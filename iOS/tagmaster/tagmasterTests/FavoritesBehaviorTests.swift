@@ -17,7 +17,7 @@ import UIKit
 final class FavoritesBehaviorTests: TMBehaviorTestCase {
 
     private var navigator: RecordingNavigator!
-    private var controller: TMHostingController!
+    private var controller: TMHostedScreen!
     private var driver: UIDriver!
 
     private var model: TMHomeModel { controller.listing as! TMHomeModel }
@@ -118,15 +118,16 @@ final class FavoritesBehaviorTests: TMBehaviorTestCase {
     func testTheRealNavigatorPushesTheListScreens() {
         seedLists(lists: FavoritesBehaviorTests.twoLists)
         let home = TMScreens.home()
-        let navigation = mountCapturingPushes(home)
+        mountInNavigation(home)
+        ScreenCatalog.settle(0.2)
         let driver = UIDriver(window)
         driver.tap(id: "home.lists.teachable")
         driver.tap(id: "home.list.chorus-warmups-list")
-        XCTAssertEqual(navigation.pushed.count, 2)
-        XCTAssertTrue(TMScreens.isListScreen(navigation.pushed[0], key: TMTagLists.teachableKey))
-        XCTAssertTrue(TMScreens.isListScreen(navigation.pushed[1], key: "chorus-warmups-list"))
+        let path = home.router?.path ?? []
+        XCTAssertEqual(path.count, 2)
+        XCTAssertTrue(path[0].opensList(key: TMTagLists.teachableKey))
+        XCTAssertTrue(path[1].opensList(key: "chorus-warmups-list"))
         XCTAssertTrue(TMScreens.isHome(home))
-        XCTAssertFalse(TMScreens.isHome(navigation.pushed[0]))
     }
 
     func testReorderingAListRowReordersTheStoredLists() {
@@ -168,7 +169,7 @@ final class FavoritesBehaviorTests: TMBehaviorTestCase {
 
     func testDeletingFromTheEditButtonLeavesEditModeAlone() {
         home(lists: FavoritesBehaviorTests.twoLists)
-        controller.setEditing(true, animated: false)
+        driver.tap(label: "Edit")
         XCTAssertTrue(model.isEditing)
         model.deleteList("afterglow-set-k3f9")
         XCTAssertTrue(model.isEditing, "A red-circle delete does not end the edit session")
@@ -176,8 +177,8 @@ final class FavoritesBehaviorTests: TMBehaviorTestCase {
         model.deleteList("chorus-warmups-list")
         XCTAssertFalse(model.isEditing, "…until nothing is left to edit")
         ScreenCatalog.settle(0.1)
-        XCTAssertFalse(controller.editButtonItem.isEnabled)
-        XCTAssertFalse(controller.isEditing)
+        XCTAssertFalse(driver.isEnabled(label: "Edit"))
+        XCTAssertFalse(driver.exists(label: "Done"))
     }
 
     func testAListRowOffersRenameAndDeleteFromItsMenu() {
@@ -278,20 +279,20 @@ final class FavoritesBehaviorTests: TMBehaviorTestCase {
 
     func testEditButtonIsEnabledForFavoritesOrForListsOfTheirOwn() {
         home()
-        XCTAssertFalse(controller.editButtonItem.isEnabled)
+        XCTAssertFalse(driver.isEnabled(label: "Edit"))
         clearLists()
         home(favorites: [669])
-        XCTAssertTrue(controller.editButtonItem.isEnabled)
+        XCTAssertTrue(driver.isEnabled(label: "Edit"))
         clearLists()
         home(lists: FavoritesBehaviorTests.twoLists)
-        XCTAssertTrue(controller.editButtonItem.isEnabled, "Lists alone are worth an Edit button")
+        XCTAssertTrue(driver.isEnabled(label: "Edit"), "Lists alone are worth an Edit button")
     }
 
     func testTheEditButtonDrivesTheListsEditMode() {
         home(favorites: [669])
-        controller.setEditing(true, animated: false)
+        driver.tap(label: "Edit")
         XCTAssertTrue(model.isEditing)
-        controller.setEditing(false, animated: false)
+        driver.tap(label: "Done")
         XCTAssertFalse(model.isEditing)
     }
 
@@ -301,10 +302,15 @@ final class FavoritesBehaviorTests: TMBehaviorTestCase {
         home()
         XCTAssertEqual(controller.navigationItem.title, "Tag Master")
         XCTAssertEqual(controller.navigationItem.largeTitleDisplayMode, .always)
-        XCTAssertEqual(controller.navigationItem.leftBarButtonItems, [controller.editButtonItem])
-        XCTAssertEqual(controller.navigationItem.rightBarButtonItems?.map { $0.accessibilityLabel ?? "" },
-                       ["Search", "Settings"], "Search stays outermost")
-        XCTAssertEqual(controller.navigationItem.backBarButtonItem?.title, "Home")
+        let edit = driver.element(label: "Edit")?.accessibilityFrame ?? .null
+        let search = driver.element(label: "Search")?.accessibilityFrame ?? .null
+        let settings = driver.element(label: "Settings")?.accessibilityFrame ?? .null
+        XCTAssertLessThan(edit.midX, settings.midX, "Edit leads")
+        XCTAssertLessThan(settings.midX, search.midX, "Search stays outermost")
+        driver.tap(label: "Search")
+        driver.tap(label: "Settings")
+        XCTAssertEqual(navigator.destinations, [.search, .settings])
+        XCTAssertEqual(controller.navigationItem.backButtonTitle, "Home")
         XCTAssertFalse(driver.exists(label: "Settings") && TMHomeModel.navigationTitles.contains("Settings"))
     }
 

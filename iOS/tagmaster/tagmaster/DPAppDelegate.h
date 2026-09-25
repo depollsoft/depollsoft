@@ -7,7 +7,6 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "DPBusyIndicator.h"
 
 /// Adopted by any on-screen list of tags (a query results list, Home's favorites
 /// section, the teachable list) so the open detail can step to a neighbouring tag
@@ -32,14 +31,8 @@ FOUNDATION_EXPORT NSNotificationName const TMTagSelectionDidChangeNotification;
 /// Both app and unit-test hosts must preserve URL/date values in the disk cache.
 + (void)configureCacheSerialization;
 
-@property (strong, nonatomic) UIWindow *window;
-@property (strong, nonatomic) DPBusyIndicator *busyIndicator;
-
-@property (readonly, strong, nonatomic) NSManagedObjectContext *managedObjectContext;
-@property (readonly, strong, nonatomic) NSManagedObjectModel *managedObjectModel;
-@property (readonly, strong, nonatomic) NSPersistentStoreCoordinator *persistentStoreCoordinator;
-
-@property (readonly, strong, nonatomic) UINavigationController *navigationController;
+/// Hands a sign-in callback URL to Google, Facebook or Firebase; NO when none of them owns it.
++ (BOOL)handleAuthURL:(NSURL *)url;
 
 + (BOOL)containsFavorite:(int)tagId;
 + (void)moveFavoriteAt:(NSUInteger)fromIndex to:(NSUInteger)toIndex;
@@ -50,28 +43,8 @@ FOUNDATION_EXPORT NSNotificationName const TMTagSelectionDidChangeNotification;
 + (void)addTeachable:(int)tagId;
 + (void)removeTeachable:(int)tagId;
 
-+ (void)setUpBackground:(UIView *)view;
-/// On iPad one watermark sits behind the whole split; after this, setUpBackground: leaves
-/// screens clear so the shared artwork shows through once instead of once per column.
-+ (void)installSharedBackgroundIn:(UIView *)view;
-/// Returns to per-screen watermarks (tests).
-+ (void)removeSharedBackground;
-/// Whether the split draws the one watermark behind both columns, so screens stay clear.
-+ (BOOL)hasSharedBackground;
-/// Opens a tag from any screen: the secondary column on a regular-width iPad,
-/// a push on the current navigation stack everywhere else.
-+ (void)showTagWithId:(int)tagId from:(UIViewController *)sender;
-/// Opens any tag list from any screen: Favorites returns to Home, Teachable Tags
-/// and the user's own lists push onto the primary column's stack.
-+ (void)showListWithKey:(NSString *)key from:(UIViewController *)sender;
-+ (UIBarButtonItem *)barButtonItemWithSystemName:(NSString *)systemName
-                                          target:(id)target
-                                          action:(SEL)action;
-/// The tag id currently shown by the secondary column's detail controller for
-/// sender's split, or nil when there is no split or no tag showing yet.
-+ (NSNumber *)currentSplitTagIdFor:(UIViewController *)sender;
-/// Tag Master's one accent, shared with Android: #007AA3 in light, #5AC8FA in dark. The window
-/// tint, page tabs, links, the lit row and the quartet notes all draw from it.
+/// Tag Master's one accent, shared with Android: #007AA3 in light, #5AC8FA in dark. Tints,
+/// page tabs, links, the lit row and the quartet notes all draw from it.
 + (UIColor *)accentColor;
 
 @end

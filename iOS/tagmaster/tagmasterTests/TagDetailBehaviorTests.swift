@@ -130,19 +130,13 @@ final class TagDetailBehaviorTests: TMBehaviorTestCase {
         try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "Beside-a-list layout is iPad only")
         seedCachedTag(id: 1809)
         seedCachedTag(id: 4243, title: "Short")
-        let detail = TagDetailViewController()
-        detail.tagId = 1809
+        let router = TMRouter()
+        mountShell(router, split: true)
+        spinUntil("the split is expanded") { router.expanded }
         let source = TMTestSource([4243, 1809])
-        detail.source = source
-        let split = UISplitViewController(style: .doubleColumn)
-        split.preferredDisplayMode = .oneBesideSecondary
-        split.setViewController(UINavigationController(rootViewController: UIViewController()), for: .primary)
-        split.setViewController(UINavigationController(rootViewController: detail), for: .secondary)
-        let splitWindow = ScreenCatalog.makeWindow()
-        splitWindow.rootViewController = split
-        splitWindow.makeKeyAndVisible()
-        window = splitWindow
-        spinUntil("the detail settles", timeout: 5) { !detail.model.fetchPending && detail.model.expanded }
+        router.showTag(1809, source: source)
+        let model = router.detail
+        spinUntil("the detail settles", timeout: 5) { !model.fetchPending && model.expanded && model.tag != nil }
         ScreenCatalog.settle(0.3)
 
         let driver = driver()
@@ -150,12 +144,11 @@ final class TagDetailBehaviorTests: TMBehaviorTestCase {
             XCTAssertTrue(driver.exists(label: label), "\(label) is beside the list")
         }
         XCTAssertFalse(driver.exists(label: "Favorite and Teachable options"))
-        XCTAssertFalse(driver.element(label: "Previous tag")?.accessibilityTraits.contains(.notEnabled) ?? true)
-        XCTAssertTrue(driver.element(label: "Next tag")?.accessibilityTraits.contains(.notEnabled) ?? false,
-                      "The last tag in the list has no next")
-        XCTAssertTrue(detail.canPerformAction(#selector(TagDetailViewController.stepToPreviousTag), withSender: nil))
-        XCTAssertFalse(detail.canPerformAction(#selector(TagDetailViewController.stepToNextTag), withSender: nil))
-        XCTAssertEqual(detail.keyCommands?.prefix(2).map(\.discoverabilityTitle), ["Previous Tag", "Next Tag"])
+        XCTAssertTrue(driver.isEnabled(label: "Previous tag"))
+        XCTAssertFalse(driver.isEnabled(label: "Next tag"), "The last tag in the list has no next")
+        // ⌘↑ / ⌘↓ ride on these two buttons, so they step from either column.
+        XCTAssertTrue(model.canStep && model.hasPreviousTag)
+        XCTAssertFalse(model.hasNextTag)
 
         driver.tap(label: "Add Favorite")
         XCTAssertEqual(DPAppDelegate.favorites(), [1809])
@@ -173,8 +166,8 @@ final class TagDetailBehaviorTests: TMBehaviorTestCase {
         let barButton = try XCTUnwrap(driver.elements.last { $0.isAccessibilityElement && $0.accessibilityLabel == "Add to list" })
         XCTAssertTrue(barButton.accessibilityActivate())
         ScreenCatalog.settle(0.1)
-        XCTAssertEqual(detail.model.pickerSource, .toolbar)
-        detail.model.pickerSource = nil
+        XCTAssertEqual(model.pickerSource, .toolbar)
+        model.pickerSource = nil
         ScreenCatalog.settle(0.5)
     }
 
@@ -182,36 +175,45 @@ final class TagDetailBehaviorTests: TMBehaviorTestCase {
         try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "The split is iPad only")
         seedCachedTag(id: 1809)
         seedCachedTag(id: 42, title: "Other")
+        let router = TMRouter()
+        mountShell(router, split: true)
+        spinUntil("the split is expanded") { router.expanded }
+        XCTAssertTrue(driver().exists(label: "Pick a tag"), "The placeholder holds the column until a tag is chosen")
         let list = TMTestListController(ids: [1809, 42])
-        let split = UISplitViewController(style: .doubleColumn)
-        split.preferredDisplayMode = .oneBesideSecondary
-        split.setViewController(UINavigationController(rootViewController: list), for: .primary)
-        split.setViewController(UINavigationController(rootViewController: TMTagPlaceholderController()), for: .secondary)
-        let splitWindow = ScreenCatalog.makeWindow()
-        splitWindow.rootViewController = split
-        splitWindow.makeKeyAndVisible()
-        window = splitWindow
-        ScreenCatalog.settle(0.3)
 
-        DPAppDelegate.showTag(withId: 1809, from: list)
-        let secondary = try XCTUnwrap(split.viewController(for: .secondary) as? UINavigationController)
-        let detail = try XCTUnwrap(secondary.viewControllers.first as? TagDetailViewController)
-        spinUntil("the tag loads", timeout: 5) { detail.model.tag != nil && detail.model.expanded }
+        router.showTag(1809, source: list)
+        let detail = router.detail
+        spinUntil("the tag loads", timeout: 5) { detail.tag != nil && detail.expanded }
         XCTAssertTrue(detail.source === list)
-        XCTAssertEqual(DPAppDelegate.currentSplitTagId(for: list), 1809)
-        detail.model.selectedPage = .tracks
+        XCTAssertEqual(router.currentSplitTagId, 1809)
+        XCTAssertTrue(router.path.isEmpty, "The tag opens beside the list, not on its stack")
+        detail.selectedPage = .tracks
 
         detail.stepToNextTag()
-        XCTAssertTrue(secondary.viewControllers.first === detail, "Stepping reuses the detail")
+        XCTAssertTrue(router.detail === detail, "Stepping reuses the detail")
         XCTAssertEqual(detail.tagId, 42)
-        XCTAssertEqual(detail.model.selectedPage, .tracks, "The open page survives the tag change")
+        XCTAssertEqual(detail.selectedPage, .tracks, "The open page survives the tag change")
         XCTAssertEqual(list.steppedTo, [1809, 42], "The list follows the open tag")
-        spinUntil("the next tag loads", timeout: 5) { detail.model.tag?.tagId == 42 }
-        XCTAssertFalse(detail.canPerformAction(#selector(TagDetailViewController.stepToNextTag), withSender: nil))
+        spinUntil("the next tag loads", timeout: 5) { detail.tag?.tagId == 42 }
+        XCTAssertFalse(detail.hasNextTag)
 
-        DPAppDelegate.showTag(withId: 42, from: split.viewController(for: .primary)!)
+        router.showTag(42, source: nil)
         XCTAssertNil(detail.source, "Opened from nowhere in particular, there is nothing to step through")
-        XCTAssertEqual(detail.keyCommands?.count ?? 0, 0)
+        XCTAssertFalse(detail.canStep)
+    }
+
+    func testOnAPhoneATagIsPushedOverTheListItCameFrom() {
+        seedCachedTag(id: 1809)
+        let router = TMRouter()
+        mountShell(router)
+        let list = TMTestListController(ids: [1809])
+        router.showTag(1809, source: list)
+        let pushed = router.path.last?.tagModel
+        XCTAssertEqual(pushed?.tagId, 1809)
+        XCTAssertTrue(pushed?.source === list)
+        XCTAssertFalse(pushed?.canStep ?? true, "Stepping belongs beside a list")
+        XCTAssertNil(router.currentSplitTagId)
+        spinUntil("the tag shows", timeout: 5) { self.driver().exists(label: "Summary") }
     }
 
     // MARK: - Summary
@@ -502,7 +504,7 @@ final class TagDetailBehaviorTests: TMBehaviorTestCase {
     // MARK: - iPad placeholder
 
     func testThePlaceholderSaysWhatWillOpenThere() {
-        mount(TMTagPlaceholderController())
+        mount(UIHostingController(rootView: TMTagPlaceholder()))
         let driver = driver()
         XCTAssertTrue(driver.exists(label: "Pick a tag"))
         XCTAssertTrue(driver.element(label: "Pick a tag")?.accessibilityTraits.contains(.header) ?? false)

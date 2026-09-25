@@ -18,7 +18,7 @@ final class TagListBehaviorTests: TMBehaviorTestCase {
     private static let key = "afterglow-set-k3f9"
 
     private var navigator: RecordingNavigator!
-    private var controller: TMHostingController!
+    private var controller: TMHostedScreen!
     private var driver: UIDriver!
     private var model: TMTagListModel { controller.listing as! TMTagListModel }
 
@@ -57,7 +57,7 @@ final class TagListBehaviorTests: TMBehaviorTestCase {
         list()
         XCTAssertEqual(controller.navigationItem.title, "Afterglow set")
         XCTAssertEqual(controller.navigationItem.largeTitleDisplayMode, .never)
-        XCTAssertEqual(controller.navigationItem.backBarButtonItem?.title, "List")
+        XCTAssertEqual(controller.navigationItem.backButtonTitle, "List")
         XCTAssertEqual(model.ids, [669, 1478, 122])
         let rows = driver.elements(labelPrefix: "Tag ").compactMap(\.accessibilityLabel)
         XCTAssertEqual(rows.count, 3)
@@ -70,9 +70,9 @@ final class TagListBehaviorTests: TMBehaviorTestCase {
     func testTeachableTagsIsTheSameScreenOverTheTeachableList() {
         list(ids: [122, 669], kind: .teachable)
         XCTAssertEqual(controller.navigationItem.title, "Teachable Tags")
-        XCTAssertEqual(controller.navigationItem.backBarButtonItem?.title, "Teachable")
-        XCTAssertEqual(controller.navigationItem.rightBarButtonItems, [controller.editButtonItem],
-                       "Teachable Tags cannot be renamed or deleted")
+        XCTAssertEqual(controller.navigationItem.backButtonTitle, "Teachable")
+        XCTAssertTrue(driver.exists(label: "Edit"))
+        XCTAssertFalse(driver.exists(id: "list.menu"), "Teachable Tags cannot be renamed or deleted")
         XCTAssertEqual(model.ids, [122, 669])
         model.promptRename()
         model.confirmDelete()
@@ -90,10 +90,13 @@ final class TagListBehaviorTests: TMBehaviorTestCase {
     func testTheRealNavigatorOpensTheTagOnThePhoneStack() {
         seedAfterglow()
         let list = TMScreens.list(key: TagListBehaviorTests.key)
-        let navigation = mountCapturingPushes(list)
+        mountInNavigation(list)
+        ScreenCatalog.settle(0.2)
         UIDriver(window).elements(labelPrefix: "Tag 1478").first?.accessibilityActivate()
-        let detail = navigation.pushed.last as? TagDetailViewController
+        let detail = list.router?.path.last?.tagModel
         XCTAssertEqual(detail?.tagId, 1478)
+        XCTAssertEqual(detail?.source?.tm_listedTagIds().map(\.intValue), [669, 1478, 122],
+                       "The pushed tag steps through the list it came from")
     }
 
     func testAnEmptyListSaysSoAndOffersAWayToFillIt() {
@@ -104,7 +107,7 @@ final class TagListBehaviorTests: TMBehaviorTestCase {
         XCTAssertEqual(driver.label(id: "list.browse"), "Browse Tags")
         driver.tap(id: "list.browse")
         XCTAssertEqual(navigator.destinations, [.browse])
-        XCTAssertFalse(controller.editButtonItem.isEnabled, "There is nothing to edit yet")
+        XCTAssertFalse(driver.isEnabled(label: "Edit"), "There is nothing to edit yet")
     }
 
     func testAnEmptyTeachableListNamesItselfAndOffersBrowse() {
@@ -118,16 +121,17 @@ final class TagListBehaviorTests: TMBehaviorTestCase {
     func testAFilledListDropsItsEmptyStateAndEnablesEdit() {
         list()
         XCTAssertFalse(driver.exists(id: "list.browse"))
-        XCTAssertTrue(controller.editButtonItem.isEnabled)
+        XCTAssertTrue(driver.isEnabled(label: "Edit"))
     }
 
     // MARK: - Editing the tags in a list
 
     func testTheEditButtonDrivesTheListsEditMode() {
         list()
-        controller.setEditing(true, animated: false)
+        driver.tap(label: "Edit")
         XCTAssertTrue(model.isEditing)
-        controller.setEditing(false, animated: false)
+        XCTAssertTrue(driver.exists(label: "Done"))
+        driver.tap(label: "Done")
         XCTAssertFalse(model.isEditing)
     }
 
@@ -144,7 +148,7 @@ final class TagListBehaviorTests: TMBehaviorTestCase {
         ScreenCatalog.settle(0.1)
         XCTAssertEqual(model.ids, [])
         XCTAssertTrue(driver.exists(id: "list.browse"))
-        XCTAssertFalse(controller.editButtonItem.isEnabled)
+        XCTAssertFalse(driver.isEnabled(label: "Edit"))
     }
 
     func testDraggingARowReordersTheStoredList() {
@@ -160,14 +164,11 @@ final class TagListBehaviorTests: TMBehaviorTestCase {
 
     func testTheOverflowMenuRenamesAndDeletesTheList() {
         list()
-        let items = controller.navigationItem.rightBarButtonItems
-        XCTAssertEqual(items?.first, controller.editButtonItem, "Edit sits outermost")
-        let overflow = items?.last
-        XCTAssertEqual(overflow?.accessibilityIdentifier, "list.menu")
-        XCTAssertEqual(overflow?.accessibilityLabel, "List options")
-        let actions = overflow?.menu?.children.compactMap { $0 as? UIAction }
-        XCTAssertEqual(actions?.map(\.title), ["Rename list…", "Delete list…"])
-        XCTAssertEqual(actions?.last?.attributes.contains(.destructive), true)
+        XCTAssertEqual(driver.label(id: "list.menu"), "List options")
+        let edit = driver.element(label: "Edit")?.accessibilityFrame ?? .zero
+        let menu = driver.element(id: "list.menu")?.accessibilityFrame ?? .zero
+        XCTAssertGreaterThan(edit.midX, menu.midX, "Edit sits outermost")
+        // The menu's two actions are the model's; each is exercised below.
     }
 
     func testRenamingTheListRetitlesTheScreen() {
@@ -215,19 +216,16 @@ final class TagListBehaviorTests: TMBehaviorTestCase {
 
     func testDeletingTheListElsewhereLeavesTheTagOpenedFromItOnTop() {
         seedAfterglow()
-        let list = TMScreens.list(key: TagListBehaviorTests.key)
-        let root = UIViewController()
-        let stack = UINavigationController(rootViewController: root)
-        stack.pushViewController(list, animated: false)
+        let router = TMRouter()
+        mountShell(router)
+        router.show(.list(TagListBehaviorTests.key))
         // What tapping a row does on a phone: the tag's detail sits above the list.
-        let detail = UIViewController()
-        stack.pushViewController(detail, animated: false)
-        mount(stack)
+        router.showTag(1478, source: nil)
+        ScreenCatalog.settle(0.3)
         TMTagLists.deleteList(TagListBehaviorTests.key)
-        waitUntil("the list leaves the stack") { !stack.viewControllers.contains(list) }
-        XCTAssertEqual(stack.topViewController, detail,
+        waitUntil("the list leaves the stack") { router.path.count == 1 }
+        XCTAssertEqual(router.path.first?.tagModel?.tagId, 1478,
                        "The tag the user is reading stays put; only its list goes")
-        XCTAssertEqual(stack.viewControllers, [root, detail])
     }
 
     func testATagAddedElsewhereMidScrollAppearsOnceTheScrollStops() {

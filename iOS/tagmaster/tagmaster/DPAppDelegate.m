@@ -7,8 +7,6 @@
 //
 
 #import "DPAppDelegate.h"
-#import <limits.h>
-#import "TMLogoBackgroundView.h"
 
 @import FirebaseAuth;
 @import FirebaseCore;
@@ -34,29 +32,7 @@
 NSNotificationName const TMTagListDidChangeNotification = @"TMTagListDidChangeNotification";
 NSNotificationName const TMTagSelectionDidChangeNotification = @"TMTagSelectionDidChangeNotification";
 
-@interface DPAppDelegate () <UISplitViewControllerDelegate>
-@end
-
-/// Records whichever responder a nil-targeted action lands on, i.e. the first responder.
-static __weak UIResponder *TMRecordedFirstResponder;
-
-@interface UIResponder (TMFirstResponder)
-- (void)tm_recordFirstResponder:(id)sender;
-@end
-
-@implementation UIResponder (TMFirstResponder)
-- (void)tm_recordFirstResponder:(id)sender {
-    TMRecordedFirstResponder = self;
-}
-@end
-
 @implementation DPAppDelegate
-
-@synthesize window = _window;
-@synthesize managedObjectContext = __managedObjectContext;
-@synthesize managedObjectModel = __managedObjectModel;
-@synthesize persistentStoreCoordinator = __persistentStoreCoordinator;
-@synthesize navigationController;
 
 + (void)configureCacheSerialization
 {
@@ -80,13 +56,6 @@ static __weak UIResponder *TMRecordedFirstResponder;
 {
     [DPAppDelegate configureCacheSerialization];
 
-    if (NSClassFromString(@"XCTestCase") != nil) {
-        self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
-        self.window.rootViewController = [UIViewController new];
-        self.window.hidden = YES;
-        return YES;
-    }
-
     [DPAppLog start];
     [FIRApp configure];
     [TelemetryConsent configure];
@@ -95,231 +64,24 @@ static __weak UIResponder *TMRecordedFirstResponder;
                              didFinishLaunchingWithOptions:launchOptions];
 #endif
     [application registerForRemoteNotifications];
-        
-    self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
-    // Override point for customization after application launch.
-    self.window.backgroundColor = [UIColor systemBackgroundColor];
-    self.window.tintColor = [DPAppDelegate accentColor];
-    UINavigationBarAppearance *navigationAppearance = [[UINavigationBarAppearance alloc] init];
-    [navigationAppearance configureWithOpaqueBackground];
-    navigationAppearance.backgroundColor = [UIColor colorWithWhite:55.0 / 255.0 alpha:1];
-    navigationAppearance.titleTextAttributes = @{NSForegroundColorAttributeName: [UIColor whiteColor]};
-    navigationAppearance.largeTitleTextAttributes = @{NSForegroundColorAttributeName: [UIColor whiteColor]};
-    UINavigationController *navController = [[UINavigationController alloc] init];
-    UINavigationBar *navigationBar = navController.navigationBar;
-    navigationBar.standardAppearance = navigationAppearance;
-    navigationBar.scrollEdgeAppearance = navigationAppearance;
-    navigationBar.compactAppearance = navigationAppearance;
-    navigationBar.compactScrollEdgeAppearance = navigationAppearance;
-    navigationBar.tintColor = [UIColor whiteColor];
-    navigationBar.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
-    navigationBar.barStyle = UIBarStyleBlack;
-    // With opaque chrome, keep UIKit's large-title host above the bar background.
-    navigationBar.translucent = NO;
-    [self.window makeKeyAndVisible];
-    
-    navController.navigationBar.prefersLargeTitles = YES;
-    [navController pushViewController:[TMScreens home] animated:NO];
-    navigationController = navController;
-
-    if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad) {
-        // List and detail side by side on iPad; the Home stack stays the primary column.
-        UISplitViewController *split = [[UISplitViewController alloc] initWithStyle:UISplitViewControllerStyleDoubleColumn];
-        split.delegate = self;
-        // One watermark behind both columns, installed before any column loads its view.
-        [DPAppDelegate installSharedBackgroundIn:split.view];
-        split.preferredDisplayMode = UISplitViewControllerDisplayModeOneBesideSecondary;
-        split.preferredSplitBehavior = UISplitViewControllerSplitBehaviorTile;
-        // A comfortable list width on both 11- and 13-inch iPads, without
-        // touching the bar appearance shared with the detail column.
-        split.minimumPrimaryColumnWidth = 320;
-        split.maximumPrimaryColumnWidth = 400;
-        split.preferredPrimaryColumnWidthFraction = 0.36;
-        [split setViewController:navController forColumn:UISplitViewControllerColumnPrimary];
-        UINavigationController *detailNavigation = [[UINavigationController alloc] initWithRootViewController:[[TMTagPlaceholderController alloc] init]];
-        detailNavigation.navigationBar.standardAppearance = navigationAppearance;
-        detailNavigation.navigationBar.scrollEdgeAppearance = navigationAppearance;
-        detailNavigation.navigationBar.compactAppearance = navigationAppearance;
-        detailNavigation.navigationBar.compactScrollEdgeAppearance = navigationAppearance;
-        detailNavigation.navigationBar.tintColor = [UIColor whiteColor];
-        detailNavigation.navigationBar.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
-        detailNavigation.navigationBar.barStyle = UIBarStyleBlack;
-        detailNavigation.navigationBar.translucent = NO;
-        [split setViewController:detailNavigation forColumn:UISplitViewControllerColumnSecondary];
-        self.window.rootViewController = split;
-    } else {
-        self.window.rootViewController = navController;
-    }
-    [self.window makeKeyAndVisible];
-    
     [self extraInit];
-
     return YES;
 }
 
-- (void)applicationDidBecomeActive:(UIApplication *)application {
-    if (NSClassFromString(@"XCTestCase") == nil) {
-        [TelemetryConsent presentIfNeededFrom:self.window.rootViewController];
-    }
-}
-
-- (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options {
++ (BOOL)handleAuthURL:(NSURL *)url {
 #if HAS_GOOGLE_SIGN_IN
     if ([[GIDSignIn sharedInstance] handleURL:url]) {
         return YES;
     }
 #endif
 #if HAS_FBSDK
-    if ([[FBSDKApplicationDelegate sharedInstance] application:app
+    if ([[FBSDKApplicationDelegate sharedInstance] application:UIApplication.sharedApplication
                                                      openURL:url
-                                                     options:options]) {
+                                                     options:@{}]) {
         return YES;
     }
 #endif
-    if ([[FIRAuth auth] canHandleURL:url]) {
-        return YES;
-    }
-    // Auth callbacks above keep their provider-specific schemes and paths.
-    if (url.scheme.length == 0 || [url.scheme caseInsensitiveCompare:@"tagmaster"] != NSOrderedSame ||
-        url.user || url.password || url.port) return NO;
-    // Split without normalizing away empty components or trailing slashes.
-    NSString *path = [NSURLComponents componentsWithURL:url resolvingAgainstBaseURL:NO].path;
-    NSArray<NSString *> *components = [path componentsSeparatedByString:@"/"];
-    BOOL hostIsTag = [url.host isEqualToString:@"tag"] && components.count == 2;
-    BOOL pathHasTag = (url.host.length == 0 || [url.host isEqualToString:@"open"]) &&
-        components.count == 3 && [components[1] isEqualToString:@"tag"];
-    if ((!hostIsTag && !pathHasTag) || ![components.firstObject isEqualToString:@""]) return NO;
-    NSString *identifier = components.lastObject;
-    if (identifier.length == 0) return NO;
-    int tagId = 0;
-    for (NSUInteger index = 0; index < identifier.length; index++) {
-        unichar character = [identifier characterAtIndex:index];
-        if (character < '0' || character > '9') return NO;
-        int digit = character - '0';
-        if (tagId > (INT_MAX - digit) / 10) return NO;
-        tagId = tagId * 10 + digit;
-    }
-    if (tagId == 0) return NO;
-    [DPAppDelegate showTagWithId:tagId from:self.navigationController.topViewController];
-    return YES;
-}
-
-+ (void)showTagWithId:(int)tagId from:(UIViewController *)sender {
-    id<TMTagListSource> source = [sender conformsToProtocol:@protocol(TMTagListSource)] ? (id<TMTagListSource>)sender : nil;
-    if ([sender isKindOfClass:DPTagViewController.class]) source = ((DPTagViewController *)sender).source;
-    UISplitViewController *split = sender.splitViewController;
-    if (split && !split.isCollapsed) {
-        UINavigationController *secondary = (UINavigationController *)[split viewControllerForColumn:UISplitViewControllerColumnSecondary];
-        UIViewController *root = [secondary isKindOfClass:[UINavigationController class]] ? secondary.viewControllers.firstObject : nil;
-        if ([root isKindOfClass:[DPTagViewController class]]) {
-            // Reuse the existing detail so the page the user was on (Summary,
-            // Details, Tracks, Videos) survives the tag change.
-            DPTagViewController *existing = (DPTagViewController *)root;
-            existing.source = source;
-            existing.tagId = tagId;
-        } else {
-            DPTagViewController *controller = [[DPTagViewController alloc] init];
-            controller.source = source;
-            controller.tagId = tagId;
-            if ([secondary isKindOfClass:UINavigationController.class]) {
-                // Keep the placeholder's configured navigation bar and safe-area behavior.
-                [secondary setViewControllers:@[controller] animated:NO];
-            } else {
-                [split setViewController:[[UINavigationController alloc] initWithRootViewController:controller]
-                               forColumn:UISplitViewControllerColumnSecondary];
-            }
-        }
-        [NSNotificationCenter.defaultCenter postNotificationName:TMTagSelectionDidChangeNotification object:split];
-        [source tm_didStepToTagId:tagId];
-        if (split.displayMode == UISplitViewControllerDisplayModeOneOverSecondary) {
-            [split hideColumn:UISplitViewControllerColumnPrimary];
-        }
-        return;
-    }
-    DPTagViewController *controller = [[DPTagViewController alloc] init];
-    controller.tagId = tagId;
-    UINavigationController *navigation = sender.navigationController ?: [(DPAppDelegate *)UIApplication.sharedApplication.delegate navigationController];
-    [navigation pushViewController:controller animated:YES];
-}
-
-/// The stack a list belongs on: the primary column beside an open tag, the
-/// current stack everywhere else.
-+ (UINavigationController *)primaryNavigationFor:(UIViewController *)sender {
-    UISplitViewController *split = sender.splitViewController;
-    if (split && !split.isCollapsed) {
-        UIViewController *primary = [split viewControllerForColumn:UISplitViewControllerColumnPrimary];
-        if ([primary isKindOfClass:UINavigationController.class]) return (UINavigationController *)primary;
-    }
-    return sender.navigationController ?: [(DPAppDelegate *)UIApplication.sharedApplication.delegate navigationController];
-}
-
-+ (void)showListWithKey:(NSString *)key from:(UIViewController *)sender {
-    UINavigationController *navigation = [self primaryNavigationFor:sender];
-    UISplitViewController *split = sender.splitViewController;
-    BOOL expanded = split && !split.isCollapsed;
-    if ([key isEqualToString:[TMTagLists favoriteKey]]) {
-        // Favorites is a section of Home rather than a screen of its own.
-        for (UIViewController *controller in navigation.viewControllers) {
-            if ([TMScreens isHome:controller]) {
-                [navigation popToViewController:controller animated:YES];
-                if (expanded) [split showColumn:UISplitViewControllerColumnPrimary];
-                return;
-            }
-        }
-        return;
-    }
-    UIViewController *destination = [key isEqualToString:[TMTagLists teachableKey]]
-        ? [TMScreens teachable]
-        : [TMScreens listWithKey:key];
-    [navigation pushViewController:destination animated:YES];
-    if (expanded) [split showColumn:UISplitViewControllerColumnPrimary];
-}
-
-#pragma mark - Keyboard stepping from either column
-
-/// The detail showing beside a list, or nil when there is no expanded split or no tag yet.
-- (DPTagViewController *)tm_expandedDetail {
-    UISplitViewController *split = (UISplitViewController *)self.window.rootViewController;
-    if (![split isKindOfClass:UISplitViewController.class] || split.isCollapsed) return nil;
-    UINavigationController *secondary = (UINavigationController *)[split viewControllerForColumn:UISplitViewControllerColumnSecondary];
-    UIViewController *root = [secondary isKindOfClass:UINavigationController.class] ? secondary.viewControllers.firstObject : nil;
-    return [root isKindOfClass:DPTagViewController.class] ? (DPTagViewController *)root : nil;
-}
-
-/// Whether the first responder sits inside the detail column, where the detail's own key
-/// commands already serve; asking the chain with a nil target reaches the first responder.
-- (BOOL)tm_detailOwnsFocus:(DPTagViewController *)detail {
-    TMRecordedFirstResponder = nil;
-    [UIApplication.sharedApplication sendAction:@selector(tm_recordFirstResponder:) to:nil from:self forEvent:nil];
-    for (UIResponder *responder = TMRecordedFirstResponder; responder; responder = responder.nextResponder) {
-        if (responder == detail) return YES;
-    }
-    return NO;
-}
-
-/// The list column usually holds keyboard focus on iPad, and the detail is not in its
-/// responder chain. The delegate is always in the chain, so it republishes the detail's
-/// ⌘↑ / ⌘↓ commands and forwards their actions.
-- (NSArray<UIKeyCommand *> *)keyCommands {
-    DPTagViewController *detail = [self tm_expandedDetail];
-    if (!detail || [self tm_detailOwnsFocus:detail]) return nil;
-    return detail.keyCommands;
-}
-
-- (void)stepToPreviousTag {
-    [[self tm_expandedDetail] stepToPreviousTag];
-}
-
-- (void)stepToNextTag {
-    [[self tm_expandedDetail] stepToNextTag];
-}
-
-- (BOOL)canPerformAction:(SEL)action withSender:(id)sender {
-    if (action == @selector(stepToPreviousTag) || action == @selector(stepToNextTag)) {
-        DPTagViewController *detail = [self tm_expandedDetail];
-        return detail != nil && [detail canPerformAction:action withSender:sender];
-    }
-    return [super canPerformAction:action withSender:sender];
+    return [[FIRAuth auth] canHandleURL:url];
 }
 
 + (UIColor *)accentColor {
@@ -333,58 +95,6 @@ static __weak UIResponder *TMRecordedFirstResponder;
         }];
     });
     return accent;
-}
-
-+ (NSNumber *)currentSplitTagIdFor:(UIViewController *)sender {
-    UISplitViewController *split = sender.splitViewController;
-    if (!split || split.isCollapsed) return nil;
-    UINavigationController *secondary = (UINavigationController *)[split viewControllerForColumn:UISplitViewControllerColumnSecondary];
-    UIViewController *root = [secondary isKindOfClass:[UINavigationController class]] ? secondary.viewControllers.firstObject : nil;
-    if (![root isKindOfClass:[DPTagViewController class]]) return nil;
-    return @(((DPTagViewController *)root).tagId);
-}
-
-- (void)splitViewControllerDidCollapse:(UISplitViewController *)splitViewController {
-    [NSNotificationCenter.defaultCenter postNotificationName:TMTagSelectionDidChangeNotification object:splitViewController];
-}
-
-- (void)splitViewControllerDidExpand:(UISplitViewController *)splitViewController {
-    [NSNotificationCenter.defaultCenter postNotificationName:TMTagSelectionDidChangeNotification object:splitViewController];
-}
-
-- (UISplitViewControllerColumn)splitViewController:(UISplitViewController *)svc topColumnForCollapsingToProposedTopColumn:(UISplitViewControllerColumn)proposedTopColumn {
-    // Keep a chosen tag on top when the window narrows; never surface the placeholder.
-    UINavigationController *secondary = (UINavigationController *)[svc viewControllerForColumn:UISplitViewControllerColumnSecondary];
-    UIViewController *detail = [secondary isKindOfClass:[UINavigationController class]] ? secondary.topViewController : secondary;
-    return [detail isKindOfClass:[DPTagViewController class]] ? UISplitViewControllerColumnSecondary : UISplitViewControllerColumnPrimary;
-}
-
-- (void)applicationWillResignActive:(UIApplication *)application
-{
-    /*
-     Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
-     Use this method to pause ongoing tasks, disable timers, and throttle down OpenGL ES frame rates. Games should use this method to pause the game.
-     */
-}
-
-- (void)applicationDidEnterBackground:(UIApplication *)application
-{
-    /*
-     Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
-     If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
-     */
-}
-
-- (void)applicationWillEnterForeground:(UIApplication *)application
-{
-    /*
-     Called as part of the transition from the background to the inactive state; here you can undo many of the changes made on entering the background.
-     */
-}
-
-- (void)applicationWillTerminate:(UIApplication *)application
-{
-
 }
 
 + (BOOL)containsFavorite:(int)tagId {
@@ -439,79 +149,6 @@ static __weak UIResponder *TMRecordedFirstResponder;
     NSMutableArray *teachable = [NSMutableArray arrayWithArray:self.teachable];
     [teachable removeObject:@(tagId)];
     [self setTeachable:teachable];
-}
-
-+ (UIBarButtonItem *)barButtonItemWithSystemName:(NSString *)systemName
-                                          target:(id)target
-                                          action:(SEL)action {
-    UIImageSymbolConfiguration *configuration =
-        [UIImageSymbolConfiguration configurationWithPointSize:17
-                                                        weight:UIImageSymbolWeightRegular
-                                                         scale:UIImageSymbolScaleMedium];
-    UIImage *image = [UIImage systemImageNamed:systemName
-                             withConfiguration:configuration];
-    UIBarButtonItem *item = [[UIBarButtonItem alloc] initWithImage:image
-                                            style:UIBarButtonItemStylePlain
-                                           target:target
-                                           action:action];
-    item.accessibilityLabel = @{@"magnifyingglass": @"Search",
-                                @"gearshape": @"Settings",
-                                @"square.and.arrow.up": @"Share",
-                                @"tag": @"Favorite and Teachable options",
-                                @"arrow.clockwise": @"Refresh",
-                                @"chevron.up": @"Previous tag",
-                                @"chevron.down": @"Next tag",
-                                @"text.badge.plus": @"Add to list",
-                                @"ellipsis.circle": @"List options"}[systemName];
-    return item;
-}
-
-static TMLogoBackgroundView *TMSharedBackground;
-
-+ (TMLogoBackgroundView *)addLogoBackgroundTo:(UIView *)view {
-    TMLogoBackgroundView *backgroundImage = [[TMLogoBackgroundView alloc] initWithFrame:CGRectZero];
-    backgroundImage.translatesAutoresizingMaskIntoConstraints = NO;
-    [view addSubview:backgroundImage];
-    [view sendSubviewToBack:backgroundImage];
-    [view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[backgroundImage]|"
-                                                                 options:0
-                                                                 metrics:nil
-                                                                   views:NSDictionaryOfVariableBindings(backgroundImage)]];
-    [view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-60-[backgroundImage]-44-|"
-                                                                 options:0
-                                                                 metrics:nil
-                                                                   views:NSDictionaryOfVariableBindings(backgroundImage)]];
-    return backgroundImage;
-}
-
-+ (void)installSharedBackgroundIn:(UIView *)view {
-    [TMSharedBackground removeFromSuperview];
-    view.backgroundColor = [UIColor systemBackgroundColor];
-    TMSharedBackground = [self addLogoBackgroundTo:view];
-}
-
-+ (BOOL)hasSharedBackground {
-    return TMSharedBackground != nil;
-}
-
-+ (void)removeSharedBackground {
-    [TMSharedBackground removeFromSuperview];
-    TMSharedBackground = nil;
-}
-
-+ (void)setUpBackground:(UIView *)view {
-    if (TMSharedBackground) {
-        // The split paints the watermark once behind both columns; screens stay clear.
-        view.backgroundColor = [UIColor clearColor];
-        if ([view isKindOfClass:[UITableView class]]) ((UITableView *)view).backgroundView = nil;
-        return;
-    }
-    view.backgroundColor = [UIColor systemBackgroundColor];
-    if ([view isKindOfClass:[UITableView class]]) {
-        UITableView *tableView = (UITableView *)view;
-        view = tableView.backgroundView = [[UIView alloc] init];
-    }
-    [self addLogoBackgroundTo:view];
 }
 
 @end

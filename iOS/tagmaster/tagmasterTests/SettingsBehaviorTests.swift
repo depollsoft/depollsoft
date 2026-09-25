@@ -46,7 +46,7 @@ final class SettingsBehaviorTests: TMBehaviorTestCase {
     }
 
     private func settings(build: TMBuildInfo = TMBuildInfo(number: "", pullRequest: "?"))
-        -> (TMHostingController, TMSettingsModel, UIDriver) {
+        -> (TMHostedScreen, TMSettingsModel, UIDriver) {
         let controller = TMScreens.settings(navigator: navigator, account: account, build: build)
         let driver = mountScreen(controller, size: CGSize(width: 375, height: 1600))
         return (controller, controller.settingsModel!, driver)

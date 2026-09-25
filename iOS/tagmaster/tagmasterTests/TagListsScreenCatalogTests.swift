@@ -12,6 +12,7 @@
 //
 
 import XCTest
+import SwiftUI
 import UIKit
 import ObjectiveC
 @testable import tagmaster
@@ -115,7 +116,6 @@ final class TagListsScreenCatalogTests: TMBehaviorTestCase {
         catalogWindow?.isHidden = true
         catalogWindow?.rootViewController = nil
         catalogWindow = nil
-        DPAppDelegate.removeSharedBackground()
         autoreleasepool { RunLoop.current.run(until: Date()) }
     }
 
@@ -124,66 +124,29 @@ final class TagListsScreenCatalogTests: TMBehaviorTestCase {
         catalogNetwork = TMCatalogNetwork(mode: mode)
     }
 
-    // MARK: - Shell (mirrors DPAppDelegate's launch)
+    // MARK: - Shell
 
-    private func appearance() -> UINavigationBarAppearance {
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor(white: 55.0 / 255.0, alpha: 1)
-        appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
-        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
-        return appearance
-    }
-
-    private func style(_ bar: UINavigationBar) {
-        let appearance = appearance()
-        bar.standardAppearance = appearance
-        bar.scrollEdgeAppearance = appearance
-        bar.compactAppearance = appearance
-        bar.compactScrollEdgeAppearance = appearance
-        bar.tintColor = .white
-        bar.overrideUserInterfaceStyle = .dark
-        bar.barStyle = .black
-        bar.isTranslucent = false
-    }
-
-    /// Mounts the app's root: Home in a navigation stack, inside the split on iPad.
+    /// Mounts the app's own SwiftUI shell: Home on the phone stack, or the iPad split.
     @discardableResult
-    private func mountApp(style interfaceStyle: UIUserInterfaceStyle = .light) -> UINavigationController {
+    private func mountApp(style interfaceStyle: UIUserInterfaceStyle = .light) -> TMCatalogApp {
         tearDownCatalogWindow()
         let window = ScreenCatalog.makeWindow(style: interfaceStyle)
-        window.backgroundColor = .systemBackground
-        window.tintColor = DPAppDelegate.accentColor()
-        let navigation = UINavigationController()
-        style(navigation.navigationBar)
-        navigation.navigationBar.prefersLargeTitles = true
-        navigation.pushViewController(Screens.home(), animated: false)
-        if isPad {
-            let split = UISplitViewController(style: .doubleColumn)
-            DPAppDelegate.installSharedBackground(in: split.view)
-            split.preferredDisplayMode = .oneBesideSecondary
-            split.preferredSplitBehavior = .tile
-            split.minimumPrimaryColumnWidth = 320
-            split.maximumPrimaryColumnWidth = 400
-            split.preferredPrimaryColumnWidthFraction = 0.36
-            split.setViewController(navigation, for: .primary)
-            let placeholderClass = NSClassFromString("TMTagPlaceholderController") as! UIViewController.Type
-            let detail = UINavigationController(rootViewController: placeholderClass.init())
-            style(detail.navigationBar)
-            split.setViewController(detail, for: .secondary)
-            window.rootViewController = split
-        } else {
-            window.rootViewController = navigation
-        }
+        let router = TMRouter(account: TMAccount(isSignedIn: { false }, signOut: {}),
+                              build: TMBuildInfo(number: "", pullRequest: "?"))
+        let root: AnyView = isPad ? AnyView(TMSplitRoot(router: router)) : AnyView(TMStackRoot(router: router))
+        window.rootViewController = UIHostingController(rootView: root)
         window.makeKeyAndVisible()
         catalogWindow = window
-        ScreenCatalog.settle(0.3)
-        return navigation
+        let app = TMCatalogApp(router: router, window: window)
+        Screens.current = app
+        ScreenCatalog.settle(0.5)
+        return app
     }
 
-    private func push(_ controller: UIViewController, on navigation: UINavigationController) {
-        navigation.pushViewController(controller, animated: false)
-        ScreenCatalog.settle(0.3)
+    private func push(_ screen: TMCatalogScreen, on app: TMCatalogApp) {
+        app.router.show(screen.destination)
+        screen.model = app.router.path.last?.screen
+        ScreenCatalog.settle(0.5)
     }
 
     private func shoot(_ name: String, settle: TimeInterval = 0.5) {
@@ -191,10 +154,6 @@ final class TagListsScreenCatalogTests: TMBehaviorTestCase {
         ScreenCatalog.capture("\(prefix)-\(name)", window: catalogWindow, settle: settle)
     }
 
-    private func present(_ alert: UIViewController, from navigation: UINavigationController) {
-        (navigation.topViewController ?? navigation).present(alert, animated: false)
-        ScreenCatalog.settle(0.4)
-    }
 
     private func seedFavoritesAndLists() {
         for (index, id) in [1809, 669, 1478, 122].enumerated() {
@@ -427,31 +386,74 @@ final class TagListsScreenCatalogTests: TMBehaviorTestCase {
     }
 }
 
+/// The mounted shell: its router, and the stack the list screens stand on.
+@MainActor
+final class TMCatalogApp {
+    let router: TMRouter
+    let window: UIWindow
+
+    init(router: TMRouter, window: UIWindow) {
+        self.router = router
+        self.window = window
+    }
+
+    /// The navigation controller SwiftUI draws the list stack with.
+    var navigation: UINavigationController? {
+        func find(_ controller: UIViewController?) -> UINavigationController? {
+            guard let controller else { return nil }
+            if let navigation = controller as? UINavigationController,
+               navigation.viewControllers.first.map({ !($0 is UINavigationController) }) ?? false,
+               !(navigation.parent is UINavigationController) {
+                return navigation
+            }
+            for child in controller.children { if let found = find(child) { return found } }
+            return nil
+        }
+        return find(window.rootViewController)
+    }
+
+    var topViewController: UIViewController? { navigation?.topViewController }
+}
+
+/// A screen the catalog pushes, and its model once it is on the stack.
+@MainActor
+final class TMCatalogScreen {
+    let destination: TMDestination
+    var model: TMScreenModel?
+
+    init(_ destination: TMDestination) {
+        self.destination = destination
+    }
+
+    func setEditing(_ editing: Bool, animated: Bool) {
+        if case .tagList(let list)? = model { list.isEditing = editing }
+    }
+}
+
 /// How the catalog reaches each screen. The one place that knows which
 /// implementation is current.
 @MainActor
 enum Screens {
-    static func home() -> UIViewController { TMScreens.home() }
-    static func setHomeEditing(_ home: UIViewController, _ editing: Bool) { home.setEditing(editing, animated: false) }
-    static func homeModel(_ home: UIViewController) -> TMHomeModel { (home as! TMHostingController).listing as! TMHomeModel }
-    static func openTag(_ home: UIViewController) { homeModel(home).openTagPrompt = TMOpenTagPrompt() }
-    static func randomTag(_ home: UIViewController) { homeModel(home).randomTag() }
-    static func browse() -> UIViewController { TMScreens.browse() }
-    static func selectBrowsePage(_ browse: UIViewController, _ index: Int) {
-        ((browse as! TMHostingController).listing as! TMBrowseModel).selectedIndex = index
+    static var current: TMCatalogApp?
+    private static var home: TMHomeModel { current!.router.home }
+
+    static func setHomeEditing(_ home: UIViewController, _ editing: Bool) { Screens.home.isEditing = editing }
+    static func homeModel(_ home: UIViewController) -> TMHomeModel { Screens.home }
+    static func openTag(_ home: UIViewController) { Screens.home.openTagPrompt = TMOpenTagPrompt() }
+    static func randomTag(_ home: UIViewController) { Screens.home.randomTag() }
+    static func browse() -> TMCatalogScreen { TMCatalogScreen(.browse) }
+    static func selectBrowsePage(_ browse: TMCatalogScreen, _ index: Int) {
+        if case .browse(let model)? = browse.model { model.selectedIndex = index }
     }
-    static func search() -> UIViewController { TMScreens.search() }
-    static func setSearchText(_ search: UIViewController, _ text: String) {
-        (search as! TMHostingController).searchModel?.text = text
+    static func search() -> TMCatalogScreen { TMCatalogScreen(.search) }
+    static func setSearchText(_ search: TMCatalogScreen, _ text: String) {
+        if case .search(let model)? = search.model { model.text = text }
     }
-    static func results(query: String) -> UIViewController { TMScreens.results(TMTagQuery(text: query)) }
-    static func settings() -> UIViewController {
-        TMScreens.settings(account: TMAccount(isSignedIn: { false }, signOut: {}),
-                           build: TMBuildInfo(number: "", pullRequest: "?"))
-    }
+    static func results(query: String) -> TMCatalogScreen { TMCatalogScreen(.results(TMTagQuery(text: query))) }
+    static func settings() -> TMCatalogScreen { TMCatalogScreen(.settings) }
     static func clearFavorites(_ settings: UIViewController) {
-        (settings as! TMHostingController).settingsModel?.clearTapped(.favorites)
+        if case .settings(let model)? = current?.router.path.last?.screen { model.clearTapped(.favorites) }
     }
-    static func teachable() -> UIViewController { TMScreens.teachable() }
-    static func list(_ key: String) -> UIViewController { TMScreens.list(key: key) }
+    static func teachable() -> TMCatalogScreen { TMCatalogScreen(.teachable) }
+    static func list(_ key: String) -> TMCatalogScreen { TMCatalogScreen(.list(key)) }
 }

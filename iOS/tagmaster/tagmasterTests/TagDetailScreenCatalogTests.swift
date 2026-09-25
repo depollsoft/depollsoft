@@ -9,6 +9,7 @@
 //
 
 import XCTest
+import SwiftUI
 import UIKit
 import ObjectiveC
 @testable import tagmaster
@@ -40,6 +41,19 @@ final class TMHeldTagLoad {
     }
 }
 
+/// A tag the catalog opens, and the detail model the shell shows it with.
+@MainActor
+final class TMCatalogDetail {
+    let tagId: Int32
+    let source: TMTagListSource?
+    var model: TagDetailModel?
+
+    init(tagId: Int32, source: TMTagListSource?) {
+        self.tagId = tagId
+        self.source = source
+    }
+}
+
 /// A list the detail can step through, as Home or a query list would be.
 final class TMCatalogSource: NSObject, TMTagListSource {
     var ids: [NSNumber]
@@ -61,7 +75,6 @@ class TagDetailScreenCatalogTests: TMBehaviorTestCase {
         held?.release()
         held = nil
         window?.rootViewController?.dismiss(animated: false)
-        DPAppDelegate.removeSharedBackground()
         super.tearDown()
     }
 
@@ -108,28 +121,7 @@ class TagDetailScreenCatalogTests: TMBehaviorTestCase {
         return tag
     }
 
-    // MARK: - Chrome, as DPAppDelegate builds it
-
-    static let navigationAppearance: UINavigationBarAppearance = {
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor(white: 55.0 / 255.0, alpha: 1)
-        appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
-        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
-        return appearance
-    }()
-
-    static func styleBar(_ navigation: UINavigationController) {
-        let bar = navigation.navigationBar
-        bar.standardAppearance = navigationAppearance
-        bar.scrollEdgeAppearance = navigationAppearance
-        bar.compactAppearance = navigationAppearance
-        bar.compactScrollEdgeAppearance = navigationAppearance
-        bar.tintColor = .white
-        bar.overrideUserInterfaceStyle = .dark
-        bar.barStyle = .black
-        bar.isTranslucent = false
-    }
+    // MARK: - The app's shell
 
     func appWindow(_ style: UIUserInterfaceStyle) -> UIWindow {
         if let old = self.window {
@@ -138,48 +130,35 @@ class TagDetailScreenCatalogTests: TMBehaviorTestCase {
             old.rootViewController = nil
         }
         let window = ScreenCatalog.makeWindow(style: style)
-        window.backgroundColor = .systemBackground
-        window.tintColor = DPAppDelegate.accentColor()
         self.window = window
         return window
     }
 
-    /// iPhone: the detail pushed onto a navigation stack above a stand-in list.
-    func showOnPhone(_ detail: UIViewController, style: UIUserInterfaceStyle = .light) {
+    /// iPhone: the app's stack with the tag pushed over Home.
+    func showOnPhone(_ detail: TMCatalogDetail, style: UIUserInterfaceStyle = .light) {
         let window = appWindow(style)
-        let root = UIViewController()
-        root.title = "Home"
-        let navigation = UINavigationController(rootViewController: root)
-        Self.styleBar(navigation)
-        navigation.navigationBar.prefersLargeTitles = true
-        navigation.pushViewController(detail, animated: false)
-        window.rootViewController = navigation
+        let router = TMRouter()
+        window.rootViewController = UIHostingController(rootView: TMStackRoot(router: router))
         window.makeKeyAndVisible()
+        ScreenCatalog.settle(0.3)
+        router.showTag(detail.tagId, source: detail.source)
+        detail.model = router.path.last?.tagModel
+        ScreenCatalog.settle(0.5)
     }
 
-    /// iPad: the split, a stand-in list in the primary column, `detail` in the secondary.
-    func showOnPad(_ detail: UIViewController, style: UIUserInterfaceStyle = .light) -> UISplitViewController {
+    /// iPad: the app's split, Home in the list column and the tag beside it
+    /// (or, with no tag, the placeholder).
+    func showOnPad(_ detail: TMCatalogDetail?, style: UIUserInterfaceStyle = .light) {
         let window = appWindow(style)
-        let split = UISplitViewController(style: .doubleColumn)
-        DPAppDelegate.installSharedBackground(in: split.view)
-        split.preferredDisplayMode = .oneBesideSecondary
-        split.preferredSplitBehavior = .tile
-        split.minimumPrimaryColumnWidth = 320
-        split.maximumPrimaryColumnWidth = 400
-        split.preferredPrimaryColumnWidthFraction = 0.36
-        let list = UIViewController()
-        list.title = "Tag Master"
-        list.view.backgroundColor = .clear
-        let primary = UINavigationController(rootViewController: list)
-        Self.styleBar(primary)
-        primary.navigationBar.prefersLargeTitles = true
-        split.setViewController(primary, for: .primary)
-        let secondary = UINavigationController(rootViewController: detail)
-        Self.styleBar(secondary)
-        split.setViewController(secondary, for: .secondary)
-        window.rootViewController = split
+        let router = TMRouter()
+        window.rootViewController = UIHostingController(rootView: TMSplitRoot(router: router))
         window.makeKeyAndVisible()
-        return split
+        ScreenCatalog.settle(0.5)
+        if let detail {
+            router.showTag(detail.tagId, source: detail.source)
+            detail.model = router.detail
+        }
+        ScreenCatalog.settle(0.5)
     }
 
     var isPad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
@@ -188,45 +167,43 @@ class TagDetailScreenCatalogTests: TMBehaviorTestCase {
         ScreenCatalog.capture(name, window: window, settle: seconds)
     }
 
-    // MARK: - Driving the detail (the part that changes with the implementation)
+    // MARK: - Driving the detail
 
-    func makeDetail(tagId: Int32, source: TMTagListSource? = nil) -> TagDetailViewController {
-        let detail = TagDetailViewController()
-        detail.tagId = tagId
-        detail.source = source
-        return detail
+    func makeDetail(tagId: Int32, source: TMTagListSource? = nil) -> TMCatalogDetail {
+        TMCatalogDetail(tagId: tagId, source: source)
     }
 
-    func waitForLoad(_ detail: TagDetailViewController) {
-        spinUntil("the detail settles", timeout: 5) { !detail.model.fetchPending }
+    func waitForLoad(_ detail: TMCatalogDetail) {
+        spinUntil("the detail settles", timeout: 5) { detail.model.map { !$0.fetchPending } ?? false }
     }
 
-    func select(page: Int, in detail: TagDetailViewController) {
-        detail.model.selectedPage = TagDetailModel.Page(rawValue: page)!
+    func select(page: Int, in detail: TMCatalogDetail) {
+        detail.model?.selectedPage = TagDetailModel.Page(rawValue: page)!
         ScreenCatalog.settle(0.6)
     }
 
     /// Stops the quartet so it is captured at rest.
-    func stillQuartet(in detail: TagDetailViewController) {
-        detail.model.applicationActive = false
+    func stillQuartet(in detail: TMCatalogDetail) {
+        detail.model?.applicationActive = false
     }
 
-    func showActions(in detail: TagDetailViewController) {
-        detail.model.showActions()
+    func showActions(in detail: TMCatalogDetail) {
+        detail.model?.showActions()
     }
 
-    func showPicker(in detail: TagDetailViewController) {
-        detail.model.showListPicker(from: detail.model.expanded ? .toolbar : .actions)
+    func showPicker(in detail: TMCatalogDetail) {
+        guard let model = detail.model else { return }
+        model.showListPicker(from: model.expanded ? .toolbar : .actions)
     }
 
-    func showRating(in detail: TagDetailViewController) {
-        detail.model.summary.showRating()
+    func showRating(in detail: TMCatalogDetail) {
+        detail.model?.summary.showRating()
     }
 
-    func dismissPresentations(in detail: TagDetailViewController) {
-        detail.model.actionsPresented = false
-        detail.model.pickerSource = nil
-        detail.model.summary.ratingDialogPresented = false
+    func dismissPresentations(in detail: TMCatalogDetail) {
+        detail.model?.actionsPresented = false
+        detail.model?.pickerSource = nil
+        detail.model?.summary.ratingDialogPresented = false
         ScreenCatalog.settle(0.5)
     }
 
@@ -331,7 +308,7 @@ class TagDetailScreenCatalogTests: TMBehaviorTestCase {
             seedMinimalTag()
             let source = TMCatalogSource([4243, 1809, 122])
             let detail = makeDetail(tagId: 1809, source: source)
-            _ = showOnPad(detail, style: style)
+            showOnPad(detail, style: style)
             waitForLoad(detail)
             snap("pad-summary-\(suffix)")
             select(page: 1, in: detail)
@@ -340,22 +317,14 @@ class TagDetailScreenCatalogTests: TMBehaviorTestCase {
             snap("pad-tracks-\(suffix)")
             select(page: 3, in: detail)
             snap("pad-videos-\(suffix)")
-            DPAppDelegate.removeSharedBackground()
         }
-    }
-
-    /// The secondary column before any tag is chosen.
-    func makePlaceholder() -> UIViewController {
-        let type = NSClassFromString("TMTagPlaceholderController") as! UIViewController.Type
-        return type.init()
     }
 
     func testPadPlaceholder() {
         guard isPad else { return }
         for style in [UIUserInterfaceStyle.light, .dark] {
-            _ = showOnPad(makePlaceholder(), style: style)
+            showOnPad(nil, style: style)
             snap("pad-placeholder-\(style == .dark ? "dark" : "light")")
-            DPAppDelegate.removeSharedBackground()
         }
     }
 
@@ -363,18 +332,17 @@ class TagDetailScreenCatalogTests: TMBehaviorTestCase {
         guard isPad else { return }
         held = TMHeldTagLoad()
         let pending = makeDetail(tagId: TMHeldTagLoad.heldId, source: TMCatalogSource([TMHeldTagLoad.heldId].map(Int.init)))
-        _ = showOnPad(pending)
+        showOnPad(pending)
         ScreenCatalog.settle(0.3)
         stillQuartet(in: pending)
         snap("pad-loading-light")
         held?.release()
         held = nil
         waitForLoad(pending)
-        DPAppDelegate.removeSharedBackground()
 
         seedFullTag()
         let detail = makeDetail(tagId: 1809, source: TMCatalogSource([1809]))
-        _ = showOnPad(detail)
+        showOnPad(detail)
         waitForLoad(detail)
         showPicker(in: detail)
         snap("pad-picker-light", settle: 3)

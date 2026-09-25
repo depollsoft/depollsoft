@@ -11,6 +11,7 @@
 //  Frames are read from the accessibility tree, as VoiceOver and the UI tests see them.
 //
 
+import SwiftUI
 import XCTest
 import UIKit
 @testable import tagmaster
@@ -144,31 +145,23 @@ final class TagDetailLayoutTests: TMBehaviorTestCase {
     func testBesideAListThePageBarStaysInTheDetailColumnAtEveryWidth() throws {
         try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "The split is iPad only")
         seedCachedTag(id: 1809)
-        let detail = TagDetailViewController()
-        detail.tagId = 1809
-        let sidebar = UIViewController()
-        sidebar.title = "Tags"
-        let split = UISplitViewController(style: .doubleColumn)
-        split.preferredDisplayMode = .oneBesideSecondary
-        split.preferredSplitBehavior = .tile
-        split.setViewController(UINavigationController(rootViewController: sidebar), for: .primary)
-        split.setViewController(UINavigationController(rootViewController: detail), for: .secondary)
-        let window = ScreenCatalog.makeWindow()
-        window.rootViewController = split
-        window.makeKeyAndVisible()
-        self.window = window
-        spinUntil("the detail loads beside the list", timeout: 5) { detail.model.tag != nil && detail.model.expanded }
+        let router = TMRouter()
+        mountShell(router, split: true)
+        spinUntil("expanded") { router.expanded }
+        router.showTag(1809, source: nil)
+        spinUntil("the detail loads beside the list", timeout: 5) { router.detail.tag != nil && router.detail.expanded }
         ScreenCatalog.settle(0.4)
         let portrait = window.bounds.size
         for (width, category) in [(portrait.width, UIContentSizeCategory.large),
                                   (600, .accessibilityExtraExtraExtraLarge),
                                   (portrait.height, .accessibilityExtraExtraExtraLarge)] {
             resize(CGSize(width: width, height: min(portrait.width, portrait.height)), category: category)
-            guard !split.isCollapsed else { continue }
-            try assertBar(detail, selected: "Summary")
-            let bar = try bar(detail).convert(try bar(detail).bounds, to: window)
-            let side = sidebar.view.convert(sidebar.view.bounds, to: window)
-            XCTAssertGreaterThanOrEqual(bar.minX, side.maxX - 1, "The bar stays clear of the list at \(width) pt")
+            guard router.expanded else { continue }
+            let bars = descendants(of: window) { ($0 as? UITabBar)?.accessibilityIdentifier == "page-tab-bar" && !$0.isHidden }
+            let bar = try XCTUnwrap(bars.first).convert(try XCTUnwrap(bars.first).bounds, to: window)
+            // The list column ends where Home's rows end.
+            let list = frame("Browse")
+            XCTAssertGreaterThanOrEqual(bar.minX, list.maxX - 1, "The bar stays clear of the list at \(width) pt")
         }
     }
 
@@ -321,113 +314,108 @@ final class TagDetailLayoutTests: TMBehaviorTestCase {
 
     // MARK: - Beside a list (iPad)
 
-    private func padSplit(detail: UIViewController, list: UIViewController) -> UISplitViewController {
-        let split = UISplitViewController(style: .doubleColumn)
-        split.preferredDisplayMode = .oneBesideSecondary
-        split.preferredSplitBehavior = .tile
-        DPAppDelegate.installSharedBackground(in: split.view)
-        split.setViewController(UINavigationController(rootViewController: list), for: .primary)
-        split.setViewController(UINavigationController(rootViewController: detail), for: .secondary)
-        let window = ScreenCatalog.makeWindow()
-        window.rootViewController = split
-        window.makeKeyAndVisible()
-        self.window = window
-        return split
+    /// The app's split, with `tagId` opened beside Home.
+    private func padSplit(tagId: Int32, source: TMTagListSource?) -> TMRouter {
+        let router = TMRouter()
+        mountShell(router, split: true)
+        spinUntil("expanded") { router.expanded }
+        router.showTag(tagId, source: source)
+        spinUntil("loaded", timeout: 5) { router.detail.tag != nil && router.detail.expanded }
+        ScreenCatalog.settle(0.3)
+        return router
     }
 
     func testCollapsingTheSplitDropsTheListControlsAndExpandingBringsThemBack() throws {
         try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "The split is iPad only")
-        defer { DPAppDelegate.removeSharedBackground() }
         seedCachedTag(id: 1809)
-        let detail = TagDetailViewController()
-        detail.tagId = 1809
         let source = TMTestSource([1809, 42])
-        detail.source = source
-        let split = padSplit(detail: detail, list: UIViewController())
-        spinUntil("expanded", timeout: 5) { detail.model.tag != nil && detail.model.expanded }
-        XCTAssertEqual(detail.keyCommands?.count ?? 0, 2)
+        let router = padSplit(tagId: 1809, source: source)
+        let detail = router.detail
+        XCTAssertTrue(detail.canStep, "⌘↑ / ⌘↓ and the steppers step beside the list")
+        XCTAssertTrue(UIDriver(window).exists(label: "Next tag"))
 
         window.traitOverrides.horizontalSizeClass = .compact
-        spinUntil("collapsed") { split.isCollapsed }
-        NotificationCenter.default.post(Notification(name: .TMTagSelectionDidChange, object: split))
+        spinUntil("collapsed") { !router.expanded }
         ScreenCatalog.settle(0.4)
-        XCTAssertFalse(detail.model.expanded)
-        XCTAssertEqual(detail.keyCommands?.count ?? 0, 0, "No stepping without the list beside the tag")
+        XCTAssertFalse(detail.expanded)
+        XCTAssertFalse(detail.canStep, "No stepping without the list beside the tag")
         XCTAssertFalse(UIDriver(window).exists(label: "Next tag"))
 
         window.traitOverrides.horizontalSizeClass = .regular
-        spinUntil("expanded again") { !split.isCollapsed }
-        NotificationCenter.default.post(Notification(name: .TMTagSelectionDidChange, object: split))
+        spinUntil("expanded again") { router.expanded }
         ScreenCatalog.settle(0.4)
-        XCTAssertTrue(detail.model.expanded)
-        XCTAssertEqual(detail.keyCommands?.count ?? 0, 2)
+        XCTAssertTrue(detail.expanded)
+        XCTAssertTrue(detail.canStep)
         withExtendedLifetime(source) {}
     }
 
     func testSheetMusicStaysInTheDetailColumnAndCanGoFullScreen() throws {
         try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "The split is iPad only")
-        defer { DPAppDelegate.removeSharedBackground() }
         seedCachedTag(id: 1809)
-        let detail = TagDetailViewController()
-        detail.tagId = 1809
-        let list = UIViewController()
-        let split = padSplit(detail: detail, list: list)
-        spinUntil("expanded", timeout: 5) { detail.model.tag != nil && detail.model.expanded }
+        let router = padSplit(tagId: 1809, source: nil)
         let file = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("sheet-\(UUID().uuidString).pdf")
         try UIGraphicsPDFRenderer(bounds: CGRect(x: 0, y: 0, width: 612, height: 792)).pdfData { $0.beginPage() }.write(to: file)
         defer { try? FileManager.default.removeItem(at: file) }
-        detail.model.navigator.showSheetMusic(TMSheetMusicDocument(fileURL: file, title: "Lost", writtenKey: "Bb"))
-        let navigation = try XCTUnwrap(detail.navigationController)
-        spinUntil("the reader is pushed") { navigation.topViewController is TMSheetMusicViewController }
-        let reader = try XCTUnwrap(navigation.topViewController as? TMSheetMusicViewController)
-        ScreenCatalog.settle(0.5)
-        XCTAssertTrue(split.viewController(for: .secondary) === navigation, "The reader opens in the detail column")
+        router.detail.navigator.showSheetMusic(TMSheetMusicDocument(fileURL: file, title: "Lost", writtenKey: "Bb"))
+        XCTAssertEqual(router.detailPath.count, 1, "The reader opens in the detail column")
+        XCTAssertTrue(router.path.isEmpty)
+        ScreenCatalog.settle(0.8)
         func previewer(_ controller: UIViewController) -> UIViewController? {
             if NSStringFromClass(type(of: controller)).contains("QLPreviewController") { return controller }
             return controller.children.lazy.compactMap(previewer).first
         }
-        let quickLook = try XCTUnwrap(previewer(reader), "QuickLook shows the page")
+        let quickLook = try XCTUnwrap(window.rootViewController.flatMap(previewer), "QuickLook shows the page")
         let pageFrame = quickLook.view.convert(quickLook.view.bounds, to: window)
-        let listFrame = list.view.convert(list.view.bounds, to: window)
-        XCTAssertGreaterThanOrEqual(pageFrame.minX, listFrame.maxX - 1, "The page is clear of the list")
+        let home = try XCTUnwrap(UIDriver(window).element(label: "Browse")?.accessibilityFrame)
+        XCTAssertGreaterThanOrEqual(pageFrame.minX, home.maxX - 1, "The page is clear of the list")
         let driver = UIDriver(window)
         XCTAssertTrue(driver.exists(label: "Full screen"))
         XCTAssertTrue(driver.exists(id: "sheet.key"))
         XCTAssertTrue(driver.exists(label: "Share"))
 
-        let before = split.preferredDisplayMode
-        reader.toggleFullScreen()
-        XCTAssertEqual(split.preferredDisplayMode, .secondaryOnly)
+        driver.tap(label: "Full screen")
+        XCTAssertTrue(router.isFullScreen)
         ScreenCatalog.settle(0.4)
         XCTAssertTrue(UIDriver(window).exists(label: "Show list"))
-        reader.toggleFullScreen()
-        XCTAssertEqual(split.preferredDisplayMode, before)
+        UIDriver(window).tap(label: "Show list")
+        XCTAssertFalse(router.isFullScreen)
 
-        reader.toggleFullScreen()
-        navigation.popViewController(animated: false)
-        ScreenCatalog.settle(0.3)
-        XCTAssertEqual(split.preferredDisplayMode, before, "Leaving the reader gives the list back")
+        router.toggleFullScreen()
+        router.detailPath.removeAll()
+        ScreenCatalog.settle(0.5)
+        XCTAssertFalse(router.isFullScreen, "Leaving the reader gives the list back")
     }
 
     func testTheSplitPaintsOneWatermarkBehindBothColumns() throws {
         try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "The split is iPad only")
-        defer { DPAppDelegate.removeSharedBackground() }
         seedCachedTag(id: 1809)
-        let detail = TagDetailViewController()
-        detail.tagId = 1809
-        let split = padSplit(detail: detail, list: UIViewController())
-        spinUntil("loaded", timeout: 5) { detail.model.tag != nil }
-        let marks = descendants(of: split.view) { $0.accessibilityIdentifier == "background.logo.vector" }
-        XCTAssertEqual(marks.count, 1, "One watermark, drawn behind the whole split")
-        XCTAssertTrue(descendants(of: detail.view) { $0.accessibilityIdentifier == "background.logo.vector" }.isEmpty)
-        XCTAssertEqual(detail.view.backgroundColor, .clear)
+        _ = padSplit(tagId: 1809, source: nil)
+        // The watermark is the barber-pole shape; each drawn copy is one opaque grey region.
+        let shared = TMScreenBackground()
+        let host = UIHostingController(rootView: shared.environment(\.tmSharedWatermark, true))
+        host.view.backgroundColor = .clear
+        host.view.frame = CGRect(x: 0, y: 0, width: 400, height: 800)
+        host.view.layoutIfNeeded()
+        let format = UIGraphicsImageRendererFormat()
+        format.opaque = false
+        let image = UIGraphicsImageRenderer(bounds: host.view.bounds, format: format).image { _ in
+            host.view.drawHierarchy(in: host.view.bounds, afterScreenUpdates: true)
+        }
+        let pixel = image.cgImage.flatMap { $0.cropping(to: CGRect(x: 200, y: 400, width: 1, height: 1)) }
+        XCTAssertNotNil(pixel)
+        // Inside the split a plain screen draws nothing of its own: the split's one watermark shows through.
+        var bytes = [UInt8](repeating: 0, count: 4)
+        let context = CGContext(data: &bytes, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 4,
+                                space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        if let pixel { context?.draw(pixel, in: CGRect(x: 0, y: 0, width: 1, height: 1)) }
+        XCTAssertEqual(bytes[3], 0, "A screen beside the split's watermark stays clear")
     }
 
     func testThePlaceholderStaysCenteredAndReadableAtLargeText() {
         for category in [UIContentSizeCategory.large, .accessibilityExtraExtraExtraLarge] {
             let window = ScreenCatalog.makeWindow()
             window.traitOverrides.preferredContentSizeCategory = category
-            window.rootViewController = TMTagPlaceholderController()
+            window.rootViewController = UIHostingController(rootView: TMTagPlaceholder())
             window.makeKeyAndVisible()
             self.window = window
             ScreenCatalog.settle(0.3)

@@ -224,7 +224,7 @@ final class QueryBehaviorTests: TMBehaviorTestCase {
 
     private static let browseTabs = ["Latest", "Rating", "Downloads", "Classic"]
 
-    private func browse() -> (TMHostingController, TMBrowseModel, UIDriver) {
+    private func browse() -> (TMHostedScreen, TMBrowseModel, UIDriver) {
         let controller = TMScreens.browse(navigator: navigator, catalog: fixtures.catalog)
         let driver = mountScreen(controller)
         return (controller, controller.listing as! TMBrowseModel, driver)

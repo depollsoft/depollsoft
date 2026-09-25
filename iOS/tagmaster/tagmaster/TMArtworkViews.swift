@@ -16,6 +16,14 @@
 
 import SwiftUI
 
+/// When motion artwork moves: only when asked, never under Reduce Motion, and
+/// never while the scene is not in front.
+enum TMMotion {
+    static func moves(animating: Bool, reduceMotion: Bool, scenePhase: ScenePhase) -> Bool {
+        animating && !reduceMotion && scenePhase == .active
+    }
+}
+
 // MARK: - Quartet
 
 /// The artwork's per-voice C arrays, which Swift imports as tuples.
@@ -39,7 +47,7 @@ struct TMQuartetStaff: View {
 
     static let size = CGSize(width: TMQuartetWidth, height: TMQuartetHeight)
 
-    private var moving: Bool { animating && !reduceMotion && scenePhase == .active }
+    private var moving: Bool { TMMotion.moves(animating: animating, reduceMotion: reduceMotion, scenePhase: scenePhase) }
 
     var body: some View {
         TimelineView(.animation(paused: !moving)) { timeline in
@@ -118,7 +126,7 @@ struct TMBarberPole: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var start = Date()
 
-    private var moving: Bool { animating && !reduceMotion && scenePhase == .active }
+    private var moving: Bool { TMMotion.moves(animating: animating, reduceMotion: reduceMotion, scenePhase: scenePhase) }
 
     var body: some View {
         TimelineView(.animation(paused: !moving)) { timeline in
@@ -137,9 +145,15 @@ struct TMBarberPole: View {
 
     /// How far the stripes have travelled along the pole's axis.
     func phase(at date: Date) -> CGFloat {
+        TMBarberPole.phase(elapsed: date.timeIntervalSince(start), moving: moving)
+    }
+
+    /// The stripes' travel `elapsed` seconds into a turn: one stripe step per
+    /// loop, and none at all while the pole holds still.
+    static func phase(elapsed: TimeInterval, moving: Bool) -> CGFloat {
         guard moving else { return 0 }
         let duration = Double(TMLoaderDurationSeconds)
-        let fraction = date.timeIntervalSince(start).truncatingRemainder(dividingBy: duration) / duration
+        let fraction = elapsed.truncatingRemainder(dividingBy: duration) / duration
         return CGFloat(fraction) * TMLoaderStripeStep * TMLoaderPhaseMultiplier
     }
 

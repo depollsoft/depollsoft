@@ -5,7 +5,7 @@
 //  The pieces every Tag Master list screen is drawn from: the barber-pole
 //  watermark, a tag row, the disclosure chevron and the shared tag store that
 //  loads rows on demand. Metrics are the UIKit ones they replaced (DPTagCell,
-//  TMLogoBackgroundView, UITableViewCell's disclosure indicator).
+//  the old UIKit watermark view, UITableViewCell's disclosure indicator).
 //
 
 import SwiftUI
@@ -82,7 +82,7 @@ extension View {
 // MARK: - Watermark
 
 /// The barber-pole artwork, fitted into the old 480x800 canvas exactly as
-/// TMLogoBackgroundView placed its shape layer.
+/// the UIKit watermark view placed its shape layer.
 struct TMLogoShape: Shape {
     func path(in rect: CGRect) -> Path {
         let canvasScale = min(rect.width / 480, rect.height / 800)
@@ -107,15 +107,17 @@ struct TMWatermark: View {
     }
 }
 
-/// A screen's backdrop: its page colour and the watermark. Beside the iPad split's
-/// one shared watermark it draws nothing: a grouped screen's colour then belongs
-/// on its hosting controller's view (`TMHostingController.pageColor`), where
-/// UIKit's sidebar treats it as the old screens' view background.
+/// A screen's backdrop: its page colour and the watermark. Inside the iPad
+/// split, which draws one watermark behind both columns, a plain screen stays
+/// clear and a grouped one keeps only its colour.
 struct TMScreenBackground: View {
     var grouped = false
+    @Environment(\.tmSharedWatermark) private var sharedWatermark
 
     var body: some View {
-        if !DPAppDelegate.hasSharedBackground() {
+        if sharedWatermark {
+            if grouped { Color(uiColor: .systemGroupedBackground).ignoresSafeArea() }
+        } else {
             ZStack {
                 Color(uiColor: grouped ? .systemGroupedBackground : .systemBackground).ignoresSafeArea()
                 TMWatermark()

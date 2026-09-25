@@ -70,9 +70,12 @@ struct TagDetailScreen: View {
     private var toolbar: some ToolbarContent {
         if model.showsSteppers {
             ToolbarItemGroup(placement: .topBarTrailing) {
+                // The shortcuts belong to the scene, so they step from either column.
                 TMBarButton("chevron.up", label: "Previous tag", action: model.stepToPreviousTag)
+                    .keyboardShortcut(.upArrow, modifiers: .command)
                     .disabled(!model.hasPreviousTag)
                 TMBarButton("chevron.down", label: "Next tag", action: model.stepToNextTag)
+                    .keyboardShortcut(.downArrow, modifiers: .command)
                     .disabled(!model.hasNextTag)
             }
         }

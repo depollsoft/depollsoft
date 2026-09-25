@@ -17,6 +17,8 @@
 		03F8F0F8A96EEF880A2B2454 /* TMTint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97A045485B4EE520358D9AE7 /* TMTint.swift */; };
 		BFBCA893AC642C54F965BAD2 /* TMActionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C05C67F11892B2DF98C5C116 /* TMActionSheet.swift */; };
 		9C05E9E2C8371BEAD5A1FE46 /* TMRecovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92D726D1D38D4584B30175D1 /* TMRecovery.swift */; };
+		E64EBF2053F028C4A56C30C3 /* TMRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F12B3A878D3B670DAE9AB06 /* TMRouter.swift */; };
+		6FC5C8177A9D482C725660E0 /* TMShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA012B6F987B119001808DBE /* TMShell.swift */; };
 		B4A1B0000000000000000001 /* TMTagLists.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1B0000000000000000000 /* TMTagLists.swift */; };
 		B4A1B0000000000000000005 /* TMListNamePrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1B0000000000000000004 /* TMListNamePrompt.swift */; };
 		3BCFBE99983A934374E96904 /* TMObjC.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CDE689E9C210051F00D6DE0 /* TMObjC.m */; };
@@ -24,7 +26,6 @@
 		AE8F8DA54E2D67C8E8BF9F6D /* TMListHosting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70A849AD37DD360C344031B3 /* TMListHosting.swift */; };
 		C430D17B88D9EC3C907C1E8B /* TMNamePrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E059A20ACE33DEE7B71A906 /* TMNamePrompt.swift */; };
 		BCD20DE285F188269B192285 /* TMTagListScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD9C83F919927CDD6BD20160 /* TMTagListScreen.swift */; };
-		894DB2D5211736293728D11F /* TMScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 641618D643B760175EE0985F /* TMScreens.swift */; };
 		A76E80C6A5DC1507770A8F00 /* TMCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EC5B79C2D909C654ECEBB62 /* TMCatalog.swift */; };
 		B7411C3AC92F359F8CA4222E /* TMHomeScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AE38704B7798962B3767C16 /* TMHomeScreen.swift */; };
 		CE7B059A99E06EC259C1E989 /* TMHomeTitle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52272D53D21BECAD0A7A6DCD /* TMHomeTitle.swift */; };
@@ -39,7 +40,6 @@
 		24A50CF911D0B1355C98C550 /* TagSummaryModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A69F467F262F2D18D87FAF7 /* TagSummaryModel.swift */; };
 		FBF14E8E602F7A82192FFB0E /* TagTracksModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B1D1727D3EEAE97BBDBF08F /* TagTracksModel.swift */; };
 		2ADB50A87D031B9D0CB65D42 /* TagDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 876C6BD50FC5AE1674C8965F /* TagDetailView.swift */; };
-		17ECC5C17476EDE5559B491B /* TagDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44825952C417FF8A8DDB055C /* TagDetailViewController.swift */; };
 		E2EFF9D6D38E02634BB5DAF6 /* TMFactsLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93F5CF6B3C96209FC8DAE5C1 /* TMFactsLayout.swift */; };
 		D1045840E91B81774ED9399E /* TagSummaryPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41A38683354555FA1038024C /* TagSummaryPage.swift */; };
 		17EEC296D4EB6A8768238F7A /* TMListChips.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94C4879D4F173897058073D5 /* TMListChips.swift */; };
@@ -66,6 +66,9 @@
 		770C1215EB5E9700C7032102 /* TMReviewFeedbackTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C36C96E7D1FF307734116155 /* TMReviewFeedbackTests.m */; };
 		87A98CE19182449419D1CFA9 /* TagmasterAppLogicTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A55ECC451157267C8FD5DA6 /* TagmasterAppLogicTests.m */; };
 		D452D485E8A8FCAF1446E344 /* TagDetailLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C37C8637F4CEC03ED771843 /* TagDetailLayoutTests.swift */; };
+		88B1B18AB26853AFE59192B7 /* TMShellTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = C830AC314319D8B9E2FA6AB5 /* TMShellTestSupport.swift */; };
+		BBCA090527B9C26B067B05EC /* TMRouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37A4BC3BD26DC513A62F59B6 /* TMRouterTests.swift */; };
+		CB34D931D876177CDE0CB921 /* TMArtworkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 083712943734B5BCD1340641 /* TMArtworkTests.swift */; };
 		B4A1A0000000000000000030 /* TMBehaviorTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000020 /* TMBehaviorTestSupport.swift */; };
 		B4A1A0000000000000000031 /* FavoritesBehaviorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000021 /* FavoritesBehaviorTests.swift */; };
 		B4A1A0000000000000000032 /* SearchBehaviorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000022 /* SearchBehaviorTests.swift */; };
@@ -89,7 +92,6 @@
 		63712EF215130B21007997CC /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EF115130B21007997CC /* Foundation.framework */; };
 		63712EF415130B21007997CC /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EF315130B21007997CC /* CoreGraphics.framework */; };
 		63712EFC15130B21007997CC /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 63712EFA15130B21007997CC /* InfoPlist.strings */; };
-		63712EFE15130B21007997CC /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 63712EFD15130B21007997CC /* main.m */; };
 		63712F0215130B21007997CC /* DPAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 63712F0115130B21007997CC /* DPAppDelegate.m */; };
 		63712F0E15130B21007997CC /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EEF15130B21007997CC /* UIKit.framework */; };
 		63712F0F15130B21007997CC /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EF115130B21007997CC /* Foundation.framework */; };
@@ -118,7 +120,6 @@
 		8EA8FFA093720EB5D0A6DC19 /* tagmasterUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DC0C8159FE876947BDD64C1 /* tagmasterUITests.swift */; };
 		8F2CF87F6E700F499150A9F1 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 3FFC1E12570BCD480C047A43 /* FirebaseAuth */; };
 		9D79AFECD87180F39C32C4C9 /* DPAppLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FC6EEE9DD5603384AEEA366 /* DPAppLog.swift */; };
-		A1B2C3D42F8C18B200000001 /* TMTestAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D42F8C18B200000000 /* TMTestAppDelegate.m */; };
 		C0BEE40E436AC235FE930B8B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F63FCEA8F84786898B2EADF7 /* Foundation.framework */; };
 		C0DEFACE00000000000010B2 /* DPTagXMLParserTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000010A2 /* DPTagXMLParserTests.m */; };
 		C0DEFACE00000000000010B3 /* DPRemoteLocationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000010A3 /* DPRemoteLocationTests.m */; };
@@ -126,8 +127,6 @@
 		C626097FE51C44A7BD3E6ADF /* DPTagNetworkTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 877D645B24654A1D98693468 /* DPTagNetworkTests.m */; };
 		C82AB1B080A949869C19F68A /* DPTrackModelTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 991D84FBF6F149678772B262 /* DPTrackModelTests.m */; };
 		A7C010000000000000000001 /* TMLogoArtwork.m in Sources */ = {isa = PBXBuildFile; fileRef = A7C010000000000000000011 /* TMLogoArtwork.m */; };
-		A7C010000000000000000002 /* TMLogoBackgroundView.m in Sources */ = {isa = PBXBuildFile; fileRef = A7C010000000000000000013 /* TMLogoBackgroundView.m */; };
-		A7C020000000000000000001 /* TMBarberPoleLoadingView.m in Sources */ = {isa = PBXBuildFile; fileRef = A7C020000000000000000011 /* TMBarberPoleLoadingView.m */; };
 		A7C030000000000000000001 /* TMQuartetArtwork.m in Sources */ = {isa = PBXBuildFile; fileRef = A7C030000000000000000011 /* TMQuartetArtwork.m */; };
 		A227F7054A25174F76DE5AA7 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 49E65067B024F5CE1F5B6B77 /* FirebaseCrashlytics */; };
 		FBA1E182FA41DDDD2DBA5807 /* FirebaseAnalyticsCore in Frameworks */ = {isa = PBXBuildFile; productRef = 8AB12ED67D69BE8D3BE58A93 /* FirebaseAnalyticsCore */; };
@@ -188,6 +187,8 @@
 		97A045485B4EE520358D9AE7 /* TMTint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMTint.swift; sourceTree = "<group>"; };
 		C05C67F11892B2DF98C5C116 /* TMActionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMActionSheet.swift; sourceTree = "<group>"; };
 		92D726D1D38D4584B30175D1 /* TMRecovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMRecovery.swift; sourceTree = "<group>"; };
+		4F12B3A878D3B670DAE9AB06 /* TMRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMRouter.swift; sourceTree = "<group>"; };
+		EA012B6F987B119001808DBE /* TMShell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMShell.swift; sourceTree = "<group>"; };
 		B4A1B0000000000000000000 /* TMTagLists.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMTagLists.swift; sourceTree = "<group>"; };
 		B4A1B0000000000000000004 /* TMListNamePrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMListNamePrompt.swift; sourceTree = "<group>"; };
 		EFE46C0AE763FAE6B2A7F79E /* TMObjC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMObjC.h; sourceTree = "<group>"; };
@@ -196,7 +197,6 @@
 		70A849AD37DD360C344031B3 /* TMListHosting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMListHosting.swift; sourceTree = "<group>"; };
 		2E059A20ACE33DEE7B71A906 /* TMNamePrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMNamePrompt.swift; sourceTree = "<group>"; };
 		DD9C83F919927CDD6BD20160 /* TMTagListScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMTagListScreen.swift; sourceTree = "<group>"; };
-		641618D643B760175EE0985F /* TMScreens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMScreens.swift; sourceTree = "<group>"; };
 		7EC5B79C2D909C654ECEBB62 /* TMCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMCatalog.swift; sourceTree = "<group>"; };
 		7AE38704B7798962B3767C16 /* TMHomeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMHomeScreen.swift; sourceTree = "<group>"; };
 		52272D53D21BECAD0A7A6DCD /* TMHomeTitle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMHomeTitle.swift; sourceTree = "<group>"; };
@@ -211,7 +211,6 @@
 		6A69F467F262F2D18D87FAF7 /* TagSummaryModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagSummaryModel.swift; sourceTree = "<group>"; };
 		5B1D1727D3EEAE97BBDBF08F /* TagTracksModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagTracksModel.swift; sourceTree = "<group>"; };
 		876C6BD50FC5AE1674C8965F /* TagDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagDetailView.swift; sourceTree = "<group>"; };
-		44825952C417FF8A8DDB055C /* TagDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagDetailViewController.swift; sourceTree = "<group>"; };
 		93F5CF6B3C96209FC8DAE5C1 /* TMFactsLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMFactsLayout.swift; sourceTree = "<group>"; };
 		41A38683354555FA1038024C /* TagSummaryPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagSummaryPage.swift; sourceTree = "<group>"; };
 		94C4879D4F173897058073D5 /* TMListChips.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMListChips.swift; sourceTree = "<group>"; };
@@ -236,6 +235,9 @@
 		C36C96E7D1FF307734116155 /* TMReviewFeedbackTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TMReviewFeedbackTests.m; sourceTree = "<group>"; };
 		1A55ECC451157267C8FD5DA6 /* TagmasterAppLogicTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TagmasterAppLogicTests.m; sourceTree = "<group>"; };
 		1C37C8637F4CEC03ED771843 /* TagDetailLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagDetailLayoutTests.swift; sourceTree = "<group>"; };
+		C830AC314319D8B9E2FA6AB5 /* TMShellTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMShellTestSupport.swift; sourceTree = "<group>"; };
+		37A4BC3BD26DC513A62F59B6 /* TMRouterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMRouterTests.swift; sourceTree = "<group>"; };
+		083712943734B5BCD1340641 /* TMArtworkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMArtworkTests.swift; sourceTree = "<group>"; };
 		B4A1A0000000000000000020 /* TMBehaviorTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMBehaviorTestSupport.swift; sourceTree = "<group>"; };
 		B4A1A0000000000000000021 /* FavoritesBehaviorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesBehaviorTests.swift; sourceTree = "<group>"; };
 		B4A1A0000000000000000022 /* SearchBehaviorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchBehaviorTests.swift; sourceTree = "<group>"; };
@@ -259,7 +261,6 @@
 		63712EF315130B21007997CC /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		63712EF915130B21007997CC /* tagmaster-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "tagmaster-Info.plist"; sourceTree = "<group>"; };
 		63712EFB15130B21007997CC /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		63712EFD15130B21007997CC /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		63712EFF15130B21007997CC /* tagmaster-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "tagmaster-Prefix.pch"; sourceTree = "<group>"; };
 		63712F0015130B21007997CC /* DPAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DPAppDelegate.h; sourceTree = "<group>"; };
 		63712F0115130B21007997CC /* DPAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPAppDelegate.m; sourceTree = "<group>"; };
@@ -300,8 +301,6 @@
 		85FC00CD3DF44A7CBF014280 /* DPTagModelExtendedTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTagModelExtendedTests.m; sourceTree = "<group>"; };
 		877D645B24654A1D98693468 /* DPTagNetworkTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTagNetworkTests.m; sourceTree = "<group>"; };
 		991D84FBF6F149678772B262 /* DPTrackModelTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTrackModelTests.m; sourceTree = "<group>"; };
-		A1B2C3D42F8C18B200000000 /* TMTestAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TMTestAppDelegate.m; sourceTree = "<group>"; };
-		A1B2C3D42F8C18B200000002 /* TMTestAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMTestAppDelegate.h; sourceTree = "<group>"; };
 		C0DEFACE00000000000010A2 /* DPTagXMLParserTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTagXMLParserTests.m; sourceTree = "<group>"; };
 		C0DEFACE00000000000010A3 /* DPRemoteLocationTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPRemoteLocationTests.m; sourceTree = "<group>"; };
 		C0DEFACE00000000000010A4 /* TagmasterModelsTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TagmasterModelsTests.m; sourceTree = "<group>"; };
@@ -310,11 +309,7 @@
 		F87508481E0BDCF004F43CEA /* tagmasterUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = tagmasterUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7C010000000000000000010 /* TMLogoArtwork.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMLogoArtwork.h; sourceTree = "<group>"; };
 		A7C010000000000000000011 /* TMLogoArtwork.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TMLogoArtwork.m; sourceTree = "<group>"; };
-		A7C010000000000000000012 /* TMLogoBackgroundView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMLogoBackgroundView.h; sourceTree = "<group>"; };
-		A7C010000000000000000013 /* TMLogoBackgroundView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TMLogoBackgroundView.m; sourceTree = "<group>"; };
-		A7C020000000000000000010 /* TMBarberPoleLoadingView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMBarberPoleLoadingView.h; sourceTree = "<group>"; };
 		A7C030000000000000000010 /* TMQuartetArtwork.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMQuartetArtwork.h; sourceTree = "<group>"; };
-		A7C020000000000000000011 /* TMBarberPoleLoadingView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TMBarberPoleLoadingView.m; sourceTree = "<group>"; };
 		A7C030000000000000000011 /* TMQuartetArtwork.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TMQuartetArtwork.m; sourceTree = "<group>"; };
 		5E07E69E458972825B43D2BF /* PrivacyChoicesTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PrivacyChoicesTests.swift; path = tagmasterTests/PrivacyChoicesTests.swift; sourceTree = "<group>"; };
 		FC7D60E9982541B0A82AC843 /* ScreenCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ScreenCatalog.swift; path = ../shared/ScreenCatalog.swift; sourceTree = "<group>"; };
@@ -483,16 +478,10 @@
 				63D9472B151465B5000C8784 /* Barbershop */,
 				63712F0015130B21007997CC /* DPAppDelegate.h */,
 				63712F0115130B21007997CC /* DPAppDelegate.m */,
-				A7C020000000000000000010 /* TMBarberPoleLoadingView.h */,
 				A7C030000000000000000010 /* TMQuartetArtwork.h */,
-				A7C020000000000000000011 /* TMBarberPoleLoadingView.m */,
 				A7C030000000000000000011 /* TMQuartetArtwork.m */,
 				A7C010000000000000000010 /* TMLogoArtwork.h */,
 				A7C010000000000000000011 /* TMLogoArtwork.m */,
-				A7C010000000000000000012 /* TMLogoBackgroundView.h */,
-				A7C010000000000000000013 /* TMLogoBackgroundView.m */,
-				A1B2C3D42F8C18B200000002 /* TMTestAppDelegate.h */,
-				A1B2C3D42F8C18B200000000 /* TMTestAppDelegate.m */,
 				1E927AD522AB2BF20018E370 /* DPAppDelegate.swift */,
 				638E735917F769E7000FFE53 /* DPTagDetailController.h */,
 				DCC000000000000000000002 /* TMDetailLayout.m */,
@@ -510,7 +499,6 @@
 				52272D53D21BECAD0A7A6DCD /* TMHomeTitle.swift */,
 				7AE38704B7798962B3767C16 /* TMHomeScreen.swift */,
 				7EC5B79C2D909C654ECEBB62 /* TMCatalog.swift */,
-				641618D643B760175EE0985F /* TMScreens.swift */,
 				DD9C83F919927CDD6BD20160 /* TMTagListScreen.swift */,
 				2E059A20ACE33DEE7B71A906 /* TMNamePrompt.swift */,
 				70A849AD37DD360C344031B3 /* TMListHosting.swift */,
@@ -519,6 +507,8 @@
 				EFE46C0AE763FAE6B2A7F79E /* TMObjC.h */,
 				B4A1B0000000000000000004 /* TMListNamePrompt.swift */,
 				B4A1B0000000000000000000 /* TMTagLists.swift */,
+				EA012B6F987B119001808DBE /* TMShell.swift */,
+				4F12B3A878D3B670DAE9AB06 /* TMRouter.swift */,
 				92D726D1D38D4584B30175D1 /* TMRecovery.swift */,
 				639F293A1800C45300517583 /* DPTagVideoController.h */,
 				639F293B1800C45300517583 /* DPTagVideoController.m */,
@@ -543,7 +533,6 @@
 				94C4879D4F173897058073D5 /* TMListChips.swift */,
 				41A38683354555FA1038024C /* TagSummaryPage.swift */,
 				93F5CF6B3C96209FC8DAE5C1 /* TMFactsLayout.swift */,
-				44825952C417FF8A8DDB055C /* TagDetailViewController.swift */,
 				876C6BD50FC5AE1674C8965F /* TagDetailView.swift */,
 				5B1D1727D3EEAE97BBDBF08F /* TagTracksModel.swift */,
 				6A69F467F262F2D18D87FAF7 /* TagSummaryModel.swift */,
@@ -569,7 +558,6 @@
 			children = (
 				63712EF915130B21007997CC /* tagmaster-Info.plist */,
 				63712EFA15130B21007997CC /* InfoPlist.strings */,
-				63712EFD15130B21007997CC /* main.m */,
 				63712EFF15130B21007997CC /* tagmaster-Prefix.pch */,
 			);
 			name = "Supporting Files";
@@ -591,6 +579,9 @@
 				AF1059DD3F994302AA09C4FD /* DPHomeViewControllerExtensionTests.swift */,
 				B4A1A0000000000000000013 /* TMBalanceAudioPlayerTests.swift */,
 				B4A1A0000000000000000020 /* TMBehaviorTestSupport.swift */,
+				083712943734B5BCD1340641 /* TMArtworkTests.swift */,
+				37A4BC3BD26DC513A62F59B6 /* TMRouterTests.swift */,
+				C830AC314319D8B9E2FA6AB5 /* TMShellTestSupport.swift */,
 				D39DFEF726D6A0AD6BD25590 /* SettingsBehaviorTests.swift */,
 				42E606561E7B83893E787549 /* QueryBehaviorTests.swift */,
 				6AB6D145785607DE279B141C /* TMListTestSupport.swift */,
@@ -866,13 +857,9 @@
 			files = (
 				1E927AD622AB2BF20018E370 /* DPAppDelegate.swift in Sources */,
 				638E73A117F7E21A000FFE53 /* DPHomeViewController.m in Sources */,
-				63712EFE15130B21007997CC /* main.m in Sources */,
 				63712F0215130B21007997CC /* DPAppDelegate.m in Sources */,
-				A7C020000000000000000001 /* TMBarberPoleLoadingView.m in Sources */,
 				A7C030000000000000000001 /* TMQuartetArtwork.m in Sources */,
 				A7C010000000000000000001 /* TMLogoArtwork.m in Sources */,
-				A7C010000000000000000002 /* TMLogoBackgroundView.m in Sources */,
-				A1B2C3D42F8C18B200000001 /* TMTestAppDelegate.m in Sources */,
 				63D9471F1513198D000C8784 /* DPTag.m in Sources */,
 				639F292917FA643700517583 /* DPSettingsController.m in Sources */,
 				63D9472215145BBC000C8784 /* DPRemoteLocation.m in Sources */,
@@ -890,7 +877,6 @@
 				CE7B059A99E06EC259C1E989 /* TMHomeTitle.swift in Sources */,
 				B7411C3AC92F359F8CA4222E /* TMHomeScreen.swift in Sources */,
 				A76E80C6A5DC1507770A8F00 /* TMCatalog.swift in Sources */,
-				894DB2D5211736293728D11F /* TMScreens.swift in Sources */,
 				BCD20DE285F188269B192285 /* TMTagListScreen.swift in Sources */,
 				C430D17B88D9EC3C907C1E8B /* TMNamePrompt.swift in Sources */,
 				AE8F8DA54E2D67C8E8BF9F6D /* TMListHosting.swift in Sources */,
@@ -905,7 +891,6 @@
 				17EEC296D4EB6A8768238F7A /* TMListChips.swift in Sources */,
 				D1045840E91B81774ED9399E /* TagSummaryPage.swift in Sources */,
 				E2EFF9D6D38E02634BB5DAF6 /* TMFactsLayout.swift in Sources */,
-				17ECC5C17476EDE5559B491B /* TagDetailViewController.swift in Sources */,
 				2ADB50A87D031B9D0CB65D42 /* TagDetailView.swift in Sources */,
 				FBF14E8E602F7A82192FFB0E /* TagTracksModel.swift in Sources */,
 				24A50CF911D0B1355C98C550 /* TagSummaryModel.swift in Sources */,
@@ -913,6 +898,8 @@
 				523346955E2C4736E2847840 /* TMArtworkViews.swift in Sources */,
 				B4A1B0000000000000000005 /* TMListNamePrompt.swift in Sources */,
 				B4A1B0000000000000000001 /* TMTagLists.swift in Sources */,
+				6FC5C8177A9D482C725660E0 /* TMShell.swift in Sources */,
+				E64EBF2053F028C4A56C30C3 /* TMRouter.swift in Sources */,
 				9C05E9E2C8371BEAD5A1FE46 /* TMRecovery.swift in Sources */,
 				BFBCA893AC642C54F965BAD2 /* TMActionSheet.swift in Sources */,
 				03F8F0F8A96EEF880A2B2454 /* TMTint.swift in Sources */,
@@ -944,6 +931,9 @@
 				4B737AE82EE04FD78D0EA597 /* DPHomeViewControllerExtensionTests.swift in Sources */,
 				B4A1A0000000000000000003 /* TMBalanceAudioPlayerTests.swift in Sources */,
 				B4A1A0000000000000000030 /* TMBehaviorTestSupport.swift in Sources */,
+				CB34D931D876177CDE0CB921 /* TMArtworkTests.swift in Sources */,
+				BBCA090527B9C26B067B05EC /* TMRouterTests.swift in Sources */,
+				88B1B18AB26853AFE59192B7 /* TMShellTestSupport.swift in Sources */,
 				E641EBD58C4F14EA04088C84 /* SettingsBehaviorTests.swift in Sources */,
 				989CDEB5A598DB3E24E0B4CB /* QueryBehaviorTests.swift in Sources */,
 				EDDD53E6339D688A6F4AA4CB /* TMListTestSupport.swift in Sources */,

@@ -109,11 +109,19 @@ struct UIDriver {
 
     @discardableResult
     func tap(label: String, file: StaticString = #filePath, line: UInt = #line) -> Bool {
-        guard let element = element(label: label) else {
+        let matches = elements.filter { $0.isAccessibilityElement && $0.accessibilityLabel == label }
+        guard !matches.isEmpty else {
             XCTFail("No element labelled \(label). Present: \(labels)", file: file, line: line)
             return false
         }
-        return activate(element, file: file, line: line)
+        // A SwiftUI toolbar item is exposed twice: UIKit's bar item host, which does not
+        // activate, and the SwiftUI node inside it, which does. Take the first that acts.
+        for element in matches where element.accessibilityActivate() {
+            ScreenCatalog.settle(0.05)
+            return true
+        }
+        XCTFail("\(label) did not activate", file: file, line: line)
+        return false
     }
 
     /// Runs a named custom action (a swipe action, "Move up", a context menu item VoiceOver exposes).

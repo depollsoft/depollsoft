@@ -32,7 +32,7 @@ final class SearchBehaviorTests: TMBehaviorTestCase {
         super.tearDown()
     }
 
-    private func search() -> (TMHostingController, TMSearchModel, UIDriver) {
+    private func search() -> (TMHostedScreen, TMSearchModel, UIDriver) {
         let controller = TMScreens.search(navigator: navigator)
         let driver = mountScreen(controller, size: CGSize(width: 375, height: 1400))
         return (controller, controller.searchModel!, driver)
@@ -52,10 +52,11 @@ final class SearchBehaviorTests: TMBehaviorTestCase {
 
     func testSearchScreenOffersARunSearchAction() {
         let (controller, model, driver) = search()
-        XCTAssertEqual(controller.navigationItem.rightBarButtonItem?.accessibilityLabel, "Search")
+        _ = controller
         model.text = "coney"
-        _ = driver
-        press(controller.navigationItem.rightBarButtonItem)
+        // The bar's Search runs the query; the field carries the same name, so take the button.
+        let run = driver.elements.last { $0.isAccessibilityElement && $0.accessibilityLabel == "Search" && $0.accessibilityTraits.contains(.button) }
+        XCTAssertTrue(run?.accessibilityActivate() ?? false)
         XCTAssertEqual(navigator.destinations, [.results(TMTagQuery(text: "coney", sortBy: DPTagSortTitle))])
     }
 
@@ -159,11 +160,13 @@ final class SearchBehaviorTests: TMBehaviorTestCase {
 
     func testTheRealNavigatorPushesAResultsScreen() {
         let search = TMScreens.search()
-        let navigation = mountCapturingPushes(search)
+        mountInNavigation(search)
         search.searchModel?.text = "coney"
         search.searchModel?.search()
-        let results = navigation.pushed.last as? TMHostingController
-        XCTAssertEqual((results?.listing as? TMQueryModel)?.query.text, "coney")
+        guard case .results(let query)? = search.router?.path.last?.destination else {
+            return XCTFail("Search opens a results screen")
+        }
+        XCTAssertEqual(query.text, "coney")
     }
 
     // MARK: - Segments or a menu
