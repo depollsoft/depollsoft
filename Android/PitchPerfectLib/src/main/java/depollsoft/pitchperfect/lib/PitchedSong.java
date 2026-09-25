@@ -9,7 +9,7 @@ public class PitchedSong implements Comparable<PitchedSong> {
 
   private StateField<Key> key = new StateField<>(null);
 
-  private StateField<String> uuid = new StateField<>(null);
+  private String uuid = null;
 
   private StateField<Boolean> isPlaying = new StateField<>(false);
 
@@ -29,7 +29,7 @@ public class PitchedSong implements Comparable<PitchedSong> {
   }
 
   public String getId() {
-    return this.uuid.get();
+    return this.uuid;
   }
 
   public boolean getIsPlaying() {
@@ -55,7 +55,7 @@ public class PitchedSong implements Comparable<PitchedSong> {
   }
 
   public void setId(String value) {
-    this.uuid.set(value);
+    this.uuid = value;
   }
 
   public void setKey(Key value) {
