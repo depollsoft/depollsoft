@@ -280,14 +280,24 @@ struct TMPageTabBarBridge: UIViewControllerRepresentable {
                 || tabs.traitOverrides.horizontalSizeClass != .compact {
                 tabs.traitOverrides.horizontalSizeClass = .compact
             }
+            // The UIKit page bar kept its full height, and 44-point targets, in a
+            // phone's landscape; SwiftUI's would fall back to the short compact bar.
+            if !tabs.traitOverrides.contains(UITraitVerticalSizeClass.self)
+                || tabs.traitOverrides.verticalSizeClass != .regular {
+                tabs.traitOverrides.verticalSizeClass = .regular
+            }
             // The pages sit over the detail's own watermark, as the UIKit pages did.
             if tabs.view.backgroundColor != .clear { tabs.view.backgroundColor = .clear }
             let columnClass = tabs.parent?.traitCollection.horizontalSizeClass ?? .unspecified
+            let heightClass = tabs.parent?.traitCollection.verticalSizeClass ?? .unspecified
             for page in tabs.viewControllers ?? [] {
                 if page.viewIfLoaded?.backgroundColor != .clear { page.viewIfLoaded?.backgroundColor = .clear }
                 let overrides = page.traitOverrides
                 if !overrides.contains(UITraitHorizontalSizeClass.self) || overrides.horizontalSizeClass != columnClass {
                     page.traitOverrides.horizontalSizeClass = columnClass
+                }
+                if !overrides.contains(UITraitVerticalSizeClass.self) || overrides.verticalSizeClass != heightClass {
+                    page.traitOverrides.verticalSizeClass = heightClass
                 }
             }
         }

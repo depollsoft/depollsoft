@@ -63,6 +63,8 @@ struct TMBrowseScreen: View {
                             .accessibilityIdentifier("page-\(page.title)")
                     }
                     .tag(index)
+                    // The identifiers the UI tests and store capture find the bar and its tabs by.
+                    .background(TMPageTabBarBridge(titles: TMBrowsePage.all.map(\.title)))
             }
         }
         .tint(TMTheme.accent)

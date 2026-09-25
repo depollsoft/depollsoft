@@ -37,13 +37,14 @@ final class ConsentUITests: XCTestCase {
 
     private func openPrivacy(_ app: XCUIApplication) {
         let settingsButton = app.buttons["Settings"].firstMatch
-        let settings = settingsButton.exists ? settingsButton : app.tables.staticTexts["Settings"].firstMatch
-        XCTAssertTrue(settings.waitForExistence(timeout: 15))
+        XCTAssertTrue(settingsButton.waitForExistence(timeout: 15))
+        let settings = settingsButton
         settings.tap()
-        // A button in SwiftUI Settings; a table cell's text where Settings is still UIKit.
-        let privacyButton = app.buttons["Privacy choices"].firstMatch
-        let privacy = privacyButton.waitForExistence(timeout: 5) ? privacyButton : app.staticTexts["Privacy choices"].firstMatch
-        for _ in 0..<4 where !privacy.isHittable { app.swipeUp() }
+        // A button in SwiftUI Settings. A SwiftUI list only creates the rows it
+        // has laid out, so scroll until the row exists and can be tapped.
+        let privacy = app.buttons["Privacy choices"].firstMatch
+        _ = privacy.waitForExistence(timeout: 3)
+        for _ in 0..<6 where !(privacy.exists && privacy.isHittable) { app.swipeUp() }
         XCTAssertTrue(privacy.waitForExistence(timeout: 5))
         privacy.tap()
         XCTAssertTrue(app.switches["Usage analytics"].waitForExistence(timeout: 5))

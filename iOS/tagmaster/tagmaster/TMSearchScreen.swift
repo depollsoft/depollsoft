@@ -81,7 +81,21 @@ struct TMSearchScreen: View {
         .scrollContentBackground(.hidden)
         .scrollDismissesKeyboard(.immediately)
         .searchable(text: $model.text, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search")
+        .tmKeepsBarWhileSearching()
         .onSubmit(of: .search) { model.search() }
         .background { TMScreenBackground(grouped: true) }
+    }
+}
+
+extension View {
+    /// The bar and its Search action stay put while the field is in use, as the
+    /// UIKit search controller (hidesNavigationBarDuringPresentation = NO) kept them.
+    @ViewBuilder
+    func tmKeepsBarWhileSearching() -> some View {
+        if #available(iOS 17.1, *) {
+            searchPresentationToolbarBehavior(.avoidHidingContent)
+        } else {
+            self
+        }
     }
 }

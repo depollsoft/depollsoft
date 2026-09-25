@@ -34,9 +34,14 @@ struct TagMasterApp: App {
                 .onOpenURL { url in
                     if !DPAppDelegate.handleAuthURL(url) { router.open(url) }
                 }
-                .onChange(of: scenePhase) { _, phase in
-                    guard phase == .active, let presenter = TMRouteNavigator.topController() else { return }
-                    TelemetryConsent.presentIfNeeded(from: presenter)
+                // Every activation, the first included, offers Privacy choices until
+                // they are made; the hop lets the window become key first.
+                .onChange(of: scenePhase, initial: true) { _, phase in
+                    guard phase == .active else { return }
+                    DispatchQueue.main.async {
+                        guard let presenter = TMRouteNavigator.topController() else { return }
+                        TelemetryConsent.presentIfNeeded(from: presenter)
+                    }
                 }
         }
     }
