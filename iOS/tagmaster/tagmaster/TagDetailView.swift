@@ -80,6 +80,8 @@ struct TagDetailScreen: View {
             }
         }
         if !model.isEmpty {
+            // While a refresh is out, its barber pole stands in the bar on its own,
+            // outside the glass the buttons share, as the UIKit loading item did.
             if model.expanded {
                 ToolbarItemGroup(placement: .topBarTrailing) {
                     TMBarButton(model.isFavorite ? "heart.fill" : "heart",
@@ -91,12 +93,19 @@ struct TagDetailScreen: View {
                     TMBarButton("text.badge.plus", label: "Add to list") { model.showListPicker(from: .toolbar) }
                         .accessibilityIdentifier("tag.addToList")
                         .tmListPicker(model: model, source: .toolbar)
-                    refreshItem
-                    shareItem
+                    if !model.fetchPending {
+                        refreshButton
+                        shareItem
+                    }
+                }
+                if model.fetchPending {
+                    refreshingItem
+                    ToolbarItemGroup(placement: .topBarTrailing) { shareItem }
                 }
             } else {
+                if model.fetchPending { refreshingItem }
                 ToolbarItemGroup(placement: .topBarTrailing) {
-                    refreshItem
+                    if !model.fetchPending { refreshButton }
                     TMBarButton("tag", label: "Favorite and Teachable options", action: model.showActions)
                         .accessibilityIdentifier("tag.actions")
                         .background(TMActionSheet(isPresented: $model.actionsPresented, actions: model.tagActions))
@@ -107,16 +116,26 @@ struct TagDetailScreen: View {
         }
     }
 
-    @ViewBuilder
-    private var refreshItem: some View {
-        if model.fetchPending {
-            TMBarberPole(compact: true, darkSurface: true, animating: model.screenVisible)
-                .accessibilityElement()
-                .accessibilityLabel("Refreshing tag")
-                .accessibilityAddTraits(.isStaticText)
+    private var refreshButton: some View {
+        TMBarButton("arrow.clockwise", label: "Refresh", action: model.refresh)
+    }
+
+    @ToolbarContentBuilder
+    private var refreshingItem: some ToolbarContent {
+        if #available(iOS 26.0, *) {
+            ToolbarItem(placement: .topBarTrailing) { refreshPole }
+                .sharedBackgroundVisibility(.hidden)
         } else {
-            TMBarButton("arrow.clockwise", label: "Refresh", action: model.refresh)
+            ToolbarItem(placement: .topBarTrailing) { refreshPole }
         }
+    }
+
+    private var refreshPole: some View {
+        TMBarberPole(compact: true, darkSurface: true, animating: model.screenVisible)
+            .accessibilityElement()
+            .accessibilityLabel("Refreshing tag")
+            .accessibilityAddTraits(.isStaticText)
+            .accessibilityIdentifier("tag.refreshing")
     }
 
     @ViewBuilder
@@ -233,6 +252,9 @@ struct TagLoadingView: View {
             // Announced once per request, when the screen can actually be heard.
             guard moving, announcedGeneration != model.requestGeneration else { return }
             announcedGeneration = model.requestGeneration
+            // The screen-change sound and announcement, then focus on the status, as
+            // the UIKit detail posted UIAccessibilityScreenChangedNotification with it.
+            UIAccessibility.post(notification: .screenChanged, argument: nil)
             statusFocused = true
         }
     }

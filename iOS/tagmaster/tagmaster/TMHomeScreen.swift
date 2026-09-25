@@ -272,7 +272,8 @@ struct TMHomeScreen: View {
                     TMSectionHeader("Lists")
                 }
                 Section {
-                    ForEach(model.favorites, id: \.self) { tagId in
+                    ForEach(TMListedTag.keyed(model.favorites)) { listed in
+                        let tagId = listed.tagId
                         let selected = model.selectedTagId == tagId
                         Button { model.openTag(tagId) } label: {
                             TMTagRow(content: TMTagRowContent(tagId: tagId, tag: model.store.tag(tagId)),
@@ -282,7 +283,7 @@ struct TMHomeScreen: View {
                         }
                         .tmTagRowAccessibility(TMTagRowContent(tagId: tagId, tag: model.store.tag(tagId)), selected: selected)
                         .tmTagListRow(selected: selected, groupedInset: tagId != model.favorites.last)
-                        .id(tagId)
+                        .tmScrollTarget(listed)
                     }
                     .onDelete { model.removeFavorites(at: $0) }
                     .onMove { model.moveFavorite(from: $0, to: $1) }
@@ -326,12 +327,13 @@ struct TMHomeScreen: View {
         return Button { if !loading { model.activate(title) } } label: {
             HStack(spacing: 0) {
                 Text(title)
-                    .font(TMTheme.font(.body))
+                    .tmFont(.body)
                     .foregroundStyle(loading ? Color(uiColor: .secondaryLabel) : Color(uiColor: .label))
                 Spacer(minLength: 8)
                 if loading {
                     TMBarberPole(compact: true).accessibilityHidden(true)
-                } else {
+                } else if !model.isEditing {
+                    // A table in edit mode hid every row's accessory.
                     TMDisclosureChevron()
                 }
             }
@@ -346,7 +348,7 @@ struct TMHomeScreen: View {
     @ViewBuilder
     private var listsRows: some View {
         Button { model.openTeachable() } label: {
-            TMListCountRow(title: "Teachable Tags", count: model.teachableCount)
+            TMListCountRow(title: "Teachable Tags", count: model.teachableCount, showsChevron: !model.isEditing)
         }
         .accessibilityIdentifier("home.lists.teachable")
         .tmTextRow()
@@ -377,7 +379,7 @@ struct TMHomeScreen: View {
                     .foregroundStyle(TMTheme.tint(DPAppDelegate.accentColor(), dimmed: dimmed))
                     .frame(width: 24)
                     .padding(.trailing, 15)
-                Text("New list…").font(TMTheme.font(.body)).foregroundStyle(Color(uiColor: .label))
+                Text("New list…").tmFont(.body).foregroundStyle(Color(uiColor: .label))
                 Spacer(minLength: 0)
             }
             .contentShape(Rectangle())
@@ -427,10 +429,10 @@ struct TMListCountRow: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            Text(title).font(TMTheme.font(.body)).foregroundStyle(Color(uiColor: .label))
+            Text(title).tmFont(.body).foregroundStyle(Color(uiColor: .label))
             Spacer(minLength: 8)
             Text(TMHomeModel.countLabel(count))
-                .font(TMTheme.font(.body))
+                .tmFont(.body)
                 .foregroundStyle(Color(uiColor: .secondaryLabel))
             if showsChevron { TMDisclosureChevron().padding(.leading, 8) }
         }
@@ -483,7 +485,7 @@ struct TMHomeCredits: View {
     private func link(_ title: String, _ url: String, _ identifier: String) -> some View {
         Button { open(URL(string: url)!) } label: {
             Text(title)
-                .font(TMTheme.font(.footnote))
+                .tmFont(.footnote)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(TMTheme.tint(DPAppDelegate.accentColor(), dimmed: dimmed))
                 .padding(4)

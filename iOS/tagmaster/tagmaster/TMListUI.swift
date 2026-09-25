@@ -36,13 +36,40 @@ enum TMTheme {
         return DPAppDelegate.accentColor().resolvedColor(with: traits).withAlphaComponent(alpha)
     })
 
-    /// A text style as UIKit resolves it, so SwiftUI text matches UILabel metrics exactly.
-    static func font(_ style: UIFont.TextStyle) -> Font { Font(UIFont.preferredFont(forTextStyle: style)) }
+}
 
-    static func boldFont(_ style: UIFont.TextStyle) -> Font {
-        let base = UIFont.preferredFont(forTextStyle: style)
-        let descriptor = base.fontDescriptor.withSymbolicTraits(.traitBold) ?? base.fontDescriptor
-        return Font(UIFont(descriptor: descriptor, size: 0))
+extension DynamicTypeSize {
+    /// The text size as UIKit traits, for resolving fonts the way UILabel does.
+    var tmTraits: UITraitCollection {
+        UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(self))
+    }
+
+    /// A text style as UIKit resolves it at this size, so SwiftUI text matches UILabel metrics exactly.
+    func tmFont(_ style: UIFont.TextStyle, bold: Bool = false) -> UIFont {
+        let base = UIFont.preferredFont(forTextStyle: style, compatibleWith: tmTraits)
+        guard bold, let descriptor = base.fontDescriptor.withSymbolicTraits(.traitBold) else { return base }
+        return UIFont(descriptor: descriptor, size: 0)
+    }
+
+    var tmBodyPointSize: CGFloat { tmFont(.body).pointSize }
+}
+
+/// Sets a UIKit text style at the text size in the environment, so a window's (or
+/// the system's) text size change re-renders the text, as UILabel's
+/// adjustsFontForContentSizeCategory did.
+private struct TMFontModifier: ViewModifier {
+    let style: UIFont.TextStyle
+    let bold: Bool
+    @Environment(\.dynamicTypeSize) private var size
+
+    func body(content: Content) -> some View {
+        content.font(Font(size.tmFont(style, bold: bold)))
+    }
+}
+
+extension View {
+    func tmFont(_ style: UIFont.TextStyle, bold: Bool = false) -> some View {
+        modifier(TMFontModifier(style: style, bold: bold))
     }
 }
 
@@ -78,7 +105,16 @@ struct TMLabelBox: Layout {
 extension View {
     /// Lays this text, set in `style`, out on UILabel's grid.
     func tmLabelMetrics(_ style: UIFont.TextStyle) -> some View {
-        TMLabelBox(font: .preferredFont(forTextStyle: style)) { self }
+        modifier(TMLabelMetricsModifier(style: style))
+    }
+}
+
+private struct TMLabelMetricsModifier: ViewModifier {
+    let style: UIFont.TextStyle
+    @Environment(\.dynamicTypeSize) private var size
+
+    func body(content: Content) -> some View {
+        TMLabelBox(font: size.tmFont(style)) { content }
     }
 }
 
@@ -210,19 +246,37 @@ final class TMTagStore {
     /// Bumped whenever a fetch lands, so rows reading the cache look again.
     private(set) var revision = 0
     private(set) var loading: Set<Int> = []
-    private var failed: Set<Int> = []
+    /// When each failed fetch failed. A row asks again once `retryInterval` has
+    /// passed, and every failure is forgotten when the app comes back or the lists
+    /// change, as the UIKit cell fetched afresh each time it was configured.
+    private var failed: [Int: Date] = [:]
     /// Fetched tags, for a loader that does not also fill the cache.
     private var fetched: [Int: DPTag] = [:]
     private let cached: (Int) -> DPTag?
     private let load: Loader
+    private let now: () -> Date
+    static let retryInterval: TimeInterval = 30
+    private var observers: [NSObjectProtocol] = []
 
     init(cached: @escaping (Int) -> DPTag? = { DPTag.load(fromCache: Int32($0)) },
          load: @escaping Loader = { id in
              // loadTagById: raises on some malformed responses; a row just shows its id then.
              TMObjC.catching { DPTag.load(byId: Int32(id), refresh: false) } as? DPTag
-         }) {
+         },
+         now: @escaping () -> Date = Date.init) {
         self.cached = cached
         self.load = load
+        self.now = now
+        let center = NotificationCenter.default
+        for name in [UIApplication.didBecomeActiveNotification, Notification.Name.userDataChanged] {
+            observers.append(center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated { self?.retryFailed() }
+            })
+        }
+    }
+
+    isolated deinit {
+        observers.forEach(NotificationCenter.default.removeObserver)
     }
 
     /// The tag for a row, starting a fetch when it is not cached. The cache is
@@ -230,30 +284,73 @@ final class TMTagStore {
     func tag(_ id: Int) -> DPTag? {
         _ = revision
         if let tag = cached(id) ?? fetched[id] { return tag }
-        if !loading.contains(id), !failed.contains(id) { fetch(id) }
+        if !loading.contains(id), canFetch(id) { fetch(id) }
         return nil
     }
 
     func isLoading(_ id: Int) -> Bool { loading.contains(id) }
 
-    /// Forgets failed fetches so rows try again (a retry, or tests starting afresh).
+    private func canFetch(_ id: Int) -> Bool {
+        guard let failedAt = failed[id] else { return true }
+        return now().timeIntervalSince(failedAt) >= TMTagStore.retryInterval
+    }
+
+    /// Forgets failed fetches so their rows ask again.
+    func retryFailed() {
+        guard !failed.isEmpty else { return }
+        failed = [:]
+        revision += 1
+    }
+
+    /// Forgets failed and fetched tags (tests starting afresh).
     func reset() {
-        failed = []
+        failed = [:]
         fetched = [:]
         revision += 1
     }
 
     private func fetch(_ id: Int) {
         loading.insert(id)
+        failed[id] = nil
         let load = self.load
         Task.detached(priority: .userInitiated) {
             let tag = load(id)
             await MainActor.run {
                 self.loading.remove(id)
-                if let tag, Int(tag.tagId) == id { self.fetched[id] = tag } else { self.failed.insert(id) }
+                if let tag, Int(tag.tagId) == id { self.fetched[id] = tag } else { self.failed[id] = self.now() }
                 self.revision += 1
             }
         }
+    }
+}
+
+// MARK: - Row identity
+
+/// A saved list may name a tag twice (edited on another device, say); UITableView
+/// did not mind, but SwiftUI rows need distinct identities. Each occurrence is
+/// keyed by its tag and how many times that tag came before it, so a row keeps
+/// its identity through moves, and only the first occurrence is a scroll target.
+struct TMListedTag: Identifiable, Hashable {
+    let tagId: Int
+    let occurrence: Int
+    var id: String { "\(tagId)#\(occurrence)" }
+    var isFirst: Bool { occurrence == 0 }
+
+    static func keyed(_ ids: [Int]) -> [TMListedTag] {
+        var seen: [Int: Int] = [:]
+        return ids.map { id in
+            let occurrence = seen[id, default: 0]
+            seen[id] = occurrence + 1
+            return TMListedTag(tagId: id, occurrence: occurrence)
+        }
+    }
+}
+
+extension View {
+    /// The scroll target for a listed tag: its first occurrence only.
+    @ViewBuilder
+    func tmScrollTarget(_ listed: TMListedTag) -> some View {
+        if listed.isFirst { id(listed.tagId) } else { self }
     }
 }
 
@@ -315,11 +412,11 @@ struct TMTagRow: View {
     var body: some View {
         HStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(content.title).font(TMTheme.font(.headline)).tmLabelMetrics(.headline)
+                Text(content.title).tmFont(.headline).tmLabelMetrics(.headline)
                 if let aka = content.aka {
-                    Text(aka).font(TMTheme.font(.footnote)).tmLabelMetrics(.footnote)
+                    Text(aka).tmFont(.footnote).tmLabelMetrics(.footnote)
                 }
-                Text(content.details).font(TMTheme.font(.footnote)).tmLabelMetrics(.footnote)
+                Text(content.details).tmFont(.footnote).tmLabelMetrics(.footnote)
                 // UIKit settled the first mark's row a point taller than the second.
                 mark(content.hasSheetMusic, "Sheet music").frame(height: 21)
                 mark(content.hasLearningTracks, "Learning tracks").frame(height: 20)
@@ -331,7 +428,7 @@ struct TMTagRow: View {
             .overlay {
                 if loading {
                     Text("Loading tag…")
-                        .font(TMTheme.font(.body))
+                        .tmFont(.body)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .background(Color(uiColor: .systemBackground))
                 }
@@ -347,10 +444,10 @@ struct TMTagRow: View {
         HStack(spacing: 8) {
             // UIImageView draws a symbol at its own point size, centred, never stretched.
             Image(systemName: on ? "checkmark" : "xmark")
-                .font(TMTheme.font(.body))
+                .tmFont(.body)
                 .frame(width: 20, height: 20)
                 .foregroundStyle(on ? TMTheme.tint(.systemGreen, dimmed: dimmed) : Color(uiColor: .secondaryLabel))
-            Text(label).font(TMTheme.font(.caption1)).tmLabelMetrics(.caption1)
+            Text(label).tmFont(.caption1).tmLabelMetrics(.caption1)
         }
     }
 }

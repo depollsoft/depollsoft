@@ -99,6 +99,12 @@ struct TMStackRoot: View {
 
 /// iPad: the list stack beside the tag, one watermark behind both.
 struct TMSplitRoot: View {
+    /// The columns can only be made clear (so one watermark shows behind both) from
+    /// iOS 18; before that each screen keeps its own, rather than none showing.
+    static var columnsCanBeClear: Bool {
+        if #available(iOS 18.0, *) { true } else { false }
+    }
+
     @Bindable var router: TMRouter
     @Environment(\.horizontalSizeClass) private var sizeClass
 
@@ -132,7 +138,7 @@ struct TMSplitRoot: View {
                 }
                 .ignoresSafeArea()
             }
-            .environment(\.tmSharedWatermark, sizeClass == .regular)
+            .environment(\.tmSharedWatermark, sizeClass == .regular && TMSplitRoot.columnsCanBeClear)
         }
         .onChange(of: sizeClass, initial: true) { _, size in
             router.setExpanded(size == .regular)
@@ -207,6 +213,14 @@ struct TMDestinationScreen: View {
 
 /// The model behind each kind of destination.
 enum TMScreenModel {
+    /// Whether the screen is a list a linked tag could step through.
+    var listsTags: Bool {
+        switch self {
+        case .tagList, .results: true
+        case .browse, .search, .settings: false
+        }
+    }
+
     case browse(TMBrowseModel)
     case search(TMSearchModel)
     case settings(TMSettingsModel)
@@ -218,7 +232,14 @@ enum TMScreenModel {
         switch destination {
         case .browse:
             let model = TMBrowseModel(catalog: router.catalog, navigator: navigator)
-            model.pages.forEach { $0.owner = navigator.source }
+            // Each page is its own list: a tag opened from Latest keeps stepping
+            // through Latest when Rating shows, as each UIKit page was its own source.
+            for page in model.pages {
+                let pageNavigator = TMRouteNavigator(router: router, routeId: navigator.routeId)
+                pageNavigator.source.listing = page
+                page.navigator = pageNavigator
+                page.owner = pageNavigator.source
+            }
             navigator.source.listing = model
             self = .browse(model)
         case .search:
@@ -492,7 +513,9 @@ private struct TMBarHook: UIViewControllerRepresentable {
             if let backTitle, screen.navigationItem.backButtonTitle != backTitle {
                 screen.navigationItem.backButtonTitle = backTitle
             }
-            if let homeTitle {
+            // The handwriting belongs to Home's own turn on top: Home re-renders while
+            // covered (a favourite toggled in a pushed tag), and the bar is shared.
+            if let homeTitle, navigation.topViewController === screen {
                 homeTitle.attach(to: screen)
                 if screen.navigationItem.titleView !== homeTitle.inlineLabel {
                     screen.navigationItem.titleView = homeTitle.inlineLabel

@@ -31,25 +31,33 @@ final class TagSummaryModel {
     /// DPNote keeps playback in an ivar, so nothing can observe it directly.
     private(set) var keyNotePlaying = false
     private var keyActivation = 0
+    /// The note this page started, which is the one to silence: by the time the
+    /// page leaves, the tag (and so its key) may already be another's.
+    private var soundingNote: DPNote?
 
     var keyNote: DPNote? { tag?.keyNote() }
 
     func syncKeyNote() {
-        let playing = keyNote?.isPlaying ?? false
+        let playing = (soundingNote ?? keyNote)?.isPlaying ?? false
         if playing != keyNotePlaying { keyNotePlaying = playing }
+    }
+
+    private func sound(_ note: DPNote) {
+        if let previous = soundingNote, previous !== note { previous.stop() }
+        soundingNote = note
+        note.play()
+        syncKeyNote()
     }
 
     /// A press: sounds until released.
     func pressKey() {
         keyActivation += 1
-        keyNote?.play()
-        syncKeyNote()
+        guard let note = keyNote else { return }
+        sound(note)
     }
 
     func releaseKey() {
-        keyActivation += 1
-        keyNote?.stop()
-        syncKeyNote()
+        stopKeyNote()
     }
 
     /// VoiceOver or Switch Control: sounds for a moment and stops by itself.
@@ -57,22 +65,21 @@ final class TagSummaryModel {
         keyActivation += 1
         let generation = keyActivation
         guard let note = keyNote else { return }
-        note.play()
-        syncKeyNote()
+        sound(note)
         DispatchQueue.main.asyncAfter(deadline: .now() + TagSummaryModel.timedKeyNoteDuration) { [weak self] in
             MainActor.assumeIsolated {
                 // A later press or activation owns this shared note's cleanup now.
                 guard let self, self.keyActivation == generation else { return }
-                note.stop()
-                self.syncKeyNote()
+                self.stopKeyNote()
             }
         }
     }
 
-    /// Leaving the page silences the note, however it was started.
+    /// Leaving the page, or the tag changing under it, silences the note, however it was started.
     func stopKeyNote() {
         keyActivation += 1
-        keyNote?.stop()
+        soundingNote?.stop()
+        soundingNote = nil
         syncKeyNote()
     }
 
@@ -83,6 +90,13 @@ final class TagSummaryModel {
     private var ratedTagId: Int32?
 
     var rated: Bool { ratedTagId != nil && ratedTagId == tag?.tagId }
+
+    /// The rating sheet, top to bottom.
+    var ratingActions: [TMSheetAction] {
+        [5, 4, 3, 2, 1].map { stars in
+            TMSheetAction(title: stars == 1 ? "1 star" : "\(stars) stars") { [weak self] in self?.rate(stars) }
+        } + [TMSheetAction(title: "Cancel", style: .cancel) {}]
+    }
 
     func showRating() {
         guard tag != nil, !rated, !ratingBusy else { return }

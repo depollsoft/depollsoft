@@ -173,7 +173,7 @@ struct TMSettingsScreen: View {
 
             if model.build.isPrivate {
                 Section {
-                    Text(model.build.summary).font(TMTheme.font(.body))
+                    Text(model.build.summary).tmFont(.body)
                     actionRow("Copy Logs") { model.copyLogs() }
                 } header: { TMSectionHeader("Private Build") }
             }
@@ -201,7 +201,7 @@ struct TMSettingsScreen: View {
     private func actionRow(_ title: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title)
-                .font(TMTheme.font(.body))
+                .tmFont(.body)
                 .foregroundStyle(TMTheme.tint(DPAppDelegate.accentColor(), dimmed: dimmed))
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
@@ -218,7 +218,7 @@ struct TMSettingsScreen: View {
                 Spacer()
                 Text(TMSettingsModel.tagCount(count)).foregroundStyle(Color(uiColor: .secondaryLabel))
             }
-            .font(TMTheme.font(.body))
+            .tmFont(.body)
             .contentShape(Rectangle())
         }
         .disabled(count == 0)

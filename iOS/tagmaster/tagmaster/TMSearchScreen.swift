@@ -84,7 +84,55 @@ struct TMSearchScreen: View {
         .tmKeepsBarWhileSearching()
         .onSubmit(of: .search) { model.search() }
         .background { TMScreenBackground(grouped: true) }
+        .background(TMSearchKeyHook())
     }
+}
+
+/// An empty field is a real search here (every tag matching the options), so the
+/// keyboard's Search key stays enabled, as the UIKit search bar was set up.
+/// SwiftUI's searchable has no modifier for it; this reaches the search bar.
+struct TMSearchKeyHook: UIViewControllerRepresentable {
+    final class Hook: UIViewController {
+        /// The screen's own controller: the ancestor the navigation controller holds.
+        var screen: UIViewController? {
+            var controller: UIViewController? = self
+            while let current = controller, !(current.parent is UINavigationController) {
+                controller = current.parent
+            }
+            return controller
+        }
+
+        var searchField: UISearchTextField? { screen?.navigationItem.searchController?.searchBar.searchTextField }
+
+        func apply() {
+            guard let field = searchField, field.enablesReturnKeyAutomatically else { return }
+            field.enablesReturnKeyAutomatically = false
+        }
+
+        override func didMove(toParent parent: UIViewController?) {
+            super.didMove(toParent: parent)
+            apply()
+        }
+
+        override func viewWillAppear(_ animated: Bool) {
+            super.viewWillAppear(animated)
+            apply()
+        }
+
+        override func viewDidLayoutSubviews() {
+            super.viewDidLayoutSubviews()
+            apply()
+        }
+    }
+
+    func makeUIViewController(context: Context) -> Hook {
+        let hook = Hook()
+        hook.view.isHidden = true
+        hook.view.isUserInteractionEnabled = false
+        return hook
+    }
+
+    func updateUIViewController(_ hook: Hook, context: Context) { hook.apply() }
 }
 
 extension View {

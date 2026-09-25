@@ -83,7 +83,10 @@ final class TMQueryModel: TMTagListing {
 
     private func finish(_ result: DPTagQueryResult?) {
         if let result {
-            let page = result.tags.compactMap { $0 as? DPTag }
+            // A catalog page can shift under paging and repeat a tag already shown;
+            // each tag is listed once, so rows and stepping have one place for it.
+            let shown = Set(tags.map(\.tagId))
+            let page = result.tags.compactMap { $0 as? DPTag }.filter { !shown.contains($0.tagId) }
             tags += page
             nextStart = Int(result.start) + Int(result.count)
             hasMoreResults = nextStart < min(Int(result.available), maxResults)
@@ -213,13 +216,13 @@ struct TMQueryStatus: View {
                 .foregroundStyle(Color(uiColor: .secondaryLabel))
                 .accessibilityHidden(true)
             Text(message)
-                .font(TMTheme.font(.body))
+                .tmFont(.body)
                 .foregroundStyle(Color(uiColor: .secondaryLabel))
                 .multilineTextAlignment(.center)
                 .tmLabelMetrics(.body)
             if failed {
                 Button("Retry", action: retry)
-                    .font(TMTheme.font(.body))
+                    .tmFont(.body)
                     .frame(minHeight: 44)
                     .buttonStyle(.borderless)
             }

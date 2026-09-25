@@ -180,6 +180,7 @@ final class TagDetailModel {
         guard id != tagId else { return }
         requestGeneration += 1
         fetchPending = false
+        summary.stopKeyNote()
         tag = nil
         tracks.stopPlayback()
         tagId = id

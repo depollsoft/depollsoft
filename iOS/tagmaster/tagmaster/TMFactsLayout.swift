@@ -44,8 +44,9 @@ extension View {
 
 /// Lays out subviews as caption/value pairs: caption 0, value 0, caption 1, value 1…
 struct TMFactsLayout: Layout {
-    /// Point size of the value font, for the eight-em cap on a text value's width.
-    var valueFontSize: CGFloat = 17
+    /// The value font at the screen's text size: the eight-em cap on a text value's
+    /// width and the line height grow with it, as UIKit's label font did.
+    var bodyFont: UIFont = .preferredFont(forTextStyle: .body)
 
     private struct Row {
         var captionFrame: CGRect
@@ -62,7 +63,7 @@ struct TMFactsLayout: Layout {
             captionWidth = max(captionWidth, ceil(caption.sizeThatFits(.unspecified).width))
             let natural = value.sizeThatFits(.unspecified).width
             switch value[TMFactValueKindKey.self] {
-            case .text, .link: valueWidth = max(valueWidth, min(natural, valueFontSize * 8))
+            case .text, .link: valueWidth = max(valueWidth, min(natural, bodyFont.pointSize * 8))
             case .unit: valueWidth = max(valueWidth, natural)
             }
         }
@@ -88,7 +89,7 @@ struct TMFactsLayout: Layout {
                 valueY = max(0, captionBaseline - valueBaseline)
             }
             let natural = max(captionY + captionHeight, valueY + valueHeight)
-            let lineHeight = UIFont.preferredFont(forTextStyle: .body).lineHeight
+            let lineHeight = bodyFont.lineHeight
             let kind = value[TMFactValueKindKey.self]
             let multiline = stacked || (kind == .text && valueHeight > lineHeight * 1.5)
             let fitted = ceil(max(minimum, natural + (multiline ? 8 : 0)))

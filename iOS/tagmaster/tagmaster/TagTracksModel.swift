@@ -215,6 +215,10 @@ final class TMTrackPlayerModel {
     private(set) var balance: Float = TMBalanceAudioPlayer.centeredBalance
     /// While a finger is on the scrub bar the timer must not move its thumb.
     var scrubbing = false
+    /// Bumped when a newly loaded track should take VoiceOver to Play/Pause.
+    private(set) var focusRequest = 0
+
+    func requestFocus() { focusRequest += 1 }
 
     init() {
         player.onProgress = { [weak self] in MainActor.assumeIsolated { self?.refresh() } }
@@ -336,10 +340,12 @@ final class TagTracksModel {
         playerVisible = false
     }
 
-    private func present(_ track: DPTrack, buffer: AVAudioPCMBuffer) {
+    func present(_ track: DPTrack, buffer: AVAudioPCMBuffer) {
         player.load(track: track, buffer: buffer)
         playerVisible = true
         player.play()
+        // VoiceOver lands on Play/Pause, as the UIKit player posted it.
+        player.requestFocus()
         UIAccessibility.post(notification: .layoutChanged, argument: nil)
     }
 

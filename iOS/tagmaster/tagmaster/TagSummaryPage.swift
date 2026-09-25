@@ -6,6 +6,7 @@
 //  the key note, sheet music, and lyrics and notes (beside them when wide).
 //
 
+import Combine
 import SwiftUI
 
 /// The page body every detail page shares: scrolls within the safe area, 16 pt in
@@ -43,6 +44,7 @@ struct TagSummaryPage: View {
     @Environment(\.tmAccent) private var accent
     let model: TagSummaryModel
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @State private var visible = false
 
     var body: some View {
         if let tag = model.tag {
@@ -52,11 +54,23 @@ struct TagSummaryPage: View {
                     columns(tag)
                 }
             }
-            .onReceive(Timer.publish(every: 1.0 / 30, on: .main, in: .common).autoconnect()) { _ in
+            // The note is watched only while it sounds on a page someone can see,
+            // as the UIKit key button's display link ran only while it was in a window.
+            .onReceive(TagSummaryPage.keyNoteTicks(active: visible && model.keyNotePlaying)) { _ in
                 model.syncKeyNote()
             }
-            .onDisappear { model.stopKeyNote() }
+            .onAppear { visible = true }
+            .onDisappear {
+                visible = false
+                model.stopKeyNote()
+            }
         }
+    }
+
+    static func keyNoteTicks(active: Bool) -> AnyPublisher<Date, Never> {
+        active
+            ? Timer.publish(every: 1.0 / 30, on: .main, in: .common).autoconnect().eraseToAnyPublisher()
+            : Empty(completeImmediately: false).eraseToAnyPublisher()
     }
 
     private func identity(_ tag: DPTag) -> some View {
@@ -92,7 +106,7 @@ struct TagSummaryPage: View {
                     performance(tag).frame(maxWidth: .infinity, alignment: .leading)
                     prose(tag).frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .frame(minWidth: 560 * UIFont.preferredFont(forTextStyle: .body).pointSize / 17 + 16)
+                .frame(minWidth: 560 * dynamicTypeSize.tmBodyPointSize / 17 + 16)
             }
             VStack(alignment: .leading, spacing: 16) {
                 performance(tag)
@@ -118,7 +132,7 @@ struct TagSummaryPage: View {
     }
 
     private func facts(_ tag: DPTag) -> some View {
-        TMFactsLayout {
+        TMFactsLayout(bodyFont: dynamicTypeSize.tmFont(.body)) {
             TMCaption(text: "Tag ID")
             TMFactText(text: "\(tag.tagId)").tmFactValue(.text, minimumHeight: 28)
             TMCaption(text: "Parts")
@@ -187,58 +201,67 @@ struct TMFactText: View {
 // MARK: - Rating
 
 /// The rating number over its bar, then Rate and the slot its progress pole uses.
+/// When the two do not fit side by side (accessibility text on a narrow phone),
+/// Rate moves under the number rather than either being squeezed.
 struct TMRatingUnit: View {
     let model: TagSummaryModel
     let rating: Double
 
     var body: some View {
-        HStack(alignment: .center, spacing: 8) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(String(format: "%1.2f", rating))
-                    .font(.body)
-                    .fixedSize()
-                    .accessibilityLabel("Rating out of 5")
-                    .accessibilityValue(String(format: "%1.2f", rating))
-                TMRatingBar(progress: rating / 5)
-            }
-            .fixedSize()
-            .alignmentGuide(.firstTextBaseline) { $0[.firstTextBaseline] }
+        ViewThatFits(in: .horizontal) {
             HStack(alignment: .center, spacing: 8) {
-                Button(action: model.showRating) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "star").imageScale(.large)
-                        Text(model.rated ? "Rated" : "Rate")
-                    }
-                    .font(.body)
-                    .padding(.vertical, 4)
-                    .padding(.horizontal, 8)
-                    .frame(minWidth: 44, minHeight: 44)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.borderless)
-                .disabled(model.rated || model.ratingBusy)
-                // Anchored to Rate, with UIKit's label-coloured sheet buttons rather than the accent.
-                .background {
-                    Color.clear
-                        .confirmationDialog("Rating", isPresented: Binding(get: { model.ratingDialogPresented },
-                                                                           set: { model.ratingDialogPresented = $0 }),
-                                            titleVisibility: .visible) {
-                            ForEach([5, 4, 3, 2, 1], id: \.self) { stars in
-                                Button(stars == 1 ? "1 star" : "\(stars) stars") { model.rate(stars) }
-                            }
-                            Button("Cancel", role: .cancel) {}
-                        } message: {
-                            Text("Rate the tag on a scale of 1-5 stars")
-                        }
-                        .tint(Color(.label))
-                }
-                .accessibilityLabel(model.rated ? "Rating submitted" : "Rate tag")
-                .accessibilityIdentifier("summary.rate")
-                TMBarberPole.operation("Sending rating…", active: model.ratingBusy)
+                value
+                action
+                Spacer(minLength: 0)
             }
-            .fixedSize()
-            Spacer(minLength: 0)
+            VStack(alignment: .leading, spacing: 8) {
+                value
+                action
+            }
         }
+    }
+
+    private var value: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(String(format: "%1.2f", rating))
+                .font(.body)
+                .fixedSize()
+                .accessibilityLabel("Rating out of 5")
+                .accessibilityValue(String(format: "%1.2f", rating))
+            TMRatingBar(progress: rating / 5)
+        }
+        .fixedSize()
+        .alignmentGuide(.firstTextBaseline) { $0[.firstTextBaseline] }
+    }
+
+    private var action: some View {
+        HStack(alignment: .center, spacing: 8) {
+            Button(action: model.showRating) {
+                HStack(spacing: 8) {
+                    Image(systemName: "star").imageScale(.large)
+                    Text(model.rated ? "Rated" : "Rate")
+                }
+                .font(.body)
+                .padding(.vertical, 4)
+                .padding(.horizontal, 8)
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.borderless)
+            .disabled(model.rated || model.ratingBusy)
+            .accessibilityLabel(model.rated ? "Rating submitted" : "Rate tag")
+            .accessibilityIdentifier("summary.rate")
+            // UIKit's classic action sheet: a centred card with Cancel on iPhone,
+            // hanging from Rate on iPad. SwiftUI's confirmationDialog is a bubble
+            // without Cancel on iOS 26.
+            .background(TMActionSheet(isPresented: Binding(get: { model.ratingDialogPresented },
+                                                           set: { model.ratingDialogPresented = $0 }),
+                                      actions: model.ratingActions,
+                                      title: "Rating",
+                                      message: "Rate the tag on a scale of 1-5 stars"))
+            TMBarberPole.operation("Sending rating…", active: model.ratingBusy)
+        }
+        .fixedSize()
     }
 }
 
@@ -268,7 +291,6 @@ struct TMKeyNoteButton: View {
     let model: TagSummaryModel
     let title: String
     var singleLine = false
-    @State private var pressed = false
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
@@ -289,21 +311,30 @@ struct TMKeyNoteButton: View {
         .background(RoundedRectangle(cornerRadius: 8).fill(playing ? fill : .clear))
         .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(accent, lineWidth: 1.5))
         .contentShape(Rectangle())
-        .gesture(DragGesture(minimumDistance: 0)
-            .onChanged { _ in
-                guard !pressed else { return }
-                pressed = true
-                model.pressKey()
-            }
-            .onEnded { _ in
-                pressed = false
-                model.releaseKey()
-            })
+        // A button, so a scroll that starts on the key scrolls, and a press the
+        // system cancels (a call, a system gesture) lets the note go, as the
+        // UIKit button's touch-cancel did.
+        .overlay {
+            Button {} label: { Color.clear.contentShape(Rectangle()) }
+                .buttonStyle(TMKeyPressStyle(model: model))
+        }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Play key note \(model.keyNote?.description ?? title)")
         .accessibilityHint("Plays for one and a half seconds")
         .accessibilityAddTraits(.isButton)
         .accessibilityAction { model.playTimedKeyNote() }
+    }
+
+    /// Sounds the key for exactly as long as the button is held.
+    private struct TMKeyPressStyle: ButtonStyle {
+        let model: TagSummaryModel
+
+        func makeBody(configuration: Configuration) -> some View {
+            configuration.label
+                .onChange(of: configuration.isPressed) { _, pressed in
+                    if pressed { model.pressKey() } else { model.releaseKey() }
+                }
+        }
     }
 
     /// UIKit's high-contrast accent, for white text on the filled key in light mode.

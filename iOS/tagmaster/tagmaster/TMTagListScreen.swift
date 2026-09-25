@@ -183,7 +183,8 @@ struct TMTagListScreen: View {
                                       browseIdentifier: model.browseIdentifier,
                                       browse: model.browse)
                 }
-                ForEach(model.ids, id: \.self) { tagId in
+                ForEach(TMListedTag.keyed(model.ids)) { listed in
+                    let tagId = listed.tagId
                     let selected = model.selectedTagId == tagId
                     Button { model.open(tagId) } label: {
                         TMTagRow(content: TMTagRowContent(tagId: tagId, tag: model.store.tag(tagId)),
@@ -193,7 +194,7 @@ struct TMTagListScreen: View {
                     }
                     .tmTagRowAccessibility(TMTagRowContent(tagId: tagId, tag: model.store.tag(tagId)), selected: selected)
                     .tmTagListRow(selected: selected)
-                    .id(tagId)
+                    .tmScrollTarget(listed)
                 }
                 .onDelete { model.remove(at: $0) }
                 .onMove { model.move(from: $0, to: $1) }
@@ -226,14 +227,14 @@ struct TMEmptyListHeader: View {
     var body: some View {
         VStack(spacing: 16) {
             Text(title)
-                .font(TMTheme.boldFont(.title2))
+                .tmFont(.title2, bold: true)
                 .accessibilityAddTraits(.isHeader)
                 .accessibilityIdentifier(titleIdentifier ?? "")
             Text(guidance)
-                .font(TMTheme.font(.body))
+                .tmFont(.body)
                 .foregroundStyle(Color(uiColor: .secondaryLabel))
             Button("Browse Tags", action: browse)
-                .font(TMTheme.font(.body))
+                .tmFont(.body)
                 .frame(minHeight: 44)
                 .buttonStyle(.borderless)
                 .accessibilityIdentifier(browseIdentifier)

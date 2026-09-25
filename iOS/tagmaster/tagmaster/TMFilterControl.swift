@@ -28,7 +28,7 @@ struct TMFilterRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(filter.title)
-                .font(TMTheme.font(.subheadline))
+                .tmFont(.subheadline)
                 .foregroundStyle(Color(uiColor: .secondaryLabel))
                 .tmLabelMetrics(.subheadline)
                 .accessibilityHidden(true)
@@ -73,8 +73,8 @@ struct TMFilterRow: View {
             }
         } label: {
             HStack(spacing: 8) {
-                Text(filter.choices[safe: selection] ?? "").font(TMTheme.font(.body))
-                Image(systemName: "chevron.up.chevron.down").font(TMTheme.font(.caption1))
+                Text(filter.choices[safe: selection] ?? "").tmFont(.body)
+                Image(systemName: "chevron.up.chevron.down").tmFont(.caption1)
             }
             .frame(maxWidth: .infinity, minHeight: 44)
         }

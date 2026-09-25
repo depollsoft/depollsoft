@@ -81,7 +81,7 @@ struct TagVideosPage: View {
             .tmGroupedTableMetrics()
             .fullScreenCover(item: Binding(get: { watching.map(TMWatchedURL.init) },
                                            set: { watching = $0?.url })) { watched in
-                TMSafariView(url: watched.url)
+                TMSafariView(url: watched.url) { watching = nil }
                     .ignoresSafeArea()
             }
         }
@@ -173,14 +173,28 @@ struct TMVideoThumbnail: View {
 /// YouTube in the in-app browser, which still hands off to the YouTube app when installed.
 struct TMSafariView: UIViewControllerRepresentable {
     let url: URL
+    /// Safari's own Done dismisses its presenter behind SwiftUI's back; this tells
+    /// the page the video is closed, so the same video can be opened again.
+    var onFinish: () -> Void = {}
+
+    final class Coordinator: NSObject, SFSafariViewControllerDelegate {
+        var onFinish: () -> Void = {}
+        func safariViewControllerDidFinish(_ controller: SFSafariViewController) { onFinish() }
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
 
     func makeUIViewController(context: Context) -> SFSafariViewController {
         let browser = SFSafariViewController(url: url)
         browser.preferredControlTintColor = DPAppDelegate.accentColor()
+        browser.delegate = context.coordinator
+        context.coordinator.onFinish = onFinish
         return browser
     }
 
-    func updateUIViewController(_ controller: SFSafariViewController, context: Context) {}
+    func updateUIViewController(_ controller: SFSafariViewController, context: Context) {
+        context.coordinator.onFinish = onFinish
+    }
 }
 
 

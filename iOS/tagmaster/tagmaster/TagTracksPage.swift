@@ -91,6 +91,7 @@ struct TagTracksPage: View {
 struct TMTrackPlayer: View {
     @Bindable var model: TMTrackPlayerModel
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @AccessibilityFocusState private var playPauseFocused: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -108,6 +109,7 @@ struct TMTrackPlayer: View {
                                     identifier: "tagmaster.trackPlayer.playPause",
                                     action: model.togglePlayPause)
                         .disabled(!model.isLoaded)
+                        .accessibilityFocused($playPauseFocused)
                     transportButton("stop.fill", label: "Stop", identifier: "tagmaster.trackPlayer.stop",
                                     action: model.stop)
                         .disabled(!model.canStop)
@@ -160,6 +162,9 @@ struct TMTrackPlayer: View {
         .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color(.secondarySystemBackground)))
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("tagmaster.trackPlayer")
+        .onChange(of: model.focusRequest, initial: true) { _, request in
+            if request > 0 { playPauseFocused = true }
+        }
     }
 
     private func transportButton(_ symbol: String, label: String, identifier: String,
@@ -183,8 +188,66 @@ private struct TMTwoFingerDoubleTap: ViewModifier {
         if #available(iOS 18.0, *) {
             content.gesture(TMTwoFingerDoubleTapGesture(action: action))
         } else {
-            content
+            // SwiftUI cannot host a UIKit recognizer before iOS 18, so the tap is
+            // heard by the window and kept to the slider's own frame.
+            content.background(TMTwoFingerDoubleTapFallback(action: action))
         }
+    }
+}
+
+/// Listens for a two-finger double tap on the window, answering only taps whose
+/// fingers both land within this view's frame. Touches still reach the slider.
+struct TMTwoFingerDoubleTapFallback: UIViewRepresentable {
+    let action: () -> Void
+
+    final class Anchor: UIView, UIGestureRecognizerDelegate {
+        var action: () -> Void = {}
+        private(set) lazy var recognizer: UITapGestureRecognizer = {
+            let recognizer = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
+            recognizer.numberOfTapsRequired = 2
+            recognizer.numberOfTouchesRequired = 2
+            recognizer.cancelsTouchesInView = false
+            recognizer.delegate = self
+            return recognizer
+        }()
+
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            recognizer.view?.removeGestureRecognizer(recognizer)
+            window?.addGestureRecognizer(recognizer)
+        }
+
+        override func removeFromSuperview() {
+            recognizer.view?.removeGestureRecognizer(recognizer)
+            super.removeFromSuperview()
+        }
+
+        /// Only fingers that land on the slider count.
+        func accepts(_ point: CGPoint) -> Bool {
+            window != nil && !isHidden && bounds.contains(point)
+        }
+
+        func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+            accepts(touch.location(in: self))
+        }
+
+        func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
+                               shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool { true }
+
+        @objc func tapped(_ recognizer: UITapGestureRecognizer) {
+            if recognizer.state == .ended { action() }
+        }
+    }
+
+    func makeUIView(context: Context) -> Anchor {
+        let anchor = Anchor()
+        anchor.isUserInteractionEnabled = false
+        anchor.isAccessibilityElement = false
+        return anchor
+    }
+
+    func updateUIView(_ anchor: Anchor, context: Context) {
+        anchor.action = action
     }
 }
 

@@ -40,10 +40,13 @@ struct TMRoute: Hashable, Identifiable {
 
     let id: UUID
     let kind: Kind
+    /// The list this screen shows, for a tag a deep link opens over it.
+    let listingSource: TMListingSource?
 
-    init(id: UUID = UUID(), kind: Kind) {
+    init(id: UUID = UUID(), kind: Kind, listingSource: TMListingSource? = nil) {
         self.id = id
         self.kind = kind
+        self.listingSource = listingSource
     }
 
     static func == (lhs: TMRoute, rhs: TMRoute) -> Bool { lhs.id == rhs.id }
@@ -102,6 +105,7 @@ final class TMRouter {
     private(set) var hasDetail = false
     /// Home, the root of the list stack.
     private(set) var home: TMHomeModel!
+    private var homeNavigator: TMRouteNavigator!
     /// What the screens this router opens run against; tests substitute them.
     let catalog: TMCatalog
     let account: TMAccount
@@ -116,21 +120,24 @@ final class TMRouter {
         self.build = build
         wire(detail)
         let navigator = TMRouteNavigator(router: self, routeId: nil)
+        homeNavigator = navigator
         home = TMHomeModel(catalog: catalog, navigator: navigator)
         navigator.source.listing = home
     }
 
-    /// The column a collapsing split keeps on top: a chosen tag, never the placeholder.
-    var preferredCompactColumn: NavigationSplitViewColumn {
-        get { hasDetail ? .detail : .sidebar }
-        set {}
-    }
+    /// The column a collapsed split shows. It is decided when the split collapses
+    /// (a chosen tag, never the placeholder), then follows the user: Back to the
+    /// list stays on the list, as UIKit's top-column choice only applied at collapse.
+    var preferredCompactColumn: NavigationSplitViewColumn = .sidebar
 
     func setExpanded(_ expanded: Bool) {
         guard self.expanded != expanded else { return }
         self.expanded = expanded
         detail.expanded = expanded
-        if !expanded { columnVisibility = .doubleColumn }
+        if !expanded {
+            columnVisibility = .doubleColumn
+            preferredCompactColumn = hasDetail ? .detail : .sidebar
+        }
         selectionChanged()
     }
 
@@ -146,6 +153,8 @@ final class TMRouter {
             detail.source = source
             detail.show(tagId: tagId)
             hasDetail = true
+            // Should the split collapse now, the chosen tag stays on top.
+            preferredCompactColumn = .detail
             detailPath = []
             selectionChanged()
             source?.tm_didStep(toTagId: tagId)
@@ -155,13 +164,18 @@ final class TMRouter {
         model.source = source
         wire(model)
         model.show(tagId: tagId)
+        // A collapsed split pushes onto the list stack, so that is the column to show.
+        preferredCompactColumn = .sidebar
         path.append(TMRoute(kind: .tag(model)))
     }
 
     func show(_ destination: TMDestination) {
         let id = UUID()
-        let model = TMScreenModel(destination, navigator: TMRouteNavigator(router: self, routeId: id), router: self)
-        path.append(TMRoute(id: id, kind: .screen(destination, model)))
+        let navigator = TMRouteNavigator(router: self, routeId: id)
+        let model = TMScreenModel(destination, navigator: navigator, router: self)
+        preferredCompactColumn = .sidebar
+        path.append(TMRoute(id: id, kind: .screen(destination, model),
+                            listingSource: model.listsTags ? navigator.source : nil))
     }
 
     /// Opens a saved list: Favorites is Home's own section, so it returns to
@@ -170,6 +184,7 @@ final class TMRouter {
         if expanded { columnVisibility = .doubleColumn }
         if key == TMTagLists.favoriteKey {
             path.removeAll()
+            preferredCompactColumn = .sidebar
             return
         }
         show(key == TMTagLists.teachableKey ? .teachable : .list(key))
@@ -208,8 +223,20 @@ final class TMRouter {
     @discardableResult
     func open(_ url: URL) -> Bool {
         guard let tagId = TMDeepLink.tagId(in: url) else { return false }
-        showTag(tagId, source: nil)
+        showTag(tagId, source: topListingSource)
         return true
+    }
+
+    /// The list on top of the list stack, which a linked tag steps through as the
+    /// UIKit delegate adopted it: Home, a saved list or results, or the list the
+    /// pushed tag on top came from. Browse, Search and Settings list nothing.
+    var topListingSource: TMTagListSource? {
+        guard let top = path.last else { return homeNavigator.source }
+        switch top.kind {
+        case .tag(let model): return model.source
+        case .screen: return top.listingSource
+        case .sheetMusic: return nil
+        }
     }
 
     // MARK: - Internals
