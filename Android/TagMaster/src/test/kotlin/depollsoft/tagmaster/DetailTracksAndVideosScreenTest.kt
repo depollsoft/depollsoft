@@ -2,6 +2,7 @@ package depollsoft.tagmaster
 
 import android.app.Application
 import android.content.Intent
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performScrollToIndex
 import depollsoft.tagmaster.barbershop.Tag
@@ -94,6 +95,16 @@ class DetailTracksAndVideosScreenTest : ComposeScreenTest() {
         assertTrue("second video", exists("video:2"))
         assertTrue("sung by: " + text("video:1"), shows("A quartet with a very long name"))
         assertFalse(text("video:2").contains("null"))
+    }
+
+    @Test
+    fun aVideoListedTwiceShowsTwiceInsteadOfCrashing() {
+        val tag =
+            ScreenTestSupport.fixtureTag().apply {
+                videos = MutableList(2) { Video().apply { id = 7; sungBy = "The Same Quartet"; youTubeCode = "twice" } }
+            }
+        open(tag, 3)
+        assertEquals(2, compose.onAllNodes(hasTestTag("video:7"), useUnmergedTree = true).fetchSemanticsNodes().size)
     }
 
     @Test

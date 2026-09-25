@@ -239,7 +239,8 @@ fun VideosPage(
             state = listState,
             contentPadding = PaddingValues(vertical = 16.dp),
         ) {
-            itemsIndexed(videos, key = { _, video -> video.id }) { index, video ->
+            // A LazyColumn refuses a repeated key, and the catalog may list a video twice.
+            itemsIndexed(videos, key = { index, video -> "${video.id}:$index" }) { index, video ->
                 Column {
                     // ListView's divider: 1dp between rows, taking its own space.
                     if (index > 0) {
