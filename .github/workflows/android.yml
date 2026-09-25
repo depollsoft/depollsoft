@@ -322,8 +322,8 @@ jobs:
         with:
           name: android-screenshot-differences
           path: |
-            Android/**/src/test/screenshots/*_compare.png
-            Android/**/src/test/screenshots/*_actual.png
+            Android/**/build/outputs/roborazzi/*_compare.png
+            Android/**/build/outputs/roborazzi/*_actual.png
             Android/**/build/test-results/roborazzi/
           if-no-files-found: ignore
           retention-days: 7
