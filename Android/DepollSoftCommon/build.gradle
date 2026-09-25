@@ -18,6 +18,11 @@ android {
     namespace = 'depollsoft.lib'
     compileSdk 37
 
+    // watchState and its snapshot notifications, for the apps' tests (see src/testFixtures).
+    testFixtures {
+        enable = true
+    }
+
     defaultConfig {
         minSdk 23
         targetSdk 36

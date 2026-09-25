@@ -5,7 +5,10 @@ import kotlin.reflect.KProperty
 
 /**
  * One observable value backed by Compose snapshot state, with the `get()`/`set()` shape the Java
- * models use. Setting an equal value is not a change, as with `mutableStateOf`'s default policy.
+ * models use. Setting an equal value is not a change, as with `mutableStateOf`'s default policy,
+ * and the field keeps the instance it had: unlike a Bindroid field, which stored the new instance
+ * and only skipped the notification. Mind this for values whose `equals` ignores something
+ * (a `StateList` compares by content).
  *
  * Kotlin code can use it as a property delegate: `var name by StateField("")`.
  */
@@ -16,7 +19,6 @@ class StateField<T>(initialValue: T) {
 
     fun set(value: T) {
         state.value = value
-        SnapshotNotifications.ensureInstalled()
     }
 
     operator fun getValue(
