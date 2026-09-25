@@ -4,7 +4,6 @@ import android.content.ContextWrapper
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.android.billingclient.api.*
-import depollsoft.lib.state.StateField
 import depollsoft.lib.activity.RichApplication
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -38,10 +37,7 @@ object PurchaseService {
 
     private lateinit var billingClient: BillingClient
 
-    fun bind(
-        context: ContextWrapper,
-        callback: Runnable?,
-    ): Boolean {
+    fun bind(context: ContextWrapper) {
         billingClient =
             BillingClient
                 .newBuilder(context)
@@ -90,15 +86,12 @@ object PurchaseService {
                 }
             },
         )
-        return true
     }
 
-    private val adsRemoved = StateField(false)
-
+    /** Whether the remove-ads subscription is active; stored in [SettingsModel.areAdsRemoved]. */
     var areAdsRemoved: Boolean
-        get() = adsRemoved.get()
+        get() = SettingsModel.areAdsRemoved
         set(value) {
-            adsRemoved.set(value)
             SettingsModel.areAdsRemoved = value
         }
 

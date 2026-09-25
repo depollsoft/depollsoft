@@ -137,7 +137,7 @@ class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.Telemet
             }
         }
 
-        PurchaseService.bind(this) { SettingsModel.areAdsRemoved = PurchaseService.areAdsRemoved }
+        PurchaseService.bind(this)
 
         reserveBannerSpace()
         scheduleAdLoadAfterIdle()
@@ -194,7 +194,6 @@ class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.Telemet
         } else {
             depollsoft.lib.privacy.TelemetryConsent.showIfNeeded(this)
         }
-        handlingResult = false
 
         if (SettingsModel.wakeLock) {
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -219,11 +218,12 @@ class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.Telemet
         startupDialogsShown = true
         // First launch belongs to the first pitch: the login prompt waits for the next session.
         val isFirstLaunchEver = RunUtils.runOnce("firstLaunch")
-        if (!isFirstLaunchEver && Firebase.auth.currentUser == null && RunUtils.runOnce("loginDialog")) {
-            startupPrompt = StartupPrompt.LOGIN
-        } else if (!isFirstLaunchEver && Changelog.shouldShow()) {
-            startupPrompt = StartupPrompt.CHANGELOG
-        }
+        startupPrompt =
+            startupPromptFor(
+                startupPrompt,
+                loginDue = { !isFirstLaunchEver && Firebase.auth.currentUser == null && RunUtils.runOnce("loginDialog") },
+                changelogDue = { !isFirstLaunchEver && Changelog.shouldShow() },
+            )
     }
 
     /** Switches to [tab], as a tap on its navigation item does. */
@@ -279,9 +279,5 @@ class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.Telemet
     companion object {
         private const val AD_INITIALIZATION_DELAY_MS = 5_000L
         private const val COMPILATION_STATUS_DELAY_MS = 10_000L
-
-        /** Set by a screen this one started, so returning from it does not replay startup work. */
-        @JvmField
-        internal var handlingResult: Boolean = false
     }
 }

@@ -166,7 +166,6 @@ class AddSongsFromListActivity : AppCompatActivity() {
     /** Copies the ticked songs into the target list and closes. */
     internal fun confirm() {
         if (!addable.confirm()) return
-        PitchPerfectActivity.handlingResult = true
         setResult(RESULT_OK)
         finish()
     }

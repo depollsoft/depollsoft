@@ -65,7 +65,6 @@ class AddSongActivity : AppCompatActivity() {
 
     private fun done(result: Int) {
         setResult(result)
-        PitchPerfectActivity.handlingResult = true
         finish()
     }
 
