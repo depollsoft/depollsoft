@@ -259,6 +259,7 @@ struct SongListScreen: View {
             NavigationStack {
                 SongEditorScreen(request: request)
             }
+            .modifier(SongEditorSheetSize())
         }
         .sheet(isPresented: $model.showingAddFrom) {
             AddSongsScreen(target: model.currentList)
@@ -483,4 +484,18 @@ struct KeyReadout: View {
 extension DPPitchedSong {
     /// A row's identity: the object, since legacy songs can share (or lack) an id.
     var rowID: ObjectIdentifier { ObjectIdentifier(self) }
+}
+
+/// On iPad the editor is the small form UIKit gave it (preferredContentSize
+/// 320 × 480 below its bar); on iPhone it is an ordinary page sheet.
+private struct SongEditorSheetSize: ViewModifier {
+    func body(content: Content) -> some View {
+        if UIDevice.current.userInterfaceIdiom == .pad, #available(iOS 18.0, *) {
+            content
+                .frame(width: 320, height: 543)
+                .presentationSizing(.fitted)
+        } else {
+            content
+        }
+    }
 }

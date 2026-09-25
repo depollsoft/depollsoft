@@ -50,7 +50,9 @@ struct PitchPerfectRoot: View {
                 .tabItem { TabLabel(title: "Songs", image: "songs.png") }
                 .tag(PitchPerfectTab.songs)
         }
-        .tint(Color(uiColor: .label))
+        // On iPhone the tab bar is tinted with the label colour; the iPad's top
+        // tab bar kept the system accent, as UIKit drew them.
+        .tint(UIDevice.current.userInterfaceIdiom == .pad ? nil : Color(uiColor: .label))
         .onAppear {
             DPTheme.applyStoredAppearance()
             WakeLock.apply()

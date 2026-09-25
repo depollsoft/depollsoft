@@ -211,3 +211,46 @@ final class PitchPerfectScreenCatalogTests: PitchPerfectTestCase {
         capture("privacy", app, settle: 0.8)
     }
 }
+
+// MARK: - Scrolled to the end
+
+@MainActor
+private func scrollListsToBottom(in root: UIView) {
+    func visit(_ view: UIView) {
+        if let scroll = view as? UIScrollView, scroll.isScrollEnabled, scroll.window != nil,
+           !(view is UITextView), scroll.contentSize.height > scroll.bounds.height {
+            let bottom = scroll.contentSize.height - scroll.bounds.height + scroll.adjustedContentInset.bottom
+            scroll.setContentOffset(CGPoint(x: scroll.contentOffset.x, y: bottom), animated: false)
+        }
+        view.subviews.forEach(visit)
+    }
+    // Estimated row heights can stop a scroll short; repeat until it stays put.
+    for _ in 0..<6 {
+        visit(root)
+        root.layoutIfNeeded()
+        RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+    }
+}
+
+extension PitchPerfectScreenCatalogTests {
+    func testListsScrolledToTheEnd() throws {
+        seedCatalogForScroll()
+        let app = try launch()
+        for (tab, name) in [(1, "notes-end"), (2, "keys-end"), (3, "songs-end")] {
+            app.show(tab: tab)
+            ScreenCatalog.settle(0.5)
+            scrollListsToBottom(in: app.window)
+            capture(name, app, settle: 0.8)
+        }
+    }
+
+    private func seedCatalogForScroll() {
+        let majors = DPKey.majorKeys() as! [DPKey]
+        DPSongsModel.sharedInstance.defaultSongList.songs = (1...20).map { index in
+            let song = DPPitchedSong()
+            song.name = "Song \(index)"
+            song.key = majors[index % majors.count]
+            return song
+        }
+    }
+}
