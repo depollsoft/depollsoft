@@ -4,6 +4,7 @@ import android.app.Application
 import android.util.TypedValue
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import depollsoft.tagmaster.ui.BrandTitle
 import depollsoft.tagmaster.ui.TagMasterType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -42,5 +43,16 @@ class LargeFontTest {
         for ((shown, textView) in sizes) {
             assertEquals("a ${textView}px TextView size", (textView + 0.5f).toInt().toFloat(), shown, 0.51f)
         }
+    }
+
+    @Test
+    @Config(fontScale = 1.3f)
+    fun theBrandTitleScalesAsTheToolbarsTextViewDid() {
+        val context = RuntimeEnvironment.getApplication()
+        val metrics = context.resources.displayMetrics
+        val textView = (TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 22f, metrics) + 0.5f).toInt().toFloat()
+        assertTrue("the curve differs from linear scaling here", textView < 22f * metrics.density * 1.3f - 1f)
+        // Below the 40dp cap the title is the TextView's size exactly.
+        assertEquals(textView, BrandTitle(context).sizePx(context), 0f)
     }
 }

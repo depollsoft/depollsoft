@@ -3,6 +3,7 @@ package depollsoft.tagmaster.ui
 import android.content.Context
 import android.graphics.Paint
 import android.graphics.Typeface
+import android.util.TypedValue
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -64,18 +65,23 @@ data class BarAction(
 private const val TITLE_FONT = "fonts/wickhop-handwriting.ttf"
 
 /** The Wickhop display face the app name is set in, capped so its full bounds fit the bar. */
-private class BrandTitle(
+internal class BrandTitle(
     context: Context,
 ) {
     val family = FontFamily(Font(TITLE_FONT, context.assets))
     private val typeface = Typeface.createFromAsset(context.assets, TITLE_FONT)
 
-    /** The size, in pixels, the title is drawn at: 22sp, shrunk until the font is 40dp tall. */
+    /**
+     * The size, in pixels, the title is drawn at: 22sp as the toolbar's TextView read it (through
+     * the platform's non-linear font scaling, rounded as `getDimensionPixelSize` rounds), shrunk
+     * until the font is 40dp tall.
+     */
     fun sizePx(context: Context): Float {
         val metrics = context.resources.displayMetrics
+        val sp = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 22f, metrics)
         val paint = Paint().apply {
             typeface = this@BrandTitle.typeface
-            textSize = 22f * metrics.scaledDensity
+            textSize = (sp + 0.5f).toInt().coerceAtLeast(1).toFloat()
         }
         val font = paint.fontMetrics
         val maxHeight = 40f * metrics.density
