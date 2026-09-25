@@ -78,6 +78,7 @@ npm run deploy                     # Deploy to Firebase
 
 ### iOS Architecture
 
+- Pitch Perfect's UI is SwiftUI (a SwiftUI `App`, `@Observable` models per screen); see `docs/ios-swiftui.md`
 - Mixed Objective-C and Swift codebase with Swift bridging headers
 - Swift Package Manager for Firebase, FirebaseUI, and Google Mobile Ads dependencies
 - Custom UI components in depolllib (has test coverage)
@@ -154,7 +155,9 @@ npm run deploy                     # Deploy to Firebase
 - **iOS**:
   - depolllib: Has tests
   - pitchperfectlib: Has tests
-  - pitchperfect / tagmaster: behaviour is tested in-process in the hosted `*Tests` bundles (real view controllers in a test `UIWindow`); the `*UITests` bundles hold only launch metrics, keyboard/rotation/system-sheet cases and `StoreScreenshotTests` (used by `scripts/release/capture.py`), and run only on the weekly extended iOS CI run
+  - pitchperfect: SwiftUI screens (see `docs/ios-swiftui.md`); models are tested directly and the real controls are driven in-process through the accessibility tree (`iOS/shared/SwiftUITestDriver.swift`), and `PitchPerfectScreenCatalogTests` renders every screen state (set `TEST_RUNNER_SCREEN_CATALOG_DIR` to write captures)
+  - tagmaster: behaviour is tested in-process in the hosted `*Tests` bundles (real view controllers in a test `UIWindow`)
+  - both apps: the `*UITests` bundles hold only launch metrics, keyboard/rotation/system-sheet cases and `StoreScreenshotTests` (used by `scripts/release/capture.py`), and run only on the weekly extended iOS CI run
 
 ### Running Tests
 

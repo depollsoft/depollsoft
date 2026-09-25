@@ -162,6 +162,9 @@ final class DPTestAppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+        // The stores read whatever this simulator last saved (a UI test run of the
+        // real app, say), which needs the same aliases the app registers.
+        DPAppDelegate.registerSerializationAliases()
         let window = UIWindow(frame: UIScreen.main.bounds)
         window.rootViewController = UIViewController()
         window.isHidden = true

@@ -186,6 +186,13 @@ final class PitchPerfectSettingsPresentationTests: PitchPerfectTestCase {
         app.showLogin()
         settle { app.navigationTitles.contains("Log In To Pitch Perfect") }
         XCTAssertTrue(app.sheet.exists(label: "Sign up or log in"))
+        let intro = app.topPresented
+        app.sheet.tap(label: "Sign up or log in")
+        // FirebaseUI's picker, with its email field, over the login screen.
+        settle { UIDriver(app.topPresented.view).exists(id: "email-field") }
+        XCTAssertTrue(intro.presentedViewController != nil)
+        app.topPresented.dismiss(animated: false)
+        settle { app.topPresented === intro }
         app.sheet.tap(label: "Skip")
         settle { app.topPresented === app.host }
     }

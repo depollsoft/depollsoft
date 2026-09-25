@@ -138,13 +138,17 @@ private struct PitchPerfectAppleSignInButton: View {
 }
 
 
-/// SwiftUI view that wraps FirebaseUI's AuthPickerView for use in UIKit
-struct FirebaseAuthView: View {
-    let authService: AuthService
+/// FirebaseUI's sign-in picker, hosted on the screen that asks for it: the
+/// picker presents itself as a sheet whenever `isPresented` is set.
+struct FirebaseAuthHost: View {
+    @Binding var isPresented: Bool
     let onSignIn: (Bool) -> Void
     let onDismiss: () -> Void
 
-    init(onSignIn: @escaping (Bool) -> Void, onDismiss: @escaping () -> Void) {
+    @State private var authService = FirebaseAuthHost.makeService()
+    @State private var didFinish = false
+
+    private static func makeService() -> AuthService {
         let configuration = AuthConfiguration(
             logo: ImageResource(name: "AuthLogo", bundle: .main),
             shouldHideCancelButton: false,
@@ -152,55 +156,50 @@ struct FirebaseAuthView: View {
             customStringsBundle: .main,
             mfaIssuer: "Pitch Perfect"
         )
-
         let authService = AuthService(configuration: configuration)
             .withEmailSignIn()
             .withGoogleSignIn()
             .withFacebookSignIn()
-        authService.registerProvider(
-            providerWithButton: PitchPerfectAppleProviderUI()
-        )
+        authService.registerProvider(providerWithButton: PitchPerfectAppleProviderUI())
         #if canImport(FirebasePhoneAuthSwiftUI)
         _ = authService.withPhoneSignIn()
         #endif
-
-        self.authService = authService
-        self.onSignIn = onSignIn
-        self.onDismiss = onDismiss
+        return authService
     }
 
-    @State private var didFinish = false
+    /// Whether the account just signed in was created by this sign-in.
+    static func isNewUser(_ metadata: UserMetadata) -> Bool {
+        guard let created = metadata.creationDate, let lastSignIn = metadata.lastSignInDate else { return false }
+        return abs(created.timeIntervalSince(lastSignIn)) <= 1.0
+    }
 
     var body: some View {
         AuthPickerView { Color.clear }
             .environment(authService)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
             .onAppear {
-                authService.isPresented = true
+                if isPresented { authService.isPresented = true }
+            }
+            .onChange(of: isPresented) { _, show in
+                if show {
+                    didFinish = false
+                    authService.isPresented = true
+                } else if authService.isPresented {
+                    authService.isPresented = false
+                }
             }
             .onChange(of: authService.currentUser?.uid) { _, userID in
-                guard !didFinish,
-                      let currentUser = authService.currentUser,
-                      userID == Auth.auth().currentUser?.uid else {
-                    return
-                }
-
+                guard !didFinish, let currentUser = authService.currentUser,
+                      userID == Auth.auth().currentUser?.uid else { return }
                 didFinish = true
-                let metadata = currentUser.metadata
-                let isNewUser: Bool
-                if let creationDate = metadata.creationDate,
-                   let lastSignInDate = metadata.lastSignInDate {
-                    isNewUser = abs(
-                        creationDate.timeIntervalSince(lastSignInDate)
-                    ) <= 1.0
-                } else {
-                    isNewUser = false
-                }
-                onSignIn(isNewUser)
+                onSignIn(Self.isNewUser(currentUser.metadata))
+                authService.isPresented = false
             }
-            .onChange(of: authService.isPresented) { _, isPresented in
-                if !isPresented && !didFinish {
-                    onDismiss()
-                }
+            .onChange(of: authService.isPresented) { _, shown in
+                guard !shown else { return }
+                if !didFinish { onDismiss() }
+                isPresented = false
             }
     }
 }
@@ -222,27 +221,20 @@ private struct SignInSheet: ViewModifier {
     @Binding var isPresented: Bool
     let onSignIn: (Bool) -> Void
     let onDismiss: () -> Void
-    @State private var signedIn = false
 
     func body(content: Content) -> some View {
-        content.sheet(isPresented: $isPresented, onDismiss: {
-            if !signedIn { onDismiss() }
-            signedIn = false
-        }) {
-            #if canImport(FirebaseAuthSwiftUI)
-            FirebaseAuthView(
-                onSignIn: { isNewUser in
-                    signedIn = true
-                    SignIn.completed(isNewUser: isNewUser)
-                    onSignIn(isNewUser)
-                    isPresented = false
-                },
-                onDismiss: { isPresented = false }
-            )
-            #else
-            Text("Sign-in is unavailable in this build.")
-            #endif
+        #if canImport(FirebaseAuthSwiftUI)
+        content.background {
+            FirebaseAuthHost(isPresented: $isPresented,
+                             onSignIn: { isNewUser in
+                                 SignIn.completed(isNewUser: isNewUser)
+                                 onSignIn(isNewUser)
+                             },
+                             onDismiss: onDismiss)
         }
+        #else
+        content
+        #endif
     }
 }
 
