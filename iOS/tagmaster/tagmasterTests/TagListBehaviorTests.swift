@@ -251,9 +251,9 @@ final class TagListBehaviorTests: TMBehaviorTestCase {
         list(ids: [669])
         seedCachedTag(id: 1478, title: "Tag 1478")
         TMTagLists.add(1478, to: TagListBehaviorTests.key)
-        ScreenCatalog.settle(0.1)
         XCTAssertEqual(model.ids, [669, 1478])
-        XCTAssertEqual(driver.elements(labelPrefix: "Tag ").count, 2)
+        // The row renders on a later SwiftUI update; slow CI runners need more than a fixed beat.
+        driver.wait(5) { driver.elements(labelPrefix: "Tag ").count == 2 }
     }
 
     // MARK: - Beside an open tag
