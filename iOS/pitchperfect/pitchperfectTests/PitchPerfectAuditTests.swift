@@ -24,6 +24,15 @@ extension HostedApp {
             .filter { $0.window != nil && !$0.isHidden && $0.bounds.height > 100 }
             .max { $0.contentSize.height < $1.contentSize.height }
     }
+
+    /// The tab's list once SwiftUI has mounted it; a cold CI runner can take a few beats.
+    func waitForListScrollView(timeout: TimeInterval = 5) -> UIScrollView? {
+        let deadline = Date().addingTimeInterval(timeout)
+        while listScrollView == nil, Date() < deadline {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.02))
+        }
+        return listScrollView
+    }
 }
 
 // MARK: - Rows press as the UIKit cells did
@@ -217,7 +226,7 @@ final class SongsAuditTests: PitchPerfectTestCase {
         let other = try customList(named: "Saturday show")
         let app = try launch()
         app.show(tab: 3)
-        let list = try XCTUnwrap(app.listScrollView)
+        let list = try XCTUnwrap(app.waitForListScrollView())
         let top = -list.adjustedContentInset.top
         list.setContentOffset(CGPoint(x: 0, y: top + 437), animated: false)
         ScreenCatalog.settle(0.2)
@@ -226,7 +235,7 @@ final class SongsAuditTests: PitchPerfectTestCase {
         ScreenCatalog.settle(0.3)
         DPSongsModel.sharedInstance.currentListId = DPSongsModel.defaultListId
         ScreenCatalog.settle(0.3)
-        let restored = try XCTUnwrap(app.listScrollView)
+        let restored = try XCTUnwrap(app.waitForListScrollView())
         if #available(iOS 18.0, *) {
             XCTAssertEqual(restored.contentOffset.y, top + 437, accuracy: 0.5, "the exact offset, as UIKit kept it")
         } else {
@@ -245,12 +254,12 @@ final class SongsAuditTests: PitchPerfectTestCase {
         }
         let app = try launch()
         app.show(tab: 3)
-        let list = try XCTUnwrap(app.listScrollView)
+        let list = try XCTUnwrap(app.waitForListScrollView())
         list.setContentOffset(CGPoint(x: 0, y: -list.adjustedContentInset.top + 500), animated: false)
         ScreenCatalog.settle(0.2)
         app.songs.select(listId: other.id)
         ScreenCatalog.settle(0.3)
-        let shown = try XCTUnwrap(app.listScrollView)
+        let shown = try XCTUnwrap(app.waitForListScrollView())
         XCTAssertEqual(shown.contentOffset.y, -shown.adjustedContentInset.top, accuracy: 0.5)
     }
 
@@ -304,14 +313,14 @@ final class InstrumentListPlaceTests: PitchPerfectTestCase {
         let app = try launch()
         for tab in [1, 2] {
             app.show(tab: tab)
-            let list = try XCTUnwrap(app.listScrollView)
+            let list = try XCTUnwrap(app.waitForListScrollView())
             let top = -list.adjustedContentInset.top
             XCTAssertGreaterThan(list.contentOffset.y, top + 1, "opens midway")
             list.setContentOffset(CGPoint(x: 0, y: top), animated: false)
             ScreenCatalog.settle(0.1)
             app.show(tab: 0)
             app.show(tab: tab)
-            let again = try XCTUnwrap(app.listScrollView)
+            let again = try XCTUnwrap(app.waitForListScrollView())
             XCTAssertEqual(again.contentOffset.y, top, accuracy: 0.5,
                            "coming back to the tab keeps the place, as UIKit's viewDidLoad-only scroll did")
         }
