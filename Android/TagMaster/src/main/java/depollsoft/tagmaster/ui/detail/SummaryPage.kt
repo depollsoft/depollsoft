@@ -39,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.input.InputMode
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalConfiguration
@@ -373,7 +374,7 @@ private fun KeyNoteButton(tag: Tag) {
                 background.state =
                     if (playing) intArrayOf(android.R.attr.state_enabled, android.R.attr.state_activated) else intArrayOf(android.R.attr.state_enabled)
                 drawPlatform(background, 0, 0, size.width.toInt(), size.height.toInt())
-                if (highlight) drawRect(colors.controlHighlight)
+                if (highlight) drawOutline(shape.createOutline(size, layoutDirection, this), colors.controlHighlight)
             }.clip(shape)
             .notePress(player, { tag.keyNote }, description = noteDescription(note), view = LocalView.current, interactionSource = interactions)
             .padding(horizontal = 16.dp, vertical = 8.dp)

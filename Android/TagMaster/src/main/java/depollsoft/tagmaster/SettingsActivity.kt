@@ -28,7 +28,6 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -431,7 +430,9 @@ private fun WakeLockSwitch() {
         Modifier
             .fillMaxWidth()
             .heightIn(min = 48.dp)
-            .toggleable(checked, interactions, ripple(), role = Role.Switch) { SettingsModel.wakeLockOnSheetMusic = it }
+            // Only the thumb ripples, as MaterialSwitch bounded its ripple there; the Switch draws it
+            // from the shared interactions.
+            .toggleable(checked, interactions, indication = null, role = Role.Switch) { SettingsModel.wakeLockOnSheetMusic = it }
             .testTag("sheetMusicWakeLockCheckBox"),
         verticalAlignment = ViewAlign.CenterVertically,
     ) {
