@@ -42,6 +42,17 @@ public class Preferences {
   // Test mode support
   private static boolean testMode = false;
   private static Map<String, Object> testValues = new HashMap<>();
+  /** Per-key change signals for the test store, so observers behave as they do on a device. */
+  private static final Map<String, ChangeSignal> testSignals = new HashMap<>();
+
+  private static ChangeSignal testSignal(String key) {
+    ChangeSignal signal = testSignals.get(key);
+    if (signal == null) {
+      signal = new ChangeSignal();
+      testSignals.put(key, signal);
+    }
+    return signal;
+  }
 
   /**
    * Lazily initialize SharedPreferences. This is done lazily to allow test mode
@@ -99,6 +110,7 @@ public class Preferences {
   @SuppressWarnings("unchecked")
   public static <T> T get(String key) {
     if (testMode) {
+      testSignal(key).read();
       return (T) testValues.get(key);
     }
 
@@ -179,10 +191,14 @@ public class Preferences {
 
   private static boolean set(String key, Object value, boolean synchronous) {
     if (testMode) {
-      if (value == null) {
-        testValues.remove(key);
-      } else {
-        testValues.put(key, value);
+      Object previous = value == null ? testValues.remove(key) : testValues.put(key, value);
+      // Like SharedPreferences' listener, an equal value is no change. The same collection or
+      // object set again may have been edited in place, so it counts: on a device its stored
+      // string would differ.
+      boolean editedInPlace = previous == value && value != null && !(value instanceof String
+          || value instanceof Number || value instanceof Boolean);
+      if (editedInPlace || !java.util.Objects.equals(previous, value)) {
+        testSignal(key).changed();
       }
       return true;
     }
