@@ -87,22 +87,21 @@ private class SoundsWhileHeldNode(
                     } else {
                         held.play()
                     }
-                    while (true) {
-                        // The final pass, after the list has had its chance to claim the finger for a scroll.
-                        val event = awaitPointerEvent(PointerEventPass.Final)
-                        val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                        if (!change.pressed) {
-                            if (!toggle) held.stop()
-                            break
+                    try {
+                        while (true) {
+                            // The final pass, after the list has had its chance to claim the finger for a scroll.
+                            val event = awaitPointerEvent(PointerEventPass.Final)
+                            val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                            // Lifting, or a scroll taking the finger (the View's ACTION_CANCEL).
+                            if (!change.pressed || change.isConsumed) break
+                            if (toggle && change.positionChanged() && change.uptimeMillis - down.uptimeMillis > TOGGLE_SLOP_MS) {
+                                held.stop()
+                            }
                         }
-                        if (change.isConsumed) {
-                            // A scroll took the finger: the View saw ACTION_CANCEL.
-                            if (!toggle) held.stop()
-                            break
-                        }
-                        if (toggle && change.positionChanged() && change.uptimeMillis - down.uptimeMillis > TOGGLE_SLOP_MS) {
-                            held.stop()
-                        }
+                    } finally {
+                        // Also when the row leaves the list mid-press (its list deleted by a
+                        // sync, say): the gesture is cancelled with no further event.
+                        if (!toggle) held.stop()
                     }
                 }
             },

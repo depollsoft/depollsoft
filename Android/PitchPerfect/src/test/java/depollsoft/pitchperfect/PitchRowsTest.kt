@@ -1,6 +1,13 @@
 package depollsoft.pitchperfect
 
 import android.os.Looper
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
@@ -14,8 +21,8 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performSemanticsAction
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.unit.dp
 import depollsoft.lib.activity.RichApplication
 import depollsoft.lib.util.Preferences
 import depollsoft.pitchperfect.lib.Accidental
@@ -68,6 +75,35 @@ class PitchRowsTest {
         compose.waitForIdle()
         shadowOf(Looper.getMainLooper()).idle()
         compose.waitForIdle()
+    }
+
+    @Test
+    fun aHeldRowThatLeavesTheListStopsItsNote() {
+        var shown by mutableStateOf(true)
+        var sounding = false
+        compose.setContent {
+            if (shown) {
+                Box(
+                    Modifier
+                        .testTag("row")
+                        .size(200.dp, 60.dp)
+                        .soundsWhileHeld(
+                            toggleMode = { false },
+                            isPlaying = { sounding },
+                            play = { sounding = true },
+                            stop = { sounding = false },
+                        ),
+                )
+            }
+        }
+        compose.onNodeWithTag("row").performTouchInput { down(center) }
+        settle()
+        assertTrue("the row sounds while held", sounding)
+
+        // Its list goes away under the finger (deleted by a sync, say).
+        shown = false
+        settle()
+        assertFalse("the note stops with the row", sounding)
     }
 
     // ==================== Notes ====================
