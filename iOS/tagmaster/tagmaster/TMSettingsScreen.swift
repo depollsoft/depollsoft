@@ -145,6 +145,7 @@ final class TMSettingsModel {
 
 struct TMSettingsScreen: View {
     @Bindable var model: TMSettingsModel
+    @Environment(\.tmTintDimmed) private var dimmed
 
     var body: some View {
         List {
@@ -201,7 +202,7 @@ struct TMSettingsScreen: View {
         Button(action: action) {
             Text(title)
                 .font(TMTheme.font(.body))
-                .foregroundStyle(TMTheme.accent)
+                .foregroundStyle(TMTheme.tint(DPAppDelegate.accentColor(), dimmed: dimmed))
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
         }
@@ -213,7 +214,7 @@ struct TMSettingsScreen: View {
         return Button { model.clearTapped(list) } label: {
             HStack {
                 Text(title)
-                    .foregroundStyle(count > 0 ? Color(uiColor: .systemRed) : Color(uiColor: .tertiaryLabel))
+                    .foregroundStyle(count > 0 ? TMTheme.tint(.systemRed, dimmed: dimmed) : Color(uiColor: .tertiaryLabel))
                 Spacer()
                 Text(TMSettingsModel.tagCount(count)).foregroundStyle(Color(uiColor: .secondaryLabel))
             }

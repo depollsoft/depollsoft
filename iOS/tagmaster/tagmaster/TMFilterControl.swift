@@ -49,10 +49,11 @@ struct TMFilterRow: View {
                 }
             }
         }
-        .padding(.top, 12)
-        // A UITableView cell also gives its separator a point of its own height.
-        .padding(.bottom, 13)
-        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+        // The old cell's stack sat 12pt below the cell top, which starts a point
+        // under the separator above; SwiftUI's row starts at the separator.
+        .padding(.top, 13)
+        .padding(.bottom, 12)
+        .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
     }
 
     /// The width the segments need, as TMFilterControl measured it: each title in

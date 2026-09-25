@@ -209,11 +209,17 @@ final class TagListsScreenCatalogTests: TMBehaviorTestCase {
 
     private func scrollToBottom(_ scroll: UIScrollView?) {
         guard let scroll else { return }
-        scroll.layoutIfNeeded()
-        let bottom = max(-scroll.adjustedContentInset.top,
-                         scroll.contentSize.height - scroll.bounds.height + scroll.adjustedContentInset.bottom)
-        scroll.setContentOffset(CGPoint(x: 0, y: bottom), animated: false)
-        ScreenCatalog.settle(0.3)
+        // A lazy list measures its last rows only once they are near; scroll
+        // until the content height stops changing.
+        for _ in 0..<6 {
+            scroll.layoutIfNeeded()
+            let bottom = max(-scroll.adjustedContentInset.top,
+                             scroll.contentSize.height - scroll.bounds.height + scroll.adjustedContentInset.bottom)
+            let height = scroll.contentSize.height
+            scroll.setContentOffset(CGPoint(x: 0, y: bottom), animated: false)
+            ScreenCatalog.settle(0.2)
+            if scroll.contentSize.height == height && abs(scroll.contentOffset.y - bottom) < 0.5 { break }
+        }
     }
 
     private func firstScrollView(in controller: UIViewController?) -> UIScrollView? {

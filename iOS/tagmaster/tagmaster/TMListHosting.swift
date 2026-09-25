@@ -75,7 +75,7 @@ final class TMHostingController: UIHostingController<AnyView>, TMTagListSource {
 
     init<Content: View>(_ content: Content, chrome: @escaping (TMHostingController) -> TMChrome) {
         self.chrome = chrome
-        super.init(rootView: AnyView(content))
+        super.init(rootView: AnyView(content.tmFollowsTintDimming()))
     }
 
     @available(*, unavailable)

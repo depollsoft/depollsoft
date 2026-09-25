@@ -263,6 +263,7 @@ final class TMHomeModel: TMTagListing {
 
 struct TMHomeScreen: View {
     @Bindable var model: TMHomeModel
+    @Environment(\.tmTintDimmed) private var dimmed
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -293,14 +294,23 @@ struct TMHomeScreen: View {
                     .onDelete { model.removeFavorites(at: $0) }
                     .onMove { model.moveFavorite(from: $0, to: $1) }
                 } header: {
-                    TMSectionHeader("Favorites")
+                    // A section with no rows sets its header higher than UITableView did.
+                    TMSectionHeader("Favorites").padding(.top, model.favorites.isEmpty ? 7 : 0)
                 } footer: {
-                    if model.favorites.isEmpty { TMSectionFooter(TMHomeModel.noFavoritesFooter) }
+                    if model.favorites.isEmpty { TMSectionFooter(TMHomeModel.noFavoritesFooter).offset(y: -1.0 / 3) }
                 }
-                TMHomeCredits(open: { model.navigator?.openURL($0) })
+                Section {
+                    TMHomeCredits(afterRows: !model.favorites.isEmpty, open: { model.navigator?.openURL($0) })
+                }
+                // Under the explanation the credits follow as closely as a table footer did.
+                .listSectionSpacing(model.favorites.isEmpty ? 1.0 / 3 : 15)
             }
             .listStyle(.grouped)
             .listSectionSpacing(.custom(15))
+            // UITableView ended Home with its footer view. A grouped List leaves more
+            // after it: 20pt of margin and 32pt of closing section space on iPhone;
+            // in the iPad sidebar the table itself left 8pt more than the List.
+            .contentMargins(.bottom, UIDevice.current.userInterfaceIdiom == .pad ? 8 : -32, for: .scrollContent)
             .scrollContentBackground(.hidden)
             .environment(\.editMode, .constant(model.isEditing ? .active : .inactive))
             .tmTracksScrolling($model.isScrolling)
@@ -371,7 +381,7 @@ struct TMHomeScreen: View {
         Button { model.newList() } label: {
             HStack(spacing: 0) {
                 Image(systemName: "plus.circle")
-                    .foregroundStyle(TMTheme.accent)
+                    .foregroundStyle(TMTheme.tint(DPAppDelegate.accentColor(), dimmed: dimmed))
                     .frame(width: 24)
                     .padding(.trailing, 15)
                 Text("New list…").font(TMTheme.font(.body)).foregroundStyle(Color(uiColor: .label))
@@ -390,6 +400,8 @@ extension View {
     /// UITableView's inset-grouped spacing above the first section.
     func tmInsetGroupedMetrics() -> some View {
         contentMargins(.top, 15, for: .scrollContent)
+            // UITableView ends an inset-grouped table 30pt below its last section (SwiftUI: 20).
+            .contentMargins(.bottom, 30, for: .scrollContent)
             .listSectionSpacing(.custom(16.0 / 3))
     }
 }
@@ -435,6 +447,9 @@ struct TMListCountRow: View {
 
 /// The links under Home: attribution, then developer, terms and donation.
 struct TMHomeCredits: View {
+    @Environment(\.tmTintDimmed) private var dimmed
+    /// Under favourite rows (rather than the empty explanation) UIKit left 2pt more.
+    var afterRows = false
     let open: (URL) -> Void
 
     private var year: Int { Calendar.current.component(.year, from: Date()) }
@@ -456,7 +471,7 @@ struct TMHomeCredits: View {
                 }
             }
         }
-        .padding(EdgeInsets(top: 8, leading: 16, bottom: 16, trailing: 16))
+        .padding(EdgeInsets(top: afterRows ? 10 : 8, leading: 16, bottom: 16, trailing: 16))
         .frame(maxWidth: .infinity)
         .listRowInsets(EdgeInsets())
         .listRowBackground(Color.clear)
@@ -477,7 +492,7 @@ struct TMHomeCredits: View {
             Text(title)
                 .font(TMTheme.font(.footnote))
                 .multilineTextAlignment(.center)
-                .foregroundStyle(TMTheme.accent)
+                .foregroundStyle(TMTheme.tint(DPAppDelegate.accentColor(), dimmed: dimmed))
                 .padding(4)
                 .frame(maxWidth: .infinity, minHeight: 44)
                 .contentShape(Rectangle())

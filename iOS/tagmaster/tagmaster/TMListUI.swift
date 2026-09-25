@@ -13,8 +13,22 @@ import UIKit
 
 // MARK: - Theme
 
+extension EnvironmentValues {
+    /// True while UIKit dims the screen's tint (an alert or sheet is up).
+    @Entry var tmTintDimmed = false
+}
+
 enum TMTheme {
     static var accent: Color { Color(uiColor: DPAppDelegate.accentColor()) }
+
+    /// A tint as UIKit shows it: its own colour, or UIKit's dimmed grey while dimmed.
+    static func tint(_ color: UIColor, dimmed: Bool) -> Color {
+        guard dimmed else { return Color(uiColor: color) }
+        let probe = UIView()
+        probe.tintColor = color
+        probe.tintAdjustmentMode = .dimmed
+        return Color(uiColor: probe.tintColor)
+    }
 
     /// The row wash for the tag open beside a list: the accent at 14% (22% in dark).
     static let selectionWash = Color(uiColor: UIColor { traits in
@@ -233,6 +247,7 @@ struct TMTagRowContent: Equatable {
 /// One tag in a list: title, a.k.a., the facts line and the two media marks, as
 /// DPTagCell drew them.
 struct TMTagRow: View {
+    @Environment(\.tmTintDimmed) private var dimmed
     let content: TMTagRowContent
     var loading = false
     var showsChevron = true
@@ -275,7 +290,7 @@ struct TMTagRow: View {
             Image(systemName: on ? "checkmark" : "xmark")
                 .font(TMTheme.font(.body))
                 .frame(width: 20, height: 20)
-                .foregroundStyle(on ? Color(uiColor: .systemGreen) : Color(uiColor: .secondaryLabel))
+                .foregroundStyle(on ? TMTheme.tint(.systemGreen, dimmed: dimmed) : Color(uiColor: .secondaryLabel))
             Text(label).font(TMTheme.font(.caption1)).tmLabelMetrics(.caption1)
         }
     }
@@ -288,4 +303,41 @@ extension View {
             .accessibilityAddTraits(selected ? .isSelected : [])
             .accessibilityRemoveTraits(selected ? [] : .isSelected)
     }
+}
+
+/// Reads UIKit's tint dimming where the screen sits and hands it to SwiftUI.
+private struct TMTintDimmingReader: UIViewRepresentable {
+    @Binding var dimmed: Bool
+
+    final class Probe: UIView {
+        var changed: ((Bool) -> Void)?
+        override func tintColorDidChange() {
+            super.tintColorDidChange()
+            changed?(tintAdjustmentMode == .dimmed)
+        }
+    }
+
+    func makeUIView(context: Context) -> Probe {
+        let probe = Probe()
+        probe.isUserInteractionEnabled = false
+        probe.changed = { value in DispatchQueue.main.async { if dimmed != value { dimmed = value } } }
+        return probe
+    }
+
+    func updateUIView(_ probe: Probe, context: Context) {}
+}
+
+private struct TMTintDimming: ViewModifier {
+    @State private var dimmed = false
+
+    func body(content: Content) -> some View {
+        content
+            .environment(\.tmTintDimmed, dimmed)
+            .background { TMTintDimmingReader(dimmed: $dimmed).accessibilityHidden(true) }
+    }
+}
+
+extension View {
+    /// Tinted colours inside follow UIKit's dimming, as UIKit views did.
+    func tmFollowsTintDimming() -> some View { modifier(TMTintDimming()) }
 }
