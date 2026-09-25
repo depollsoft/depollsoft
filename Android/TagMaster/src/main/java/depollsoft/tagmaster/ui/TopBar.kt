@@ -319,7 +319,10 @@ private fun ActionButton(
     }
 }
 
-/** The overflow popup, styled as the Popup overlay styled AppCompat's. */
+/**
+ * The overflow popup, styled as the Popup overlay styled AppCompat's. It follows the app's
+ * appearance, not the chrome's, so its press and focus highlights are the app surface's too.
+ */
 @Composable
 private fun OverflowMenu(
     expanded: Boolean,
@@ -327,27 +330,29 @@ private fun OverflowMenu(
     onDismiss: () -> Unit,
 ) {
     val colors = TagMasterTheme.colors
-    DropdownMenu(
-        expanded = expanded,
-        onDismissRequest = onDismiss,
-        containerColor = colors.surfaceContainerHigh,
-    ) {
-        for (item in items) {
-            DropdownMenuItem(
-                text = {
-                    Text(
-                        item.title,
-                        style = TagMasterType.bodyLarge.withoutLineHeight(),
-                        color = if (item.enabled) colors.onSurface else colors.onSurface.copy(alpha = 0.38f),
-                    )
-                },
-                enabled = item.enabled,
-                modifier = Modifier.testTag(item.id),
-                onClick = {
-                    onDismiss()
-                    item.onClick()
-                },
-            )
+    OnAppSurface {
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = onDismiss,
+            containerColor = colors.surfaceContainerHigh,
+        ) {
+            for (item in items) {
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            item.title,
+                            style = TagMasterType.bodyLarge.withoutLineHeight(),
+                            color = if (item.enabled) colors.onSurface else colors.onSurface.copy(alpha = 0.38f),
+                        )
+                    },
+                    enabled = item.enabled,
+                    modifier = Modifier.testTag(item.id),
+                    onClick = {
+                        onDismiss()
+                        item.onClick()
+                    },
+                )
+            }
         }
     }
 }

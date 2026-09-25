@@ -167,6 +167,16 @@ fun OnChrome(content: @Composable () -> Unit) {
     CompositionLocalProvider(LocalRippleConfiguration provides TagMasterTheme.colors.chromeHighlight.asRipple(), content = content)
 }
 
+/**
+ * [content] back on the app's surface inside the chrome, as a popup opened from the toolbar is:
+ * its ripples and focus highlights are the app's again.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun OnAppSurface(content: @Composable () -> Unit) {
+    CompositionLocalProvider(LocalRippleConfiguration provides TagMasterTheme.colors.controlHighlight.asRipple(), content = content)
+}
+
 object TagMasterTheme {
     val colors: TagMasterColors
         @Composable get() = LocalTagMasterColors.current
