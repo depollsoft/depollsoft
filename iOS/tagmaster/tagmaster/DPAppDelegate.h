@@ -56,6 +56,8 @@ FOUNDATION_EXPORT NSNotificationName const TMTagSelectionDidChangeNotification;
 + (void)installSharedBackgroundIn:(UIView *)view;
 /// Returns to per-screen watermarks (tests).
 + (void)removeSharedBackground;
+/// Whether the split draws the one watermark behind both columns, so screens stay clear.
++ (BOOL)hasSharedBackground;
 /// Opens a tag from any screen: the secondary column on a regular-width iPad,
 /// a push on the current navigation stack everywhere else.
 + (void)showTagWithId:(int)tagId from:(UIViewController *)sender;

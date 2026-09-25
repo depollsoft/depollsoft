@@ -252,25 +252,31 @@ final class TagListsScreenCatalogTests: TMBehaviorTestCase {
         ScreenCatalog.settle(0.4)
         shoot("home-open-tag-alert-light")
         navigation.topViewController?.dismiss(animated: false)
-        ScreenCatalog.settle(0.2)
+        Screens.homeModel(navigation.topViewController!).openTagPrompt = nil
+        ScreenCatalog.settle(0.3)
 
-        present(TMListNamePrompt.createAlert { _ in }, from: navigation)
+        let model = Screens.homeModel(navigation.topViewController!)
+        model.newList()
+        ScreenCatalog.settle(0.4)
         shoot("home-new-list-alert-light")
         navigation.topViewController?.dismiss(animated: false)
-        ScreenCatalog.settle(0.2)
+        model.namePrompt = nil
+        ScreenCatalog.settle(0.3)
 
-        let rename = TMListNamePrompt.renameAlert(for: "afterglow-set-k3f9") { _ in }
-        present(rename, from: navigation)
-        if let field = (rename as? UIAlertController)?.textFields?.first {
+        model.rename("afterglow-set-k3f9")
+        ScreenCatalog.settle(0.4)
+        if let field = (navigation.topViewController?.presentedViewController as? UIAlertController)?.textFields?.first {
             field.text = "Chorus warmups"
             field.sendActions(for: .editingChanged)
-            ScreenCatalog.settle(0.2)
+            ScreenCatalog.settle(0.3)
         }
         shoot("home-rename-list-duplicate-alert-light")
         navigation.topViewController?.dismiss(animated: false)
-        ScreenCatalog.settle(0.2)
+        model.namePrompt = nil
+        ScreenCatalog.settle(0.3)
 
-        present(TMListDeletePrompt.alert(for: "afterglow-set-k3f9") {}, from: navigation)
+        model.confirmDelete("afterglow-set-k3f9")
+        ScreenCatalog.settle(0.4)
         shoot("home-delete-list-alert-light")
     }
 
@@ -419,10 +425,11 @@ final class TagListsScreenCatalogTests: TMBehaviorTestCase {
 /// implementation is current.
 @MainActor
 enum Screens {
-    static func home() -> UIViewController { DPHomeViewController() }
+    static func home() -> UIViewController { TMScreens.home() }
     static func setHomeEditing(_ home: UIViewController, _ editing: Bool) { home.setEditing(editing, animated: false) }
-    static func openTag(_ home: UIViewController) { (home as! DPHomeViewController).openTag() }
-    static func randomTag(_ home: UIViewController) { home.perform(Selector(("randomTag"))) }
+    static func homeModel(_ home: UIViewController) -> TMHomeModel { (home as! TMHostingController).listing as! TMHomeModel }
+    static func openTag(_ home: UIViewController) { homeModel(home).openTagPrompt = TMOpenTagPrompt() }
+    static func randomTag(_ home: UIViewController) { homeModel(home).randomTag() }
     static func browse() -> UIViewController { DPBrowseViewController() }
     static func selectBrowsePage(_ browse: UIViewController, _ index: Int) {
         (browse as! TMPageViewController).selectedIndex = UInt(index)
@@ -441,6 +448,6 @@ enum Screens {
     }
     static func settings() -> UIViewController { SignedOutSettings() }
     static func clearFavorites(_ settings: UIViewController) { settings.perform(Selector(("clearFavorites"))) }
-    static func teachable() -> UIViewController { DPTeachableTagsController() }
-    static func list(_ key: String) -> UIViewController { TMTagListController(listKey: key) }
+    static func teachable() -> UIViewController { TMScreens.teachable() }
+    static func list(_ key: String) -> UIViewController { TMScreens.list(key: key) }
 }

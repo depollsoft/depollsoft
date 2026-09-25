@@ -248,10 +248,10 @@ final class TagDetailBehaviorTests: TMBehaviorTestCase {
         let chips = self.chips(in: summary)
 
         chip(chips, identifier: "summary.chip.teachable")?.sendActions(for: .touchUpInside)
-        XCTAssertTrue(navigation.pushed.last is DPTeachableTagsController)
+        XCTAssertTrue(navigation.pushed.last.map { TMScreens.isListScreen($0, key: TMTagLists.teachableKey) } ?? false)
 
         chip(chips, identifier: "summary.chip.afterglow-set-k3f9")?.sendActions(for: .touchUpInside)
-        XCTAssertEqual((navigation.pushed.last as? TMTagListController)?.listKey, "afterglow-set-k3f9")
+        XCTAssertTrue(navigation.pushed.last.map { TMScreens.isListScreen($0, key: "afterglow-set-k3f9") } ?? false)
     }
 
     func testAChipRemovesItsTagFromThatListThroughItsAccessibilityAction() {
@@ -271,7 +271,7 @@ final class TagDetailBehaviorTests: TMBehaviorTestCase {
     func testTheFavoritesChipGoesBackToHomeWhereFavoritesLive() {
         seedLists(favorite: [1809])
         let tag = seedCachedTag(id: 1809)
-        let home = DPHomeViewController(style: .grouped)
+        let home = TMScreens.home()
         let summary = DPTagSummaryController()
         summary.busyIndicator = DPBusyIndicator()
         summary.tag = tag

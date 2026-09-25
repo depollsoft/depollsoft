@@ -3,7 +3,6 @@
 #import <objc/runtime.h>
 
 #import "DPAppDelegate.h"
-#import "DPHomeViewController.h"
 #import "DPBrowseViewController.h"
 #import "DPTagViewController.h"
 #import "DPTagSummaryController.h"
@@ -63,10 +62,6 @@ static NSData *TMSheetMusicFixturePDF(void) {
                                 withAttributes:@{NSFontAttributeName:[UIFont systemFontOfSize:20]}];
     }];
 }
-
-@interface DPHomeViewController (Testing)
-- (NSArray<NSDictionary *> *)navigationItems;
-@end
 
 @interface DPAppDelegate (ListsTesting)
 + (NSArray<NSNumber *> *)favorites;
@@ -290,42 +285,6 @@ static NSString *const kListsDefaultsKey = @"depollsoft.pitchperfect.lists";
     XCTAssertEqual([videoTable.delegate tableView:videoTable heightForRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:1]], UITableViewAutomaticDimension);
 }
 
-- (void)testHomeViewControllerNavigationWithRandomTag {
-    DPTag *tag = [self buildSampleTagWithIdentifier:321];
-    [tag cache];
-    [DPAppDelegate setFavorites:@[@(tag.tagId)]];
-    
-    DPHomeViewController *home = [[DPHomeViewController alloc] initWithStyle:UITableViewStyleGrouped];
-    TestingNavigationController *nav = [[TestingNavigationController alloc] initWithRootViewController:home];
-    UIWindow *window = [[UIWindow alloc] initWithFrame:CGRectMake(0, 0, 320, 640)];
-    window.rootViewController = nav;
-    [window makeKeyAndVisible];
-    (void)home.view;
-    
-    UITableView *table = home.tableView;
-    XCTAssertEqual([home numberOfSectionsInTableView:table], 3);
-    XCTAssertEqual([home tableView:table numberOfRowsInSection:TMHomeFavoritesSection], 1);
-    UITableViewCell *favoriteCell = [home tableView:table cellForRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:TMHomeFavoritesSection]];
-    XCTAssertNotNil(favoriteCell);
-    
-    NSArray *items = [home navigationItems];
-    XCTAssertTrue(items.count >= 3);
-    
-    NSUInteger randomIndex = [items indexOfObjectPassingTest:^BOOL(NSDictionary *obj, NSUInteger idx, BOOL *stop) {
-        return [obj[@"title"] isEqualToString:@"Random Tag"];
-    }];
-    XCTAssertNotEqual(randomIndex, NSNotFound);
-
-    void (^randomAction)(void) = items[randomIndex][@"action"];
-    XCTAssertNotNil(randomAction);
-    XCTAssertNotNil([home valueForKey:@"busyIndicator"]);
-
-    [DPAppDelegate setFavorites:@[]];
-    [home.tableView reloadData];
-    [home.tableView layoutIfNeeded];
-    window.hidden = YES;
-    window.rootViewController = nil;
-}
 
 - (void)testTagViewControllerLoadsTag {
     DPTag *tag = [self buildSampleTagWithIdentifier:555];
@@ -417,7 +376,6 @@ static NSString *const kListsDefaultsKey = @"depollsoft.pitchperfect.lists";
 
 @end
 
-#import "DPTeachableTagsController.h"
 #import "DPPitchPipeButton.h"
 #import <QuickLook/QuickLook.h>
 
@@ -477,12 +435,6 @@ TM_CAPTURE_IMPL
 TM_CAPTURE
 @end
 @implementation TMTestSummary
-TM_CAPTURE_IMPL
-@end
-@interface TMTestHome : DPHomeViewController
-TM_CAPTURE
-@end
-@implementation TMTestHome
 TM_CAPTURE_IMPL
 @end
 @interface TMTestTracks : DPTagTracksController
@@ -793,28 +745,6 @@ TM_CAPTURE_IMPL
     } @finally { method_setImplementation(method, original); imp_removeBlock(mock); }
 }
 
-- (void)testRandomFailureAndEmptyResultRecover {
-    Method method = class_getClassMethod(DPTag.class, @selector(query:numberOfResults:start:parts:learningTracks:sheetMusic:collection:sortBy:minimumRating:minimumDownloads:cache:fieldList:));
-    IMP original = method_getImplementation(method);
-    __block BOOL fail = YES;
-    IMP mock = imp_implementationWithBlock(^DPTagQueryResult *(id cls, NSString *q, int n, int start, NSNumber *parts, NSNumber *tracks, NSNumber *sheet, enum DPTagCollection collection, enum DPTagSortOptions sort, NSNumber *rating, NSNumber *downloads, BOOL cache, NSString *fields) {
-        XCTAssertFalse(cache); XCTAssertEqualObjects(fields, @"id");
-        if (fail) [NSException raise:@"offline" format:@"private diagnostic"];
-        DPTagQueryResult *result = [DPTagQueryResult new]; result.available = 0; return result;
-    });
-    method_setImplementation(method, mock);
-    @try {
-        TMTestHome *home = [TMTestHome new]; [home loadViewIfNeeded];
-        NSDictionary *item = [[home navigationItems] filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"title == 'Random Tag'"]].firstObject;
-        ((void (^)(void))item[@"action"])();
-        [self waitUntil:^BOOL { return home.retry != nil; }];
-        XCTAssertEqual([[home valueForKey:@"busyIndicator"] busyCount], 0);
-        home.errorMessage = nil; fail = NO; home.retry();
-        [self waitUntil:^BOOL { return home.errorMessage != nil; }];
-        XCTAssertTrue([home.errorMessage containsString:@"Settings"]);
-        XCTAssertEqual([[home valueForKey:@"busyIndicator"] busyCount], 0);
-    } @finally { method_setImplementation(method, original); imp_removeBlock(mock); }
-}
 
 - (void)testSelfSizingRowsAndSpokenAvailability {
     DPTagCell *cell = [[DPTagCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
@@ -831,40 +761,8 @@ TM_CAPTURE_IMPL
     XCTAssertGreaterThan(enlarged, normal);
     XCTAssertTrue([cell.accessibilityLabel containsString:@"Sheet music unavailable"]);
     XCTAssertTrue([cell.accessibilityLabel containsString:@"Learning tracks unavailable"]);
-    DPHomeViewController *home = [DPHomeViewController new]; [home loadViewIfNeeded];
-    XCTAssertEqual([home tableView:home.tableView heightForRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:TMHomeFavoritesSection]], UITableViewAutomaticDimension);
 }
 
-- (void)testTeachableAlwaysDiscoverableAndEmptyGuidance {
-    NSArray *saved = [DPAppDelegate teachable];
-    @try {
-        [DPAppDelegate setTeachable:@[]];
-        DPHomeViewController *home = [DPHomeViewController new]; [home loadViewIfNeeded];
-        UITableViewCell *teachableRow = [home tableView:home.tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:TMHomeListsSection]];
-        XCTAssertEqualObjects(teachableRow.textLabel.text, @"Teachable Tags");
-        XCTAssertEqualObjects([home tableView:home.tableView titleForHeaderInSection:TMHomeListsSection], @"Lists");
-        DPTeachableTagsController *teachable = [DPTeachableTagsController new]; [teachable loadViewIfNeeded];
-        XCTAssertEqual([teachable tableView:teachable.tableView numberOfRowsInSection:0], 0);
-        UIView *header = teachable.tableView.tableHeaderView;
-        XCTAssertNotNil(header);
-        NSMutableArray<UIView *> *pending = [NSMutableArray array];
-        if (header) [pending addObject:header];
-        UIButton *browse = nil;
-        BOOL hasGuidance = NO;
-        while (pending.count) {
-            UIView *view = pending.lastObject;
-            [pending removeLastObject];
-            [pending addObjectsFromArray:view.subviews];
-            if ([view isKindOfClass:UIButton.class] && [view.accessibilityIdentifier isEqualToString:@"teachable.browse"]) browse = (UIButton *)view;
-            if ([view isKindOfClass:UILabel.class] && [((UILabel *)view).text containsString:@"Mark as Teachable"]) hasGuidance = YES;
-        }
-        XCTAssertEqualObjects([browse titleForState:UIControlStateNormal], @"Browse Tags");
-        XCTAssertTrue(hasGuidance);
-        XCTAssertTrue(browse.enabled);
-        XCTAssertTrue([[browse actionsForTarget:teachable forControlEvent:UIControlEventTouchUpInside] containsObject:@"browseTags"]);
-        XCTAssertFalse(teachable.editButtonItem.enabled);
-    } @finally { [DPAppDelegate setTeachable:saved]; }
-}
 
 - (void)testPitchActivationAndFormTargets {
     TMTestSummary *summary = [TMTestSummary new]; [summary loadViewIfNeeded]; summary.tag = [self tag];
@@ -1732,45 +1630,6 @@ TM_CAPTURE_IMPL
     XCTAssertNil(((DPTagViewController *)navigation.topViewController).source);
 }
 
-- (void)testTabletSavedListsReselectAfterReloadAndClearWhenCurrentTagIsRemoved {
-    NSArray *favorites = [DPAppDelegate favorites];
-    NSArray *teachable = [DPAppDelegate teachable];
-    Method cache = class_getClassMethod(DPTag.class, @selector(loadFromCache:));
-    IMP original = method_getImplementation(cache);
-    NSDictionary *tags = @{@42: [self tag:42], @99: [self tag:99]};
-    IMP mock = imp_implementationWithBlock(^DPTag *(id cls, int identifier) { return tags[@(identifier)]; });
-    method_setImplementation(cache, mock);
-    @try {
-        [DPAppDelegate setFavorites:@[@42, @99]];
-        [DPAppDelegate setTeachable:@[@42, @99]];
-        DPHomeViewController *home = [DPHomeViewController new];
-        TMTabletTestSplit *split = [self tabletSplitWithList:home];
-        DPTeachableTagsController *teachableList = [DPTeachableTagsController new];
-        for (UITableViewController<TMTagListSource> *list in @[(id)home, (id)teachableList]) {
-            if (list != home) [home.navigationController pushViewController:list animated:NO];
-            [list loadViewIfNeeded];
-            [DPAppDelegate showTagWithId:42 from:list];
-            XCTAssertEqualObjects([list tm_listedTagIds], (@[@42, @99]));
-            [list.tableView reloadData];
-            [list performSelector:@selector(tm_syncSelectionForSplit)];
-            NSIndexPath *selected = [NSIndexPath indexPathForRow:0 inSection:list == home ? TMHomeFavoritesSection : 0];
-            XCTAssertEqualObjects(list.tableView.indexPathForSelectedRow, selected);
-            XCTAssertFalse(list.clearsSelectionOnViewWillAppear);
-            [[self tabletDetail:split] stepToNextTag];
-            XCTAssertEqual(list.tableView.indexPathForSelectedRow.row, 1);
-            if (list == home) [DPAppDelegate setFavorites:@[@42]];
-            else [DPAppDelegate setTeachable:@[@42]];
-            [self drainUIKit];
-            XCTAssertNil(list.tableView.indexPathForSelectedRow);
-            XCTAssertFalse([[self tabletDetail:split] canPerformAction:@selector(stepToNextTag) withSender:nil]);
-        }
-    } @finally {
-        [DPAppDelegate setFavorites:favorites];
-        [DPAppDelegate setTeachable:teachable];
-        method_setImplementation(cache, original);
-        imp_removeBlock(mock);
-    }
-}
 
 - (void)testTabletSheetMusicStaysInDetailColumnAndCanGoFullScreen {
     DPTagQueryViewController *query = [self tabletQuery];
@@ -2755,121 +2614,6 @@ TM_CAPTURE_IMPL
     if ([view isKindOfClass:UILabel.class] && ((UILabel *)view).text.length > 0) [self assertWholeLabel:(id)view];
     for (UIView *child in view.subviews) [self checkLabelsIn:child];
 }
-- (void)testHomeAndTeachableZeroOneManyReorderGeometry {
-    Method favorites = class_getClassMethod(DPAppDelegate.class, @selector(favorites));
-    Method teachable = class_getClassMethod(DPAppDelegate.class, @selector(teachable));
-    Method cache = class_getClassMethod(DPTag.class, @selector(loadFromCache:));
-    IMP oldFavorites = method_getImplementation(favorites), oldTeachable = method_getImplementation(teachable), oldCache = method_getImplementation(cache);
-    __block NSArray *ids = @[];
-    DPTag *tag = [self layoutTag];
-    IMP list = imp_implementationWithBlock(^NSArray *(id owner) { return ids; });
-    IMP cached = imp_implementationWithBlock(^DPTag *(id owner, int identifier) { return tag; });
-    method_setImplementation(favorites, list); method_setImplementation(teachable, list); method_setImplementation(cache, cached);
-    @try {
-        for (NSNumber *count in @[@0, @1, @30]) {
-            NSMutableArray *items = [NSMutableArray array];
-            for (NSInteger i = 0; i < count.integerValue; i++) [items addObject:@(1809 + i)];
-            ids = items;
-            DPHomeViewController *home = [DPHomeViewController new];
-            [self mount:home width:393 category:UIContentSizeCategoryLarge];
-            XCTAssertEqual([home.tableView numberOfRowsInSection:TMHomeFavoritesSection], count.integerValue);
-            if (count.integerValue > 0) {
-                NSIndexPath *last = [NSIndexPath indexPathForRow:count.integerValue - 1 inSection:TMHomeFavoritesSection];
-                UITableViewCell *cell = [self scrollRow:last in:home.tableView position:UITableViewScrollPositionMiddle];
-                XCTAssertNotNil(cell); XCTAssertGreaterThan(cell.bounds.size.height, 44);
-                [self checkLabelsIn:cell.contentView];
-            }
-            if (count.integerValue == 30) [self captureLayout:@"home-many-default"];
-            DPTeachableTagsController *teachableController = [DPTeachableTagsController new];
-            [self mount:teachableController width:320 category:UIContentSizeCategoryAccessibilityExtraExtraExtraLarge];
-            XCTAssertEqual([teachableController.tableView numberOfRowsInSection:0], count.integerValue);
-            if (count.integerValue == 0) {
-                UIView *header = teachableController.tableView.tableHeaderView;
-                XCTAssertNotNil(header);
-                UIStackView *stack = (id)header.subviews.firstObject;
-                UIButton *browse = (id)stack.arrangedSubviews.lastObject;
-                XCTAssertEqualObjects(browse.currentTitle, @"Browse Tags");
-                for (NSNumber *width in @[@320, @834, @320]) {
-                    self.window.frame = CGRectMake(0, 0, width.doubleValue, 568); [self settle];
-                    UITableView *emptyTable = teachableController.tableView;
-                    UIWindow *window = self.window;
-                    // The empty-state header restacks over several passes after a width
-                    // change, so a scroll issued against the interim rect lands short.
-                    // Wait for the reachable state the assertions below read.
-                    TMSpinUntil(3, ^BOOL{
-                        [emptyTable scrollRectToVisible:[browse convertRect:browse.bounds toView:emptyTable] animated:NO];
-                        [self settle];
-                        CGRect reachable = UIEdgeInsetsInsetRect(emptyTable.bounds, emptyTable.adjustedContentInset);
-                        return browse.bounds.size.height >= 44
-                            && CGRectContainsRect(reachable, [browse convertRect:browse.bounds toView:emptyTable]);
-                    });
-                    [self checkLabelsIn:header];
-                    XCTAssertGreaterThanOrEqual(browse.bounds.size.height, 44);
-                    CGRect target = [browse convertRect:browse.bounds toView:teachableController.tableView];
-                    [teachableController.tableView scrollRectToVisible:target animated:NO]; [self settle];
-                    CGRect visible = UIEdgeInsetsInsetRect(teachableController.tableView.bounds, teachableController.tableView.adjustedContentInset);
-                    XCTAssertTrue(CGRectContainsRect(visible, target), @"Full Browse action reachable at %@pt: %@ in %@", width, NSStringFromCGRect(target), NSStringFromCGRect(visible));
-                    // Hit testing reaches the button only once the header has finished
-                    // placing it in the window; wait for that, not for a delay.
-                    TMSpinUntil(3, ^BOOL{
-                        CGPoint point = [browse convertPoint:CGPointMake(CGRectGetMidX(browse.bounds), CGRectGetMidY(browse.bounds)) toView:window];
-                        UIView *candidate = [window hitTest:point withEvent:nil];
-                        return candidate == browse || [candidate isDescendantOfView:browse];
-                    });
-                    CGPoint center = [browse convertPoint:CGPointMake(CGRectGetMidX(browse.bounds), CGRectGetMidY(browse.bounds)) toView:self.window];
-                    UIView *hit = [self.window hitTest:center withEvent:nil];
-                    XCTAssertTrue(hit == browse || [hit isDescendantOfView:browse]);
-                    UILabel *heading = (id)stack.arrangedSubviews.firstObject;
-                    TMSpinUntil(3, ^BOOL{
-                        CGRect current = [heading convertRect:CGRectMake(0, 0, heading.bounds.size.width, heading.font.lineHeight) toView:emptyTable];
-                        [emptyTable scrollRectToVisible:current animated:NO];
-                        [self settle];
-                        return CGRectIntersectsRect(emptyTable.bounds, [heading convertRect:CGRectMake(0, 0, heading.bounds.size.width, heading.font.lineHeight) toView:emptyTable]);
-                    });
-                    CGRect firstLine = [heading convertRect:CGRectMake(0, 0, heading.bounds.size.width, heading.font.lineHeight) toView:teachableController.tableView];
-                    [teachableController.tableView scrollRectToVisible:firstLine animated:NO]; [self settle];
-                    XCTAssertTrue(CGRectIntersectsRect(teachableController.tableView.bounds, firstLine));
-                    NSLog(@"TM_LAYOUT_PROBE empty width=%@ content=%.1f browse=%@ reachable=1", width, teachableController.tableView.contentSize.height, NSStringFromCGRect(target));
-                }
-                ids = @[@1809]; [teachableController.tableView reloadData]; [self settle];
-                TMSpinUntil(3, ^BOOL{ return teachableController.tableView.tableHeaderView == nil; });
-                XCTAssertNil(teachableController.tableView.tableHeaderView);
-                XCTAssertEqual([teachableController.tableView numberOfRowsInSection:0], 1);
-                ids = @[]; [teachableController.tableView reloadData]; [self settle];
-                TMSpinUntil(3, ^BOOL{ return teachableController.tableView.tableHeaderView != nil; });
-                XCTAssertNotNil(teachableController.tableView.tableHeaderView);
-            } else {
-                XCTAssertNil(teachableController.tableView.tableHeaderView);
-                NSIndexPath *last = [NSIndexPath indexPathForRow:count.integerValue - 1 inSection:0];
-                for (NSNumber *width in @[@320, @834, @320]) for (NSNumber *editing in @[@YES, @NO, @YES]) {
-                    self.window.frame = CGRectMake(0, 0, width.doubleValue, 852);
-                    [teachableController setEditing:editing.boolValue animated:NO]; [self settle];
-                    UITableViewCell *cell = [self scrollRow:last in:teachableController.tableView position:UITableViewScrollPositionBottom];
-                    XCTAssertNotNil(cell); XCTAssertEqual(cell.editing, editing.boolValue);
-                    XCTAssertTrue([teachableController tableView:teachableController.tableView canMoveRowAtIndexPath:last]);
-                    [self checkLabelsIn:cell.contentView];
-                    CGRect row = [teachableController.tableView rectForRowAtIndexPath:last];
-                    CGRect lastLine = CGRectMake(CGRectGetMidX(row), CGRectGetMaxY(row) - 1, 1, 1);
-                    XCTAssertTrue(CGRectContainsRect(teachableController.tableView.bounds, lastLine), @"Last row remains reachable after resizing and editing");
-                    XCTAssertTrue(cell.isAccessibilityElement);
-                    XCTAssertTrue([cell.accessibilityLabel containsString:@"Sheet music available"]);
-                    NSLog(@"TM_LAYOUT_PROBE teachable count=%@ width=%@ edit=%@ rowHeight=%.1f contentWidth=%.1f fullText=1 lastReachable=1", count, width, editing, cell.bounds.size.height, cell.contentView.bounds.size.width);
-                }
-                self.window.traitOverrides.preferredContentSizeCategory = UIContentSizeCategoryLarge;
-                self.window.frame = CGRectMake(0, 0, 393, 852);
-                [teachableController setEditing:NO animated:NO]; [self settle];
-                UITableViewCell *dense = [self scrollRow:last in:teachableController.tableView position:UITableViewScrollPositionBottom];
-                XCTAssertNotNil(dense);
-                [self checkLabelsIn:dense.contentView];
-                XCTAssertLessThan(dense.bounds.size.height, 260, @"Default catalog rows stay dense");
-            }
-        }
-    } @finally {
-        self.window.hidden = YES; self.window.rootViewController = nil;
-        method_setImplementation(favorites, oldFavorites); method_setImplementation(teachable, oldTeachable); method_setImplementation(cache, oldCache);
-        imp_removeBlock(list); imp_removeBlock(cached);
-    }
-}
 - (void)testMediaEmptyAndLongMetadataBounds {
     // Thumbnail fetches are the only remote boundary here; no video or audio opens.
     Method fetch = class_getClassMethod(DPRemoteLocation.class, @selector(dataWithContentsOfURL:error:));
@@ -3245,30 +2989,6 @@ TM_CAPTURE_IMPL
 - (void)testCompactHomeButtonsAndRefreshPending {
     for (NSNumber *dark in @[@NO, @YES]) {
         NSString *prefix = [NSString stringWithFormat:@"tagmaster-consistent-loading-ios-%@", dark.boolValue ? @"dark" : @"light"];
-        Method query = class_getClassMethod(DPTag.class, @selector(query:numberOfResults:start:parts:learningTracks:sheetMusic:collection:sortBy:minimumRating:minimumDownloads:cache:fieldList:));
-        IMP oldQuery = method_getImplementation(query);
-        dispatch_semaphore_t gate = dispatch_semaphore_create(0);
-        IMP queryMock = imp_implementationWithBlock(^DPTagQueryResult *(id cls, NSString *q, int n, int start, NSNumber *parts, NSNumber *tracks, NSNumber *sheet, enum DPTagCollection collection, enum DPTagSortOptions sort, NSNumber *rating, NSNumber *downloads, BOOL cache, NSString *fields) {
-            dispatch_semaphore_wait(gate, dispatch_time(DISPATCH_TIME_NOW, 20 * NSEC_PER_SEC));
-            [NSException raise:@"offline" format:@"Controlled pending fixture"]; return nil;
-        });
-        method_setImplementation(query, queryMock);
-        TMTestHome *home = [TMTestHome new];
-        @try {
-            [self mount:home width:UIScreen.mainScreen.bounds.size.width dark:dark.boolValue large:YES];
-            NSDictionary *item = [[home navigationItems] filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"title == 'Random Tag'"]].firstObject;
-            ((void (^)(void))item[@"action"])(); [self settle];
-            NSIndexPath *index = [home performSelector:NSSelectorFromString(@"randomTagIndexPath")];
-            [home.tableView scrollToRowAtIndexPath:index atScrollPosition:UITableViewScrollPositionMiddle animated:NO]; [self settle];
-            UITableViewCell *cell = [home.tableView cellForRowAtIndexPath:index];
-            TMBarberPoleLoadingView *pole = (id)cell.accessoryView; [self assertCompact:pole pending:YES];
-            XCTAssertEqualObjects(cell.accessibilityLabel, @"Random Tag, loading"); XCTAssertFalse(pole.isAccessibilityElement);
-            [self capture:[prefix stringByAppendingString:@"-random-row"]];
-            dispatch_semaphore_signal(gate);
-            [self waitUntil:^BOOL { return home.retry != nil; }]; [self settle];
-            XCTAssertNil([home.tableView cellForRowAtIndexPath:index].accessoryView);
-        } @finally { dispatch_semaphore_signal(gate); method_setImplementation(query, oldQuery); imp_removeBlock(queryMock); }
-
         TMHeldRatingTag *tag = [TMHeldRatingTag new]; tag.title = @"Lost"; tag.parts = 4; tag.rating = 4.5; tag.writtenKey = @"C";
         tag.gate = dispatch_semaphore_create(0); tag.failRating = YES;
         TMTestLocation *location = [TMTestLocation new]; location.type = @"pdf";
@@ -3337,62 +3057,6 @@ TM_CAPTURE_IMPL
     }
 }
 
-- (void)testFooterNativeSizes {
-    Method favorites = class_getClassMethod(DPAppDelegate.class, @selector(favorites));
-    Method cache = class_getClassMethod(DPTag.class, @selector(loadFromCache:));
-    IMP oldFavorites = method_getImplementation(favorites), oldCache = method_getImplementation(cache);
-    DPTag *tag = [self tag]; tag.title = @"Lost"; tag.alternativeTitle = @"In Your Eyes";
-    IMP mockFavorites = imp_implementationWithBlock(^NSArray *(id owner) { return @[@1809]; });
-    IMP mockCache = imp_implementationWithBlock(^DPTag *(id owner, int identifier) { return tag; });
-    method_setImplementation(favorites, mockFavorites); method_setImplementation(cache, mockCache);
-    @try {
-        CGFloat width = UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad ? 320 : UIScreen.mainScreen.bounds.size.width;
-        for (NSNumber *large in @[@NO, @YES]) for (NSNumber *dark in @[@NO, @YES]) {
-            DPHomeViewController *home = [DPHomeViewController new];
-            [self mount:home width:width dark:dark.boolValue large:large.boolValue];
-            [home.tableView reloadData]; [self settle];
-            UIView *footer = home.tableView.tableFooterView;
-            [home.tableView scrollRectToVisible:footer.frame animated:NO]; [self settle];
-            NSArray<UIButton *> *links = [self links:footer];
-            XCTAssertEqual(links.count, 4);
-            XCTAssertEqual([home.tableView numberOfRowsInSection:TMHomeFavoritesSection], 1);
-            NSLog(@"TM_FOOTER after width=%.0f large=%@ dark=%@ height=%.1f", width, large, dark, footer.bounds.size.height);
-            if (!large.boolValue && width > 320) {
-                XCTAssertGreaterThanOrEqual(footer.bounds.size.height, 110);
-                XCTAssertLessThanOrEqual(footer.bounds.size.height, 140);
-            }
-            NSArray *destinations = @[@"https://www.barbershoptags.com", @"https://apps.depoll.com", @"https://apps.depoll.com/terms-of-use", @"https://www.davidpoll.com/applications/tag-master/donate"];
-            XCTAssertEqualObjects([links valueForKeyPath:@"url.absoluteString"], destinations);
-            XCTAssertEqualObjects(links.firstObject.currentTitle, @"Content provided by BarbershopTags.com");
-            for (UIButton *button in links) {
-                XCTAssertGreaterThanOrEqual(button.bounds.size.height, 44);
-                XCTAssertGreaterThanOrEqual(button.bounds.size.width, 44);
-                XCTAssertTrue(button.accessibilityTraits & UIAccessibilityTraitLink);
-                XCTAssertEqualWithAccuracy(button.titleLabel.font.pointSize, [UIFont preferredFontForTextStyle:UIFontTextStyleFootnote compatibleWithTraitCollection:button.traitCollection].pointSize, 0.1);
-                CGSize text = [button.titleLabel sizeThatFits:CGSizeMake(button.titleLabel.bounds.size.width, CGFLOAT_MAX)];
-                XCTAssertGreaterThanOrEqual(button.titleLabel.bounds.size.height + 1, text.height);
-                CGRect rect = [button convertRect:button.bounds toView:footer];
-                XCTAssertTrue(CGRectContainsRect(CGRectInset(footer.bounds, -1, -1), rect));
-                for (UIButton *other in links) if (other != button) {
-                    XCTAssertFalse(CGRectIntersectsRect(CGRectInset(rect, 0.25, 0.25), [other convertRect:other.bounds toView:footer]), @"%@ overlaps %@", button.accessibilityIdentifier, other.accessibilityIdentifier);
-                }
-                CGRect tableRect = [button convertRect:button.bounds toView:home.tableView];
-                [home.tableView scrollRectToVisible:tableRect animated:NO]; [self settle];
-                CGPoint center = [button convertPoint:CGPointMake(button.bounds.size.width / 2, button.bounds.size.height / 2) toView:self.window];
-                XCTAssertEqual([self.window hitTest:center withEvent:nil], button);
-            }
-            if (!large.boolValue) {
-                XCTAssertEqualWithAccuracy([links[2] convertRect:links[2].bounds toView:footer].origin.y, [links[3] convertRect:links[3].bounds toView:footer].origin.y, 1);
-            }
-            [home.tableView scrollRectToVisible:footer.frame animated:NO];
-            NSString *name = [NSString stringWithFormat:@"tagmaster-ios-footer-pitch-after-%@-%@-%@", width == 320 ? @"sidebar" : @"phone", dark.boolValue ? @"dark" : @"light", large.boolValue ? @"AX5" : @"default"];
-            [self capture:name];
-        }
-    } @finally {
-        method_setImplementation(favorites, oldFavorites); method_setImplementation(cache, oldCache);
-        imp_removeBlock(mockFavorites); imp_removeBlock(mockCache);
-    }
-}
 // Count actual rendered pixels, not UIButton highlighted flags or configuration alone.
 - (NSUInteger)pixelsIn:(UIView *)view matching:(UIColor *)color {
     NSUInteger width = ceil(view.bounds.size.width), height = ceil(view.bounds.size.height);

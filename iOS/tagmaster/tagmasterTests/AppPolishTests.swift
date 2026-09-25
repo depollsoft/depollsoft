@@ -181,30 +181,7 @@ final class AppPolishTests: TMBehaviorTestCase {
         }
     }
 
-    // MARK: - Teachable tags empty state
-    // Replaces testLayoutNativeEmptyTeachableBrowseReachable.
-
-    func testEmptyTeachableListNamesItselfAndOffersBrowse() {
-        let teachable = DPTeachableTagsController()
-        let navigation = mountCapturingPushes(teachable)
-        teachable.viewWillAppear(false)
-        teachable.viewDidAppear(false)
-        settle()
-
-        XCTAssertEqual(teachable.tableView.numberOfRows(inSection: 0), 0)
-        let header = try? XCTUnwrap(teachable.tableView.tableHeaderView)
-        XCTAssertNotNil(header.flatMap { label(in: $0, text: "No teachable tags yet") },
-                        "The empty list says so in its own words")
-
-        let browse = try? XCTUnwrap(header.flatMap { button(in: $0, identifier: "teachable.browse") })
-        XCTAssertEqual(browse?.currentTitle, "Browse Tags")
-        XCTAssertEqual(browse?.isEnabled, true)
-        XCTAssertGreaterThanOrEqual(browse?.bounds.height ?? 0, 44)
-
-        browse?.sendActions(for: .touchUpInside)
-        XCTAssertTrue(navigation.pushed.last is DPBrowseViewController,
-                      "Browse Tags is the way out of the empty list")
-    }
+    // The empty Teachable Tags state now lives in TagListBehaviorTests.
 
     // MARK: - Settings
     // Replaces testSettingsFilters and the non-Firebase half of
