@@ -1,6 +1,7 @@
 package depollsoft.pitchperfect
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasContentDescription
@@ -466,6 +467,7 @@ class MainScreenTest {
         screens.settle()
         assertFalse("Done does not save and close the editor", editor.isFinishing)
         assertTrue(songs.isEmpty())
+        compose.onNodeWithTag(TestTags.SONG_TITLE).assertIsFocused()
     }
 
     @Test

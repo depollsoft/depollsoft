@@ -2,7 +2,6 @@ package depollsoft.pitchperfect
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import depollsoft.pitchperfect.ui.ListMotion
 
@@ -190,7 +189,6 @@ fun AddSongScreen(
 ) {
     val colors = plateColors
     val keyboard = LocalSoftwareKeyboardController.current
-    val focus = LocalFocusManager.current
     PlateBackground {
         Column(Modifier.fillMaxSize()) {
             Column(Modifier.padding(start = 20.dp, top = 20.dp, end = 20.dp)) {
@@ -202,12 +200,9 @@ fun AddSongScreen(
                     description = stringResource(R.string.SongTitle),
                     textStyle = plateText(24.sp, colors.ink, PlateFonts.condensed, letterSpacing = 0.009375f),
                     error = if (state.titleMissing) stringResource(R.string.SongTitleRequired) else null,
-                    // Done only puts the keyboard away, as the EditText's default action did;
-                    // saving is the Save button's and the toolbar's.
-                    onDone = {
-                        keyboard?.hide()
-                        focus.clearFocus()
-                    },
+                    // Done only puts the keyboard away and the field keeps focus, as TextView's
+                    // default IME_ACTION_DONE does; saving is the Save button's and the toolbar's.
+                    onDone = { keyboard?.hide() },
                     focusRequester = titleFocus,
                     modifier = Modifier.padding(top = 2.dp).fillMaxWidth(),
                     fieldModifier = Modifier.testTag(TestTags.SONG_TITLE),
