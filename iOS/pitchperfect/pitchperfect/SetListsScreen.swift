@@ -119,9 +119,8 @@ struct SetListsScreen: View {
             }
             .onMove(perform: model.move)
         }
-        .plateList()
+        .plateList(fullScreen: true)
         .environment(\.editMode, .constant(.active))
-        .staffScreenBackground()
         .navigationTitle("Set Lists")
         .navigationBarTitleDisplayMode(.inline)
         .instrumentChrome()
@@ -137,14 +136,14 @@ struct SetListsScreen: View {
         let home = model.isHome(list)
         let current = list.id == model.currentListId
         let name = model.displayName(list)
-        return SetListRow(name: name, songCount: list.songs.count, isCurrent: current,
+        return SetListRow(name: name, songCount: list.songs.count, isCurrent: current, movable: !home,
                           menuIdentifier: "setlist.row.menu.\(list.id)") {
             rowMenu(list)
         } select: {
             model.select(list)
             dismiss()
         }
-        .plateRow()
+        .plateRow(trailingOverhang: home ? 0 : 40)
         .moveDisabled(home)
         .deleteDisabled(true)
         .swipeActions(edge: .trailing) {
@@ -182,10 +181,20 @@ struct SetListsScreen: View {
 
 /// One manage row: the list's display name, how many songs it holds, the
 /// selector's lit indicator when it is the current list, and a "…" menu.
+private enum SetListRowGlyph {
+    /// The glyph at the size a system UIButton drew it in this row (18.5 pt).
+    static let ellipsis = UIImage(systemName: "ellipsis.circle",
+                                  withConfiguration: UIImage.SymbolConfiguration(pointSize: 18.5)) ?? UIImage()
+}
+
 private struct SetListRow<MenuContent: View>: View {
+    private static var ellipsis: UIImage { SetListRowGlyph.ellipsis }
+
     let name: String
     let songCount: Int
     let isCurrent: Bool
+    /// Carries a reorder control, which takes the trailing edge.
+    let movable: Bool
     let menuIdentifier: String
     @ViewBuilder let menu: () -> MenuContent
     let select: () -> Void
@@ -206,7 +215,8 @@ private struct SetListRow<MenuContent: View>: View {
                         .fixedSize()
                 }
                 .padding(.leading, 26)
-                .padding(.vertical, 14)
+                .padding(.top, 14)
+                .padding(.bottom, 15)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .overlay(alignment: .leading) {
                     if isCurrent {
@@ -220,13 +230,17 @@ private struct SetListRow<MenuContent: View>: View {
             }
             .buttonStyle(.plain)
             Menu(content: menu) {
-                Image(systemName: "ellipsis.circle")
+                // Sized explicitly: a menu label would otherwise scale the glyph to its font.
+                Image(uiImage: Self.ellipsis)
+                    .renderingMode(.template)
+                    .resizable()
+                    .frame(width: Self.ellipsis.size.width, height: Self.ellipsis.size.height)
                     .foregroundStyle(Plate.inkSecondary)
                     .frame(width: 44, height: 44)
             }
             .menuIndicator(.hidden)
             .padding(.leading, 8)
-            .padding(.trailing, 4)
+            .padding(.trailing, movable ? 4 + 22.0 / 3.0 : 4)
             .accessibilityLabel("Actions for \(name)")
             .accessibilityIdentifier(menuIdentifier)
         }

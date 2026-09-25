@@ -83,13 +83,13 @@ struct AddSongsScreen: View {
                         }
                     } header: {
                         PlateHeader(model.sectionTitle(group))
-                            .padding(.top, 14)
-                            .padding(.bottom, 6)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.top, 26.0 / 3.0)
+                            .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
                     }
                 }
             }
-            .plateList()
-            .staffScreenBackground()
+            .plateList(fullScreen: true)
             .navigationTitle("Add songs")
             .navigationBarTitleDisplayMode(.inline)
             .instrumentChrome()
@@ -105,13 +105,14 @@ struct AddSongsScreen: View {
                         model.confirm()
                         dismiss()
                     }
-                    .fontWeight(.semibold)
+                    .modifier(ProminentDone())
                     .disabled(!model.canConfirm)
                     .accessibilityIdentifier("setlist.addSongs.confirm")
                 }
             }
         }
         .presentationDetents(UIDevice.current.userInterfaceIdiom == .pad ? [.large] : [.medium, .large])
+        .presentationDragIndicator(.hidden)
     }
 
     private func row(_ song: DPPitchedSong) -> some View {
@@ -128,17 +129,29 @@ struct AddSongsScreen: View {
                 if chosen {
                     Image(systemName: "checkmark")
                         .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(Color.accentColor)
+                        .foregroundStyle(Color(uiColor: .systemBlue))
                         .padding(.leading, 12)
                 }
             }
             .padding(.horizontal, 20)
-            .padding(.vertical, 14)
+            .padding(.top, 14)
+            .padding(.bottom, 15)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .plateRow()
         .accessibilityLabel("\(song.name ?? ""), \(song.key?.friendlyName() ?? "")")
         .accessibilityAddTraits(chosen ? [.isButton, .isSelected] : .isButton)
+    }
+}
+
+/// UIKit's `.done` bar item: the prominent, tinted confirm button.
+private struct ProminentDone: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            content.buttonStyle(.glassProminent).tint(Color(uiColor: .systemBlue))
+        } else {
+            content.fontWeight(.semibold)
+        }
     }
 }

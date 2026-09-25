@@ -55,9 +55,10 @@ struct SetListSelector: View {
     var body: some View {
         let lists = model.lists
         let currentId = model.currentListId
+        GeometryReader { frame in
         ScrollViewReader { proxy in
             ScrollView(.horizontal, showsIndicators: false) {
-                ProportionalRow {
+                ProportionalRow(minimumWidth: frame.size.width) {
                     ForEach(Array(lists.enumerated()), id: \.element.id) { index, list in
                         if index > 0 { Hairline() }
                         position(list, selected: list.id == currentId)
@@ -70,6 +71,7 @@ struct SetListSelector: View {
             .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
             .onAppear { proxy.scrollTo(currentId) }
             .onChange(of: currentId) { _, id in proxy.scrollTo(id) }
+        }
         }
         .frame(height: SetListSelectorMetrics.height)
         .clipShape(RoundedRectangle(cornerRadius: SetListSelectorMetrics.cornerRadius))
@@ -165,10 +167,13 @@ private struct FixedWidth: LayoutValueKey {
 /// or three positions fill the whole frame. When they do not fit, every
 /// position takes its natural width and the row scrolls.
 private struct ProportionalRow: Layout {
+    /// The frame the row scrolls within; the positions never leave it part-empty.
+    var minimumWidth: CGFloat
+
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         let natural = subviews.reduce(CGFloat(0)) { $0 + width(of: $1) }
         let height = proposal.height ?? SetListSelectorMetrics.height
-        return CGSize(width: max(natural, proposal.width ?? natural), height: height)
+        return CGSize(width: max(natural, minimumWidth), height: height)
     }
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {

@@ -60,17 +60,32 @@ struct NotePressStyle: ButtonStyle {
 
 /// The plain hairline list every instrument screen uses: transparent rows over
 /// the staff, 1 pt rules inset 20 pt, nothing highlighted but what sounds.
+///
+/// Inside a screen (Notes, Keys, Songs) the list stops at the bars, as the
+/// UIKit tables did, and its staff starts at its own top. `fullScreen` is the
+/// UITableViewController form (Set Lists, Add songs): the list runs under the
+/// bars and its staff starts at the top of the screen.
 struct PlateListStyle: ViewModifier {
+    var fullScreen = false
+
     func body(content: Content) -> some View {
-        content
-            .listStyle(.plain)
-            .scrollContentBackground(.hidden)
-            .background(StaffBackground())
-            // UIKit's table stopped at the bars; its rows never ran beneath them,
-            // and the bars' edge effect belonged to the screen, not the list.
-            .clipped()
-            .modifier(TopEdgeEffectHidden())
-            .environment(\.defaultMinListRowHeight, 0)
+        if fullScreen {
+            content
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .background { StaffBackground().ignoresSafeArea() }
+                .environment(\.defaultMinListRowHeight, 0)
+        } else {
+            content
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .background(StaffBackground())
+                // UIKit's table stopped at the bars; its rows never ran beneath them,
+                // and the bars' edge effect belonged to the screen, not the list.
+                .clipped()
+                .modifier(TopEdgeEffectHidden())
+                .environment(\.defaultMinListRowHeight, 0)
+        }
     }
 }
 
@@ -85,7 +100,7 @@ private struct TopEdgeEffectHidden: ViewModifier {
 }
 
 extension View {
-    func plateList() -> some View { modifier(PlateListStyle()) }
+    func plateList(fullScreen: Bool = false) -> some View { modifier(PlateListStyle(fullScreen: fullScreen)) }
 
     /// A transparent row whose rule runs from 20 pt in from the list's edge to
     /// 20 pt from the other. `contentIndent` is how far the list has moved the
