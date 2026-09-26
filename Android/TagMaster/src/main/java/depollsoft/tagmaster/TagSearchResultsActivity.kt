@@ -24,16 +24,11 @@ import kotlinx.coroutines.launch
  * The results of a search: the query the search form built (the [QUERY_MODEL] extra, as JSON),
  * titled with the search text.
  */
-open class TagSearchResultsActivity :
-    TagPaneActivity() {
+class TagSearchResultsActivity : TagPaneActivity() {
     lateinit var model: QueryModel
         private set
 
     private val retained: RetainedQueries by viewModels()
-
-    /** The toolbar title; the search text. */
-    protected open val screenTitle: String?
-        get() = model.query
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,7 +47,7 @@ open class TagSearchResultsActivity :
                 hasMoreResults = { model.hasMoreResults },
                 fetchMore = { model.fetchResults() },
             )
-        setTagMasterContent { ResultsScreen(this) }
+        setTagMasterContent { ResultsScreen() }
         tagPane.restore(savedInstanceState)
         if (fresh) model.refresh()
     }
@@ -69,29 +64,29 @@ open class TagSearchResultsActivity :
     }
 
     @Composable
-    internal fun ResultsScreen(activity: TagSearchResultsActivity) {
+    private fun ResultsScreen() {
         val dialogs = rememberListDialogs()
-        val pane = activity.tagPane
+        val pane = tagPane
         val listState = rememberLazyListState()
         val scope = rememberCoroutineScope()
         pane.reveal = { id ->
-            val index = activity.model.tags.indexOfFirst { it.id == id }
+            val index = model.tags.indexOfFirst { it.id == id }
             if (index >= 0) scope.launch { listState.revealItem(index) }
         }
         val bar =
             @Composable {
                 TagMasterTopBar(
-                    title = activity.screenTitle ?: "",
-                    onNavigateUp = { activity.navigateUpOrHome() },
+                    title = model.query ?: "",
+                    onNavigateUp = { navigateUpOrHome() },
                     paneTitle = if (pane.hasDetailPane) stringResource(R.string.tag_pane_list_title) else null,
                     actions =
                         listOf(
-                            BarAction("refresh", stringResource(R.string.Refresh), R.drawable.ic_refresh, ShowAs.IfRoom) { activity.model.refresh() },
+                            BarAction("refresh", stringResource(R.string.Refresh), R.drawable.ic_refresh, ShowAs.IfRoom) { model.refresh() },
                         ),
                 )
             }
         ListDetailScaffold(pane, dialogs, Watermark.Content, bar) {
-            QueryList(activity.model, listState, pane.selectedTagId, pane::showTag)
+            QueryList(model, listState, pane.selectedTagId, pane::showTag)
         }
         ListDialogsHost(dialogs)
     }
