@@ -2,6 +2,7 @@ package depollsoft.compose
 
 import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.ui.Modifier
@@ -38,8 +39,12 @@ object ListMotion {
 
 /**
  * Fades this row in and out as it is added or removed and slides it when it moves.
- * [animatePlacement] is false for a row a finger (or its settle) positions, which must not also
- * be slid.
+ *
+ * Pass `animatePlacement = !listState.isScrollInProgress` (and false for a row a finger or its
+ * settle positions). While a list scrolls, rows fill in as they come into view and change height,
+ * pushing the rows after them along; RecyclerView's item animator ran only for adapter changes, so
+ * those rows jumped, where a glide would lag behind a fast scroll. A list's own changes (a row
+ * added, removed or moved, a sync) happen at rest and still glide.
  */
 fun Modifier.listItemMotion(
     scope: LazyItemScope,
@@ -48,7 +53,9 @@ fun Modifier.listItemMotion(
     with(scope) {
         this@listItemMotion.animateItem(
             fadeInSpec = ListMotion.fade,
-            placementSpec = if (animatePlacement) ListMotion.placement else null,
+            // snap(), not null: a null spec stops the list tracking where the row was, so the frame
+            // that turns gliding back on would have nothing to glide from.
+            placementSpec = if (animatePlacement) ListMotion.placement else snap(),
             fadeOutSpec = ListMotion.fade,
         )
     }

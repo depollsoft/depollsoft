@@ -68,12 +68,30 @@ class TagLoad(
     val isLoading: Boolean get() = tag == null && !failed
 }
 
-/** Loads [id] through the tag cache while the row is on screen. */
+/**
+ * A list screen's tag loads, kept while the screen is, so a row scrolled back into view shows the
+ * tag it already loaded instead of starting empty and changing height a frame later.
+ */
+@Stable
+class TagLoads {
+    private val loads = mutableMapOf<Int, TagLoad>()
+
+    fun of(id: Int): TagLoad = loads.getOrPut(id) { TagLoad(id) }
+}
+
 @Composable
-fun rememberTagLoad(id: Int): TagLoad {
-    val load = remember(id) { TagLoad(id) }
+fun rememberTagLoads(): TagLoads = remember { TagLoads() }
+
+/** Loads [id] through the tag cache while the row is on screen, unless [loads] already has it. */
+@Composable
+fun rememberTagLoad(
+    id: Int,
+    loads: TagLoads? = null,
+): TagLoad {
+    val load = remember(id, loads) { loads?.of(id) ?: TagLoad(id) }
     LaunchedEffect(load) {
         if (load.tag != null) return@LaunchedEffect
+        load.failed = false
         try {
             load.tag = Tag.loadTagById(id).await()
             if (load.tag == null) load.failed = true
@@ -193,12 +211,13 @@ fun SavedTagRow(
     onMove: (Int, Int) -> Boolean,
     handleModifier: (MutableInteractionSource) -> Modifier,
     modifier: Modifier = Modifier,
+    loads: TagLoads? = null,
 ) {
     val context = LocalContext.current
     val handleInteractions = remember { MutableInteractionSource() }
     val rowInteractions = remember { MutableInteractionSource() }
     val colors = TagMasterTheme.colors
-    val load = rememberTagLoad(id)
+    val load = rememberTagLoad(id, loads)
     val tag = load.tag
     val displayName = tag?.title?.takeIf { it.isNotBlank() } ?: stringResource(R.string.saved_list_tag_id, id)
     val removeLabel = stringResource(R.string.saved_list_remove_named, displayName, listLabel)

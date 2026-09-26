@@ -162,7 +162,7 @@ fun ManageSetListsScreen(
             items(rows, key = { it.id }) { list ->
                 Column(
                     Modifier
-                        .listItemMotion(this, animatePlacement = !reorder.isMoving(list.id))
+                        .listItemMotion(this, animatePlacement = !listState.isScrollInProgress && !reorder.isMoving(list.id))
                         .reorderRow(reorder, list.id, surface),
                 ) {
                     SetListRow(state, list, reorder, onSwitch) { delta -> state.moveList(list, delta) }

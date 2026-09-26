@@ -173,6 +173,7 @@ fun HomeScreen(
     val view = LocalView.current
     val dialogs = rememberListDialogs()
     val listState = rememberLazyListState()
+    val tagLoads = rememberTagLoads()
     val favorites = ListModel(TagLists.FAVORITE)
     val favoriteIds = favorites.ids.toList()
     TagLists.version
@@ -292,12 +293,12 @@ fun HomeScreen(
                         handleGesture = { pressed -> Modifier.reorderHandle(listsReorder, key, { TagLists.customKeys.toList() }, editor.isEditing && lists.size > 1, pressed) },
                         modifier =
                             Modifier
-                                .listItemMotion(this, animatePlacement = !listsReorder.isMoving(key))
+                                .listItemMotion(this, animatePlacement = !listState.isScrollInProgress && !listsReorder.isMoving(key))
                                 .reorderRow(listsReorder, key, colors.surface),
                     )
                 }
                 item(key = "listsFooter") {
-                    Column(Modifier.listItemMotion(this)) {
+                    Column(Modifier.listItemMotion(this, animatePlacement = !listState.isScrollInProgress)) {
                         ActionRow(R.drawable.ic_add, Modifier.testTag("newListButton"), onClick = { dialogs.newList() }) {
                             ActionTitle(stringResource(R.string.list_new_row))
                         }
@@ -324,6 +325,7 @@ fun HomeScreen(
                         listLabel = favoritesLabel,
                         selected = pane.selectedTagId == id,
                         onOpen = actions::openTag,
+                        loads = tagLoads,
                         onRemove = editor::askToRemove,
                         onMove = editor::move,
                         handleModifier = { pressed ->
@@ -331,12 +333,12 @@ fun HomeScreen(
                         },
                         modifier =
                             Modifier
-                                .listItemMotion(this, animatePlacement = !favoritesReorder.isMoving(id))
+                                .listItemMotion(this, animatePlacement = !listState.isScrollInProgress && !favoritesReorder.isMoving(id))
                                 .reorderRow(favoritesReorder, id, colors.surface)
                                 .topDivider(index > 0, colors.outlineVariant),
                     )
                 }
-                item(key = "footer") { Box(Modifier.listItemMotion(this)) { AboutFooter() } }
+                item(key = "footer") { Box(Modifier.listItemMotion(this, animatePlacement = !listState.isScrollInProgress)) { AboutFooter() } }
             }
         }
         SearchFab { context.startActivity(Intent(context, TagSearchActivity::class.java)) }

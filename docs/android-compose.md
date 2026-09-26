@@ -87,6 +87,11 @@ Both apps move the same way. Keep new screens consistent with this:
   (RecyclerView's default animator: 120ms fades, 250ms moves). A list that can be reordered
   shows `shownOrder`, which holds the scroll position by index whenever the rows only trade
   places (a drag, Sort, Move up/down, a sync), so the list doesn't follow its old top row.
+  Rows glide only while the list is at rest (`animatePlacement = !listState.isScrollInProgress`):
+  mid-scroll a row can change height as its content fills in, and the rows it pushes along must
+  snap, as a RecyclerView's did, or they lag behind a fast fling. A list whose rows load content
+  (`SavedTagRow`) keeps the loads for the screen (`rememberTagLoads`), so a row scrolled back into
+  view comes back already filled in.
 * **Dragged rows** (`ReorderState`) start on touch-down of the handle, lift to a 6dp shadow in
   150ms, trade places once they pass a neighbour's far edge, and settle into their slot in 200ms.
   The new order is committed once, on the drop, and only if it changed. A refused drop or a drag

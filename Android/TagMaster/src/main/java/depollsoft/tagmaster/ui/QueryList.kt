@@ -102,7 +102,7 @@ fun QueryList(
                 contentPadding = PaddingValues(start = inset, top = 16.dp, end = inset, bottom = 88.dp),
             ) {
                 itemsIndexed(tags, key = { index, tag -> "${tag.id}:$index" }) { index, tag ->
-                    Column(Modifier.listItemMotion(this)) {
+                    Column(Modifier.listItemMotion(this, animatePlacement = !listState.isScrollInProgress)) {
                         if (index > 0) {
                             Box(
                                 Modifier

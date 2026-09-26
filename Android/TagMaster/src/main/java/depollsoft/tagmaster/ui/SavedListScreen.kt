@@ -50,6 +50,7 @@ fun SavedListScreen(
 ) {
     val view = LocalView.current
     val listState = rememberLazyListState()
+    val tagLoads = rememberTagLoads()
     val ids = model.ids.toList()
     val changed = stringResource(R.string.saved_list_changed)
     val reorder =
@@ -111,12 +112,13 @@ fun SavedListScreen(
                         listLabel = listLabel,
                         selected = pane.selectedTagId == id,
                         onOpen = onOpenTag,
+                        loads = tagLoads,
                         onRemove = editor::askToRemove,
                         onMove = editor::move,
                         handleModifier = { pressed -> Modifier.reorderHandle(reorder, id, { model.ids.toList() }, editor.isEditing && shown.size > 1, pressed) },
                         modifier =
                             Modifier
-                                .listItemMotion(this, animatePlacement = !reorder.isMoving(id))
+                                .listItemMotion(this, animatePlacement = !listState.isScrollInProgress && !reorder.isMoving(id))
                                 .reorderRow(reorder, id, colors.surface)
                                 .topDivider(index > 0, colors.outlineVariant),
                     )

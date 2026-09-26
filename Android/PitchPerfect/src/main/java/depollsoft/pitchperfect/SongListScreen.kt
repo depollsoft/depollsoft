@@ -202,7 +202,7 @@ private fun SongRows(
         items(songs, key = { it.id }) { song ->
             Column(
                 Modifier
-                    .listItemMotion(this, animatePlacement = !reorder.isMoving(song.id))
+                    .listItemMotion(this, animatePlacement = !listState.isScrollInProgress && !reorder.isMoving(song.id))
                     .reorderRow(reorder, song.id, surface),
             ) {
                 SongRow(state, list, song, reorder, listState)
