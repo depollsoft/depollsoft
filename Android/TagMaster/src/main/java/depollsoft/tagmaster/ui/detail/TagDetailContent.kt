@@ -3,6 +3,7 @@ package depollsoft.tagmaster.ui.detail
 import depollsoft.compose.scrollViewScrollbar
 import depollsoft.compose.ViewAlign
 import android.animation.ValueAnimator
+import android.os.Build
 import android.content.Context
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
@@ -141,7 +142,7 @@ private fun DetailPages(
     LaunchedEffect(tag) {
         if (state.revealPending) {
             state.revealPending = false
-            if (ValueAnimator.areAnimatorsEnabled()) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || ValueAnimator.areAnimatorsEnabled()) {
                 reveal.snapTo(0f)
                 reveal.animateTo(1f, tween(200))
             }

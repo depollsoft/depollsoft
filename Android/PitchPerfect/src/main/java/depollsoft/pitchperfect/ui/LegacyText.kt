@@ -2,6 +2,7 @@ package depollsoft.pitchperfect.ui
 
 import depollsoft.compose.inWholePixels
 import android.graphics.Typeface
+import android.os.Build
 import android.text.BoringLayout
 import android.text.Layout
 import android.text.StaticLayout
@@ -108,10 +109,11 @@ private class AndroidTextLayout(
                 .setAlignment(alignment)
                 .setLineSpacing(spacing, 1f)
                 .setIncludePad(true)
-                // TextView's default since API 28: fallback fonts' taller lines count.
-                .setUseLineSpacingFromFallbacks(true)
                 .setBreakStrategy(Layout.BREAK_STRATEGY_HIGH_QUALITY)
                 .setHyphenationFrequency(Layout.HYPHENATION_FREQUENCY_NONE)
+                // TextView's default from API 28, where the call exists: fallback fonts' taller
+                // lines count.
+                .apply { if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) setUseLineSpacingFromFallbacks(true) }
                 .build()
         }
 

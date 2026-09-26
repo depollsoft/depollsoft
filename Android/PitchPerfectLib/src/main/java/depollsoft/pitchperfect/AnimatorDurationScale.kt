@@ -11,7 +11,7 @@ import android.provider.Settings
  * ValueAnimator multiplies its period by this.
  */
 fun animatorDurationScale(context: Context): Float =
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         ValueAnimator.getDurationScale()
     } else {
         Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f)
