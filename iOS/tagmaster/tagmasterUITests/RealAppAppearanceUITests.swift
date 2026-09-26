@@ -151,9 +151,9 @@ final class RealAppFlowUITests: TagMasterUITestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
         app = XCUIApplication()
-        // A clean slate of saved tags and lists for each journey.
-        app.launchArguments = ["--uitesting", "-depollsoft.pitchperfect.lists", "<dict/>",
-                               "-depollsoft.tagmaster.listInfo", "<dict/>"]
+        // No saved-list launch arguments: a value there shadows every write the app
+        // makes for the whole run, so a journey that saves could never see its result.
+        app.launchArguments = ["--uitesting"]
         app.launchArguments += ["-telemetry.chosen", "YES", "-telemetry.analytics", "NO", "-telemetry.crashes", "NO"]
         app.launch()
         XCTAssertTrue(app.buttons["Browse"].existsOrWait(timeout: 15))
@@ -197,13 +197,18 @@ final class RealAppFlowUITests: TagMasterUITestCase {
 
     func testFavoritingATagPutsItOnHome() {
         openTag("1809")
+        // Saved lists persist between runs; the tag may already be a favourite.
         if app.navigationBars.buttons["Add Favorite"].exists {
             app.navigationBars.buttons["Add Favorite"].tap()
-        } else {
+        } else if app.navigationBars.buttons["Favorite and Teachable options"].exists {
             app.navigationBars.buttons["Favorite and Teachable options"].tap()
             let add = app.buttons["Add Favorite"]
-            XCTAssertTrue(add.existsOrWait(timeout: 5))
-            add.tap()
+            if add.existsOrWait(timeout: 3) {
+                add.tap()
+            } else {
+                XCTAssertTrue(app.buttons["Remove Favorite"].exists, "The sheet offers one or the other")
+                app.buttons["Cancel"].tap()
+            }
         }
         backToHome()
         let favorite = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Tag ID 1809'")).firstMatch
@@ -212,27 +217,30 @@ final class RealAppFlowUITests: TagMasterUITestCase {
     }
 
     func testANewListTakesATagFromTheDetail() {
-        app.buttons["home.lists.new"].tap()
+        let name = "Warmups \(Int.random(in: 1000...9999))"
+        let newList = app.buttons["home.lists.new"]
+        for _ in 0..<4 where !newList.isHittable { app.collectionViews.firstMatch.swipeUp() }
+        newList.tap()
         let alert = app.alerts["New list"]
         XCTAssertTrue(alert.existsOrWait(timeout: 5))
-        alert.textFields.firstMatch.typeText("Warmups")
+        alert.textFields.firstMatch.typeText(name)
         alert.buttons["Create"].tap()
-        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Warmups'")).firstMatch
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", name)).firstMatch
             .existsOrWait(timeout: 5))
 
         openTag("1809")
         let addToList = app.buttons["summary.chip.add"]
         XCTAssertTrue(addToList.existsOrWait(timeout: 10))
         addToList.tap()
-        let warmups = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'picker.row.' AND label == 'Warmups'")).firstMatch
+        let warmups = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'picker.row.' AND label == %@", name)).firstMatch
         XCTAssertTrue(warmups.existsOrWait(timeout: 5))
         warmups.tap()
         XCTAssertTrue(warmups.isSelected, "The tag is now in Warmups")
         app.buttons["picker.done"].tap()
         backToHome()
-        let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Warmups'")).firstMatch
+        let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", name)).firstMatch
         XCTAssertTrue(row.existsOrWait(timeout: 5))
-        XCTAssertTrue(row.label.contains("1 tag") || app.staticTexts["1 tag"].exists, "The list counts its one tag")
+        XCTAssertTrue(row.label.hasSuffix("1 tag"), "The list counts its one tag: \(row.label)")
     }
 
     func testSearchListsMatchingTags() {
