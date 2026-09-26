@@ -208,6 +208,8 @@ final class RealAppAppearanceUITests: TagMasterUITestCase {
     }
 
     func testTheDetailShowsThePoleOnEveryPageInBothAppearances() throws {
+        // Both appearances, each with live catalog loads: well over a minute.
+        executionTimeAllowance = 240
         for appearance in [XCUIDevice.Appearance.light, .dark] {
             let style = appearance == .dark ? "dark" : "light"
             launch(appearance)
@@ -235,7 +237,7 @@ final class RealAppAppearanceUITests: TagMasterUITestCase {
                 app.navigationBars.buttons["Search"].tap()
                 let field = app.searchFields.firstMatch
                 XCTAssertTrue(field.existsOrWait(timeout: 5))
-                field.tap()
+                field.focusForTyping()
                 field.typeText("Lo")
                 assertSamePole("detail-\(style)-keyboard", as: baseline, region: detailRegion, appearance: appearance)
             }
@@ -244,6 +246,8 @@ final class RealAppAppearanceUITests: TagMasterUITestCase {
     }
 
     func testListScreensShowThePoleInBothAppearances() throws {
+        // Both appearances, each with live catalog loads: well over a minute.
+        executionTimeAllowance = 240
         for appearance in [XCUIDevice.Appearance.light, .dark] {
             let style = appearance == .dark ? "dark" : "light"
             launch(appearance)
@@ -275,7 +279,7 @@ final class RealAppAppearanceUITests: TagMasterUITestCase {
             app.navigationBars.buttons["Search"].tap()
             let field = app.searchFields.firstMatch
             XCTAssertTrue(field.existsOrWait(timeout: 5))
-            field.tap()
+            field.focusForTyping()
             field.typeText("Lost\n")
             XCTAssertTrue(app.collectionViews.firstMatch.tagRows.firstMatch.existsOrWait(timeout: 60))
             check("results-\(style)")
@@ -416,6 +420,7 @@ final class RealAppFlowUITests: TagMasterUITestCase {
         let confirm = app.alerts.firstMatch
         XCTAssertTrue(confirm.existsOrWait(timeout: 5), "Deleting a list asks first")
         XCTAssertTrue(row.exists, "The row stays until the question is answered")
+        confirm.buttons["Delete"].waitUntilHittable(timeout: 3)
         confirm.buttons["Delete"].tap()
         XCTAssertTrue(row.waitForNonExistence(timeout: 5), "The list is gone")
     }
@@ -447,7 +452,15 @@ final class RealAppFlowUITests: TagMasterUITestCase {
         let confirm = app.alerts.firstMatch
         XCTAssertTrue(confirm.existsOrWait(timeout: 5), "Deleting a list asks first")
         XCTAssertTrue(row.exists, "The row stays until the question is answered")
-        confirm.buttons["Delete"].tap()
+        // A tap while the alert is still animating in is dropped; answer it once it
+        // takes taps, and again if it is still up.
+        let answer = confirm.buttons["Delete"]
+        for _ in 0..<3 where confirm.exists {
+            _ = answer.waitUntilHittable(timeout: 3)
+            answer.tap()
+            _ = confirm.waitForNonExistence(timeout: 2)
+        }
+        XCTAssertFalse(confirm.exists, "The question was answered")
     }
 
     func testEditingHomeReordersAndDeletesListsWithItsControls() {
@@ -486,7 +499,10 @@ final class RealAppFlowUITests: TagMasterUITestCase {
             let delete = app.buttons["Delete"].firstMatch
             if delete.existsOrWait(timeout: 3) { delete.tap() }
             let confirm = app.alerts.firstMatch
-            if confirm.existsOrWait(timeout: 3) { confirm.buttons["Delete"].tap() }
+            if confirm.existsOrWait(timeout: 3) {
+                confirm.buttons["Delete"].waitUntilHittable(timeout: 3)
+                confirm.buttons["Delete"].tap()
+            }
             guardCount += 1
         }
     }
@@ -501,7 +517,7 @@ final class RealAppFlowUITests: TagMasterUITestCase {
         app.navigationBars.buttons["Search"].tap()
         let field = app.searchFields.firstMatch
         XCTAssertTrue(field.existsOrWait(timeout: 5))
-        field.tap()
+        field.focusForTyping()
         field.typeText("Lost\n")
         XCTAssertTrue(app.collectionViews.firstMatch.tagRows.firstMatch.existsOrWait(timeout: 60),
                       "Searching for a title lists tags")
