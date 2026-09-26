@@ -147,7 +147,7 @@ npm run deploy                     # Deploy to Firebase
 - **Android**:
   - depollsoft.lib.kotlin: Has test coverage
   - TagMaster / PitchPerfect / PitchPerfectWear: screen behaviour is tested on the JVM with Robolectric and the Compose test APIs (`src/test`); pixels are pinned by Roborazzi screenshot goldens in `src/test/screenshots` (`recordRoborazziDebug` to update, `verifyRoborazziDebug` to check; CI verifies them), including right-to-left, 200% font, landscape and tablet variants; what a screen reader hears is pinned by semantics snapshots in `src/test/semantics` (`RECORD_SEMANTICS=1` to rewrite); `src/androidTest` holds only a small device-only residue (drags, IME geometry, PdfRenderer, store screenshots, FirebaseUI patch check) that CI compiles but does not run
-- **Pitch Perfect set list sync**: `SongListSyncEmulatorTest` (Android) and `DPSongListSyncEmulatorTests` (iOS, needs a signed build) exercise the real Firestore sync against the local emulators started by `scripts/firestore-emulator.sh pitchperfect`, and skip when none is running; see `docs/pitchperfect-set-lists.md`
+- **Pitch Perfect set list sync**: `SongListSyncEmulatorTest` (Android) and `DPSongListSyncEmulatorTests` (iOS, needs a signed build) exercise the real Firestore sync against the local emulators started by `scripts/firestore-emulator.sh pitchperfect`, and skip when none is running; see `docs/pitchperfect-set-lists.md`. Both sync suites and the script honour `FIRESTORE_EMULATOR_HOST` / `FIREBASE_AUTH_EMULATOR_HOST`, so the emulators can run on free ports (e.g. `localhost:8180` / `localhost:9199`) when 8080 is taken
 - **iOS**:
   - depolllib: Has tests
   - pitchperfectlib: Has tests
