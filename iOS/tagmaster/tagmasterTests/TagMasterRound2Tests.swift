@@ -173,7 +173,7 @@ final class TagMasterRound3Tests: TMBehaviorTestCase {
         }
         let whole = render(.own, frame: window)
         let column = CGRect(x: 400, y: 0, width: 600, height: 800)
-        let slice = render(.windowSlice(window), frame: column)
+        let slice = render(.windowSlice, frame: column)
         var matches = 0, poleInSlice = 0
         for y in stride(from: 80, to: 740, by: 20) {
             for x in stride(from: 10, to: 590, by: 20) {
@@ -192,26 +192,72 @@ final class TagMasterRound3Tests: TMBehaviorTestCase {
         seedCachedTag(id: 1809)
         let detail = TagDetailViewController()
         detail.tagId = 1809
-        mountInNavigation(detail)
+        // Tall enough that the key and Sheet Music stay on screen at the largest text.
+        mountInNavigation(detail, size: CGSize(width: 375, height: 1800))
         spinUntil("the detail settles", timeout: 5) { !detail.model.fetchPending }
         spinUntil("the key is shown", timeout: 5) { UIDriver(self.window).exists(id: "summary.key") }
+        // The key's drawn outline, not its slot: its top and bottom edges where they
+        // run straight, clear of the rounded corners and of the centred content.
         func heights() throws -> (key: CGFloat, sheet: CGFloat) {
-            ScreenCatalog.settle(0.3)
-            let key = try XCTUnwrap(UIDriver(window).element(id: "summary.key")).accessibilityFrame
             let button = try XCTUnwrap(descendants(of: UIButton.self, in: window)
                 .first { $0.title(for: .normal) == "Sheet Music" })
-            return (key.height, button.bounds.height)
+            var result: (key: CGFloat, sheet: CGFloat) = (0, 0)
+            spinUntil("the key and Sheet Music settle", timeout: 5) {
+                guard let slot = UIDriver(self.window).element(id: "summary.key")?.accessibilityFrame else { return false }
+                let image = ScreenCatalog.image(of: self.window)
+                let x = slot.minX + 12
+                var rows: [CGFloat] = []
+                for y in stride(from: slot.minY - 6, to: slot.maxY + 6, by: 1 / image.scale) {
+                    let px = Int(x * image.scale), py = Int(y * image.scale)
+                    guard let p = image.tmPixel(x: px, y: py) else { continue }
+                    if Int(p.b) - Int(p.r) > 60 { rows.append(y) }
+                }
+                guard let first = rows.first, let last = rows.last else { return false }
+                let drawn = last - first + 1 / image.scale
+                let sheet = button.bounds.height
+                let settled = abs(drawn - result.key) < 0.5 && abs(sheet - result.sheet) < 0.5
+                result = (drawn, sheet)
+                return settled
+            }
+            return result
         }
         let small = try heights()
-        XCTAssertEqual(small.key, small.sheet, accuracy: 0.5, "UIKit held both to one height")
+        XCTAssertEqual(small.key, small.sheet, accuracy: 1, "UIKit held both to one height")
         window.traitOverrides.preferredContentSizeCategory = .accessibilityExtraExtraLarge
         let large = try heights()
-        XCTAssertEqual(large.key, large.sheet, accuracy: 0.5)
+        XCTAssertEqual(large.key, large.sheet, accuracy: 1, "The key's outline grows with Sheet Music")
         XCTAssertGreaterThan(large.sheet, small.sheet + 10, "Both grow with the text")
         window.traitOverrides.preferredContentSizeCategory = .large
         let back = try heights()
-        XCTAssertEqual(back.key, back.sheet, accuracy: 0.5)
+        XCTAssertEqual(back.key, back.sheet, accuracy: 1)
         XCTAssertEqual(back.sheet, small.sheet, accuracy: 0.5, "Both shrink back, not held at the larger height")
+    }
+
+    func testTheKeysOutlineStretchesToATallerPartner() throws {
+        // Whichever of the two is taller, both are drawn at its height, outline and all.
+        let model = TagSummaryModel(busy: TMBusyCount())
+        let host = UIHostingController(rootView: TMMatchedHeightStack {
+            TMKeyNoteButton(model: model, title: "Bb", fillsHeight: true)
+                .layoutValue(key: TMMatchesHeight.self, value: true)
+            Color.clear.frame(height: 120)
+                .layoutValue(key: TMGapBefore.self, value: 16)
+                .layoutValue(key: TMMatchesHeight.self, value: true)
+        }.frame(width: 300).fixedSize(horizontal: false, vertical: true).padding(20))
+        let window = mount(host, size: CGSize(width: 340, height: 400))
+        var drawn: CGFloat = 0
+        spinUntil("the outline is drawn", timeout: 5) {
+            let image = ScreenCatalog.image(of: window)
+            var rows: [CGFloat] = []
+            let x: CGFloat = 20 + 12
+            for y in stride(from: CGFloat(0), to: 400, by: 1 / image.scale) {
+                guard let p = image.tmPixel(x: Int(x * image.scale), y: Int(y * image.scale)) else { continue }
+                if Int(p.b) - Int(p.r) > 60 { rows.append(y) }
+            }
+            guard let first = rows.first, let last = rows.last else { return false }
+            drawn = last - first + 1 / image.scale
+            return true
+        }
+        XCTAssertEqual(drawn, 120, accuracy: 1, "The key's outline takes its partner's height")
     }
 
     func testPageContentMatchesAUIKitReadableGuideAtEveryWidthAndTextSize() throws {
@@ -321,6 +367,62 @@ final class TagMasterRound3Tests: TMBehaviorTestCase {
     }
 
     // MARK: The bar
+
+    func testBarItemsUseUIKitsInkWhenEnabledAndDisabled() throws {
+        // The brightest ink in an item's area (the 99.5th percentile, clear of the
+        // glass rim), a UIKit bar against the SwiftUI one, for a title and an image.
+        func ink(_ image: UIImage, _ rect: CGRect) -> Int {
+            var values: [Int] = []
+            for y in stride(from: rect.minY, to: rect.maxY, by: 1 / image.scale) {
+                for x in stride(from: rect.minX, to: rect.maxX, by: 1 / image.scale) {
+                    if let p = image.tmPixel(x: Int(x * image.scale), y: Int(y * image.scale)) { values.append(Int(p.r)) }
+                }
+            }
+            values.sort()
+            return values.isEmpty ? 0 : values[values.count * 995 / 1000]
+        }
+        /// The two items' ink once the bar has settled: the same reading twice running.
+        func inks(_ controller: UIViewController) -> (left: Int, right: Int) {
+            let window = mount(controller, size: CGSize(width: 390, height: 300))
+            var last: (left: Int, right: Int)?
+            var reading = (left: 0, right: 0)
+            spinUntil("the bar settles", timeout: 5) {
+                let image = ScreenCatalog.image(of: window)
+                let top = controller.view.safeAreaInsets.top - 44
+                reading = (ink(image, CGRect(x: 0, y: top, width: 110, height: 44)),
+                           ink(image, CGRect(x: 310, y: top, width: 80, height: 44)))
+                defer { last = reading }
+                return last.map { $0 == reading } ?? false
+            }
+            return reading
+        }
+        for enabled in [true, false] {
+            let plain = UIViewController()
+            plain.title = "Home"
+            let edit = UIBarButtonItem(title: "Edit", style: .plain, target: nil, action: nil)
+            let gear = UIBarButtonItem(image: UIImage(systemName: "gearshape", withConfiguration:
+                UIImage.SymbolConfiguration(pointSize: 17, weight: .regular, scale: .medium)), style: .plain, target: nil, action: nil)
+            edit.isEnabled = enabled
+            gear.isEnabled = enabled
+            plain.navigationItem.leftBarButtonItem = edit
+            plain.navigationItem.rightBarButtonItem = gear
+            let navigation = UINavigationController(rootViewController: plain)
+            TMBarAppearance.apply(to: navigation.navigationBar)
+            let uikit = inks(navigation)
+            let swiftUI = UIHostingController(rootView: NavigationStack {
+                Color(uiColor: .systemBackground).ignoresSafeArea()
+                    .navigationTitle("Home").navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .topBarLeading) { TMEditButton(isEditing: .constant(false)).disabled(!enabled) }
+                        ToolbarItem(placement: .topBarTrailing) { TMBarButton("gearshape", label: "Settings") {}.disabled(!enabled) }
+                    }
+                    .tmCharcoalBar()
+            })
+            let ours = inks(swiftUI)
+            XCTAssertEqual(ours.left, uikit.left, accuracy: 10, "Edit, enabled \(enabled)")
+            XCTAssertEqual(ours.right, uikit.right, accuracy: 10, "gear, enabled \(enabled)")
+        }
+    }
 
     func testTheBarRepairsEachPropertyOnItsOwnAndKeepsHomesFont() throws {
         let bar = UINavigationBar(frame: CGRect(x: 0, y: 0, width: 375, height: 44))
@@ -458,7 +560,7 @@ final class TagMasterRound3Tests: TMBehaviorTestCase {
 }
 
 /// The old list picker's table (TMListPickerController) with its "New list…" row.
-private final class TMLegacyPickerFixture: UITableViewController {
+final class TMLegacyPickerFixture: UITableViewController {
     init() { super.init(style: .insetGrouped) }
     required init?(coder: NSCoder) { fatalError("created in code") }
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int { 1 }

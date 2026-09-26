@@ -416,13 +416,16 @@ struct TMHomeScreen: View {
 extension EnvironmentValues {
     /// A row's leading and trailing inset inside an inset-grouped card.
     @Entry var tmInsetRowMargin: CGFloat = 20
+    /// Inside an inset group whose cards and rows sit on UITableView's margins.
+    @Entry var tmInInsetGroup = false
 }
 
 extension View {
-    /// On iPhone UITableView's inset groups sat further in than SwiftUI's; `margin`
-    /// is the SwiftUI content margin that puts the cards where UIKit's were.
-    func tmInsetGroupMargins(_ margin: CGFloat, always: Bool = false) -> some View {
-        modifier(TMInsetGroupMargins(margin: margin, always: always))
+    /// Puts inset-grouped cards and their rows' text where UITableView put them
+    /// (`tmGroupedMargin`, `tmGroupedTextInset`). Compact widths only unless `always`
+    /// (the iPad popover): at regular width SwiftUI's cards already sit where UIKit's did.
+    func tmInsetGroupMargins(always: Bool = false) -> some View {
+        modifier(TMInsetGroupMargins(always: always))
     }
 
     /// A row inside an inset-grouped card, on the card's own margin. The margin is
@@ -432,15 +435,26 @@ extension View {
         modifier(TMInsetRowInsets())
     }
 
-    /// UITableView's inset-grouped spacing above the first section.
+    /// UITableView's inset-grouped spacing above the first section, and its margins.
     func tmInsetGroupedMetrics(bottom: CGFloat = 30) -> some View {
-        contentMargins(.top, 15, for: .scrollContent)
+        modifier(TMInsetGroupedMetrics(bottom: bottom))
+    }
+}
+
+private struct TMInsetGroupedMetrics: ViewModifier {
+    let bottom: CGFloat
+    @Environment(\.tmGroupedMargin) private var groupedMargin
+
+    func body(content: Content) -> some View {
+        content
+            .contentMargins(.top, 15, for: .scrollContent)
             // UITableView ends an inset-grouped table 30pt below its last section (SwiftUI: 20).
             .contentMargins(.bottom, bottom, for: .scrollContent)
             .listSectionSpacing(.custom(16.0 / 3))
-            .tmInsetGroupMargins(20)
-            // The 16-point column margin is the plain lists'; inset groups keep their own.
-            .environment(\.tmTableMargin, 20)
+            .tmInsetGroupMargins()
+            // A plain list's column margin is not an inset group's; headers and footers
+            // inside the group use the group's own.
+            .environment(\.tmTableMargin, groupedMargin)
     }
 }
 
@@ -453,16 +467,17 @@ private struct TMInsetRowInsets: ViewModifier {
 }
 
 private struct TMInsetGroupMargins: ViewModifier {
-    let margin: CGFloat
-    /// Apply at a regular width too (the iPad popover).
     var always = false
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.tmGroupedMargin) private var margin
+    @Environment(\.tmGroupedTextInset) private var textInset
 
     func body(content: Content) -> some View {
         if sizeClass == .compact || always {
-            // The cards moved in; the rows' own insets shrink by as much, so text stays put.
+            // The cards where UIKit's were, and each row's text where UIKit's cell put it.
             content.contentMargins(.horizontal, margin, for: .scrollContent)
-                .environment(\.tmInsetRowMargin, 20 - (margin - 16))
+                .environment(\.tmInsetRowMargin, textInset - margin)
+                .environment(\.tmInInsetGroup, true)
         } else {
             content
         }
@@ -474,16 +489,17 @@ struct TMSectionHeader: View {
     let title: String
     @Environment(\.tmTableMargin) private var margin
     @Environment(\.tmInsetRowMargin) private var rowMargin
+    @Environment(\.tmInInsetGroup) private var inGroup
     init(_ title: String) { self.title = title }
 
     var body: some View {
-        // SwiftUI sets section text 16 points in; UIKit set it on the table's margin
-        // (less whatever an inset group's own margin already moved it).
-        Text(title).padding(.leading, TMSectionHeader.inset(margin, rowMargin)).offset(y: 4)
+        Text(title).padding(.leading, TMSectionHeader.inset(margin: margin, rowMargin: rowMargin, inGroup: inGroup)).offset(y: 4)
     }
 
-    static func inset(_ margin: CGFloat, _ rowMargin: CGFloat) -> CGFloat {
-        (margin - 16) - (20 - rowMargin)
+    /// SwiftUI sets section text 16 points in from the list's edge, or from a card's.
+    /// UIKit set it on the table's margin, or with an inset group's row text.
+    static func inset(margin: CGFloat, rowMargin: CGFloat, inGroup: Bool) -> CGFloat {
+        inGroup ? rowMargin - 16 : margin - 16
     }
 }
 
@@ -492,10 +508,11 @@ struct TMSectionFooter: View {
     let text: String
     @Environment(\.tmTableMargin) private var margin
     @Environment(\.tmInsetRowMargin) private var rowMargin
+    @Environment(\.tmInInsetGroup) private var inGroup
     init(_ text: String) { self.text = text }
 
     var body: some View {
-        Text(text).padding(.horizontal, TMSectionHeader.inset(margin, rowMargin))
+        Text(text).padding(.horizontal, TMSectionHeader.inset(margin: margin, rowMargin: rowMargin, inGroup: inGroup))
     }
 }
 

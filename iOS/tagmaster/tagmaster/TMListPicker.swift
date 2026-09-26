@@ -76,6 +76,8 @@ struct TMListPicker: View {
     /// The rows set their accent explicitly, as the UIKit cells did.
     private let accent = TMTheme.accent
     @State var model: TMListPickerModel
+    /// UITableView's margins in the sheet or popover the picker is presented in.
+    @State private var margins = TMTableMargins()
     /// Closes the picker; the presenter owns how.
     var onDone: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
@@ -99,10 +101,13 @@ struct TMListPicker: View {
             // A hardware keyboard would otherwise light the first row as focused.
             .focusEffectDisabled()
             .modifier(TMClearNavigationContainer())
-            // UIKit's cards sat 4 pt further in on iPad's popover than on the phone's
-            // sheet, whichever size class the popover reports.
-            .tmInsetGroupMargins(UIDevice.current.userInterfaceIdiom == .pad ? 21.33 : 25.33,
-                                 always: UIDevice.current.userInterfaceIdiom == .pad)
+            // UIKit's cards where a UIKit table put them in this sheet or popover,
+            // whichever size class the popover reports.
+            .tmInsetGroupMargins(always: UIDevice.current.userInterfaceIdiom == .pad)
+            // A sheet's or popover's SwiftUI cards land on UIKit's 16/3 pt further in.
+            .environment(\.tmGroupedMargin, margins.grouped + 16.0 / 3)
+            .environment(\.tmGroupedTextInset, margins.groupedText)
+            .background(TMTableMarginReader { margins = $0 })
             .focusEffectDisabled()
             .accessibilityIdentifier("picker.table")
             .navigationTitle("Add to list")

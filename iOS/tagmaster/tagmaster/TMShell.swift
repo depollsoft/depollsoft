@@ -146,14 +146,10 @@ enum TMBackdrop: Equatable {
     case own
     /// Beside another column: the screen draws its colour and its slice of one
     /// watermark laid over the whole window, so both columns show a single pole.
-    case windowSlice(CGRect)
-    /// The iPad list column from iOS 18: UIKit's glass sidebar is the surface and
+    case windowSlice
+    /// The iPad list column from iOS 26: UIKit's glass sidebar is the surface and
     /// the split's watermark lies beneath it, so the screen draws nothing.
-    case glassColumn(CGRect)
-
-    var isGlassColumn: Bool {
-        if case .glassColumn = self { true } else { false }
-    }
+    case glassColumn
 }
 
 extension TagMasterApp {
@@ -213,14 +209,17 @@ private struct TMWindowTint: UIViewRepresentable {
 /// iPhone: one stack, Home at its root.
 struct TMStackRoot: View {
     @Bindable var router: TMRouter
+    @State private var margins = TMTableMargins()
 
     var body: some View {
+        let column = TMColumnTraits(margins: margins)
         NavigationStack(path: $router.path) {
-            TMHomeRoute(router: router)
+            TMHomeRoute(router: router, column: column)
                 .navigationDestination(for: TMRoute.self) { route in
-                    TMRouteScreen(route: route, router: router)
+                    TMRouteScreen(route: route, router: router, column: column)
                 }
         }
+        .background(TMTableMarginReader { margins = $0 })
         .background(TMWindowTint())
         .onAppear { router.setExpanded(false) }
     }
@@ -228,59 +227,54 @@ struct TMStackRoot: View {
 
 /// iPad: the list stack beside the tag, one watermark behind both.
 struct TMSplitRoot: View {
-    /// The list column can only be made clear, to show its glass over the split's
-    /// watermark, from iOS 18. Before that its screens draw their window slice.
+    /// The list column is a glass sidebar over the split's watermark from iOS 26.
+    /// Before that UIKit's list column was a clear view over the watermark, which its
+    /// screens reproduce exactly by drawing their colour and window slice; that way
+    /// no container's own fill can hide the pole.
     static var columnsCanBeClear: Bool {
-        if #available(iOS 18.0, *) { true } else { false }
+        if #available(iOS 26.0, *) { true } else { false }
     }
 
-    /// Each column's backdrop: `window` is the whole window in global coordinates.
-    static func backdrops(regular: Bool, window: CGRect, columnsCanBeClear: Bool = columnsCanBeClear)
+    /// Each column's backdrop.
+    static func backdrops(regular: Bool, columnsCanBeClear: Bool = columnsCanBeClear)
         -> (list: TMBackdrop, detail: TMBackdrop) {
         guard regular else { return (.own, .own) }
-        return (columnsCanBeClear ? .glassColumn(window) : .windowSlice(window), .windowSlice(window))
+        return (columnsCanBeClear ? .glassColumn : .windowSlice, .windowSlice)
     }
 
     @Bindable var router: TMRouter
     @Environment(\.horizontalSizeClass) private var sizeClass
-
-    /// The whole window in global coordinates: the split's frame plus its safe areas.
-    static func canvas(_ geometry: GeometryProxy) -> CGRect {
-        let frame = geometry.frame(in: .global)
-        let insets = geometry.safeAreaInsets
-        return CGRect(x: frame.minX - insets.leading, y: frame.minY - insets.top,
-                      width: frame.width + insets.leading + insets.trailing,
-                      height: frame.height + insets.top + insets.bottom)
-    }
+    @State private var listMargins = TMTableMargins(plain: 16, grouped: 20)
+    @State private var detailMargins = TMTableMargins()
 
     var body: some View {
         GeometryReader { geometry in
-            let backdrops = TMSplitRoot.backdrops(regular: sizeClass == .regular, window: TMSplitRoot.canvas(geometry))
+            let backdrops = TMSplitRoot.backdrops(regular: sizeClass == .regular)
             NavigationSplitView(columnVisibility: $router.columnVisibility,
                                 preferredCompactColumn: $router.preferredCompactColumn) {
                 // A stack does not hand its environment to the screens pushed onto it,
                 // so each column's root and destinations are given theirs directly.
-                let list = TMColumnTraits(backdrop: backdrops.list,
-                                          // UITableView's margins in the list column were 16 points, not 20.
-                                          tableMargin: sizeClass == .regular ? 16 : 20)
+                let list = TMColumnTraits(backdrop: backdrops.list, margins: listMargins)
                 NavigationStack(path: $router.path) {
                     TMHomeRoute(router: router, column: list)
                         .navigationDestination(for: TMRoute.self) { route in
                             TMRouteScreen(route: route, router: router, column: list)
                         }
                 }
+                .background(TMTableMarginReader { listMargins = $0 })
                 // A comfortable list on both 11- and 13-inch iPads: 36% of the width, 320–400 points.
                 .navigationSplitViewColumnWidth(min: 320,
                                                 ideal: min(max(geometry.size.width * 0.36, 320), 400),
                                                 max: 400)
             } detail: {
-                let detail = TMColumnTraits(backdrop: backdrops.detail, tableMargin: 20)
+                let detail = TMColumnTraits(backdrop: backdrops.detail, margins: detailMargins)
                 NavigationStack(path: $router.detailPath) {
                     TMDetailColumn(router: router, column: detail)
                         .navigationDestination(for: TMRoute.self) { route in
                             TMRouteScreen(route: route, router: router, column: detail)
                         }
                 }
+                .background(TMTableMarginReader { detailMargins = $0 })
             }
             .navigationSplitViewStyle(.balanced)
             .background {
@@ -298,11 +292,12 @@ struct TMSplitRoot: View {
     }
 }
 
-/// What a column tells the screens in it: their backdrop and table margin.
+/// What a column tells the screens in it: their backdrop and UITableView's
+/// margins at the column's size.
 struct TMColumnTraits {
     var backdrop: TMBackdrop = .own
-    var tableMargin: CGFloat = 20
-    /// A phone's single stack.
+    var margins = TMTableMargins()
+    /// A phone's single stack, before its margins are measured.
     static let stack = TMColumnTraits()
 }
 
@@ -315,7 +310,9 @@ extension View {
     /// root of a column's view.
     func tmRoute(in column: TMColumnTraits) -> some View {
         environment(\.tmBackdrop, column.backdrop)
-            .environment(\.tmTableMargin, column.tableMargin)
+            .environment(\.tmTableMargin, column.margins.plain)
+            .environment(\.tmGroupedMargin, column.margins.grouped)
+            .environment(\.tmGroupedTextInset, column.margins.groupedText)
             .tmFollowsUIKitTint()
             .tmClearColumnBackground(column.backdrop != .own)
     }
@@ -612,7 +609,7 @@ struct TMEditButton: View {
                         Text("Done").fontWeight(.semibold)
                     }
                 } else {
-                    Text("Edit")
+                    Text("Edit").fontWeight(.medium)
                 }
             }
         }

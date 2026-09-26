@@ -55,7 +55,7 @@ struct TMBrowseScreen: View {
                 // Each page draws its own backdrop (TMQueryScreen). Only over the glass
                 // list column, where the page draws nothing, must the tab container be clear.
                 TMQueryScreen(model: model.pages[index])
-                    .background { if backdrop.isGlassColumn { TMClearTabContainer() } }
+                    .background { if backdrop == .glassColumn { TMClearTabContainer() } }
                     // Only the tab container is compact; pages keep the column's own size class.
                     .environment(\.horizontalSizeClass, sizeClass)
                     .tabItem {
