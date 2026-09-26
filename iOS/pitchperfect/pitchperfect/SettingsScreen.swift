@@ -172,7 +172,7 @@ struct SettingsScreen: View {
 
     var body: some View {
         @Bindable var model = box.model
-        InstrumentPage(showsBanner: UIDevice.current.userInterfaceIdiom == .phone) {
+        InstrumentPage(showsBanner: UIDevice.current.userInterfaceIdiom == .phone, tableStyle: .grouped) {
             List {
                 Section {
                     SwitchRow(title: "Toggle Notes", detail: "Notes play until pressed again",
@@ -189,11 +189,13 @@ struct SettingsScreen: View {
                         }
                         .pickerStyle(.segmented)
                         .fixedSize()
+                        .offset(y: -2.0 / 3.0)
                         .accessibilityIdentifier("settings.theme")
                     }
+                    // UIKit's accessory control sat ⅔ pt higher in its cell.
                     .settingsRow(height: 52)
                 } header: {
-                    PlateHeader("Pitch Pipe")
+                    PlateHeader("Pitch Pipe").settingsHeader()
                 }
 
                 Section {
@@ -202,9 +204,12 @@ struct SettingsScreen: View {
                         ActionRow(title: "Delete Account", busy: model.deleting, action: model.requestDelete)
                     }
                 } header: {
-                    PlateHeader("Account")
+                    // UIKit's header and footer below the first section sat ⅓ and ⅔ pt higher.
+                    PlateHeader("Account").settingsHeader().padding(.bottom, -1.0 / 3.0)
                 } footer: {
                     Text("Log in to back up and synchronize your song list and settings.")
+                        .settingsHeader()
+                        .offset(y: -2.0 / 3.0)
                 }
 
                 Section {
@@ -212,14 +217,15 @@ struct SettingsScreen: View {
                         HStack {
                             Text("Privacy choices").foregroundStyle(Color(uiColor: .label))
                             Spacer()
-                            Image(systemName: "chevron.forward")
-                                .font(.system(size: 17, weight: .semibold))
-                                .foregroundStyle(Color(uiColor: .tertiaryLabel))
+                            DisclosureIndicator()
+                                .accessibilityHidden(true)
                         }
+                        .contentShape(Rectangle())
                     }
+                    .buttonStyle(UnhighlightedRowStyle())
                     .settingsRow(height: 51)
                 } header: {
-                    PlateHeader("Privacy")
+                    PlateHeader("Privacy").settingsHeader().padding(.bottom, 1.0 / 3.0)
                 }
 
                 if model.isPrivateBuild {
@@ -233,7 +239,7 @@ struct SettingsScreen: View {
                         .settingsRow()
                         ActionRow(title: "Copy Logs", busy: false, action: model.copyLogs)
                     } header: {
-                        PlateHeader("Private Build")
+                        PlateHeader("Private Build").settingsHeader()
                     }
                 }
             }
@@ -274,10 +280,14 @@ struct SettingsScreen: View {
 /// Engraved section label: tracked monospaced capitals in secondary ink.
 struct PlateHeader: View {
     let title: String
-    init(_ title: String) { self.title = title }
+    let uppercased: Bool
+    init(_ title: String, uppercased: Bool = true) {
+        self.title = title
+        self.uppercased = uppercased
+    }
 
     var body: some View {
-        Text(title.uppercased())
+        Text(uppercased ? title.uppercased() : title)
             .font(Plate.mono(12))
             .tracking(12 * 0.14)
             .foregroundStyle(Plate.inkSecondary)
@@ -320,27 +330,188 @@ private struct ActionRow: View {
             HStack {
                 Text(title).foregroundStyle(Color(uiColor: .label))
                 Spacer()
-                if busy { ProgressView() }
+                if busy { ActivitySpinner() }
             }
+            .contentShape(Rectangle())
         }
+        .buttonStyle(UnhighlightedRowStyle())
         .settingsRow(height: 51)
+    }
+}
+
+/// The UIKit rows took taps through a gesture recogniser on a table that allowed
+/// no selection: nothing highlighted when pressed.
+struct UnhighlightedRowStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View { configuration.label }
+}
+
+/// UIKit's medium activity indicator, in its own grey (SwiftUI's would take the
+/// label tint the instrument chrome sets).
+struct ActivitySpinner: UIViewRepresentable {
+    func makeUIView(context: Context) -> UIActivityIndicatorView {
+        let spinner = UIActivityIndicatorView(style: .medium)
+        spinner.startAnimating()
+        return spinner
+    }
+
+    func updateUIView(_ spinner: UIActivityIndicatorView, context: Context) {}
+}
+
+/// UIKit's disclosure indicator, from the cell accessory itself.
+struct DisclosureIndicator: UIViewRepresentable {
+    func makeUIView(context: Context) -> UIView {
+        let cell = UITableViewCell(style: .default, reuseIdentifier: nil)
+        cell.accessoryType = .disclosureIndicator
+        cell.frame = CGRect(x: 0, y: 0, width: 200, height: 44)
+        cell.layoutIfNeeded()
+        // The accessory image view the cell lays out, lifted out on its own.
+        let image = cell.subviews.compactMap { $0 as? UIButton }.first?.image(for: .normal)
+            ?? UIImage(systemName: "chevron.forward")
+        let view = UIImageView(image: image)
+        view.tintColor = .tertiaryLabel
+        view.contentMode = .center
+        return view
+    }
+
+    func updateUIView(_ view: UIView, context: Context) {}
+
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: UIView, context: Context) -> CGSize? {
+        uiView.intrinsicContentSize
     }
 }
 
 extension View {
     /// A UITableViewCell's frame: clear, 20 pt margins, and (for single-line
     /// rows) the cell's height.
+    /// UIKit set section headers and footers at the table margin; a grouped List
+    /// sets them at 16 pt.
+    fileprivate func settingsHeader() -> some View { modifier(SettingsHeaderInset()) }
+
     fileprivate func settingsRow(height: CGFloat? = nil) -> some View {
-        frame(minHeight: height)
-            .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
-            .listRowBackground(Color.clear)
+        modifier(SettingsRow(height: height))
     }
 
     /// Settings as every tab presents it: a sheet with its own navigation bar.
     func settingsSheet(isPresented: Binding<Bool>) -> some View {
-        sheet(isPresented: isPresented) {
-            NavigationStack { SettingsScreen() }
+        background(SettingsPresenter(isPresented: isPresented).frame(width: 0, height: 0))
+    }
+}
+
+/// Settings as the UIKit app presented it: one controller for the app's life,
+/// presented from whichever tab asks, so reopening it (from any tab) finds it
+/// as it was left, scroll position and all.
+final class SettingsHost: UIHostingController<SettingsSheet> {
+    private struct Entry {
+        weak var window: UIWindow?
+        let host: SettingsHost
+    }
+
+    private static var hosts: [ObjectIdentifier: Entry] = [:]
+
+    static func existing(for window: UIWindow) -> SettingsHost? { hosts[ObjectIdentifier(window)]?.host }
+
+    /// The Settings for `window`'s app: one per window, kept as long as it is.
+    static func shared(for window: UIWindow) -> SettingsHost {
+        hosts = hosts.filter { $0.value.window != nil }
+        if let entry = hosts[ObjectIdentifier(window)] { return entry.host }
+        let host = SettingsHost()
+        hosts[ObjectIdentifier(window)] = Entry(window: window, host: host)
+        return host
+    }
+
+    /// Called once the sheet has gone, however it was closed.
+    var onClose: () -> Void = {}
+
+    private init() {
+        super.init(rootView: SettingsSheet())
+    }
+
+    @available(*, unavailable)
+    @MainActor required dynamic init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        if isBeingDismissed || presentingViewController == nil {
+            let close = onClose
+            onClose = {}
+            close()
         }
+    }
+}
+
+/// Settings with its own navigation bar.
+struct SettingsSheet: View {
+    var body: some View {
+        NavigationStack { SettingsScreen() }
+    }
+}
+
+/// Presents the window's `SettingsHost` while `isPresented` is true.
+private struct SettingsPresenter: UIViewControllerRepresentable {
+    @Binding var isPresented: Bool
+
+    final class Presenter: UIViewController {
+        /// Whether this tab's Settings is the one up: only its own tab closes it.
+        private var presenting = false
+
+        func sync(isPresented: Bool, close: @escaping () -> Void) {
+            guard isPresented != presenting else { return }
+            // Not during SwiftUI's update: a hosting controller made there never
+            // builds its NavigationStack's navigation controller.
+            DispatchQueue.main.async { [weak self] in
+                guard let self, let window = self.view.window else { return }
+                if isPresented {
+                    let host = SettingsHost.shared(for: window)
+                    guard !self.presenting, host.presentingViewController == nil else { return }
+                    self.presenting = true
+                    host.onClose = { [weak self] in
+                        self?.presenting = false
+                        close()
+                    }
+                    // From the window's root, not from this controller: a NavigationStack
+                    // presented from a controller inside another NavigationStack hands
+                    // its title and toolbar to the presenting screen's bar.
+                    var presenter = window.rootViewController ?? self
+                    while let next = presenter.presentedViewController { presenter = next }
+                    presenter.present(host, animated: true)
+                } else if self.presenting, let host = SettingsHost.existing(for: window),
+                          host.presentingViewController != nil, !host.isBeingDismissed {
+                    host.dismiss(animated: true)
+                }
+            }
+        }
+    }
+
+    func makeUIViewController(context: Context) -> Presenter {
+        let presenter = Presenter()
+        presenter.view.isHidden = true
+        return presenter
+    }
+
+    func updateUIViewController(_ presenter: Presenter, context: Context) {
+        let binding = $isPresented
+        presenter.sync(isPresented: isPresented) { binding.wrappedValue = false }
+    }
+}
+
+/// A UITableViewCell's frame: clear, the table's margins, and its height.
+private struct SettingsRow: ViewModifier {
+    let height: CGFloat?
+    @Environment(\.tableMargin) private var margin
+
+    func body(content: Content) -> some View {
+        content
+            .frame(minHeight: height)
+            .listRowInsets(EdgeInsets(top: 0, leading: margin, bottom: 0, trailing: margin))
+            .listRowBackground(Color.clear)
+    }
+}
+
+private struct SettingsHeaderInset: ViewModifier {
+    @Environment(\.tableMargin) private var margin
+
+    func body(content: Content) -> some View {
+        content.padding(.horizontal, max(0, margin - 16))
     }
 }
 

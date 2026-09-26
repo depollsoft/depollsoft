@@ -73,7 +73,6 @@ import UIKit
         }
     }
 
-
     private static let themeKey = "depollsoft.pitchperfect.theme"
 
     @objc public static var storedTheme: Int {
@@ -96,9 +95,6 @@ import UIKit
             for window in windowScene.windows {
                 window.overrideUserInterfaceStyle = style
             }
-        }
-        for window in UIApplication.shared.windows {
-            window.overrideUserInterfaceStyle = style
         }
     }
 }

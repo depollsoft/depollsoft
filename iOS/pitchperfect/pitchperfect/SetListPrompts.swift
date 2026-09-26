@@ -153,13 +153,7 @@ private struct SetListAlertPresenter: UIViewControllerRepresentable {
             guard let kind, let prompts else { return }
             let alert = makeAlert(kind, prompts: prompts)
             self.alert = alert
-            // Present once this controller is in a window; SwiftUI may update it first.
-            DispatchQueue.main.async { [weak self] in
-                guard let self, self.alert === alert else { return }
-                var presenter: UIViewController = self
-                while let next = presenter.presentedViewController { presenter = next }
-                presenter.present(alert, animated: true)
-            }
+            presentOnTop(alert, stillWanted: { [weak self] in self?.alert === alert })
         }
 
         private func makeAlert(_ kind: SetListPromptModel.Kind, prompts: SetListPromptModel) -> UIAlertController {

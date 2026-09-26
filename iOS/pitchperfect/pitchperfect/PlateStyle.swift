@@ -28,6 +28,10 @@ enum Plate {
     static func mono(_ size: CGFloat) -> Font { Font(DPTheme.monospacedFont(size: size) as CTFont) }
     static func music(_ size: CGFloat) -> Font { Font.custom("MusiQwik", fixedSize: size) }
     static func noteHedz(_ size: CGFloat) -> Font { Font.custom("NoteHedz", fixedSize: size) }
+    /// The song editor's music faces scale with Dynamic Type, as its SwiftUI always
+    /// did; the UIKit lists' fixed UIFonts did not.
+    static func scaledMusic(_ size: CGFloat) -> Font { Font.custom("MusiQwik", size: size) }
+    static func scaledNoteHedz(_ size: CGFloat) -> Font { Font.custom("NoteHedz", size: size) }
 
     /// NoteHedz's sharp and flat glyphs.
     static let sharpGlyph = "\u{00EC}"
@@ -60,6 +64,13 @@ struct StaffBackground: View {
         }
         .clipped()
         .accessibilityHidden(true)
+    }
+}
+
+/// The staff as a UIKit pattern colour, for the few screens still laid out in UIKit.
+enum StaffPattern {
+    static let color = UIColor { traits in
+        UIColor(patternImage: DPTheme.staffTileImage(dark: traits.userInterfaceStyle == .dark))
     }
 }
 
@@ -98,6 +109,11 @@ private struct NavigationTitleFace: UIViewControllerRepresentable {
             apply()
         }
         func apply() {
+            // The app delegate tinted the tab bar itself with the label colour on
+            // every device; UIKit decides what that means for each bar style. It
+            // must be UIKit's tint, not a SwiftUI one on the TabView: UIKit's greys
+            // the selected item out under an alert and leaves the others be.
+            if let tabBar = tabBarController?.tabBar { TabBarChrome.apply(to: tabBar) }
             guard let bar = navigationController?.navigationBar else { return }
             bar.tintColor = .label
             guard oswald else { return }
@@ -118,6 +134,41 @@ private struct NavigationTitleFace: UIViewControllerRepresentable {
     func updateUIViewController(_ controller: Controller, context: Context) {
         controller.oswald = oswald
         controller.apply()
+    }
+}
+
+/// The tab bar as the app delegate set it up: tinted with the label colour on
+/// every device, which UIKit applies to its own bottom bar and dims under an
+/// alert. SwiftUI rewrites the bar's tint from its environment on every update,
+/// so the root's tint says the same (`color`), except over iPadOS 18's top tab
+/// bar (regular width), which kept the system accent.
+enum TabBarChrome {
+    static func isTopTabBar(horizontal: UserInterfaceSizeClass?) -> Bool {
+        guard UIDevice.current.userInterfaceIdiom == .pad, horizontal == .regular else { return false }
+        if #available(iOS 18.0, *) { return true }
+        return false
+    }
+
+    static func color(horizontal: UserInterfaceSizeClass?) -> Color? {
+        isTopTabBar(horizontal: horizontal) ? nil : Color(uiColor: .label)
+    }
+
+    static func apply(to tabBar: UITabBar) {
+        if tabBar.tintColor != .label { tabBar.tintColor = .label }
+        // SwiftUI's items leave unselected buttons in the secondary label colour,
+        // which an alert greys far past UIKit's items (they took the label colour).
+        if let standard = inked(tabBar.standardAppearance) { tabBar.standardAppearance = standard }
+        if let edge = tabBar.scrollEdgeAppearance, let inkedEdge = inked(edge) { tabBar.scrollEdgeAppearance = inkedEdge }
+    }
+
+    /// A copy with label-coloured unselected icons, or nil when it has them already.
+    private static func inked(_ appearance: UITabBarAppearance) -> UITabBarAppearance? {
+        guard appearance.stackedLayoutAppearance.normal.iconColor != .label else { return nil }
+        let copy = appearance.copy()
+        for layout in [copy.stackedLayoutAppearance, copy.inlineLayoutAppearance, copy.compactInlineLayoutAppearance] {
+            layout.normal.iconColor = .label
+        }
+        return copy
     }
 }
 

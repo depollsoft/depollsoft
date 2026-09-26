@@ -125,10 +125,20 @@ struct SetListsScreen: View {
         List {
             ForEach(model.lists, id: \.id) { list in
                 row(list)
+                    .overlay(alignment: .top) {
+                        // UIKit's table ruled its top at the same 20 pt inset as its
+                        // rows; a List's section rule runs to its own 16 pt margin.
+                        if list === model.lists.first {
+                            Plate.hairline.frame(height: 1).padding(.horizontal, 20)
+                                .accessibilityHidden(true)
+                        }
+                    }
             }
             .onMove(perform: model.move)
+            .listSectionSeparator(.hidden, edges: .top)
         }
         .plateList(fullScreen: true)
+        .tableMargins()
         .environment(\.editMode, .constant(.active))
         .navigationTitle("Set Lists")
         .navigationBarTitleDisplayMode(.inline)
@@ -146,25 +156,22 @@ struct SetListsScreen: View {
         let current = list.id == model.currentListId
         let name = model.displayName(list)
         return SetListRow(name: name, songCount: list.songs.count, isCurrent: current, movable: !home,
-                          menuIdentifier: "setlist.row.menu.\(list.id)") {
+                          menuIdentifier: "setlist.row.menu.\(list.id)",
+                          rowLabel: model.accessibilityLabel(list),
+                          rowIdentifier: current ? "setlist.row.\(list.id).current" : "setlist.row.\(list.id)",
+                          // The reorder control is a drag; VoiceOver and Switch Control reorder
+                          // through named actions instead, one row at a time.
+                          moveActions: model.moveActionNames(list).map { name in
+                              (name, { model.move(list, by: name == "Move up" ? -1 : 1) })
+                          }) {
             rowMenu(list)
         } select: {
             model.select(list)
             dismiss()
-        } rowAccessibility: { content in
-            AnyView(content
-                .accessibilityLabel(model.accessibilityLabel(list))
-                .accessibilityAddTraits(current ? [.isButton, .isSelected] : .isButton)
-                .accessibilityIdentifier(current ? "setlist.row.\(list.id).current" : "setlist.row.\(list.id)")
-                .accessibilityActions {
-                    // The reorder control is a drag; VoiceOver and Switch Control reorder
-                    // through named actions instead, one row at a time.
-                    ForEach(model.moveActionNames(list), id: \.self) { name in
-                        Button(name) { model.move(list, by: name == "Move up" ? -1 : 1) }
-                    }
-                })
         }
-        .plateRow(trailingOverhang: home ? 0 : 40)
+        .modifier(SetListRowFrame(movable: !home))
+        // The UIKit table's own separator colour, not the system default.
+        .listRowSeparatorTint(Plate.hairline)
         .moveDisabled(home)
         .deleteDisabled(true)
         .swipeActions(edge: .trailing) {
@@ -173,8 +180,10 @@ struct SetListsScreen: View {
                 // Red rather than the destructive role, which would take the row
                 // away before the confirmation is answered.
                 case .delete: Button("Delete") { model.confirmDelete(list) }.tint(.red)
-                case .duplicate: Button("Duplicate") { model.duplicate(list) }
-                case .rename: Button("Rename") { model.promptRename(list) }
+                // UIKit's `.normal` contextual actions are system grey; the app's
+                // label tint would otherwise paint them black (white in dark mode).
+                case .duplicate: Button("Duplicate") { model.duplicate(list) }.tint(Color(uiColor: .systemGray))
+                case .rename: Button("Rename") { model.promptRename(list) }.tint(Color(uiColor: .systemGray))
                 }
             }
         }
@@ -193,19 +202,27 @@ struct SetListsScreen: View {
     }
 }
 
-/// One manage row: the list's display name, how many songs it holds, the
-/// selector's lit indicator when it is the current list, and a "…" menu.
-private struct RowAccessibility: ViewModifier {
-    let apply: (AnyView) -> AnyView
-    func body(content: Content) -> some View { apply(AnyView(content)) }
+/// A row's rule at the table's 20 pt inset, and the reorder control where UIKit's
+/// table put it: ending the system table margin from the edge.
+private struct SetListRowFrame: ViewModifier {
+    let movable: Bool
+    @Environment(\.tableMargin) private var tableMargin
+
+    func body(content: Content) -> some View {
+        content
+            .plateRow(trailingOverhang: movable ? tableMargin + SongRow.reorderControlSpan : 0, margin: 20)
+            .background(ListCellMargins(leading: nil, trailing: tableMargin + 1.5).frame(width: 0, height: 0))
+    }
 }
 
+/// The row menu's glyph at the size a system UIButton drew it there (18.5 pt).
 private enum SetListRowGlyph {
-    /// The glyph at the size a system UIButton drew it in this row (18.5 pt).
     static let ellipsis = UIImage(systemName: "ellipsis.circle",
                                   withConfiguration: UIImage.SymbolConfiguration(pointSize: 18.5)) ?? UIImage()
 }
 
+/// One manage row: the list's display name, how many songs it holds, the
+/// selector's lit indicator when it is the current list, and a "…" menu.
 private struct SetListRow<MenuContent: View>: View {
     private static var ellipsis: UIImage { SetListRowGlyph.ellipsis }
 
@@ -215,10 +232,13 @@ private struct SetListRow<MenuContent: View>: View {
     /// Carries a reorder control, which takes the trailing edge.
     let movable: Bool
     let menuIdentifier: String
+    /// What VoiceOver says about the row (the tappable part), apart from its menu.
+    let rowLabel: String
+    @Environment(\.tableMargin) private var tableMargin
+    let rowIdentifier: String
+    let moveActions: [(name: String, perform: () -> Void)]
     @ViewBuilder let menu: () -> MenuContent
     let select: () -> Void
-    /// What VoiceOver says about the row (the tappable part), apart from its menu.
-    let rowAccessibility: (AnyView) -> AnyView
 
     var body: some View {
         HStack(alignment: .center, spacing: 0) {
@@ -250,7 +270,14 @@ private struct SetListRow<MenuContent: View>: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .modifier(RowAccessibility(apply: rowAccessibility))
+            .accessibilityLabel(rowLabel)
+            .accessibilityAddTraits(isCurrent ? [.isButton, .isSelected] : .isButton)
+            .accessibilityIdentifier(rowIdentifier)
+            .accessibilityActions {
+                ForEach(moveActions, id: \.name) { action in
+                    Button(action.name, action: action.perform)
+                }
+            }
             Menu(content: menu) {
                 // Sized explicitly: a menu label would otherwise scale the glyph to its font.
                 Image(uiImage: Self.ellipsis)
@@ -262,7 +289,9 @@ private struct SetListRow<MenuContent: View>: View {
             }
             .menuIndicator(.hidden)
             .padding(.leading, 8)
-            .padding(.trailing, movable ? 4 + 22.0 / 3.0 : 4)
+            // UIKit's button ended 4 pt inside its content view, which in turn
+            // ended (24 - table margin) before the reorder control.
+            .padding(.trailing, movable ? 4 + 22.0 / 3.0 - (tableMargin - 14) : 4)
             .accessibilityLabel("Actions for \(name)")
             .accessibilityIdentifier(menuIdentifier)
         }

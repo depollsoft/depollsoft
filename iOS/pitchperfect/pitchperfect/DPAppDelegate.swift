@@ -50,24 +50,8 @@ final class DPAppDelegate: UIResponder, UIApplicationDelegate {
         application.registerForRemoteNotifications()
 
         try? AVAudioSession.sharedInstance().setCategory(.playback)
-        Self.registerSerializationAliases()
         attachSyncToSignIn()
         return true
-    }
-
-    /// The type names the stored songs and lists were serialized under.
-    static func registerSerializationAliases() {
-        DPJsonSerializer.registerAlias("List", for: NSClassFromString("__NSArrayM"))
-        DPJsonSerializer.registerAlias("Key", for: DPKey.self)
-        DPJsonSerializer.registerAlias("KeyType", for: DPKeyType.self)
-        DPJsonSerializer.registerAlias("Accidental", for: DPAccidental.self)
-        DPJsonSerializer.registerAlias("Note", for: DPNote.self)
-        DPJsonSerializer.registerAlias("PitchedSong", for: DPPitchedSong.self)
-        DPJsonSerializer.registerAlias("String", for: NSString.self)
-        DPJsonSerializer.registerAlias("Primitive", for: DPJsonPrimitive.self)
-        DPJsonSerializer.registerAlias("Integer", forObjCType: String(cString: "i"))
-        DPJsonSerializer.registerAlias("Boolean", forObjCType: String(cString: "B"))
-        DPJsonSerializer.registerAlias("Double", forObjCType: String(cString: "d"))
     }
 
     /// Lit cells mirror tones owned by this process. A new process owns no
@@ -103,14 +87,6 @@ final class DPAppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     // MARK: - Presentation from outside SwiftUI
-
-    static var frontmostController: UIViewController? {
-        let root = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
-            .flatMap(\.windows).first(where: \.isKeyWindow)?.rootViewController
-        var top = root
-        while let next = top?.presentedViewController { top = next }
-        return top
-    }
 
     static var rootController: UIViewController? {
         UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
@@ -162,9 +138,6 @@ final class DPTestAppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
-        // The stores read whatever this simulator last saved (a UI test run of the
-        // real app, say), which needs the same aliases the app registers.
-        DPAppDelegate.registerSerializationAliases()
         let window = UIWindow(frame: UIScreen.main.bounds)
         window.rootViewController = UIViewController()
         window.isHidden = true
@@ -176,6 +149,9 @@ final class DPTestAppDelegate: UIResponder, UIApplicationDelegate {
 @main
 enum PitchPerfectMain {
     static func main() {
+#if DEBUG
+        UITestSongStore.prepare(ProcessInfo.processInfo.environment)
+#endif
         if DPAppDelegate.isRunningTests {
             UIApplicationMain(CommandLine.argc, CommandLine.unsafeArgv, nil, NSStringFromClass(DPTestAppDelegate.self))
         } else {
@@ -186,6 +162,8 @@ enum PitchPerfectMain {
 
 struct PitchPerfectApp: App {
     @UIApplicationDelegateAdaptor(DPAppDelegate.self) private var delegate
+    // Built when SwiftUI creates the app, before didFinishLaunching: the song
+    // store registers its own serialization aliases before it reads.
     @State private var models = PitchPerfectModels()
 
     var body: some Scene {
@@ -194,3 +172,38 @@ struct PitchPerfectApp: App {
         }
     }
 }
+
+#if DEBUG
+/// Launch hooks for UI tests that need the song store in a particular state,
+/// applied before anything reads it. Only defaults are touched, so nothing is
+/// registered or decoded before the store does it itself.
+enum UITestSongStore {
+    private static let keys = [DPSongsModel.songListsKey, DPSongsModel.currentListKey, DPSongsModel.legacySongsKey]
+    private static func stashed(_ key: String) -> String { "depollsoft.pitchperfect.uitest.stash." + key }
+    private static let stashMarker = "depollsoft.pitchperfect.uitest.stashed"
+
+    static func prepare(_ environment: [String: String], defaults: UserDefaults = .standard) {
+        // PP_STASH_SONGS: set the simulator's own songs aside (once) for a test.
+        if environment["PP_STASH_SONGS"] == "1", !defaults.bool(forKey: stashMarker) {
+            for key in keys {
+                defaults.set(defaults.object(forKey: key), forKey: stashed(key))
+                defaults.removeObject(forKey: key)
+            }
+            defaults.set(true, forKey: stashMarker)
+        }
+        // PP_LEGACY_SONGS_JSON: the old app's saved songs, as it stored them.
+        if let json = environment["PP_LEGACY_SONGS_JSON"],
+           let songs = try? JSONSerialization.jsonObject(with: Data(json.utf8)) {
+            defaults.set(songs, forKey: DPSongsModel.legacySongsKey)
+        }
+        // PP_UNSTASH_SONGS: put them back, replacing whatever the test left.
+        if environment["PP_UNSTASH_SONGS"] == "1", defaults.bool(forKey: stashMarker) {
+            for key in keys {
+                defaults.set(defaults.object(forKey: stashed(key)), forKey: key)
+                defaults.removeObject(forKey: stashed(key))
+            }
+            defaults.removeObject(forKey: stashMarker)
+        }
+    }
+}
+#endif

@@ -62,16 +62,10 @@ final class BannerHostView: UIView, BannerViewDelegate {
 
     override func didMoveToWindow() {
         super.didMoveToWindow()
-        banner.rootViewController = owningViewController
+        // The banner's own screen presents the ad's overlay, as UIKit had it: the
+        // window's root would already be presenting Settings when the banner is in it.
+        banner.rootViewController = owningViewController ?? window?.rootViewController
         reloadIfNeeded(force: true)
-    }
-
-    /// The controller the banner's screen belongs to, which presents the ad's
-    /// overlay (UIKit gave the banner its own screen's controller). The window's
-    /// root would already be presenting Settings when the banner is in it.
-    var owningViewController: UIViewController? {
-        sequence(first: self as UIResponder, next: \.next).lazy.compactMap { $0 as? UIViewController }.first
-            ?? window?.rootViewController
     }
 
     override func layoutSubviews() {
@@ -113,6 +107,8 @@ struct BannerAdSlot: UIViewRepresentable {
 /// A screen on the instrument: content over the staff, docked banner below.
 struct InstrumentPage<Content: View>: View {
     var showsBanner = true
+    /// The style of the UIKit table this screen's list stands in for.
+    var tableStyle = UITableView.Style.plain
     @ViewBuilder let content: () -> Content
 
     var body: some View {
@@ -124,6 +120,10 @@ struct InstrumentPage<Content: View>: View {
                     .accessibilityHidden(true)
             }
         }
+        // UIKit's screens pinned the banner to the safe area's foot and never made
+        // room for the keyboard: it covered the banner and the rows beneath it.
+        .ignoresSafeArea(.keyboard, edges: .bottom)
         .staffScreenBackground()
+        .tableMargins(style: tableStyle)
     }
 }

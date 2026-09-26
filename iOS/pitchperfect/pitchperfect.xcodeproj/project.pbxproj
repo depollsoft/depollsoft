@@ -33,6 +33,7 @@
 		631C913C15958335004733F1 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 631C913B15958335004733F1 /* QuartzCore.framework */; };
 		631C913F15958DC4004733F1 /* songs.png in Resources */ = {isa = PBXBuildFile; fileRef = 631C913D15958DC4004733F1 /* songs.png */; };
 		631C914015958DC4004733F1 /* songs@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 631C913E15958DC4004733F1 /* songs@2x.png */; };
+		9FF07793CE29E6A611923170 /* MainFlowsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6155D424790DC35A3826DC5 /* MainFlowsUITests.swift */; };
 		631D517D271DCD9D67FBDBE3 /* SongManagementUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F8B9AFCD4ED5E9F6865924C /* SongManagementUITests.swift */; };
 		63225C0A1A35706100857B44 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 63225C091A35706100857B44 /* LaunchScreen.xib */; };
 		63225C171A35736600857B44 /* EventKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63225C151A35736600857B44 /* EventKit.framework */; };
@@ -98,6 +99,7 @@
 		44E7D9830E8096A5A299F8A0 /* SetListsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99D5B492DCC792ECA65B576A /* SetListsScreen.swift */; };
 		E65EDFC2976D88A001EA44A8 /* AddSongsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1737B3746383017103376669 /* AddSongsScreen.swift */; };
 		F4894DA333155429B1C25ED3 /* LoginScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38A9F2873253B92DF9F3EC95 /* LoginScreen.swift */; };
+		A4E5ADA8D05A8CE05F741E93 /* ScrollViewFinders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AC397F0D61D3C7FD50858BC /* ScrollViewFinders.swift */; };
 		ABBB000A000000000000000A /* SongEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBB00090000000000000009 /* SongEditorView.swift */; };
 		ABBB00030000000000000003 /* PitchChord.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBB00010000000000000001 /* PitchChord.swift */; };
 		C0AUTH001000000000000001 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C0AUTH001000000000000002 /* Localizable.strings */; };
@@ -129,6 +131,7 @@
 		795E22A6227760EDF08EEA47 /* PitchPerfectNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F9BB2BB5C8CD214C5959517 /* PitchPerfectNavigationTests.swift */; };
 		3E96EB53A597815ADF403A0A /* PitchPerfectSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499260AA39BC26906364161C /* PitchPerfectSettingsTests.swift */; };
 		C18B4F0CE52A1F33743F1A54 /* PitchPerfectAuditTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F3D14BD6CCE8D6334A7ACEA /* PitchPerfectAuditTests.swift */; };
+		4833DD5905A555F0F65EFA77 /* PitchPerfectRound2Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AFEF38D07E60E290D1530BF /* PitchPerfectRound2Tests.swift */; };
 		1F162A3E6D015D56AB99FD87 /* PitchPerfectSongManagementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5965ABAE6CDE569D817AF0A5 /* PitchPerfectSongManagementTests.swift */; };
 		319BAFA3CDBA97E6CCDAEBAD /* FirebaseAnalyticsCore in Frameworks */ = {isa = PBXBuildFile; productRef = 02C2927DF115B8E67AFA6F59 /* FirebaseAnalyticsCore */; };
 		3590F25955BA13F49EF7DED7 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 6D805B3F00E05D86234DC2BF /* FirebaseCrashlytics */; };
@@ -220,6 +223,7 @@
 
 /* Begin PBXFileReference section */
 		0402FA3EE07445808AD3AB18 /* Oswald-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Oswald-Medium.ttf"; sourceTree = "<group>"; };
+		D6155D424790DC35A3826DC5 /* MainFlowsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainFlowsUITests.swift; sourceTree = "<group>"; };
 		0F8B9AFCD4ED5E9F6865924C /* SongManagementUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SongManagementUITests.swift; sourceTree = "<group>"; };
 		12D2A66DC1F2CE9D62072F6D /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1E131315267FD07600F33385 /* DPSettingsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSettingsModel.swift; sourceTree = "<group>"; };
@@ -248,6 +252,7 @@
 		99D5B492DCC792ECA65B576A /* SetListsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetListsScreen.swift; sourceTree = "<group>"; };
 		1737B3746383017103376669 /* AddSongsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddSongsScreen.swift; sourceTree = "<group>"; };
 		38A9F2873253B92DF9F3EC95 /* LoginScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginScreen.swift; sourceTree = "<group>"; };
+		3AC397F0D61D3C7FD50858BC /* ScrollViewFinders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollViewFinders.swift; sourceTree = "<group>"; };
 		ABBB00090000000000000009 /* SongEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SongEditorView.swift; sourceTree = "<group>"; };
 		631C911515906D2B004733F1 /* notes.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = notes.png; sourceTree = "<group>"; };
 		631C911615906D2B004733F1 /* notes@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "notes@2x.png"; sourceTree = "<group>"; };
@@ -334,6 +339,7 @@
 		0F9BB2BB5C8CD214C5959517 /* PitchPerfectNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectNavigationTests.swift; sourceTree = "<group>"; };
 		499260AA39BC26906364161C /* PitchPerfectSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectSettingsTests.swift; sourceTree = "<group>"; };
 		7F3D14BD6CCE8D6334A7ACEA /* PitchPerfectAuditTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectAuditTests.swift; sourceTree = "<group>"; };
+		3AFEF38D07E60E290D1530BF /* PitchPerfectRound2Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectRound2Tests.swift; sourceTree = "<group>"; };
 		5965ABAE6CDE569D817AF0A5 /* PitchPerfectSongManagementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectSongManagementTests.swift; sourceTree = "<group>"; };
 		BD8765116ED3097D4A35113F /* AdConsent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AdConsent.swift; path = pitchperfect/AdConsent.swift; sourceTree = "<group>"; };
 		FA302DC4CFB02B16EA9E5DD8 /* ConsentUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConsentUITests.swift; path = ../shared/ConsentUITests.swift; sourceTree = "<group>"; };
@@ -444,6 +450,7 @@
 				C486582193CBB54AC3DB38A0 /* DesignTourUITests.swift */,
 				A7D10A050000000000000005 /* WidgetHitTargetUITests.swift */,
 				0F8B9AFCD4ED5E9F6865924C /* SongManagementUITests.swift */,
+				D6155D424790DC35A3826DC5 /* MainFlowsUITests.swift */,
 				A3433DD5597D07DB78C74A9E /* pitchperfectUITests.swift */,
 				BF5A9239DD6F1B199D1E7307 /* Info.plist */,
 			);
@@ -570,6 +577,7 @@
 				ABBB00010000000000000001 /* PitchChord.swift */,
 				ABBB00060000000000000006 /* PitchRadialLayout.swift */,
 				ABBB00090000000000000009 /* SongEditorView.swift */,
+				3AC397F0D61D3C7FD50858BC /* ScrollViewFinders.swift */,
 				38A9F2873253B92DF9F3EC95 /* LoginScreen.swift */,
 				1737B3746383017103376669 /* AddSongsScreen.swift */,
 				99D5B492DCC792ECA65B576A /* SetListsScreen.swift */,
@@ -613,6 +621,7 @@
 				C0NEWF0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift */,
 				C0NEWF0050000000000000F5 /* PitchChordTests.swift */,
 				5965ABAE6CDE569D817AF0A5 /* PitchPerfectSongManagementTests.swift */,
+				3AFEF38D07E60E290D1530BF /* PitchPerfectRound2Tests.swift */,
 				7F3D14BD6CCE8D6334A7ACEA /* PitchPerfectAuditTests.swift */,
 				499260AA39BC26906364161C /* PitchPerfectSettingsTests.swift */,
 				0F9BB2BB5C8CD214C5959517 /* PitchPerfectNavigationTests.swift */,
@@ -927,6 +936,7 @@
 				1E989A3122F5063000EA9F2E /* DPAppDelegate.swift in Sources */,
 				ABBB00070000000000000007 /* PitchRadialLayout.swift in Sources */,
 				ABBB000A000000000000000A /* SongEditorView.swift in Sources */,
+				A4E5ADA8D05A8CE05F741E93 /* ScrollViewFinders.swift in Sources */,
 				F4894DA333155429B1C25ED3 /* LoginScreen.swift in Sources */,
 				E65EDFC2976D88A001EA44A8 /* AddSongsScreen.swift in Sources */,
 				44E7D9830E8096A5A299F8A0 /* SetListsScreen.swift in Sources */,
@@ -966,6 +976,7 @@
 				C0NEWT0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift in Sources */,
 				C0NEWT0050000000000000F5 /* PitchChordTests.swift in Sources */,
 				1F162A3E6D015D56AB99FD87 /* PitchPerfectSongManagementTests.swift in Sources */,
+				4833DD5905A555F0F65EFA77 /* PitchPerfectRound2Tests.swift in Sources */,
 				C18B4F0CE52A1F33743F1A54 /* PitchPerfectAuditTests.swift in Sources */,
 				3E96EB53A597815ADF403A0A /* PitchPerfectSettingsTests.swift in Sources */,
 				795E22A6227760EDF08EEA47 /* PitchPerfectNavigationTests.swift in Sources */,
@@ -987,6 +998,7 @@
 				4F1A765B2B7CD004526031A0 /* DesignTourUITests.swift in Sources */,
 				A7D10A060000000000000006 /* WidgetHitTargetUITests.swift in Sources */,
 				631D517D271DCD9D67FBDBE3 /* SongManagementUITests.swift in Sources */,
+				9FF07793CE29E6A611923170 /* MainFlowsUITests.swift in Sources */,
 				299FC208CD04C88A41A821FB /* pitchperfectUITests.swift in Sources */,
 				7660797165BEEF60C6B81C43 /* ConsentUITests.swift in Sources */,
 			);
