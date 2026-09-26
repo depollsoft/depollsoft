@@ -266,7 +266,10 @@ both platforms for when it grows one.
   FAB/Add targets the current list, edit-mode actions appear and act, delete
   falls back to My Songs, empty states.
 - Emulator (skips when nothing listens on `localhost:8080` / `:9099`, and on
-  iOS when the build is unsigned, since Firebase Auth needs the keychain):
+  iOS when the build is unsigned, since Firebase Auth needs the keychain; an
+  ad-hoc signed simulator build, `CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual
+  DEVELOPMENT_TEAM=`, is enough; other ports via
+  `TEST_RUNNER_FIRESTORE_EMULATOR_PORT` / `TEST_RUNNER_AUTH_EMULATOR_PORT`):
   `scripts/firestore-emulator.sh pitchperfect` starts Firestore + Auth for the
   reserved project `demo-pitchperfect`. Each test creates a fresh user and two
   clients: local edits produce the documented documents; remote create,

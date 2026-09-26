@@ -54,8 +54,9 @@ struct PitchPerfectRoot: View {
                 .tag(PitchPerfectTab.songs)
         }
         // SwiftUI writes the tab bar's tint from its environment on every update;
-        // the label colour here is the tint UIKit set on the UITabBar.
-        .tint(Color(uiColor: .label))
+        // the label colour here is the tint UIKit set on the UITabBar. iPadOS 18's
+        // top tab bar drew its selection in the system accent regardless.
+        .tint(TabBarTint.color)
         // The stored theme reaches the window as it gets one, before the first
         // frame is drawn (UIKit applied it in didFinishLaunching).
         .background(ThemeWindowHook().frame(width: 0, height: 0))
@@ -68,6 +69,17 @@ struct PitchPerfectRoot: View {
             if phase == .active { DPAppDelegate.sceneDidBecomeActive() }
         }
     }
+}
+
+enum TabBarTint {
+    /// Whether the tabs are iPadOS 18's top tab bar rather than a bottom bar.
+    static var isTopTabBar: Bool {
+        guard UIDevice.current.userInterfaceIdiom == .pad else { return false }
+        if #available(iOS 18.0, *) { return true }
+        return false
+    }
+
+    static var color: Color? { isTopTabBar ? nil : Color(uiColor: .label) }
 }
 
 /// Applies the stored theme to the window the moment the root joins it.

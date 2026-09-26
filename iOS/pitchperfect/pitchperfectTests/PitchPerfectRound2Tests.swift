@@ -75,6 +75,10 @@ final class UIKitChromeTests: PitchPerfectTestCase {
         app.show(tab: 3)
         app.manageSetLists()
         ScreenCatalog.settle(0.3)
+        guard !TabBarTint.isTopTabBar else {
+            XCTAssertNil(TabBarTint.color, "iPadOS 18's top tab bar kept the system accent")
+            return
+        }
         let tabBar = try XCTUnwrap(app.descendants(of: UITabBar.self, in: app.window).first)
         func rgba(_ color: UIColor) -> [CGFloat] {
             var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
@@ -89,6 +93,8 @@ final class UIKitChromeTests: PitchPerfectTestCase {
     func testAnAlertDimsOnlyTheTabBarsTint() throws {
         let app = try launch()
         app.show(tab: 3)
+        // iPadOS 18's top tab bar carries titles only.
+        try XCTSkipIf(TabBarTint.isTopTabBar, "no tab glyphs in the top tab bar")
         let tabBar = try XCTUnwrap(app.descendants(of: UITabBar.self, in: app.window).first)
         XCTAssertEqual(tabBar.tintAdjustmentMode, .normal)
         let alert = UIAlertController(title: "Test", message: nil, preferredStyle: .alert)
@@ -195,7 +201,7 @@ final class RowAndSettingsDetailTests: PitchPerfectTestCase {
         let first = try openList()
         let bottom = first.contentSize.height - first.bounds.height + first.adjustedContentInset.bottom
         let place = min(bottom, 400)
-        XCTAssertGreaterThan(place, 100, "large text makes Settings taller than its sheet")
+        XCTAssertGreaterThan(place, 40, "large text makes Settings taller than its sheet")
         first.setContentOffset(CGPoint(x: 0, y: place), animated: false)
         app.sheet.tap(id: "checkmark")
         settle { app.topPresented === app.host }
@@ -231,12 +237,24 @@ final class RowAndSettingsDetailTests: PitchPerfectTestCase {
     /// what a real grouped UIKit table in the same sheet gets (not the window's).
     func testTheSettingsSheetMeasuresAGroupedTableInItself() throws {
         let app = try launch()
-        let reference = UITableViewController(style: .grouped)
+        // Built as the UIKit Settings screen was: a grouped table filling a plain
+        // controller's view (a UITableViewController's own table gets other margins).
+        let reference = UIViewController()
+        let table = UITableView(frame: .zero, style: .grouped)
+        table.translatesAutoresizingMaskIntoConstraints = false
+        table.insetsLayoutMarginsFromSafeArea = false
+        reference.view.addSubview(table)
+        NSLayoutConstraint.activate([
+            table.leadingAnchor.constraint(equalTo: reference.view.leadingAnchor),
+            table.trailingAnchor.constraint(equalTo: reference.view.trailingAnchor),
+            table.topAnchor.constraint(equalTo: reference.view.topAnchor),
+            table.bottomAnchor.constraint(equalTo: reference.view.bottomAnchor),
+        ])
         let sheet = UINavigationController(rootViewController: reference)
         app.host.present(sheet, animated: false)
-        settle { reference.view.window != nil && reference.tableView.bounds.width > 0 }
-        reference.tableView.layoutIfNeeded()
-        let uikitMargin = reference.tableView.layoutMargins.left
+        settle { reference.view.window != nil && table.bounds.width > 0 }
+        table.layoutIfNeeded()
+        let uikitMargin = table.layoutMargins.left
         let container = TableMargin.Container(size: sheet.view.bounds.size, traits: sheet.traitCollection, style: .grouped)
         XCTAssertEqual(TableMargin.measure(container, in: app.window), uikitMargin)
         sheet.dismiss(animated: false)

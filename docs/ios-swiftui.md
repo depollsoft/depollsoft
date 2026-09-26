@@ -92,12 +92,17 @@ the XCUITest bundles and `scripts/release/capture.py` use them.
   pattern colours used (a screen's staff starts below the bars; a full-screen
   table's starts at the top), and `BarSymbol` draws bar symbols at UIKit's bar
   configuration. `plateList()` and `plateRow()` reproduce the UITableView rows:
-  rules at the table margin UIKit gives the device (`tableMargins()` measures a
-  real table in a navigation screen: 20 pt on an iPhone 17, 16 pt on an iPad;
-  Set Lists and Add songs set 20 pt themselves), 1 pt rows added for
-  separators, rules that stay put in edit mode. The tab bar is tinted with the
-  label colour through UIKit (`tabBar.tintColor`) and SwiftUI alike wherever
-  it is the bottom bar; iPadOS 18's top tab bar kept the system accent.
+  rules at the table margin UIKit would give the screen (`tableMargins(style:)`
+  measures a real table of the screen's style filling a navigation screen the
+  size of the screen's own container, so a sheet is measured as a sheet: 20 pt
+  on an iPhone 17, 16 pt on an iPad; Set Lists and Add songs set 20 pt
+  themselves), 1 pt rows added for separators, rules that stay put in edit
+  mode. The tab bar is tinted with the label colour through UIKit
+  (`tabBar.tintColor`) and SwiftUI alike wherever it is the bottom bar (SwiftUI
+  rewrites the bar's tint on every update); iPadOS 18's top tab bar kept the
+  system accent. Unselected items take the label colour through the bar's
+  appearance, as UIKit's items did: SwiftUI's leave them in the secondary
+  label colour, which an alert greys far past UIKit's.
 - **Sound.** `NotePlayer` sounds every note and makes playing observable.
   Notes, Keys and Songs rows press through `TouchPressSurface`, a transparent
   `UIView` with the UIKit cells' touch semantics: a press lasts until that
@@ -180,8 +185,14 @@ Deliberate differences from the UIKit screens:
   consulted (a plain navigation controller and a page sheet do not ask), so
   they were not carried over; nothing changes for users.
 - Settings remembers its scroll position across presentations (UIKit
-  reused one Settings controller for the app's life); two held songs are both
-  lit, as each UIKit cell kept its own highlight.
+  reused one Settings controller for the app's life): the List's own scroll
+  view is found beside it, whichever rows exist, the offset is filed as the
+  user scrolls, and a new List is held at it while it settles (a second) unless
+  the user drags. Two held songs are both lit, as each UIKit cell kept its own
+  highlight.
+- Under an alert the unselected tab glyphs come out a little lighter than
+  UIKit's, though every tint in the bar's hierarchy now matches UIKit's; the
+  selected item and the titles match.
 - The row, rule and bar metrics match to the pixel on iPhone, edit mode
   included: the Songs List's margins are set so its delete and reorder
   controls sit where UIKit's did. On iPad SwiftUI places its edit controls,
@@ -191,6 +202,27 @@ Deliberate differences from the UIKit screens:
   before its table had a size, does not reproduce where it landed; UIKit's
   iPad table opened at the top and its iPhone 17 table about two and a half
   rows down.
+
+- Settings that arrive from the account are applied without being written
+  back. `DPSettingsModel` used to apply each snapshot through its setters, which
+  wrote the values back to the account and filled a field the account did not
+  have with this device's value.
+
+Pitch Perfect's tests, beyond the hosted unit suites:
+
+- `MainFlowsUITests` runs the main flows in the real app: the pitch pipe's range
+  by touch, Notes and Keys, a song added, edited and deleted, a set list created,
+  managed and deleted, and a setting that outlives its sheet.
+- `SongManagementUITests.testSongsSavedByTheOldAppDecodeInAFreshProcess` seeds
+  the pre-set-list app's saved songs (a literal fixture) into a fresh app
+  process, where nothing has registered the serializer's aliases, and finds the
+  song; the store registers them itself before it reads.
+- `DPSongListSyncEmulatorTests` (set lists and settings, both ways) run against
+  the emulators in an ad-hoc signed simulator build, which gives Firebase Auth
+  the keychain: add `CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=`
+  to `xcodebuild test`. If another server holds 8080, run the emulators on other
+  ports and pass them as `TEST_RUNNER_FIRESTORE_EMULATOR_PORT` and
+  `TEST_RUNNER_AUTH_EMULATOR_PORT`.
 
 ## Project files
 
