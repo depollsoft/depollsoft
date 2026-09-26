@@ -77,15 +77,33 @@ final class RealAppAppearanceUITests: TagMasterUITestCase {
         XCTAssertTrue(share.existsOrWait(timeout: 60), "The tag never loaded")
     }
 
-    /// What the pole looks like in a screenshot region: its share of the pixels and
-    /// the box its pixels span (unit coordinates of the region).
+    /// What the pole looks like in a screenshot region: its share of the pixels, the
+    /// box they span (unit coordinates of the region), where they sit across three
+    /// bands of the region's height, and the grid of cells holding pole pixels.
     struct PoleReading: CustomStringConvertible {
         var share: Double
         var span: CGSize
-        /// The pole is there: enough of its grey, spread over a diagonal band rather
-        /// than a stray patch, against the page colour around it.
-        var isPole: Bool { share > 0.03 && share < 0.7 && span.width > 0.25 && span.height > 0.4 }
-        var description: String { String(format: "share %.3f, span %.2f×%.2f", share, span.width, span.height) }
+        /// The mean x (unit) of the pole's pixels in the top, middle and bottom thirds.
+        var bandCentres: [Double] = []
+        /// Which cells of a 12×12 grid over the region hold pole pixels.
+        var cells: Set<Int> = []
+        /// The pole is there: enough of its grey, spread over a band that runs
+        /// diagonally (its centre moves across the thirds), not a stray patch.
+        var isPole: Bool {
+            guard share > 0.03, share < 0.7, span.width > 0.25, span.height > 0.4, bandCentres.count == 3 else { return false }
+            let drift = bandCentres[2] - bandCentres[0]
+            let steady = (bandCentres[1] - bandCentres[0]) * drift >= 0
+            return abs(drift) > 0.05 && steady
+        }
+        /// How well two readings of the same region agree on where the pole is.
+        func overlap(with other: PoleReading) -> Double {
+            let union = cells.union(other.cells).count
+            return union == 0 ? 0 : Double(cells.intersection(other.cells).count) / Double(union)
+        }
+        var description: String {
+            String(format: "share %.3f, span %.2f×%.2f, bands %@", share, span.width, span.height,
+                   bandCentres.map { String(format: "%.2f", $0) }.joined(separator: "/"))
+        }
     }
 
     /// Reads the region for the watermark grey: 76/255 of mid grey over the plain
@@ -103,6 +121,8 @@ final class RealAppAppearanceUITests: TagMasterUITestCase {
         let y0 = Int(region.minY * Double(height)), y1 = Int(region.maxY * Double(height))
         var hits = 0, total = 0
         var minX = Int.max, maxX = Int.min, minY = Int.max, maxY = Int.min
+        var bandSums = [0.0, 0.0, 0.0], bandCounts = [0, 0, 0]
+        var cells: Set<Int> = []
         for y in stride(from: y0, to: y1, by: 3) {
             for x in stride(from: x0, to: x1, by: 3) {
                 let i = (y * width + x) * 4
@@ -111,18 +131,26 @@ final class RealAppAppearanceUITests: TagMasterUITestCase {
                 guard abs(r - target) < 10, abs(g - target) < 10, abs(b - target) < 10 else { continue }
                 hits += 1
                 minX = min(minX, x); maxX = max(maxX, x); minY = min(minY, y); maxY = max(maxY, y)
+                let ux = Double(x - x0) / Double(max(1, x1 - x0)), uy = Double(y - y0) / Double(max(1, y1 - y0))
+                let band = min(2, Int(uy * 3))
+                bandSums[band] += ux
+                bandCounts[band] += 1
+                cells.insert(min(11, Int(uy * 12)) * 12 + min(11, Int(ux * 12)))
             }
         }
         guard hits > 0 else { return PoleReading(share: 0, span: .zero) }
+        let centres = zip(bandSums, bandCounts).compactMap { $1 > 0 ? $0 / Double($1) : nil }
         return PoleReading(share: Double(hits) / Double(total),
                            span: CGSize(width: Double(maxX - minX) / Double(max(1, x1 - x0)),
-                                        height: Double(maxY - minY) / Double(max(1, y1 - y0))))
+                                        height: Double(maxY - minY) / Double(max(1, y1 - y0))),
+                           bandCentres: centres, cells: cells)
     }
 
     /// Waits (at most `timeout`) for the pole to show in `region`, then attaches the
     /// screenshot and fails with the last reading if it never did.
+    @discardableResult
     private func assertPole(_ name: String, region: CGRect, appearance: XCUIDevice.Appearance,
-                            timeout: TimeInterval = 8, file: StaticString = #filePath, line: UInt = #line) {
+                            timeout: TimeInterval = 8, file: StaticString = #filePath, line: UInt = #line) -> PoleReading {
         let deadline = Date().addingTimeInterval(timeout)
         var shot = XCUIScreen.main.screenshot().image
         var reading = readPole(shot, region: region, appearance: appearance)
@@ -136,12 +164,37 @@ final class RealAppAppearanceUITests: TagMasterUITestCase {
         attachment.lifetime = reading.isPole ? .deleteOnSuccess : .keepAlways
         add(attachment)
         XCTAssertTrue(reading.isPole, "\(name): no barber pole behind the screen (\(reading))", file: file, line: line)
+        return reading
+    }
+
+    /// The same window-wide pole, in the same place, as `baseline` showed: a slice
+    /// placed from a stale position would land a column's width away.
+    private func assertSamePole(_ name: String, as baseline: PoleReading, region: CGRect, appearance: XCUIDevice.Appearance,
+                                file: StaticString = #filePath, line: UInt = #line) {
+        let deadline = Date().addingTimeInterval(8)
+        var reading = readPole(XCUIScreen.main.screenshot().image, region: region, appearance: appearance)
+        while reading.overlap(with: baseline) < 0.8, Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.3))
+            reading = readPole(XCUIScreen.main.screenshot().image, region: region, appearance: appearance)
+        }
+        XCTAssertGreaterThan(reading.overlap(with: baseline), 0.8,
+                             "\(name): the pole moved (\(reading) vs \(baseline))", file: file, line: line)
     }
 
     /// The lower part of the screen on a phone; on iPad the detail column's, where
     /// the window's one pole lies beside the list whatever the list column shows.
     private var detailRegion: CGRect {
         pad ? CGRect(x: 0.5, y: 0.55, width: 0.45, height: 0.35) : CGRect(x: 0.05, y: 0.55, width: 0.9, height: 0.3)
+    }
+
+    /// The iPad list column below its rows, where only the page shows. Before iOS 26
+    /// the column's screens draw their slice of the window's pole; from iOS 26 the
+    /// glass sidebar covers the split's pole, and UIKit's glass showed little of it.
+    private var listRegion: CGRect { CGRect(x: 0.02, y: 0.62, width: 0.3, height: 0.33) }
+
+    private var listShowsPole: Bool {
+        if #available(iOS 26.0, *) { return false }
+        return true
     }
 
     private var landscapeRegion: CGRect {
@@ -152,18 +205,34 @@ final class RealAppAppearanceUITests: TagMasterUITestCase {
         for appearance in [XCUIDevice.Appearance.light, .dark] {
             let style = appearance == .dark ? "dark" : "light"
             launch(appearance)
-            if pad { assertPole("placeholder-\(style)", region: detailRegion, appearance: appearance) }
+            // On iPad the placeholder's slice is the window's pole where the detail
+            // column lies; every page opened there must show that same pole.
+            let baseline: PoleReading? = pad ? assertPole("placeholder-\(style)", region: detailRegion, appearance: appearance) : nil
             openTag("1809")
             for title in ["Summary", "Details", "Tracks", "Videos"] {
                 let item = app.buttons["page-\(title)"]
                 XCTAssertTrue(item.existsOrWait(timeout: 10))
                 item.tap()
                 assertPole("detail-\(style)-\(title)", region: detailRegion, appearance: appearance)
+                if let baseline {
+                    assertSamePole("detail-\(style)-\(title)", as: baseline, region: detailRegion, appearance: appearance)
+                }
             }
             XCUIDevice.shared.orientation = .landscapeLeft
             app.buttons["page-Details"].tap()
             assertPole("detail-\(style)-landscape", region: landscapeRegion, appearance: appearance)
             XCUIDevice.shared.orientation = .portrait
+            if let baseline {
+                // Back from landscape with no further interaction: the slice follows the column.
+                assertSamePole("detail-\(style)-after-rotation", as: baseline, region: detailRegion, appearance: appearance)
+                // A keyboard in the list column leaves the detail's pole where it was.
+                app.navigationBars.buttons["Search"].tap()
+                let field = app.searchFields.firstMatch
+                XCTAssertTrue(field.existsOrWait(timeout: 5))
+                field.tap()
+                field.typeText("Lo")
+                assertSamePole("detail-\(style)-keyboard", as: baseline, region: detailRegion, appearance: appearance)
+            }
             app.terminate()
         }
     }
@@ -172,19 +241,29 @@ final class RealAppAppearanceUITests: TagMasterUITestCase {
         for appearance in [XCUIDevice.Appearance.light, .dark] {
             let style = appearance == .dark ? "dark" : "light"
             launch(appearance)
-            assertPole("home-\(style)", region: detailRegion, appearance: appearance)
+            // A phone's screen is its own column; on iPad the list column's own region.
+            let region = pad ? listRegion : detailRegion
+            let checksList = !pad || listShowsPole
+            func check(_ name: String) {
+                if checksList { assertPole(name, region: region, appearance: appearance) }
+                if pad {
+                    // Whatever the list column shows, the detail column keeps its pole.
+                    assertPole("\(name)-detail", region: detailRegion, appearance: appearance)
+                }
+            }
+            check("home-\(style)")
             app.buttons["Browse"].firstMatch.tap()
             for title in ["Latest", "Rating", "Downloads", "Classic"] {
                 let item = app.buttons["page-\(title)"]
                 XCTAssertTrue(item.existsOrWait(timeout: 10))
                 item.tap()
-                assertPole("browse-\(style)-\(title)", region: detailRegion, appearance: appearance)
+                check("browse-\(style)-\(title)")
             }
             app.navigationBars.buttons["Home"].tap()
             let teachable = app.buttons["home.lists.teachable"]
             XCTAssertTrue(teachable.existsOrWait(timeout: 5))
             teachable.tap()
-            assertPole("teachable-\(style)", region: detailRegion, appearance: appearance)
+            check("teachable-\(style)")
             app.navigationBars.buttons["Home"].tap()
             // Results pushed from Search.
             app.navigationBars.buttons["Search"].tap()
@@ -193,7 +272,7 @@ final class RealAppAppearanceUITests: TagMasterUITestCase {
             field.tap()
             field.typeText("Lost\n")
             XCTAssertTrue(app.collectionViews.firstMatch.tagRows.firstMatch.existsOrWait(timeout: 60))
-            assertPole("results-\(style)", region: detailRegion, appearance: appearance)
+            check("results-\(style)")
             app.terminate()
         }
     }
@@ -333,6 +412,83 @@ final class RealAppFlowUITests: TagMasterUITestCase {
         XCTAssertTrue(row.exists, "The row stays until the question is answered")
         confirm.buttons["Delete"].tap()
         XCTAssertTrue(row.waitForNonExistence(timeout: 5), "The list is gone")
+    }
+
+    private func createList(_ name: String) {
+        let newList = app.buttons["home.lists.new"]
+        for _ in 0..<4 where !newList.isHittable { app.collectionViews.firstMatch.swipeUp() }
+        newList.tap()
+        let alert = app.alerts["New list"]
+        XCTAssertTrue(alert.existsOrWait(timeout: 5))
+        alert.textFields.firstMatch.typeText(name)
+        alert.buttons["Create"].tap()
+        XCTAssertTrue(listRow(name).existsOrWait(timeout: 5))
+    }
+
+    private func listRow(_ name: String) -> XCUIElement {
+        // While editing SwiftUI prefixes the label with "Remove, ".
+        app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'home.list.' AND (label BEGINSWITH %@ OR label BEGINSWITH %@)",
+                                         name, "Remove, \(name)")).firstMatch
+    }
+
+    /// Deletes a list while editing: its red delete control (the row's leading edge),
+    /// the Delete it reveals, and the question.
+    private func deleteWhileEditing(_ row: XCUIElement) {
+        row.coordinate(withNormalizedOffset: CGVector(dx: 0.05, dy: 0.5)).tap()
+        let delete = app.buttons["Delete"].firstMatch
+        XCTAssertTrue(delete.existsOrWait(timeout: 5), "The delete control reveals Delete")
+        delete.tap()
+        let confirm = app.alerts.firstMatch
+        XCTAssertTrue(confirm.existsOrWait(timeout: 5), "Deleting a list asks first")
+        XCTAssertTrue(row.exists, "The row stays until the question is answered")
+        confirm.buttons["Delete"].tap()
+    }
+
+    func testEditingHomeReordersAndDeletesListsWithItsControls() {
+        removeLeftoverLists()
+        let suffix = Int.random(in: 1000...9999)
+        let first = "Alpha \(suffix)", second = "Beta \(suffix)"
+        createList(first)
+        createList(second)
+        XCTAssertLessThan(listRow(first).frame.minY, listRow(second).frame.minY, "New lists are added last")
+
+        app.navigationBars.buttons["Edit"].tap()
+        XCTAssertFalse(listRow(first).isEnabled, "Rows are not controls while editing")
+        // Every list has a reorder handle at its trailing edge while editing (SwiftUI
+        // names them all alike); drag the second list's above the first.
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label CONTAINS 'Reorder'")).firstMatch.existsOrWait(timeout: 5),
+                      "The lists have reorder handles while editing")
+        listRow(second).coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5))
+            .press(forDuration: 0.6, thenDragTo: listRow(first).coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.2)))
+        XCTAssertTrue(waitUntil(5) { self.listRow(second).frame.minY < self.listRow(first).frame.minY },
+                      "The dragged list now comes first")
+
+        deleteWhileEditing(listRow(first))
+        XCTAssertTrue(listRow(first).waitForNonExistence(timeout: 5), "The list is gone")
+        // Leave Home as it was.
+        deleteWhileEditing(listRow(second))
+        XCTAssertTrue(listRow(second).waitForNonExistence(timeout: 5))
+    }
+
+    /// Lists an earlier, interrupted run of these journeys left behind.
+    private func removeLeftoverLists() {
+        let leftovers = NSPredicate(format: "identifier BEGINSWITH 'home.list.' AND label MATCHES '(Remove, )?(Alpha|Beta|Warmups) [0-9]{4},.*'")
+        var guardCount = 0
+        while app.buttons.matching(leftovers).firstMatch.exists, guardCount < 10 {
+            let row = app.buttons.matching(leftovers).firstMatch
+            row.swipeLeft()
+            let delete = app.buttons["Delete"].firstMatch
+            if delete.existsOrWait(timeout: 3) { delete.tap() }
+            let confirm = app.alerts.firstMatch
+            if confirm.existsOrWait(timeout: 3) { confirm.buttons["Delete"].tap() }
+            guardCount += 1
+        }
+    }
+
+    private func waitUntil(_ timeout: TimeInterval, _ condition: () -> Bool) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        while !condition(), Date() < deadline { RunLoop.current.run(until: Date().addingTimeInterval(0.2)) }
+        return condition()
     }
 
     func testSearchListsMatchingTags() {

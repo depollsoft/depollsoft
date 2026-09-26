@@ -75,12 +75,19 @@ extension View {
 
 // MARK: - Label metrics
 
-/// Sizes text the way UILabel does: as many lines of the font's own line
-/// height as the text wraps to, rounded up to the pixel grid, the glyphs centred
-/// in that box. SwiftUI's line boxes are a fraction of a point shorter, which
-/// drifts a stack of labels off UIKit's grid by a pixel every few rows.
+/// Sizes text the way UILabel does: its lines a line height apart plus the font's
+/// leading between them, the whole rounded up to the pixel grid, the glyphs centred
+/// in that box. SwiftUI sets lines a line height apart with no leading, and its line
+/// boxes are a fraction of a point shorter, which drifts a stack of labels off
+/// UIKit's grid by a pixel every few rows and a wrapped label by points.
 struct TMLabelBox: Layout {
     let font: UIFont
+
+    /// UILabel's height for `lines` lines of `font`.
+    static func height(lines: CGFloat, font: UIFont, scale: CGFloat = UIScreen.main.scale) -> CGFloat {
+        let raw = lines * font.lineHeight + max(0, lines - 1) * font.leading
+        return (raw * scale).rounded(.up) / scale
+    }
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         guard let child = subviews.first else { return .zero }
@@ -89,9 +96,8 @@ struct TMLabelBox: Layout {
         // overflow its box, over its neighbours, once placed.
         let size = child.sizeThatFits(ProposedViewSize(width: proposal.width, height: nil))
         let line = child.sizeThatFits(.unspecified).height
-        let lines = line > 0 ? max(1, (size.height / line).rounded()) : 1
-        let scale = UIScreen.main.scale
-        return CGSize(width: size.width, height: (lines * font.lineHeight * scale).rounded(.up) / scale)
+        let lines = line > 0 ? max(1, ((size.height + font.leading) / (line + font.leading)).rounded()) : 1
+        return CGSize(width: size.width, height: TMLabelBox.height(lines: lines, font: font))
     }
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
@@ -114,7 +120,8 @@ private struct TMLabelMetricsModifier: ViewModifier {
     @Environment(\.dynamicTypeSize) private var size
 
     func body(content: Content) -> some View {
-        TMLabelBox(font: size.tmFont(style)) { content }
+        let font = size.tmFont(style)
+        TMLabelBox(font: font) { content.lineSpacing(font.leading) }
     }
 }
 
@@ -521,6 +528,12 @@ struct TMTagRowContent: Equatable {
 /// DPTagCell drew them.
 struct TMTagRow: View {
     @Environment(\.tmTintDimmed) private var dimmed
+    @Environment(\.editMode) private var editMode
+    @Environment(\.dynamicTypeSize) private var textSize
+    /// How many lines the facts took before editing began. UIKit kept a row's height
+    /// when its edit controls came in, so a facts line that no longer fitted was
+    /// truncated there rather than wrapping.
+    @State private var restingFactLines: Int?
     let content: TMTagRowContent
     var loading = false
     var showsChevron = true
@@ -534,6 +547,12 @@ struct TMTagRow: View {
                     Text(aka).tmFont(.footnote).tmLabelMetrics(.footnote)
                 }
                 Text(content.details).tmFont(.footnote).tmLabelMetrics(.footnote)
+                    .lineLimit(editing ? restingFactLines : nil)
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                        guard !editing else { return }
+                        let font = textSize.tmFont(.footnote)
+                        restingFactLines = max(1, Int(((height + font.leading) / (font.lineHeight + font.leading)).rounded()))
+                    }
                 // UIKit settled the first mark's row a point taller than the second; both
                 // grow with their labels at larger text, as the UIKit stacks did.
                 mark(content.hasSheetMusic, "Sheet music").frame(minHeight: 21)
@@ -557,6 +576,8 @@ struct TMTagRow: View {
         }
         .contentShape(Rectangle())
     }
+
+    private var editing: Bool { editMode?.wrappedValue.isEditing == true }
 
     private func mark(_ on: Bool, _ label: String) -> some View {
         HStack(spacing: 8) {

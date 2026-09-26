@@ -144,6 +144,19 @@ final class TagMasterRound2Tests: TMBehaviorTestCase {
 
 @MainActor
 final class TagMasterRound3Tests: TMBehaviorTestCase {
+    /// A reading once layout has settled: the same non-nil value twice running,
+    /// within `timeout`, instead of a fixed pause.
+    func stable<T: Equatable>(_ description: String, timeout: TimeInterval = 5, _ read: () -> T?) -> T? {
+        var last: T?
+        var current: T?
+        spinUntil(description, timeout: timeout) {
+            current = read()
+            defer { last = current }
+            return current != nil && current == last
+        }
+        return current
+    }
+
     private func descendants<T: UIView>(of type: T.Type, in root: UIView) -> [T] {
         var result = (root as? T).map { [$0] } ?? []
         for child in root.subviews { result += descendants(of: type, in: child) }
@@ -282,8 +295,9 @@ final class TagMasterRound3Tests: TMBehaviorTestCase {
                 mount(page, size: size)
                 window.traitOverrides.preferredContentSizeCategory = category
                 settle()
-                ScreenCatalog.settle(0.3)
-                let content = try XCTUnwrap(UIDriver(window).element(label: "probe.content")).accessibilityFrame.width
+                let content = try XCTUnwrap(stable("the page lays out") {
+                    UIDriver(self.window).element(label: "probe.content")?.accessibilityFrame.width
+                })
                 XCTAssertEqual(content, expected, accuracy: 1, "\(size.width) \(category.rawValue)")
             }
         }
@@ -323,8 +337,9 @@ final class TagMasterRound3Tests: TMBehaviorTestCase {
         mount(picker, size: size)
         window.traitOverrides.horizontalSizeClass = .compact
         settle()
-        ScreenCatalog.settle(0.3)
-        let row = try XCTUnwrap(UIDriver(window).element(id: "picker.row.new")).accessibilityFrame
+        let row = try XCTUnwrap(stable("the picker lays out") {
+            UIDriver(self.window).element(id: "picker.row.new")?.accessibilityFrame
+        })
         let swiftUI = try XCTUnwrap(inkEdges(in: window, row: row))
         XCTAssertEqual(swiftUI.iconMid, uikit.iconMid, accuracy: 1, "icon")
         XCTAssertEqual(swiftUI.text, uikit.text, accuracy: 1, "text")
@@ -337,7 +352,6 @@ final class TagMasterRound3Tests: TMBehaviorTestCase {
         mountInNavigation(detail)
         spinUntil("the detail settles", timeout: 5) { detail.model.tag != nil }
         detail.model.selectedPage = .tracks
-        ScreenCatalog.settle(0.4)
         let track = try XCTUnwrap(tag.tracks.first as? DPTrack)
         let format = try XCTUnwrap(AVAudioFormat(standardFormatWithSampleRate: 22050, channels: 2))
         let buffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 2205))
@@ -346,9 +360,15 @@ final class TagMasterRound3Tests: TMBehaviorTestCase {
         defer { detail.model.tracks.stopPlayback() }
         for category in [UIContentSizeCategory.large, .extraExtraExtraLarge] {
             window.traitOverrides.preferredContentSizeCategory = category
-            ScreenCatalog.settle(0.5)
-            let sliders = descendants(of: UISlider.self, in: window).filter { $0.window != nil && !$0.isHidden }
-                .sorted { $0.convert($0.bounds, to: nil).minY < $1.convert($1.bounds, to: nil).minY }
+            func visibleSliders() -> [UISlider] {
+                descendants(of: UISlider.self, in: window).filter { $0.window != nil && !$0.isHidden }
+                    .sorted { $0.convert($0.bounds, to: nil).minY < $1.convert($1.bounds, to: nil).minY }
+            }
+            _ = stable("the player lays out at \(category.rawValue)") { () -> [CGRect]? in
+                let frames = visibleSliders().map { $0.convert($0.trackRect(forBounds: $0.bounds), to: nil) }
+                return frames.count == 2 ? frames : nil
+            }
+            let sliders = visibleSliders()
             XCTAssertEqual(sliders.count, 2)
             guard sliders.count == 2 else { return }
             let position = sliders[0].convert(sliders[0].bounds, to: nil)
@@ -456,7 +476,7 @@ final class TagMasterRound3Tests: TMBehaviorTestCase {
         let router = TMRouter()
         let shell = mountShell(router)
         router.showList(key: "set")
-        ScreenCatalog.settle(0.6)
+        UIDriver(shell).wait(5) { UIDriver(shell).exists(id: "list.menu") }
         let menu = try XCTUnwrap(UIDriver(shell).element(id: "list.menu"))
         let frame = menu.accessibilityFrame
         XCTAssertFalse(frame.isEmpty)
@@ -531,6 +551,45 @@ final class TagMasterRound3Tests: TMBehaviorTestCase {
 
     // MARK: Editing
 
+    func testEditingHomeDeletesAndReordersFavoritesThroughItsOwnControls() throws {
+        seedCachedTag(id: 1809)
+        seedCachedTag(id: 42, title: "Other")
+        seedLists(favorite: [1809, 42])
+        let home = TMScreens.home(navigator: RecordingNavigator(), catalog: TMFixtureCatalog(available: 1).catalog)
+        let driver = mountScreen(home, size: CGSize(width: 375, height: 1200))
+        let model = try XCTUnwrap(home.listing as? TMHomeModel)
+        model.isEditing = true
+        driver.wait { driver.elements(labelPrefix: "Remove, Lost").count == 1 }
+        // The rows are not controls while editing, but each keeps its delete control
+        // and its reorder handle.
+        XCTAssertEqual(driver.elements.filter { $0.accessibilityLabel == "drag" }.count, 2, "Both favourites can be dragged")
+        XCTAssertFalse(driver.elements.contains {
+            ($0.accessibilityLabel ?? "").hasPrefix("Lost.") && !$0.accessibilityTraits.contains(.notEnabled)
+        }, "The row itself is not offered as a control")
+        // Delete, as the row's delete control does (the real tap and drag run in
+        // RealAppFlowUITests: SwiftUI's edit controls do not take in-process activation).
+        XCTAssertEqual(driver.elements.filter { $0.accessibilityLabel == "remove" }.count, 2, "Both rows keep a delete control")
+        model.removeFavorites(at: IndexSet(integer: 0))
+        driver.wait { model.favorites == [42] }
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.favoriteKey), [42], "The favourite is gone from the saved list")
+        driver.wait { driver.elements(labelPrefix: "Remove, Lost").isEmpty }
+        // Reorder, as the drag's drop does, while the rows stay disabled.
+        TMTagLists.add(1809, to: TMTagLists.favoriteKey)
+        driver.wait { model.favorites == [42, 1809] }
+        model.moveFavorite(from: IndexSet(integer: 1), to: 0)
+        driver.wait { model.favorites == [1809, 42] }
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.favoriteKey), [1809, 42])
+        // Top to bottom on screen, as the rows now stand.
+        func order() -> [String] {
+            driver.elements.filter { ($0.accessibilityLabel ?? "").hasPrefix("Remove, ") }
+                .sorted { $0.accessibilityFrame.minY < $1.accessibilityFrame.minY }
+                .compactMap(\.accessibilityLabel)
+        }
+        driver.wait { order().count == 2 && order()[0].contains("Tag ID 1809") }
+        XCTAssertEqual(order().first?.contains("Tag ID 1809"), true, "The rows show the new order: \(order())")
+        XCTAssertTrue(model.isEditing, "Editing continues")
+    }
+
     func testRowsWhileEditingAreNotOfferedAsControlsButKeepTheirEditingActions() throws {
         seedLists(favorite: [1809], lists: [(key: "set", name: "Set", ids: [])])
         let navigator = RecordingNavigator()
@@ -539,7 +598,7 @@ final class TagMasterRound3Tests: TMBehaviorTestCase {
         let model = try XCTUnwrap(home.listing as? TMHomeModel)
         XCTAssertTrue(driver.isEnabled(id: "home.list.set"))
         model.isEditing = true
-        ScreenCatalog.settle(0.4)
+        driver.wait { !driver.isEnabled(id: "home.list.set") }
         for id in ["home.list.set", "home.lists.teachable"] {
             XCTAssertFalse(driver.isEnabled(id: id), "\(id) is not offered as a control while editing")
             _ = driver.element(id: id)?.accessibilityActivate()
@@ -552,8 +611,7 @@ final class TagMasterRound3Tests: TMBehaviorTestCase {
         XCTAssertTrue(actions.contains { $0.localizedCaseInsensitiveContains("delete") } || !deleteControls.isEmpty,
                       "Delete stays: \(actions) \(driver.labels)")
         model.isEditing = false
-        ScreenCatalog.settle(0.4)
-        XCTAssertTrue(driver.isEnabled(id: "home.list.set"))
+        driver.wait { driver.isEnabled(id: "home.list.set") }
         driver.tap(id: "home.list.set")
         XCTAssertFalse(navigator.destinations.isEmpty, "Out of editing the row opens its list")
     }
