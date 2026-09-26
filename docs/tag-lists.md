@@ -100,8 +100,25 @@ has already run it cannot sign in. The class detects that and skips, which is wh
 cd iOS
 xcodebuild test -workspace iOS.xcworkspace -scheme tagmaster \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= \
   -only-testing:tagmasterTests/TMListSyncEmulatorTests
 ```
+
+Sign the build ad hoc (`CODE_SIGN_IDENTITY=-`) as shown: Firebase Auth keeps its session in the
+keychain, and an unsigned simulator build (`CODE_SIGNING_ALLOWED=NO`) has no keychain entitlement,
+so creating the emulator user fails with `SecItemAdd (-34018)`.
+
+When port 8080 or 9099 is already taken by something else, run the emulators on other ports (a copy
+of `Firebase/tagmaster/firebase.json` with different ports, started with `firebase
+emulators:start --only firestore,auth --project demo-tagmaster` from its folder) and point the tests
+at them with Firebase's standard variables, passed through xcodebuild's test-runner prefix:
+`TEST_RUNNER_FIRESTORE_EMULATOR_HOST=localhost:8180 TEST_RUNNER_FIREBASE_AUTH_EMULATOR_HOST=localhost:9199`.
+The iOS suite only checks that something accepts connections on those ports, so another server on
+8080 makes it fail rather than skip.
+
+Beyond the document shape and both directions of sync, the iOS suite checks that Favorites and
+Teachable Tags travel in `lists` without `listInfo`, and that a list created on another device
+appears on a mounted Home screen and opens from there.
 
 Each suite creates a throwaway email/password account in the Auth emulator and signs **two**
 clients in as it: the app's own client, driven through the real listener

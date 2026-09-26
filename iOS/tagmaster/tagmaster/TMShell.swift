@@ -619,6 +619,9 @@ enum TMBarAppearance {
         bar.compactAppearance = appearance
         bar.compactScrollEdgeAppearance = appearance
         bar.tintColor = .white
+        // UIKit's back button stayed white behind an alert; the icons that did grey
+        // (Home's) grey through TMBarButton.ink, not through the bar's tint.
+        bar.tintAdjustmentMode = .normal
         bar.overrideUserInterfaceStyle = .dark
         bar.barStyle = .black
         // With opaque chrome, keep UIKit's large-title host above the bar background.

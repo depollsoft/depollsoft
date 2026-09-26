@@ -203,6 +203,44 @@ final class TMListSyncEmulatorTests: TMBehaviorTestCase {
         XCTAssertEqual(TMTagLists.ids(for: "remote-key"), [])
     }
 
+    func testTheBuiltInListsSyncWithoutMetadata() {
+        // Favorites and Teachable Tags are keyed in `lists` like any list, but never in
+        // listInfo: their names and places are the app's own.
+        TMTagLists.add(1809, to: TMTagLists.favoriteKey)
+        let snapshot = awaitRemote("the favourite to reach the server") {
+            self.ids($0)[TMTagLists.favoriteKey] == [1809]
+        }
+        XCTAssertNil(info(snapshot)[TMTagLists.favoriteKey])
+
+        awaitError("the other device to mark a tag teachable") {
+            self.remoteDoc.setData(["lists": [TMTagLists.teachableKey: [42]]], merge: true, completion: $0)
+        }
+        spinUntil("the teachable tag to reach this device", timeout: 30) {
+            TMTagLists.ids(for: TMTagLists.teachableKey) == [42]
+        }
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.favoriteKey), [1809], "the merge kept this device's favourite")
+        XCTAssertTrue(TMTagLists.customKeys().isEmpty)
+    }
+
+    @MainActor
+    func testHomeShowsAListAddedOnAnotherDevice() {
+        let navigator = RecordingNavigator()
+        let home = TMScreens.home(navigator: navigator, catalog: TMFixtureCatalog().catalog)
+        let driver = mountScreen(home)
+        XCTAssertFalse(driver.exists(label: "Remote set"))
+
+        awaitError("the other device to create a list") {
+            self.remoteDoc.setData(
+                ["lists": ["remote-key": [7, 8]], "listInfo": ["remote-key": ["name": "Remote set", "order": 0]]],
+                merge: true, completion: $0)
+        }
+        spinUntil("the new list to appear on Home", timeout: 30) {
+            driver.elements(labelPrefix: "Remote set").count == 1
+        }
+        driver.tap(id: "home.list.remote-key")
+        XCTAssertEqual(navigator.destinations.count, 1, "the synced row opens its list")
+    }
+
     // MARK: - Reading the document
 
     private func ids(_ snapshot: DocumentSnapshot?) -> [String: [Int]] {
