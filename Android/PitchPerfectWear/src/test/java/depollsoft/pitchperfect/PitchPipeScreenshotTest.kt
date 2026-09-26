@@ -114,4 +114,12 @@ class PitchPipeScreenshotTest {
     @Test
     @Config(qualifiers = "w200dp-h200dp-notround-xhdpi")
     fun squareOneNote() = capture("square_one_note", playing = listOf(note("D")))
+
+    @Test
+    @Config(qualifiers = "w200dp-h200dp-notround-xhdpi")
+    fun squareChord() = capture("square_chord", playing = listOf(note("C"), note("E"), note("G")))
+
+    @Test
+    @Config(qualifiers = "w200dp-h200dp-notround-xhdpi")
+    fun squareHighRange() = capture("square_high_range", fromFToF = true, playing = listOf(note("F", octave = 5)))
 }
