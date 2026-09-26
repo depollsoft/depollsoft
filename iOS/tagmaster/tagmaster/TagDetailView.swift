@@ -31,11 +31,7 @@ struct TagDetailScreen: View {
         .navigationTitle(model.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbar }
-
-
         .focusEffectDisabled()
-        .tmFollowsUIKitTint()
-
         .tmRecoveryAlert($model.error)
         .onAppear { model.screenVisible = true }
         .onDisappear { model.screenVisible = false }
@@ -178,8 +174,6 @@ struct TMBarButton: View {
             .offset(x: (insets.right - insets.left) / 2, y: (insets.bottom - insets.top) / 2)
     }
 
-    @Environment(\.tmTintDimmed) private var dimmed
-
     /// The charcoal bar's item colour: white, and UIKit's dimmed grey while an
     /// alert or sheet is up. Set explicitly, so a light-mode column (the iPad
     /// list) never draws its items in black on the charcoal bar.
@@ -188,9 +182,29 @@ struct TMBarButton: View {
     }
 
     var body: some View {
-        Button(action: action) { TMBarButton.symbol(systemName) }
-            .foregroundStyle(TMBarButton.ink(dimmed: dimmed))
+        Button(action: action) { TMBarLabel(systemName) }
             .accessibilityLabel(label)
+    }
+}
+
+/// The label of anything on the charcoal bar (a button, a menu, a share link): its
+/// content in the bar's ink, white or UIKit's dimmed grey. Every bar item's label
+/// goes through it, so none can fall back to the column's light-mode black.
+struct TMBarLabel<Content: View>: View {
+    @Environment(\.tmTintDimmed) private var dimmed
+    let content: Content
+
+    init(@ViewBuilder content: () -> Content) { self.content = content() }
+
+    var body: some View {
+        content.foregroundStyle(TMBarButton.ink(dimmed: dimmed))
+    }
+}
+
+extension TMBarLabel where Content == AnyView {
+    /// A bar symbol, as `TMBarButton.symbol` draws it.
+    init(_ systemName: String, scale: UIImage.SymbolScale = .medium) {
+        content = AnyView(TMBarButton.symbol(systemName, scale: scale))
     }
 }
 

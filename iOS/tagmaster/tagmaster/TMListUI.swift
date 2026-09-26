@@ -148,31 +148,40 @@ struct TMWatermark: View {
     }
 }
 
-/// A screen's backdrop: its page colour and the watermark. Inside the iPad
-/// split, which draws one watermark behind both columns, a plain screen stays
-/// clear and a grouped one keeps only its colour.
+/// A screen's backdrop, by the policy its column sets (`TMBackdrop`): its own
+/// colour and watermark, its colour and slice of the window's watermark, or
+/// nothing over the glass list column.
 struct TMScreenBackground: View {
     var grouped = false
-    /// Draw the page colour and the shared watermark's slice even inside the split,
-    /// for pages whose UIKit container views might not be clear.
-    var opaqueInSplit = false
-    @Environment(\.tmSharedWatermark) private var sharedWatermark
-    @Environment(\.tmWindowCanvas) private var canvas
+    /// For content UIKit hosts in opaque containers (a TabView's pages), which could
+    /// only show the glass through views cleared behind it: draw the window slice there too.
+    var opaqueInGlass = false
+    @Environment(\.tmBackdrop) private var backdrop
+
+    private var color: Color { Color(uiColor: grouped ? .systemGroupedBackground : .systemBackground) }
 
     var body: some View {
-        if sharedWatermark, opaqueInSplit, !canvas.isEmpty {
+        switch backdrop {
+        case .own:
             ZStack {
-                Color(uiColor: grouped ? .systemGroupedBackground : .systemBackground).ignoresSafeArea()
-                TMWindowWatermark(canvas: canvas)
-            }
-        } else if sharedWatermark {
-            // UIKit set a grouped screen's colour on its own view, beneath the
-            // sidebar's glass; painted in SwiftUI it would sit above the glass.
-            if grouped { TMPageColorHook(color: .systemGroupedBackground) }
-        } else {
-            ZStack {
-                Color(uiColor: grouped ? .systemGroupedBackground : .systemBackground).ignoresSafeArea()
+                color.ignoresSafeArea()
                 TMWatermark()
+            }
+        case .windowSlice(let window):
+            ZStack {
+                color.ignoresSafeArea()
+                TMWindowWatermark(canvas: window)
+            }
+        case .glassColumn(let window):
+            if opaqueInGlass {
+                ZStack {
+                    color.ignoresSafeArea()
+                    TMWindowWatermark(canvas: window)
+                }
+            } else if grouped {
+                // UIKit set a grouped screen's colour on its own view, beneath the
+                // sidebar's glass; painted in SwiftUI it would sit above the glass.
+                TMPageColorHook(color: .systemGroupedBackground)
             }
         }
     }
@@ -180,12 +189,9 @@ struct TMScreenBackground: View {
 
 extension View {
     /// A page inside a SwiftUI TabView draws its own backdrop in its own content,
-    /// so the watermark never depends on UIKit views behind the page being cleared
-    /// at the right moment. Inside the iPad split the page is opaque and draws its
-    /// slice of the window's one watermark, which looks the same as a clear page
-    /// over the shared one.
+    /// so the watermark never depends on UIKit views behind the page being cleared.
     func tmTabPageBackground() -> some View {
-        background { TMScreenBackground(opaqueInSplit: true) }
+        background { TMScreenBackground(opaqueInGlass: true) }
     }
 }
 
@@ -207,11 +213,6 @@ struct TMWindowWatermark: View {
         .allowsHitTesting(false)
         .accessibilityHidden(true)
     }
-}
-
-extension EnvironmentValues {
-    /// The window's bounds in global coordinates, set by the iPad split.
-    @Entry var tmWindowCanvas: CGRect = .zero
 }
 
 /// Colours the view of the controller a screen is hosted in, the layer UIKit

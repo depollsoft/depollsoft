@@ -256,7 +256,8 @@ extension View {
     /// full-width border is drawn instead.
     @ViewBuilder
     func tmTagListRow(selected: Bool, groupedInset: Bool = false) -> some View {
-        let row = listRowInsets(EdgeInsets())
+        let row = modifier(TMInertWhileEditing())
+            .listRowInsets(EdgeInsets())
             .listRowBackground(selected ? TMTheme.selectionWash : Color.clear)
             .alignmentGuide(.listRowSeparatorLeading) { _ in 20 }
         if groupedInset {
@@ -269,7 +270,8 @@ extension View {
     /// A text row on UITableViewCell's layout margins (20 points; 16 in the iPad
     /// split's list column), over the page's watermark.
     func tmTextRow(groupedInset: Bool = true) -> some View {
-        modifier(TMTextRowInsets(groupedInset: groupedInset))
+        modifier(TMInertWhileEditing())
+            .modifier(TMTextRowInsets(groupedInset: groupedInset))
     }
 
     /// Mirrors whether the user is scrolling into `isScrolling` (iOS 18 and later).
@@ -282,6 +284,18 @@ extension View {
         } else {
             self
         }
+    }
+}
+
+/// UIKit's tables did not select rows while editing; a row's button is disabled
+/// then, so VoiceOver no longer offers it as a control. Its delete and reorder
+/// controls belong to the list, not the button, and stay. The rows' colours are
+/// their own, so disabling does not grey them.
+private struct TMInertWhileEditing: ViewModifier {
+    @Environment(\.editMode) private var editMode
+
+    func body(content: Content) -> some View {
+        content.disabled(editMode?.wrappedValue.isEditing == true)
     }
 }
 

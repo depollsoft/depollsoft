@@ -392,7 +392,7 @@ final class TagDetailLayoutTests: TMBehaviorTestCase {
         _ = padSplit(tagId: 1809, source: nil)
         // The watermark is the barber-pole shape; each drawn copy is one opaque grey region.
         let shared = TMScreenBackground()
-        let host = UIHostingController(rootView: shared.environment(\.tmSharedWatermark, true))
+        let host = UIHostingController(rootView: shared.environment(\.tmBackdrop, .glassColumn(CGRect(x: 0, y: 0, width: 1000, height: 800))))
         host.view.backgroundColor = .clear
         host.view.frame = CGRect(x: 0, y: 0, width: 400, height: 800)
         host.view.layoutIfNeeded()
@@ -408,7 +408,7 @@ final class TagDetailLayoutTests: TMBehaviorTestCase {
         let context = CGContext(data: &bytes, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 4,
                                 space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
         if let pixel { context?.draw(pixel, in: CGRect(x: 0, y: 0, width: 1, height: 1)) }
-        XCTAssertEqual(bytes[3], 0, "A screen beside the split's watermark stays clear")
+        XCTAssertEqual(bytes[3], 0, "A screen over the glass list column stays clear")
     }
 
     func testThePlaceholderStaysCenteredAndReadableAtLargeText() {

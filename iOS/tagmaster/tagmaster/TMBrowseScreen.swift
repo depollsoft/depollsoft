@@ -47,13 +47,15 @@ final class TMBrowseModel: TMTagListing {
 struct TMBrowseScreen: View {
     @Bindable var model: TMBrowseModel
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.tmBackdrop) private var backdrop
 
     var body: some View {
         TabView(selection: $model.selectedIndex) {
             ForEach(Array(TMBrowsePage.all.enumerated()), id: \.offset) { index, page in
-                // Each page draws the watermark in the one place Browse's own view held it.
+                // Each page draws its own backdrop (TMQueryScreen). Only over the glass
+                // list column, where the page draws nothing, must the tab container be clear.
                 TMQueryScreen(model: model.pages[index])
-                    .background { TMClearTabContainer() }
+                    .background { if backdrop.isGlassColumn { TMClearTabContainer() } }
                     // Only the tab container is compact; pages keep the column's own size class.
                     .environment(\.horizontalSizeClass, sizeClass)
                     .tabItem {
@@ -88,24 +90,35 @@ extension View {
     }
 }
 
-/// Clears the views SwiftUI's TabView puts between a page and the screen (its
-/// tab bar controller's view and hosting views), as TMPageViewController's
-/// content view was clear, so the watermark behind shows through.
+/// Over the glass list column, clears the views SwiftUI's TabView puts between a
+/// page and the column (its tab bar controller's view and hosting views), as
+/// TMPageViewController's content view was clear, so the glass shows through.
+/// It clears again on every layout and update, so a view UIKit recolours later
+/// (a trait change, a new page) does not stay opaque.
 private struct TMClearTabContainer: UIViewRepresentable {
     final class Probe: UIView {
         override func didMoveToWindow() {
             super.didMoveToWindow()
-            DispatchQueue.main.async { [weak self] in
-                var view = self?.superview
-                while let current = view {
-                    if current.backgroundColor != nil { current.backgroundColor = .clear }
-                    if current.next is UITabBarController { break }
-                    view = current.superview
-                }
+            clearAncestors()
+            DispatchQueue.main.async { [weak self] in self?.clearAncestors() }
+        }
+
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            clearAncestors()
+        }
+
+        func clearAncestors() {
+            guard window != nil else { return }
+            var view = superview
+            while let current = view {
+                if let color = current.backgroundColor, color != .clear { current.backgroundColor = .clear }
+                if current.next is UITabBarController { break }
+                view = current.superview
             }
         }
     }
 
     func makeUIView(context: Context) -> Probe { Probe() }
-    func updateUIView(_ view: Probe, context: Context) {}
+    func updateUIView(_ view: Probe, context: Context) { view.clearAncestors() }
 }

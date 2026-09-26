@@ -88,9 +88,6 @@ struct TagSummaryPage: View {
     let model: TagSummaryModel
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var visible = false
-    /// UIKit held Sheet Music and the key to one height; each grows to the taller.
-    @State private var keyHeight: CGFloat = 0
-    @State private var sheetHeight: CGFloat = 0
 
     var body: some View {
         if let tag = model.tag {
@@ -162,19 +159,21 @@ struct TagSummaryPage: View {
     }
 
     private func performance(_ tag: DPTag) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
+        // UIKit held Sheet Music and the key to one height, the taller of the two.
+        TMMatchedHeightStack {
             facts(tag)
             if let key = tag.writtenKey, !key.isEmpty {
-                VStack(alignment: .leading, spacing: 4) {
-                    TMCaption(text: "Key")
-                    TMKeyNoteButton(model: model, title: key)
-                        .frame(minHeight: tag.sheetMusicUri != nil ? sheetHeight : 0)
-                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { keyHeight = $0 }
-                        .accessibilityIdentifier("summary.key")
-                }
+                TMCaption(text: "Key").layoutValue(key: TMGapBefore.self, value: 16)
+                TMKeyNoteButton(model: model, title: key)
+                    .frame(maxHeight: .infinity)
+                    .accessibilityIdentifier("summary.key")
+                    .layoutValue(key: TMGapBefore.self, value: 4)
+                    .layoutValue(key: TMMatchesHeight.self, value: true)
             }
             if tag.sheetMusicUri != nil {
                 sheetMusicButton
+                    .layoutValue(key: TMGapBefore.self, value: 16)
+                    .layoutValue(key: TMMatchesHeight.self, value: true)
             }
         }
     }
@@ -198,8 +197,6 @@ struct TagSummaryPage: View {
 
     private var sheetMusicButton: some View {
         TMSheetMusicButton(busy: model.sheetMusicBusy) { model.openSheetMusic() }
-            .frame(minHeight: max(44, keyHeight))
-            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { sheetHeight = $0 }
             .overlay(alignment: .trailing) {
                 TMBarberPole.operation("Opening sheet music…", active: model.sheetMusicBusy)
                     .padding(.trailing, 12)
@@ -429,7 +426,11 @@ struct TMSheetMusicButton: UIViewRepresentable {
         let fitted = button.systemLayoutSizeFitting(CGSize(width: width, height: UIView.layoutFittingCompressedSize.height),
                                                     withHorizontalFittingPriority: .required,
                                                     verticalFittingPriority: .fittingSizeLevel)
-        return CGSize(width: width, height: max(44, fitted.height))
+        let natural = max(44, fitted.height)
+        // Given a taller height (the key's, in TMMatchedHeightStack), the button takes
+        // it and centres its content, as the UIKit button did under an equal-height constraint.
+        guard let height = proposal.height, height.isFinite else { return CGSize(width: width, height: natural) }
+        return CGSize(width: width, height: max(natural, height))
     }
 
     func makeCoordinator() -> Coordinator { Coordinator(action: action) }
@@ -437,5 +438,49 @@ struct TMSheetMusicButton: UIViewRepresentable {
     final class Coordinator {
         var action: () -> Void
         init(action: @escaping () -> Void) { self.action = action }
+    }
+}
+
+/// The gap above a view in a `TMMatchedHeightStack`.
+struct TMGapBefore: LayoutValueKey {
+    static let defaultValue: CGFloat = 0
+}
+
+/// Views in a `TMMatchedHeightStack` marked with this share the tallest one's height.
+struct TMMatchesHeight: LayoutValueKey {
+    static let defaultValue = false
+}
+
+/// A leading-aligned column, each view as wide as the column, whose marked views
+/// all take the tallest one's natural height. The heights are measured unconstrained
+/// in the same pass that places them, so the shared height shrinks as well as grows
+/// when the text size or width changes.
+struct TMMatchedHeightStack: Layout {
+    struct Cache { var heights: [CGFloat] = [] }
+
+    func makeCache(subviews: Subviews) -> Cache { Cache() }
+
+    private func heights(_ width: CGFloat?, _ subviews: Subviews) -> [CGFloat] {
+        let natural = subviews.map { $0.sizeThatFits(ProposedViewSize(width: width, height: nil)).height }
+        let shared = zip(subviews, natural).filter { $0.0[TMMatchesHeight.self] }.map(\.1).max() ?? 0
+        return zip(subviews, natural).map { $0.0[TMMatchesHeight.self] ? shared : $0.1 }
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout Cache) -> CGSize {
+        let width = proposal.width ?? subviews.map { $0.sizeThatFits(.unspecified).width }.max() ?? 0
+        cache.heights = heights(width, subviews)
+        let gaps = subviews.dropFirst().map { $0[TMGapBefore.self] }.reduce(0, +)
+        return CGSize(width: width, height: cache.heights.reduce(0, +) + gaps)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout Cache) {
+        let heights = heights(bounds.width, subviews)
+        var y = bounds.minY
+        for (index, subview) in subviews.enumerated() {
+            if index > 0 { y += subview[TMGapBefore.self] }
+            subview.place(at: CGPoint(x: bounds.minX, y: y), anchor: .topLeading,
+                          proposal: ProposedViewSize(width: bounds.width, height: heights[index]))
+            y += heights[index]
+        }
     }
 }
