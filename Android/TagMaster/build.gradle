@@ -42,7 +42,6 @@ dependencies {
     implementation project(':DepollSoftCompose')
     implementation project(':PitchPerfectLib')
     implementation project(':depollsoft.lib.kotlin')
-    implementation 'com.parse.bolts:bolts-tasks:1.4.0'
     implementation 'com.facebook.android:facebook-login:18.3.0'
     implementation 'androidx.appcompat:appcompat:1.8.0'
     implementation 'com.google.android.material:material:1.14.0'
