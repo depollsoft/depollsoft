@@ -322,6 +322,7 @@ private fun NavigationItem(
                     destination.label,
                     style = regular.copy(fontWeight = FontWeight.Bold),
                     maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     align = TextAlign.Center,
                     modifier = Modifier.padding(horizontal = labelPadding).alpha(if (selected) 1f else 0f),
                 )
@@ -329,6 +330,7 @@ private fun NavigationItem(
                     destination.label,
                     style = regular,
                     maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     align = TextAlign.Center,
                     modifier = Modifier.padding(horizontal = labelPadding).alpha(if (selected) 0f else 1f),
                 )
@@ -357,8 +359,11 @@ private fun NavigationItem(
                     }.tabGestures(onClick, showTooltip),
         ) { measurables, constraints ->
             val icon = measurables[0].measure(Constraints())
-            val bold = measurables[1].measure(Constraints())
-            val plain = measurables[2].measure(Constraints())
+            // A label wider than its item (large text) is cut short with an ellipsis, as
+            // MaterialComponents' single-line labels were, rather than running into its neighbours.
+            val label = Constraints(maxWidth = constraints.maxWidth)
+            val bold = measurables[1].measure(label)
+            val plain = measurables[2].measure(label)
             val content = maxOf(icon.width, bold.width, plain.width)
             val width = constraints.maxWidth
             val left = (width - content) / 2
