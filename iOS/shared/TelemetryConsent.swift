@@ -117,7 +117,9 @@ struct PrivacyChoicesSheet: View {
 }
 
 struct PrivacyChoicesView: View {
+    @Environment(\.displayScale) private var scale
     @State private var model = PrivacyChoicesModel()
+    @State private var cardMargin = InsetGroupedMargin.lastMeasured
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
 
@@ -127,7 +129,7 @@ struct PrivacyChoicesView: View {
                 Text("Choose whether to share optional data to help improve this app. Both choices are off until you enable them. The app works either way. You can change these choices in Settings.")
                     // A multi-line UITableViewCell label sat closer to the card's edges.
                     .padding(.top, -3)
-                    .padding(.bottom, -10.0 / 3.0)
+                    .padding(.bottom, TableNudge.at(scale, threeX: -10.0 / 3.0, twoX: -3.5))
             }
             Section {
                 Toggle("Usage analytics", isOn: $model.analytics)
@@ -139,8 +141,8 @@ struct PrivacyChoicesView: View {
                 Text("Share screens visited, sessions, and app and device information with Google Analytics to understand app usage.")
                     .foregroundStyle(Color(uiColor: .label))
                     // UITableView's phone footers: this text ⅓ pt higher, the next card ⅔ pt lower.
-                    .offset(y: FooterNudge.phone(-1.0 / 3.0))
-                    .padding(.bottom, FooterNudge.phone(2.0 / 3.0))
+                    .offset(y: FooterNudge.phone(TableNudge.at(scale, threeX: -1.0 / 3.0, twoX: -5.0 / 6.0)))
+                    .padding(.bottom, FooterNudge.phone(TableNudge.at(scale, threeX: 2.0 / 3.0, twoX: -1.0 / 3.0)))
             }
             Section {
                 Toggle("Crash reports", isOn: $model.crashes)
@@ -152,7 +154,7 @@ struct PrivacyChoicesView: View {
                 Text("Send crash reports, including stack traces and app and device information, to Google Firebase Crashlytics to help fix problems. Turning this off takes full effect the next time you start the app.")
                     .foregroundStyle(Color(uiColor: .label))
                     .offset(y: FooterNudge.phone(-2.0 / 3.0))
-                    .padding(.bottom, FooterNudge.phone(1.0 / 3.0))
+                    .padding(.bottom, FooterNudge.phone(TableNudge.at(scale, threeX: 1.0 / 3.0, twoX: -1.0 / 6.0)))
             }
             Section {
                 Button("Decline both") {
@@ -167,8 +169,10 @@ struct PrivacyChoicesView: View {
             .foregroundStyle(.tint)
         }
         .listStyle(.insetGrouped)
-        // UITableView's inset-grouped cards sit 20 pt in on a phone.
-        .contentMargins(.horizontal, 20, for: .scrollContent)
+        // UIKit's inset-grouped cards sat at its controller's system margin
+        // (16 pt on an iPhone SE, 20 pt on larger phones).
+        .contentMargins(.horizontal, cardMargin, for: .scrollContent)
+        .background(InsetGroupedMargin { cardMargin = $0 })
         .navigationTitle("Privacy choices")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -185,6 +189,87 @@ struct PrivacyChoicesView: View {
                 }
             }
         }
+    }
+}
+
+/// Where UIKit put an inset-grouped table's cards in the controller showing a view:
+/// the layout margin of a UITableViewController's own inset-grouped table, in a
+/// navigation controller of the same width and size classes, as the UIKit
+/// Privacy choices screen was built (16 pt on an iPhone SE, 20 pt on larger phones).
+private struct InsetGroupedMargin: UIViewRepresentable {
+    struct Key: Hashable {
+        var width: CGFloat
+        var horizontal: UIUserInterfaceSizeClass
+        var vertical: UIUserInterfaceSizeClass
+    }
+
+    @MainActor static var lastMeasured: CGFloat = 20
+    @MainActor private static var measured: [Key: CGFloat] = [:]
+    let changed: (CGFloat) -> Void
+
+    @MainActor static func measure(_ key: Key, in window: UIWindow) -> CGFloat {
+        if let margin = measured[key] { return margin }
+        let screen = UITableViewController(style: .insetGrouped)
+        let navigation = UINavigationController(rootViewController: screen)
+        navigation.traitOverrides.horizontalSizeClass = key.horizontal
+        navigation.traitOverrides.verticalSizeClass = key.vertical
+        navigation.view.frame = CGRect(x: 0, y: 0, width: key.width, height: 600)
+        navigation.view.isHidden = true
+        window.addSubview(navigation.view)
+        defer { navigation.view.removeFromSuperview() }
+        navigation.view.layoutIfNeeded()
+        screen.tableView.layoutIfNeeded()
+        let margin = screen.tableView.layoutMargins.left - screen.tableView.safeAreaInsets.left
+        measured[key] = margin
+        return margin
+    }
+
+    final class View: UIView {
+        var changed: (CGFloat) -> Void = { _ in }
+        private var measuredFor: Key?
+
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            report()
+        }
+
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            report()
+        }
+
+        private func report() {
+            var responder: UIResponder? = next
+            while let current = responder, !(current is UIViewController) { responder = current.next }
+            guard let window, let container = (responder as? UIViewController)?.view,
+                  container.bounds.width > 0 else { return }
+            let traits = container.traitCollection
+            let key = Key(width: container.bounds.width, horizontal: traits.horizontalSizeClass,
+                          vertical: traits.verticalSizeClass)
+            guard key != measuredFor else { return }
+            measuredFor = key
+            let margin = InsetGroupedMargin.measure(key, in: window)
+            InsetGroupedMargin.lastMeasured = margin
+            let changed = self.changed
+            DispatchQueue.main.async { changed(margin) }
+        }
+    }
+
+    func makeUIView(context: Context) -> View {
+        let view = View()
+        view.isUserInteractionEnabled = false
+        view.isAccessibilityElement = false
+        return view
+    }
+
+    func updateUIView(_ view: View, context: Context) { view.changed = changed }
+}
+
+/// UIKit's table rounds its rows and footers to the screen's pixels, so its
+/// sub-point positions differ at 2x and 3x; these corrections were measured at both.
+private enum TableNudge {
+    static func at(_ scale: CGFloat, threeX: CGFloat, twoX: CGFloat) -> CGFloat {
+        scale >= 3 ? threeX : twoX
     }
 }
 

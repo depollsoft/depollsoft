@@ -305,10 +305,13 @@ struct LoginIntroScreen: View {
     }
 }
 
-/// The explanation exactly as the UIKit screen showed it: the same HTML, typeset
-/// by a read-only UITextView, which scrolls when it must and lets its text be
-/// selected and copied.
-private struct LoginExplanation: UIViewRepresentable {
+/// The explanation exactly as the UIKit screen showed it: the text its HTML
+/// imported to, typeset by a read-only UITextView, which scrolls when it must
+/// and lets its text be selected and copied. The attributed string is built
+/// directly rather than imported from HTML at run time: HTML import spins the
+/// run loop, which is unsafe inside a SwiftUI update. `LoginExplanationTests`
+/// checks it against a fresh import of the original HTML.
+struct LoginExplanation: UIViewRepresentable {
     static let html = "<style>* {font-family: -apple-system; font-size: 17px;}</style>"
         + "<p><b>Recommended:</b> Log in to Pitch Perfect and we'll save your settings and song list to the cloud.</p>"
         + "<p>"
@@ -320,19 +323,30 @@ private struct LoginExplanation: UIViewRepresentable {
         + "Signing in syncs your song list and settings. You control optional analytics and crash reports in Privacy choices."
         + "</p>"
 
-    /// Typeset once, on first use, and kept: HTML import is slow, and it spins
-    /// the run loop, so it cannot run inside a `static let`'s one-time initializer
-    /// (a nested access would re-enter it).
-    @MainActor private static var typeset: NSAttributedString?
-
-    @MainActor static var text: NSAttributedString? {
-        if let typeset { return typeset }
-        typeset = try? NSAttributedString(data: Data(html.utf8),
-                                          options: [.documentType: NSAttributedString.DocumentType.html,
-                                                    .characterEncoding: String.Encoding.utf8.rawValue],
-                                          documentAttributes: nil)
-        return typeset
-    }
+    /// What the HTML above imports to: a bold lead-in, then regular text, 17 pt,
+    /// one paragraph style with a 17 pt gap after each paragraph.
+    static let text: NSAttributedString = {
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.alignment = .natural
+        paragraph.paragraphSpacing = 17
+        paragraph.defaultTabInterval = 36
+        let black = UIColor(red: 0, green: 0, blue: 0, alpha: 1)
+        func run(_ string: String, _ font: UIFont) -> NSAttributedString {
+            NSAttributedString(string: string, attributes: [
+                .font: font, .paragraphStyle: paragraph, .foregroundColor: black,
+                .strokeColor: black, .strokeWidth: 0, .kern: 0,
+            ])
+        }
+        let text = NSMutableAttributedString()
+        text.append(run("Recommended:", .systemFont(ofSize: 17, weight: .bold)))
+        text.append(run(" Log in to Pitch Perfect and we'll save your settings and song list to the cloud.\n"
+            + "When you log in to Pitch Perfect, we'll automatically synchronize your settings and song list from device to device. "
+            + "Whether you just want to back up your songs or are working with multiple phones or tablets, logging in ensures that your "
+            + "data goes where you go.\n"
+            + "Signing in syncs your song list and settings. You control optional analytics and crash reports in Privacy choices.\n",
+            .systemFont(ofSize: 17)))
+        return text
+    }()
 
     func makeUIView(context: Context) -> UITextView {
         let view = UITextView()

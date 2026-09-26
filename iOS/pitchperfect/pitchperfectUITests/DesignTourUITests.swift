@@ -17,7 +17,7 @@ final class DesignTourUITests: XCTestCase {
         XCUIDevice.shared.press(.home)
 
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
-        addPitchPipeWidget(to: springboard)
+        try addPitchPipeWidget(to: springboard)
 
         let attachment = XCTAttachment(screenshot: springboard.screenshot())
         attachment.name = "widget-on-home"
@@ -103,7 +103,7 @@ final class DesignTourUITests: XCTestCase {
         app.launch()
         XCUIDevice.shared.press(.home)
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
-        addPitchPipeWidget(to: springboard)
+        try addPitchPipeWidget(to: springboard)
         let barbershop = springboard.staticTexts["BARBERSHOP!"].firstMatch
 
         // C7: the accidental cell is spoken as A sharp, equivalent to B flat.

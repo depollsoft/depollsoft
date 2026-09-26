@@ -138,10 +138,21 @@ the XCUITest bundles and `scripts/release/capture.py` use them.
   differently, the screen hosts the UIKit one: the Keys Major/Minor control
   is a `UISegmentedControl` bar item (`KeyModeBarItem`); the Songs rows'
   detail-disclosure and Settings' spinners and disclosure indicator are
-  UIKit's own; the login explanation is the HTML `UITextView` the screen
-  always had; set-list selector positions are the frames a real
-  `.fillProportionally` stack gives them (`StackGeometry`); note spellings
-  are measured with `UILabel.sizeToFit`.
+  UIKit's own; the login explanation is the `UITextView` the screen always
+  had, holding the attributed string its HTML imported to (built directly,
+  because HTML import spins the run loop and is unsafe in a SwiftUI update; a
+  test checks it run for run against a fresh import); set-list selector
+  positions are the frames a real `.fillProportionally` stack gives them
+  (`StackGeometry`), checked against the shipped UIKit selector itself
+  (`UIKitSetListSelectorReference` in the tests); note spellings are measured
+  with `UILabel.sizeToFit`.
+- **Measured on the device, not constants.** Table margins (`TableMargin`),
+  Settings' row heights (`SettingsCellHeights`: a grouped table built with the
+  UIKit screen's own cells) and Privacy choices' card inset
+  (`InsetGroupedMargin`: a real inset-grouped `UITableViewController`) come
+  from UIKit at the screen's width, text size and size classes, so the iPhone
+  SE (16 pt margins, 2x pixels) matches as the larger phones do. Privacy's
+  remaining sub-point footer corrections are given for 2x and 3x separately.
 - **Remaining UIKit.** The set-list naming and delete prompts are
   `UIAlertController`s presented by `SetListAlertPresenter`: SwiftUI's `.alert`
   fixes its message and buttons once shown, which would let an invalid name
@@ -191,14 +202,31 @@ Deliberate differences from the UIKit screens:
 - Keys and Settings declared portrait-only orientation masks that UIKit never
   consulted (a plain navigation controller and a page sheet do not ask), so
   they were not carried over; nothing changes for users.
-- Settings is one controller for the window's life (`SettingsHost`), presented
-  from UIKit as the UIKit app presented its singleton, so reopening it from any
+- Settings is one controller per window (`SettingsHost`, owned by the window
+  and released with it), presented from UIKit as the UIKit app presented its
+  singleton, so reopening it from any
   tab finds it as it was left, scroll position included. It is made outside
   SwiftUI's update (a hosting controller made during one never builds its
   NavigationStack's navigation controller) and presented from the window's
   root (a NavigationStack presented from inside another hands its bar items
-  to the presenting screen). Two held songs are both lit, as each UIKit cell
-  kept its own highlight.
+  to the presenting screen). A request made while another sheet is still
+  presenting or dismissing waits for that transition, and one UIKit refuses is
+  handed back so the next tap tries again. Two held songs are both lit, as
+  each UIKit cell kept its own highlight.
+- On a phone narrow enough for the set-list positions to overflow (iPhone SE),
+  the selector shows the chosen position. UIKit's meant to, but scrolled
+  before its stack had laid out, so it stayed at the first position.
+- The key list in the song editor is an eager `VStack` (fifteen rows). A lazy
+  stack re-estimated its height when the title's error line appeared and the
+  keyboard came up, and on an iPhone SE that reset the list to its top;
+  UIKit's kept its place.
+- The SpringBoard widget UI tests (`WidgetHitTargetUITests`,
+  `DesignTourUITests.testWidgetGalleryShowsPitchPipe` and
+  `testWidgetRecognizesBarbershopInBothRanges`) skip when SpringBoard does not
+  expose the Home Screen editor, the widget gallery or a placed widget's
+  controls. On the iOS 26.5 simulator it exposes none of them reliably, and the
+  pre-port UIKit app (edab6cec) fails them the same way; the widget itself
+  is unchanged SwiftUI.
 - Under an alert the unselected tab glyphs come out a little lighter than
   UIKit's, though every tint in the bar's hierarchy now matches UIKit's; the
   selected item and the titles match.

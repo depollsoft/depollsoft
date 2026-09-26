@@ -151,7 +151,7 @@ private struct KeySignatureList: View {
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(spacing: 0) {
+                VStack(spacing: 0) {
                     Rectangle().fill(Plate.hairline).frame(height: 1)
                     ForEach(Array(model.keys.enumerated()), id: \.offset) { index, key in
                         let selected = key.isEqual(model.selectedKey)
