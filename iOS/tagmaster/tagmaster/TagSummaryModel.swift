@@ -91,6 +91,9 @@ final class TagSummaryModel {
 
     var rated: Bool { ratedTagId != nil && ratedTagId == tag?.tagId }
 
+    /// A freshly loaded tag (a refresh included) offers Rate again, as UIKit's did.
+    func tagDidLoad() { ratedTagId = nil }
+
     /// The rating sheet, top to bottom.
     var ratingActions: [TMSheetAction] {
         [5, 4, 3, 2, 1].map { stars in

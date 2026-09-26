@@ -301,10 +301,13 @@ final class TMRouteNavigator: TMNavigator {
     }
 
     /// The controller everything else is presented over.
-    static func topController() -> UIViewController? {
-        let window = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+    static func keyWindow() -> UIWindow? {
+        UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
             .flatMap(\.windows).first(where: \.isKeyWindow)
-        var top = window?.rootViewController
+    }
+
+    static func topController() -> UIViewController? {
+        var top = keyWindow()?.rootViewController
         while let next = top?.presentedViewController { top = next }
         return top
     }

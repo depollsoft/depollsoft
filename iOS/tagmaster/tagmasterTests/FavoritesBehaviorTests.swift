@@ -355,9 +355,15 @@ final class FavoritesBehaviorTests: TMBehaviorTestCase {
         XCTAssertEqual(navigator.shownTags, [1809])
     }
 
-    func testOpenTagKeepsOnlyDigitsAndIgnoresAnEmptyOrZeroId() {
-        XCTAssertEqual(TMOpenTagPrompt.filter("12a3-4 "), "1234")
-        XCTAssertEqual(TMOpenTagPrompt.filter("abc"), "")
+    func testOpenTagTakesEditsTheWayTheUIKitFieldDidAndIgnoresAnEmptyOrZeroId() {
+        // Typing a digit, or deleting, is taken; a letter on its own is refused.
+        XCTAssertEqual(TMOpenTagPrompt.accept(old: "18", new: "180"), "180")
+        XCTAssertEqual(TMOpenTagPrompt.accept(old: "18", new: "18a"), "18")
+        XCTAssertEqual(TMOpenTagPrompt.accept(old: "180", new: "18"), "18")
+        // A paste holding a digit is taken whole, so "1e3" never becomes tag 13.
+        XCTAssertEqual(TMOpenTagPrompt.accept(old: "", new: "1e3"), "1e3")
+        XCTAssertNil(TMOpenTagPrompt(text: "1e3").tagId)
+        XCTAssertEqual(TMOpenTagPrompt.accept(old: "", new: "abc"), "")
         XCTAssertNil(TMOpenTagPrompt(text: "").tagId)
         XCTAssertNil(TMOpenTagPrompt(text: "0").tagId)
         XCTAssertNil(TMOpenTagPrompt(text: "99999999999").tagId, "Beyond a tag id's range")

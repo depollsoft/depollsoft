@@ -24,8 +24,18 @@ import FirebaseFirestore
 final class TMListSyncEmulatorTests: TMBehaviorTestCase {
 
     private static let host = "localhost"
-    private static let firestorePort = 8080
-    private static let authPort = 9099
+    /// The emulators' ports: Firebase's standard FIRESTORE_EMULATOR_HOST and
+    /// FIREBASE_AUTH_EMULATOR_HOST (host:port, passed as TEST_RUNNER_…), or the ports
+    /// Firebase/tagmaster/firebase.json gives them. Another server holding 8080
+    /// needs only a second emulator on free ports, not a change here.
+    private static let firestorePort = port(from: "FIRESTORE_EMULATOR_HOST", default: 8080)
+    private static let authPort = port(from: "FIREBASE_AUTH_EMULATOR_HOST", default: 9099)
+
+    private static func port(from variable: String, default fallback: Int) -> Int {
+        guard let value = ProcessInfo.processInfo.environment[variable],
+              let port = value.split(separator: ":").last.flatMap({ Int($0) }) else { return fallback }
+        return port
+    }
     private static let projectID = "demo-tagmaster"
     private static var configured: (local: FirebaseApp, remote: FirebaseApp)?
 

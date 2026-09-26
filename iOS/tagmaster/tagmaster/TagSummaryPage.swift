@@ -13,21 +13,64 @@ import SwiftUI
 /// from the edges, limited to a readable width.
 struct TMPageScroll<Content: View>: View {
     @ViewBuilder var content: Content
+    /// The readable width UIKit's guide gives the page right now.
+    @State private var readable = TMReadable.width
 
     var body: some View {
         ScrollView {
             content
-                .frame(maxWidth: TMReadable.width, alignment: .leading)
+                .frame(maxWidth: readable, alignment: .leading)
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 4)
         }
+        .background(TMReadableProbe(width: $readable).accessibilityHidden(true))
     }
 }
 
 enum TMReadable {
-    /// UIKit's readable content width at the default text size.
+    /// UIKit's readable content width at the default text size, until measured.
     static let width: CGFloat = 672
+}
+
+/// The UIKit page's container: a view with 16-point side margins whose
+/// `readableContentGuide` set the content's width. It reports that width, which
+/// follows the text size, the size class and the page's own width exactly.
+struct TMReadableProbe: UIViewRepresentable {
+    @Binding var width: CGFloat
+
+    final class Probe: UIView {
+        var report: (CGFloat) -> Void = { _ in }
+
+        override init(frame: CGRect) {
+            super.init(frame: frame)
+            directionalLayoutMargins = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
+            isUserInteractionEnabled = false
+            isAccessibilityElement = false
+        }
+
+        required init?(coder: NSCoder) { fatalError("TMReadableProbe is created in code") }
+
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            let measured = readableContentGuide.layoutFrame.width
+            if measured > 0 { report(measured) }
+        }
+
+        override func traitCollectionDidChange(_ previous: UITraitCollection?) {
+            super.traitCollectionDidChange(previous)
+            setNeedsLayout()
+        }
+    }
+
+    func makeUIView(context: Context) -> Probe { Probe() }
+
+    func updateUIView(_ probe: Probe, context: Context) {
+        let binding = $width
+        probe.report = { measured in
+            DispatchQueue.main.async { if abs(binding.wrappedValue - measured) > 0.5 { binding.wrappedValue = measured } }
+        }
+    }
 }
 
 struct TMCaption: View {
@@ -45,6 +88,9 @@ struct TagSummaryPage: View {
     let model: TagSummaryModel
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var visible = false
+    /// UIKit held Sheet Music and the key to one height; each grows to the taller.
+    @State private var keyHeight: CGFloat = 0
+    @State private var sheetHeight: CGFloat = 0
 
     var body: some View {
         if let tag = model.tag {
@@ -122,6 +168,8 @@ struct TagSummaryPage: View {
                 VStack(alignment: .leading, spacing: 4) {
                     TMCaption(text: "Key")
                     TMKeyNoteButton(model: model, title: key)
+                        .frame(minHeight: tag.sheetMusicUri != nil ? sheetHeight : 0)
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { keyHeight = $0 }
                         .accessibilityIdentifier("summary.key")
                 }
             }
@@ -149,25 +197,13 @@ struct TagSummaryPage: View {
     }
 
     private var sheetMusicButton: some View {
-        Button(action: { model.openSheetMusic() }) {
-            HStack(spacing: 8) {
-                Image(systemName: "doc.richtext").imageScale(.large)
-                Text("Sheet Music")
+        TMSheetMusicButton(busy: model.sheetMusicBusy) { model.openSheetMusic() }
+            .frame(minHeight: max(44, keyHeight))
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { sheetHeight = $0 }
+            .overlay(alignment: .trailing) {
+                TMBarberPole.operation("Opening sheet music…", active: model.sheetMusicBusy)
+                    .padding(.trailing, 12)
             }
-            .font(.body)
-            .foregroundStyle(.white)
-            .padding(.vertical, 8)
-            .padding(.horizontal, 44)
-            .frame(maxWidth: .infinity, minHeight: 44)
-            .background(RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(accent.opacity(model.sheetMusicBusy ? 0.5 : 1)))
-        }
-        .buttonStyle(.plain)
-        .disabled(model.sheetMusicBusy)
-        .overlay(alignment: .trailing) {
-            TMBarberPole.operation("Opening sheet music…", active: model.sheetMusicBusy)
-                .padding(.trailing, 12)
-        }
     }
 
     private func prose(_ tag: DPTag) -> some View {
@@ -204,6 +240,7 @@ struct TMFactText: View {
 /// When the two do not fit side by side (accessibility text on a narrow phone),
 /// Rate moves under the number rather than either being squeezed.
 struct TMRatingUnit: View {
+    @Environment(\.tmAccent) private var accent
     let model: TagSummaryModel
     let rating: Double
 
@@ -248,6 +285,7 @@ struct TMRatingUnit: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.borderless)
+            .tint(accent)
             .disabled(model.rated || model.ratingBusy)
             .accessibilityLabel(model.rated ? "Rating submitted" : "Rate tag")
             .accessibilityIdentifier("summary.rate")
@@ -345,4 +383,54 @@ struct TMKeyNoteButton: View {
             return accent.resolvedColor(with: contrast)
         }
     }()
+}
+
+/// Sheet Music as UIKit drew it: a filled button (white title and icon on the
+/// accent, medium corners, 8/44 insets, wrapping title) that greys out exactly as
+/// UIKit's does while something is presented over the page.
+struct TMSheetMusicButton: UIViewRepresentable {
+    let busy: Bool
+    let action: () -> Void
+
+    func makeUIView(context: Context) -> UIButton {
+        var configuration = UIButton.Configuration.filled()
+        configuration.baseForegroundColor = .white
+        configuration.cornerStyle = .medium
+        configuration.image = UIImage(systemName: "doc.richtext")
+        configuration.imagePadding = 8
+        configuration.titleLineBreakMode = .byWordWrapping
+        configuration.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 44, bottom: 8, trailing: 44)
+        configuration.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attributes in
+            var attributes = attributes
+            attributes.font = UIFont.preferredFont(forTextStyle: .body)
+            return attributes
+        }
+        let button = UIButton(configuration: configuration)
+        button.setTitle("Sheet Music", for: .normal)
+        button.titleLabel?.adjustsFontForContentSizeCategory = true
+        button.tintColor = DPAppDelegate.accentColor()
+        button.addAction(UIAction { _ in context.coordinator.action() }, for: .touchUpInside)
+        button.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        return button
+    }
+
+    func updateUIView(_ button: UIButton, context: Context) {
+        context.coordinator.action = action
+        button.isEnabled = !busy
+    }
+
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView button: UIButton, context: Context) -> CGSize? {
+        let width = proposal.width ?? UIView.layoutFittingExpandedSize.width
+        let fitted = button.systemLayoutSizeFitting(CGSize(width: width, height: UIView.layoutFittingCompressedSize.height),
+                                                    withHorizontalFittingPriority: .required,
+                                                    verticalFittingPriority: .fittingSizeLevel)
+        return CGSize(width: width, height: max(44, fitted.height))
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(action: action) }
+
+    final class Coordinator {
+        var action: () -> Void
+        init(action: @escaping () -> Void) { self.action = action }
+    }
 }

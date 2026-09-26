@@ -62,13 +62,15 @@ struct TagVideosPage: View {
             List {
                 if let teaching {
                     Section {
-                        row(teaching)
+                        row(teaching).tmLastRowRule()
                     } header: {
                         TMGroupedHeader(text: "Teaching Video")
                     }
                 }
                 Section {
-                    ForEach(videos) { row($0) }
+                    ForEach(videos) { video in
+                        row(video).tmLastRowRule(video.id == videos.last?.id)
+                    }
                 } header: {
                     TMGroupedHeader(text: "User Submissions")
                 } footer: {
@@ -96,7 +98,10 @@ struct TagVideosPage: View {
                         if line.hasPrefix("Multitrack:") {
                             let available = line == "Multitrack: Yes"
                             HStack(spacing: 8) {
-                                Image(systemName: available ? "checkmark.circle.fill" : "circle")
+                                // UIImageView aspect-fitted the symbol image, padding and
+                                // all, into 20 pt; resizing the glyph itself draws it larger.
+                                Image(uiImage: UIImage(systemName: available ? "checkmark.circle.fill" : "circle") ?? UIImage())
+                                    .renderingMode(.template)
                                     .resizable()
                                     .scaledToFit()
                                     .frame(width: 20, height: 20)
@@ -114,18 +119,24 @@ struct TagVideosPage: View {
                     }
                 }
                 Spacer(minLength: 0)
+                // The disclosure accessory had its own column outside the content,
+                // which kept a 16 pt gap before it; long metadata wraps short of it.
+                TMDisclosureChevron()
+                    .padding(.leading, 16)
+                    .frame(maxHeight: .infinity)
             }
             .padding(.top, 12)
             // UITableView counts the 1 pt separator into the row; SwiftUI draws it over the row.
             .padding(.bottom, 13)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .overlay(alignment: .trailing) { TMDisclosureChevron() }
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .listRowBackground(Color.clear)
         .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 21))
-        .alignmentGuide(.listRowSeparatorLeading) { $0[.leading] }
+        // UIKit's rules between rows ran 20 pt in from both edges; the last row's is full width.
+        .alignmentGuide(.listRowSeparatorLeading) { $0[.leading] + 4 }
+        .alignmentGuide(.listRowSeparatorTrailing) { $0[.trailing] + 1 }
         .accessibilityLabel(video.spoken)
         .accessibilityHint("Opens the video")
         .accessibilityAddTraits(.isButton)
@@ -209,6 +220,13 @@ struct TMGroupedHeader: View {
 }
 
 extension View {
+    /// A grouped UITableView closed each section with a full-width rule under its
+    /// last row, where SwiftUI keeps the row's own inset rule.
+    func tmLastRowRule(_ isLast: Bool = true) -> some View {
+        alignmentGuide(.listRowSeparatorLeading) { isLast ? -$0.width : $0[.leading] + 4 }
+            .alignmentGuide(.listRowSeparatorTrailing) { isLast ? $0.width * 2 : $0[.trailing] + 1 }
+    }
+
     /// The spacing a plain grouped UITableView had: its first header further down,
     /// more room between sections.
     func tmGroupedTableMetrics() -> some View {

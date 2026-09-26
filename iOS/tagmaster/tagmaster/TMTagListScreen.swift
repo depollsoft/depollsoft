@@ -119,6 +119,7 @@ final class TMTagListModel: TMTagListing {
     // MARK: - Acting
 
     func open(_ tagId: Int) {
+        guard !isEditing else { return }
         navigator?.showTag(tagId)
         syncSelection()
     }
@@ -265,16 +266,10 @@ extension View {
         }
     }
 
-    /// A text row on UITableViewCell's 20-point margins, over the page's watermark.
-    @ViewBuilder
+    /// A text row on UITableViewCell's layout margins (20 points; 16 in the iPad
+    /// split's list column), over the page's watermark.
     func tmTextRow(groupedInset: Bool = true) -> some View {
-        let row = listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
-            .listRowBackground(Color.clear)
-        if groupedInset {
-            row.alignmentGuide(.listRowSeparatorTrailing) { $0.width }
-        } else {
-            row
-        }
+        modifier(TMTextRowInsets(groupedInset: groupedInset))
     }
 
     /// Mirrors whether the user is scrolling into `isScrolling` (iOS 18 and later).
@@ -288,4 +283,26 @@ extension View {
             self
         }
     }
+}
+
+private struct TMTextRowInsets: ViewModifier {
+    let groupedInset: Bool
+    @Environment(\.tmTableMargin) private var margin
+
+    func body(content: Content) -> some View {
+        let row = content
+            .listRowInsets(EdgeInsets(top: 0, leading: margin, bottom: 0, trailing: margin))
+            .listRowBackground(Color.clear)
+        if groupedInset {
+            row.alignmentGuide(.listRowSeparatorTrailing) { $0.width }
+        } else {
+            row
+        }
+    }
+}
+
+extension EnvironmentValues {
+    /// UITableViewCell's layout margin where a list stands: 20 points, 16 in the
+    /// iPad split's list column.
+    @Entry var tmTableMargin: CGFloat = 20
 }

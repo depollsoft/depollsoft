@@ -38,11 +38,24 @@ struct TagMasterApp: App {
                 // they are made; the hop lets the window become key first.
                 .onChange(of: scenePhase, initial: true) { _, phase in
                     guard phase == .active else { return }
-                    DispatchQueue.main.async {
-                        guard let presenter = TMRouteNavigator.topController() else { return }
-                        TelemetryConsent.presentIfNeeded(from: presenter)
-                    }
+                    TagMasterApp.offerPrivacyChoices()
                 }
+        }
+    }
+}
+
+extension TagMasterApp {
+    /// Offers Privacy choices from the window's root, as the UIKit delegate did,
+    /// so it never stacks over an alert or the sign-in sheet (the root is then
+    /// presenting, and the offer waits for the next activation). The first
+    /// activation can come before the window is key, so it tries again briefly.
+    static func offerPrivacyChoices(attempt: Int = 0) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + (attempt == 0 ? 0 : 0.25)) {
+            guard let root = TMRouteNavigator.keyWindow()?.rootViewController else {
+                if attempt < 8 { offerPrivacyChoices(attempt: attempt + 1) }
+                return
+            }
+            TelemetryConsent.presentIfNeeded(from: root)
         }
     }
 }
@@ -71,7 +84,6 @@ extension EnvironmentValues {
 
 struct TMRootView: View {
     let router: TMRouter
-    @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
         if UIDevice.current.userInterfaceIdiom == .pad {
@@ -80,6 +92,28 @@ struct TMRootView: View {
             TMStackRoot(router: router)
         }
     }
+}
+
+/// Gives the window the accent as soon as the root is in it, before its first
+/// frame, as the UIKit delegate did when it made the window.
+private struct TMWindowTint: UIViewRepresentable {
+    final class Probe: UIView {
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            if let window, window.tintColor != DPAppDelegate.accentColor() {
+                window.tintColor = DPAppDelegate.accentColor()
+            }
+        }
+    }
+
+    func makeUIView(context: Context) -> Probe {
+        let probe = Probe()
+        probe.isUserInteractionEnabled = false
+        probe.isAccessibilityElement = false
+        return probe
+    }
+
+    func updateUIView(_ probe: Probe, context: Context) {}
 }
 
 /// iPhone: one stack, Home at its root.
@@ -93,6 +127,7 @@ struct TMStackRoot: View {
                     TMRouteScreen(route: route, router: router)
                 }
         }
+        .background(TMWindowTint())
         .onAppear { router.setExpanded(false) }
     }
 }
@@ -108,6 +143,15 @@ struct TMSplitRoot: View {
     @Bindable var router: TMRouter
     @Environment(\.horizontalSizeClass) private var sizeClass
 
+    /// The whole window in global coordinates: the split's frame plus its safe areas.
+    static func canvas(_ geometry: GeometryProxy) -> CGRect {
+        let frame = geometry.frame(in: .global)
+        let insets = geometry.safeAreaInsets
+        return CGRect(x: frame.minX - insets.leading, y: frame.minY - insets.top,
+                      width: frame.width + insets.leading + insets.trailing,
+                      height: frame.height + insets.top + insets.bottom)
+    }
+
     var body: some View {
         GeometryReader { geometry in
             NavigationSplitView(columnVisibility: $router.columnVisibility,
@@ -118,6 +162,8 @@ struct TMSplitRoot: View {
                             TMRouteScreen(route: route, router: router)
                         }
                 }
+                // UITableView's margins in the list column were 16 points, not 20.
+                .environment(\.tmTableMargin, sizeClass == .regular ? 16 : 20)
                 // A comfortable list on both 11- and 13-inch iPads: 36% of the width, 320–400 points.
                 .navigationSplitViewColumnWidth(min: 320,
                                                 ideal: min(max(geometry.size.width * 0.36, 320), 400),
@@ -139,7 +185,9 @@ struct TMSplitRoot: View {
                 .ignoresSafeArea()
             }
             .environment(\.tmSharedWatermark, sizeClass == .regular && TMSplitRoot.columnsCanBeClear)
+            .environment(\.tmWindowCanvas, TMSplitRoot.canvas(geometry))
         }
+        .background(TMWindowTint())
         .onChange(of: sizeClass, initial: true) { _, size in
             router.setExpanded(size == .regular)
         }
@@ -160,6 +208,7 @@ struct TMDetailColumn: View {
                     .tmCharcoalBar()
             }
         }
+        .tmFollowsUIKitTint()
         .tmClearColumnBackground()
     }
 }
@@ -182,6 +231,7 @@ struct TMRouteScreen: View {
                 TMSheetMusicRoute(document: document, summary: summary, router: router)
             }
         }
+        .tmFollowsUIKitTint()
         .tmClearColumnBackground()
     }
 }
@@ -192,7 +242,8 @@ struct TMHomeRoute: View {
 
     var body: some View {
         TMScreens.home(router.home)
-            .tmClearColumnBackground()
+            .tmFollowsUIKitTint()
+        .tmClearColumnBackground()
     }
 }
 
@@ -268,8 +319,9 @@ struct TMTagRoute: View {
     let model: TagDetailModel
 
     var body: some View {
+        // Each page draws its own backdrop (tmTabPageBackground); a second one here
+        // would show through the clear pages and double the watermark.
         TagDetailScreen(model: model)
-            .background(TMScreenBackground())
             .background {
                 // Beside the floating list the column has a horizontal safe area; the pages keep to it.
                 GeometryReader { proxy in
@@ -418,18 +470,25 @@ struct TMLive<Content: View>: View {
 /// derive from their models instead.)
 struct TMEditButton: View {
     @Binding var isEditing: Bool
+    @Environment(\.tmTintDimmed) private var dimmed
 
     var body: some View {
         Button {
             withAnimation { isEditing.toggle() }
         } label: {
-            // iOS 26 draws UIKit's done-style item as a checkmark in its own glass.
+            // iOS 26 draws UIKit's done-style item as a checkmark in its own glass;
+            // earlier systems drew UIKit's bold "Done".
             if isEditing {
-                TMBarButton.symbol("checkmark", scale: .large)
+                if #available(iOS 26.0, *) {
+                    TMBarButton.symbol("checkmark", scale: .large)
+                } else {
+                    Text("Done").fontWeight(.semibold)
+                }
             } else {
                 Text("Edit")
             }
         }
+        .foregroundStyle(TMBarButton.ink(dimmed: dimmed))
         .accessibilityLabel(isEditing ? "Done" : "Edit")
     }
 }
@@ -505,10 +564,6 @@ private struct TMBarHook: UIViewControllerRepresentable {
 
         func apply() {
             guard let screen, let navigation = screen.navigationController else { return }
-            // The window carries the accent, as it did in UIKit; the bar's items stay white.
-            if let window = navigation.view.window, window.tintColor != DPAppDelegate.accentColor() {
-                window.tintColor = DPAppDelegate.accentColor()
-            }
             TMBarAppearance.apply(to: navigation.navigationBar)
             if let backTitle, screen.navigationItem.backButtonTitle != backTitle {
                 screen.navigationItem.backButtonTitle = backTitle
@@ -535,16 +590,21 @@ private struct TMBarHook: UIViewControllerRepresentable {
     func updateUIViewController(_ hook: Hook, context: Context) {
         hook.backTitle = backTitle
         hook.apply()
+        // SwiftUI rewrites the bar's title attributes when it updates the screen's
+        // toolbar (a tint dimming behind an alert does); the hook's turn comes after.
+        DispatchQueue.main.async { [weak hook] in hook?.apply() }
     }
 }
 
 /// The charcoal bar every Tag Master stack wears.
 @MainActor
 enum TMBarAppearance {
+    static let charcoal = UIColor(white: 55.0 / 255.0, alpha: 1)
+
     static func make() -> UINavigationBarAppearance {
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor(white: 55.0 / 255.0, alpha: 1)
+        appearance.backgroundColor = charcoal
         appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
         appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
         return appearance
@@ -552,7 +612,7 @@ enum TMBarAppearance {
 
     /// Gives `bar` the charcoal appearance once; Home's title adjusts it afterwards.
     static func apply(to bar: UINavigationBar) {
-        guard bar.overrideUserInterfaceStyle != .dark || bar.isTranslucent else { return }
+        guard bar.standardAppearance.backgroundColor != charcoal || bar.isTranslucent else { return }
         let appearance = make()
         bar.standardAppearance = appearance
         bar.scrollEdgeAppearance = appearance

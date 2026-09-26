@@ -48,13 +48,13 @@ struct TagDetailsPage: View {
                             .tmFactValue(.link)
                         if let provider = tag.provider, !provider.isEmpty {
                             TMCaption(text: "Posted by")
-                            TMFactLink(title: provider, url: tag.providerWebsite).tmFactValue(tag.providerWebsite == nil ? .text : .link)
+                            TMFactLink(title: provider, url: tag.providerWebsite).tmFactValue(.link)
                         }
                         TMCaption(text: "Posted")
                         TMFactText(text: TagDetailsPage.postedText(tag.posted)).tmFactValue(.text)
                         if let arranger = tag.arranger, !arranger.isEmpty {
                             TMCaption(text: "Arranged by")
-                            TMFactLink(title: arranger, url: tag.arrangerWebsite).tmFactValue(tag.arrangerWebsite == nil ? .text : .link)
+                            TMFactLink(title: arranger, url: tag.arrangerWebsite).tmFactValue(.link)
                         }
                         if tag.yearArranged != 0 {
                             TMCaption(text: "Year arranged")
@@ -62,7 +62,7 @@ struct TagDetailsPage: View {
                         }
                         if let sungBy = tag.sungBy, !sungBy.isEmpty {
                             TMCaption(text: "Sung by")
-                            TMFactLink(title: sungBy, url: tag.sungByWebsite).tmFactValue(tag.sungByWebsite == nil ? .text : .link)
+                            TMFactLink(title: sungBy, url: tag.sungByWebsite).tmFactValue(.link)
                         }
                         if tag.sungYear != 0 {
                             TMCaption(text: "Year sung")
@@ -95,6 +95,7 @@ struct TMFactLink: View {
             .accessibilityAddTraits(.isLink)
         } else {
             TMFactText(text: title)
+                .frame(maxHeight: .infinity)
         }
     }
 }

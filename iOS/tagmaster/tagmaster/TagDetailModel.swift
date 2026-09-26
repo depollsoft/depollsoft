@@ -205,6 +205,8 @@ final class TagDetailModel {
             if let loaded {
                 if loaded !== self.tag { self.tracks.stopPlayback() }
                 self.tag = loaded
+                // UIKit's refreshView put Rate back on every newly loaded tag.
+                self.summary.tagDidLoad()
             } else if self.tag != nil, self.screenVisible {
                 self.error = TMRecovery(
                     message: "The tag couldn't be refreshed. Check your connection and try again. Your saved tags are unchanged.",
@@ -307,7 +309,13 @@ final class TagDetailModel {
 
     // MARK: Sharing
 
+    var sharePresented = false
     var shareMessage: String? { tag.map { "\($0.title ?? "") - Tag Master for iOS" } }
     var shareURL: URL? { tag?.tagUri() }
+    /// What Share hands the activity sheet: the title line and the link, as UIKit did.
+    var shareItems: [Any]? {
+        guard let shareURL, let shareMessage else { return nil }
+        return [shareMessage, shareURL]
+    }
 }
 

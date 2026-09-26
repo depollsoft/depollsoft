@@ -71,6 +71,7 @@
 		CB34D931D876177CDE0CB921 /* TMArtworkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 083712943734B5BCD1340641 /* TMArtworkTests.swift */; };
 		28F695DF481EE0B06AFD6D03 /* TagMasterAuditTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63D3134C1B0898F50EE69316 /* TagMasterAuditTests.swift */; };
 		0B5E23ECC4A55E046E880953 /* TagMasterTestObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22AFC827264EA1C0323A6EC6 /* TagMasterTestObserver.swift */; };
+		E217FA772065AE2778C513F6 /* TagMasterRound2Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 935F312ACBF6F0E5B126DB34 /* TagMasterRound2Tests.swift */; };
 		B4A1A0000000000000000030 /* TMBehaviorTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000020 /* TMBehaviorTestSupport.swift */; };
 		B4A1A0000000000000000031 /* FavoritesBehaviorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000021 /* FavoritesBehaviorTests.swift */; };
 		B4A1A0000000000000000032 /* SearchBehaviorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000022 /* SearchBehaviorTests.swift */; };
@@ -82,6 +83,7 @@
 		2FA270FBF561239F254EB350 /* FirebaseFacebookSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 42BE55FE34E9E89B06BE2071 /* FirebaseFacebookSwiftUI */; };
 		2FA270FBF561239F254EB351 /* FirebaseAppleSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 42BE55FE34E9E89B06BE2072 /* FirebaseAppleSwiftUI */; };
 		C0AUTH001000000000000021 /* FirebasePhoneAuthSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = C0AUTH001000000000000022 /* FirebasePhoneAuthSwiftUI */; };
+		7B028E721B5D9E0CF361AFAB /* RealAppAppearanceUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3A2063D0098C7636EA9F886 /* RealAppAppearanceUITests.swift */; };
 		4509CDA99C01CCE4D0486639 /* TagDetailUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77ECC52AB0226D70124AAFA9 /* TagDetailUITests.swift */; };
 		45BAAFDE745C7B2FAE4B2268 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 231E00AF493A86AC7F8045FD /* FirebaseFirestore */; };
 		595A52E39FA349BD8A4A2D26 /* DPVideoModelTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2D04C94D42934A78A791DD26 /* DPVideoModelTests.m */; };
@@ -242,6 +244,7 @@
 		083712943734B5BCD1340641 /* TMArtworkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMArtworkTests.swift; sourceTree = "<group>"; };
 		63D3134C1B0898F50EE69316 /* TagMasterAuditTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagMasterAuditTests.swift; sourceTree = "<group>"; };
 		22AFC827264EA1C0323A6EC6 /* TagMasterTestObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagMasterTestObserver.swift; sourceTree = "<group>"; };
+		935F312ACBF6F0E5B126DB34 /* TagMasterRound2Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagMasterRound2Tests.swift; sourceTree = "<group>"; };
 		B4A1A0000000000000000020 /* TMBehaviorTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMBehaviorTestSupport.swift; sourceTree = "<group>"; };
 		B4A1A0000000000000000021 /* FavoritesBehaviorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesBehaviorTests.swift; sourceTree = "<group>"; };
 		B4A1A0000000000000000022 /* SearchBehaviorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchBehaviorTests.swift; sourceTree = "<group>"; };
@@ -301,6 +304,7 @@
 		63E8667A15DCCBC600E0FC17 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
 		63E8667C15DCCBE900E0FC17 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		63E8667E15DCCBF500E0FC17 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		A3A2063D0098C7636EA9F886 /* RealAppAppearanceUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealAppAppearanceUITests.swift; sourceTree = "<group>"; };
 		77ECC52AB0226D70124AAFA9 /* TagDetailUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TagDetailUITests.swift; sourceTree = "<group>"; };
 		85FC00CD3DF44A7CBF014280 /* DPTagModelExtendedTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTagModelExtendedTests.m; sourceTree = "<group>"; };
 		877D645B24654A1D98693468 /* DPTagNetworkTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTagNetworkTests.m; sourceTree = "<group>"; };
@@ -384,6 +388,7 @@
 			isa = PBXGroup;
 			children = (
 				77ECC52AB0226D70124AAFA9 /* TagDetailUITests.swift */,
+				A3A2063D0098C7636EA9F886 /* RealAppAppearanceUITests.swift */,
 				5DC0C8159FE876947BDD64C1 /* tagmasterUITests.swift */,
 				F5BCD0DFDBC06C4180EBF6BC /* Info.plist */,
 			);
@@ -583,6 +588,7 @@
 				AF1059DD3F994302AA09C4FD /* DPHomeViewControllerExtensionTests.swift */,
 				B4A1A0000000000000000013 /* TMBalanceAudioPlayerTests.swift */,
 				B4A1A0000000000000000020 /* TMBehaviorTestSupport.swift */,
+				935F312ACBF6F0E5B126DB34 /* TagMasterRound2Tests.swift */,
 				22AFC827264EA1C0323A6EC6 /* TagMasterTestObserver.swift */,
 				63D3134C1B0898F50EE69316 /* TagMasterAuditTests.swift */,
 				083712943734B5BCD1340641 /* TMArtworkTests.swift */,
@@ -937,6 +943,7 @@
 				4B737AE82EE04FD78D0EA597 /* DPHomeViewControllerExtensionTests.swift in Sources */,
 				B4A1A0000000000000000003 /* TMBalanceAudioPlayerTests.swift in Sources */,
 				B4A1A0000000000000000030 /* TMBehaviorTestSupport.swift in Sources */,
+				E217FA772065AE2778C513F6 /* TagMasterRound2Tests.swift in Sources */,
 				0B5E23ECC4A55E046E880953 /* TagMasterTestObserver.swift in Sources */,
 				28F695DF481EE0B06AFD6D03 /* TagMasterAuditTests.swift in Sources */,
 				CB34D931D876177CDE0CB921 /* TMArtworkTests.swift in Sources */,
@@ -970,6 +977,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4509CDA99C01CCE4D0486639 /* TagDetailUITests.swift in Sources */,
+				7B028E721B5D9E0CF361AFAB /* RealAppAppearanceUITests.swift in Sources */,
 				8EA8FFA093720EB5D0A6DC19 /* tagmasterUITests.swift in Sources */,
 				65091594637A70B5D6F4EA5C /* ConsentUITests.swift in Sources */,
 			);

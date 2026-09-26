@@ -135,9 +135,11 @@ struct TMLogoShape: Shape {
 /// The watermark behind a screen: the whole view less 60 points at the top and
 /// 44 at the bottom, measured from the screen edges rather than the safe area.
 struct TMWatermark: View {
+    static let color = Color(.sRGB, red: 128 / 255, green: 128 / 255, blue: 128 / 255, opacity: 76 / 255)
+
     var body: some View {
         TMLogoShape()
-            .fill(Color(.sRGB, red: 128 / 255, green: 128 / 255, blue: 128 / 255, opacity: 76 / 255))
+            .fill(TMWatermark.color)
             .padding(.top, 60)
             .padding(.bottom, 44)
             .ignoresSafeArea()
@@ -151,10 +153,19 @@ struct TMWatermark: View {
 /// clear and a grouped one keeps only its colour.
 struct TMScreenBackground: View {
     var grouped = false
+    /// Draw the page colour and the shared watermark's slice even inside the split,
+    /// for pages whose UIKit container views might not be clear.
+    var opaqueInSplit = false
     @Environment(\.tmSharedWatermark) private var sharedWatermark
+    @Environment(\.tmWindowCanvas) private var canvas
 
     var body: some View {
-        if sharedWatermark {
+        if sharedWatermark, opaqueInSplit, !canvas.isEmpty {
+            ZStack {
+                Color(uiColor: grouped ? .systemGroupedBackground : .systemBackground).ignoresSafeArea()
+                TMWindowWatermark(canvas: canvas)
+            }
+        } else if sharedWatermark {
             // UIKit set a grouped screen's colour on its own view, beneath the
             // sidebar's glass; painted in SwiftUI it would sit above the glass.
             if grouped { TMPageColorHook(color: .systemGroupedBackground) }
@@ -165,6 +176,42 @@ struct TMScreenBackground: View {
             }
         }
     }
+}
+
+extension View {
+    /// A page inside a SwiftUI TabView draws its own backdrop in its own content,
+    /// so the watermark never depends on UIKit views behind the page being cleared
+    /// at the right moment. Inside the iPad split the page is opaque and draws its
+    /// slice of the window's one watermark, which looks the same as a clear page
+    /// over the shared one.
+    func tmTabPageBackground() -> some View {
+        background { TMScreenBackground(opaqueInSplit: true) }
+    }
+}
+
+/// The shared watermark's slice behind a view: the pole drawn where it lies on the
+/// whole window (60 pt below its top, 44 above its bottom), clipped to this view.
+struct TMWindowWatermark: View {
+    let canvas: CGRect
+
+    var body: some View {
+        GeometryReader { proxy in
+            let frame = proxy.frame(in: .global)
+            TMLogoShape()
+                .fill(TMWatermark.color)
+                .frame(width: canvas.width, height: max(0, canvas.height - 104))
+                .offset(x: canvas.minX - frame.minX, y: canvas.minY + 60 - frame.minY)
+        }
+        .clipped()
+        .ignoresSafeArea()
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
+extension EnvironmentValues {
+    /// The window's bounds in global coordinates, set by the iPad split.
+    @Entry var tmWindowCanvas: CGRect = .zero
 }
 
 /// Colours the view of the controller a screen is hosted in, the layer UIKit
@@ -417,9 +464,10 @@ struct TMTagRow: View {
                     Text(aka).tmFont(.footnote).tmLabelMetrics(.footnote)
                 }
                 Text(content.details).tmFont(.footnote).tmLabelMetrics(.footnote)
-                // UIKit settled the first mark's row a point taller than the second.
-                mark(content.hasSheetMusic, "Sheet music").frame(height: 21)
-                mark(content.hasLearningTracks, "Learning tracks").frame(height: 20)
+                // UIKit settled the first mark's row a point taller than the second; both
+                // grow with their labels at larger text, as the UIKit stacks did.
+                mark(content.hasSheetMusic, "Sheet music").frame(minHeight: 21)
+                mark(content.hasLearningTracks, "Learning tracks").frame(minHeight: 20)
             }
             .foregroundStyle(Color(uiColor: .label))
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -461,39 +509,3 @@ extension View {
     }
 }
 
-/// Reads UIKit's tint dimming where the screen sits and hands it to SwiftUI.
-private struct TMTintDimmingReader: UIViewRepresentable {
-    @Binding var dimmed: Bool
-
-    final class Probe: UIView {
-        var changed: ((Bool) -> Void)?
-        override func tintColorDidChange() {
-            super.tintColorDidChange()
-            changed?(tintAdjustmentMode == .dimmed)
-        }
-    }
-
-    func makeUIView(context: Context) -> Probe {
-        let probe = Probe()
-        probe.isUserInteractionEnabled = false
-        probe.changed = { value in DispatchQueue.main.async { if dimmed != value { dimmed = value } } }
-        return probe
-    }
-
-    func updateUIView(_ probe: Probe, context: Context) {}
-}
-
-private struct TMTintDimming: ViewModifier {
-    @State private var dimmed = false
-
-    func body(content: Content) -> some View {
-        content
-            .environment(\.tmTintDimmed, dimmed)
-            .background { TMTintDimmingReader(dimmed: $dimmed).accessibilityHidden(true) }
-    }
-}
-
-extension View {
-    /// Tinted colours inside follow UIKit's dimming, as UIKit views did.
-    func tmFollowsTintDimming() -> some View { modifier(TMTintDimming()) }
-}
