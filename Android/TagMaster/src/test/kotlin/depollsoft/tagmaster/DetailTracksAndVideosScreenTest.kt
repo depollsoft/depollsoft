@@ -2,11 +2,13 @@ package depollsoft.tagmaster
 
 import android.app.Application
 import android.content.Intent
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performScrollToIndex
+import androidx.compose.ui.test.performTouchInput
 import depollsoft.tagmaster.barbershop.Tag
 import depollsoft.tagmaster.barbershop.Video
 import org.junit.Assert.assertEquals
@@ -66,12 +68,17 @@ class DetailTracksAndVideosScreenTest : ComposeScreenTest() {
         assertTrue(exists("part:0"))
     }
 
-    /** Leaving the app stops a learning track, even one still downloading. */
-    @Test
-    fun pausingStopsATrack() {
+    /**
+     * Runs [block] with the first part's track started and its download held open, so the player
+     * stays on until something stops it. The download is let go and wound up before returning, so
+     * its background load doesn't finish inside the next test.
+     */
+    private fun withTrackPlaying(block: () -> Unit) {
         val download = java.util.concurrent.CountDownLatch(1)
+        val answered = java.util.concurrent.atomic.AtomicBoolean(false)
         ScreenTestSupport.withTransport({
             download.await(10, java.util.concurrent.TimeUnit.SECONDS)
+            answered.set(true)
             java.io.ByteArrayInputStream(ByteArray(0))
         }) {
             try {
@@ -80,17 +87,51 @@ class DetailTracksAndVideosScreenTest : ComposeScreenTest() {
                 click("playPause")
                 node("playPause").assertIsNotEnabled()
                 node("stop").assertIsEnabled()
-
-                // The rule only sees resumed activities; coming back does not restart the track.
-                controller!!.pause().resume()
-                idle()
-                node("playPause").assertIsEnabled()
-                node("stop").assertIsNotEnabled()
+                block()
             } finally {
                 download.countDown()
+                ScreenTestSupport.await("the held track download to wind up") {
+                    answered.get() && Thread.getAllStackTraces().keys.none { it.name.startsWith("pool-") && it.state == Thread.State.RUNNABLE }
+                }
             }
         }
     }
+
+    /** Leaving the app stops a learning track, even one still downloading. */
+    @Test
+    fun pausingStopsATrack() =
+        withTrackPlaying {
+            // The rule only sees resumed activities; coming back does not restart the track.
+            controller!!.pause().resume()
+            idle()
+            node("playPause").assertIsEnabled()
+            node("stop").assertIsNotEnabled()
+        }
+
+    /**
+     * The track stops only once the pager settles on another page, as ViewPager2 paused the
+     * fragment: a swipe held past halfway and brought back leaves it playing.
+     */
+    @Test
+    fun aSwipeBroughtBackBeforeSettlingKeepsTheTrackPlaying() =
+        withTrackPlaying {
+            node("detailPager").performTouchInput {
+                down(center)
+                moveBy(Offset(-width * 0.7f, 0f))
+            }
+            idle()
+            node("stop").assertIsEnabled()
+            node("detailPager").performTouchInput {
+                repeat(7) { moveBy(Offset(width * 0.1f, 0f), delayMillis = 50) }
+                // Still before lifting, so no fling carries it on.
+                repeat(4) { moveBy(Offset.Zero, delayMillis = 100) }
+                up()
+            }
+            idle()
+            node("stop").assertIsEnabled()
+            click("detailTab:3")
+            node("stop").assertIsNotEnabled()
+        }
 
     @Test
     fun everyPartAndPlayerControlIsPresent() {
