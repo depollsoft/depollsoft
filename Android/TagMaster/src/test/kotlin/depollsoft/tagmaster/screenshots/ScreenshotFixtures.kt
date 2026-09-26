@@ -15,6 +15,7 @@ import depollsoft.tagmaster.barbershop.RemoteLocation
 import depollsoft.tagmaster.barbershop.Tag
 import depollsoft.tagmaster.barbershop.Video
 import org.robolectric.RuntimeEnvironment
+import org.junit.Assert.assertTrue
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.shadows.ShadowDialog
 import java.io.ByteArrayInputStream
@@ -152,26 +153,33 @@ internal object ScreenshotFixtures {
 
     /**
      * Lets background tag loads finish and the looper settle: returns once the main looper is idle
-     * and no background worker is running for three checks in a row, or after [rounds] checks.
+     * and no background worker is running for three checks in a row. A screen that is still busy
+     * after [timeoutMs] fails the test here, naming the busy threads, rather than being captured
+     * half-loaded and showing up as an unexplained golden difference.
      */
-    fun settle(rounds: Int = 40) {
+    fun settle(timeoutMs: Long = 10_000) {
         val looper = shadowOf(Looper.getMainLooper())
+        val deadline = System.currentTimeMillis() + timeoutMs
         var quiet = 0
-        repeat(rounds) {
+        while (true) {
             looper.idle()
-            quiet = if (looper.isIdle && backgroundIsIdle()) quiet + 1 else 0
+            quiet = if (looper.isIdle && busyWorkers().isEmpty()) quiet + 1 else 0
             if (quiet >= 3) return
+            assertTrue(
+                "still busy after ${timeoutMs}ms: ${busyWorkers().ifEmpty { listOf("the main looper") }}",
+                System.currentTimeMillis() < deadline,
+            )
             Thread.sleep(15)
         }
-        looper.idle()
     }
 
-    /** Bolts' executor threads (`pool-…`) and coroutine workers are parked, not working. */
-    private fun backgroundIsIdle(): Boolean =
-        Thread.getAllStackTraces().keys.none { thread ->
-            (thread.name.startsWith("pool-") || thread.name.startsWith("DefaultDispatcher-worker")) &&
-                (thread.state == Thread.State.RUNNABLE || thread.state == Thread.State.BLOCKED)
-        }
+    /** Bolts' executor threads (`pool-…`) and coroutine workers that are working, not parked. */
+    private fun busyWorkers(): List<String> =
+        Thread.getAllStackTraces().keys
+            .filter { thread ->
+                (thread.name.startsWith("pool-") || thread.name.startsWith("DefaultDispatcher-worker")) &&
+                    (thread.state == Thread.State.RUNNABLE || thread.state == Thread.State.BLOCKED)
+            }.map { it.name }
 
     /**
      * The version the goldens show. Release commits change the real one, which would otherwise

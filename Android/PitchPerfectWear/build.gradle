@@ -81,6 +81,7 @@ dependencies {
     debugImplementation 'androidx.compose.ui:ui-test-manifest'
     testImplementation platform(compose_bom)
     testImplementation 'androidx.compose.ui:ui-test-junit4'
+    testImplementation testFixtures(project(':DepollSoftCommon'))
     testImplementation "io.github.takahirom.roborazzi:roborazzi:$roborazzi_version"
     testImplementation "io.github.takahirom.roborazzi:roborazzi-compose:$roborazzi_version"
     testImplementation "io.github.takahirom.roborazzi:roborazzi-junit-rule:$roborazzi_version"

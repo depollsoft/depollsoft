@@ -12,6 +12,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextReplacement
 import androidx.test.core.app.ApplicationProvider
 import com.github.takahirom.roborazzi.captureRoboImage
+import depollsoft.lib.testing.GOLDEN_TOLERANCE
 import com.github.takahirom.roborazzi.captureScreenRoboImage
 import depollsoft.lib.privacy.PrivacyChoices
 import depollsoft.pitchperfect.MainTab
