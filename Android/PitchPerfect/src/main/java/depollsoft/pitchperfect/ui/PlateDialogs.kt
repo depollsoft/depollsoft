@@ -20,6 +20,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -112,15 +114,19 @@ fun PlateAlertDialog(
                 if (title != null) {
                     DialogTitle(title, Modifier.padding(start = 24.dp, end = 24.dp, top = 18.dp))
                 }
-                if (message != null) {
-                    if (title != null) Spacer(Modifier.heightIn(min = 8.dp))
-                    PlateText(
-                        message,
-                        style = plateText(14.sp, colors.ink.copy(alpha = 0.6f), letterSpacing = 0.017857144f),
-                        modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = MESSAGE_BOTTOM),
-                    )
+                // AlertDialogLayout measured the buttons before the body: in a short window
+                // (landscape, large text, the keyboard up) the body scrolls and the buttons stay.
+                Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())) {
+                    if (message != null) {
+                        if (title != null) Spacer(Modifier.heightIn(min = 8.dp))
+                        PlateText(
+                            message,
+                            style = plateText(14.sp, colors.ink.copy(alpha = 0.6f), letterSpacing = 0.017857144f),
+                            modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = MESSAGE_BOTTOM),
+                        )
+                    }
+                    content?.invoke(this)
                 }
-                content?.invoke(this)
                 DialogButtonBar(buttons, neutral)
             }
         }
@@ -177,11 +183,7 @@ fun AppCompatAlertDialog(
                                 modifier = Modifier.padding(end = 8.dp).size(32.dp),
                             )
                         }
-                        PlateText(
-                            title,
-                            style = plateText(20.sp, colors.ink, weight = FontWeight.Medium),
-                            maxLines = 1,
-                        )
+                        AppCompatDialogTitle(title, iconWidth = if (icon != null) 40.dp else 0.dp)
                     }
                 }
                 // The body gets only the height the title and buttons leave, as AlertDialog's
@@ -198,6 +200,35 @@ fun AppCompatAlertDialog(
                 }
             }
         }
+    }
+}
+
+/**
+ * AppCompat's DialogTitle under the alert dialog theme: one 20sp medium line, or, when that line
+ * would be cut short in the window's first measuring pass ([dialogTitleFits]), 18sp
+ * (`textAppearanceMedium`) over up to two lines. A title such as "Delete account (Google:
+ * someone@example.com)" would otherwise lose the account it names. [iconWidth] is what the icon
+ * and its gap take from the line.
+ */
+@Composable
+private fun AppCompatDialogTitle(
+    title: String,
+    iconWidth: Dp,
+) {
+    val colors = plateColors
+    val single = plateText(20.sp, colors.ink, weight = FontWeight.Medium)
+    val wrapped = plateText(18.sp, colors.ink, weight = FontWeight.Medium)
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    val fits =
+        remember(title, single, density, iconWidth) {
+            // The helper pads both sides equally; the icon's width is split between them.
+            measurer.dialogTitleFits(title, single, density, cardInset = 16.dp, titlePadding = 24.dp + iconWidth / 2)
+        }
+    if (fits) {
+        PlateText(title, style = single, maxLines = 1)
+    } else {
+        PlateText(title, style = wrapped, maxLines = 2, overflow = TextOverflow.Ellipsis)
     }
 }
 

@@ -130,7 +130,7 @@ fun SongListScreen(
         }
         PlateFab(
             R.drawable.ic_add_button,
-            description = null,
+            description = stringResource(R.string.AddSong),
             onClick = {
                 context.startActivity(
                     Intent(context, AddSongActivity::class.java).putExtra(AddSongActivity.LIST_EXTRA, model.currentListId),

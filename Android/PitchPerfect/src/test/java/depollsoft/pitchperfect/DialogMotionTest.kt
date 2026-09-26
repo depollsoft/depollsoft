@@ -11,6 +11,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.isDialog
@@ -19,14 +21,18 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import depollsoft.lib.activity.RichApplication
+import depollsoft.pitchperfect.ui.AppCompatAlertDialog
 import depollsoft.pitchperfect.ui.DialogButton
 import depollsoft.pitchperfect.ui.PlateAlertDialog
 import depollsoft.pitchperfect.ui.PlateOutlinedField
@@ -214,4 +220,42 @@ class DialogMotionTest {
             .mapNotNull { node -> node.config.getOrElseNullable(androidx.compose.ui.semantics.SemanticsProperties.Text) { null } }
 
     private fun exists(text: String) = compose.onAllNodesWithText(text, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+
+    @Test
+    @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun aBodyTallerThanTheWindowScrollsAndLeavesTheButtonsOnScreen() {
+        compose.setContent {
+            PlateTheme {
+                PlateAlertDialog(
+                    onDismissRequest = {},
+                    title = "Delete “Afterglow”?",
+                    message = List(200) { "Its songs go with it." }.joinToString(" "),
+                    buttons = listOf(DialogButton("Cancel", {}), DialogButton("Delete", {})),
+                )
+            }
+        }
+        compose.onNodeWithText("Delete", ignoreCase = true).assertIsDisplayed()
+        compose.onNodeWithText("Cancel", ignoreCase = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun anAppCompatTitleTooLongForOneLineWrapsToTwo() {
+        val title = "Delete account (Google: someone@example.com)"
+        compose.setContent {
+            PlateTheme {
+                AppCompatAlertDialog(onDismissRequest = {}, title = title, buttons = listOf(DialogButton("OK", {}))) {}
+            }
+        }
+        val layouts = mutableListOf<TextLayoutResult>()
+        compose.onNodeWithText(title).performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+        assertEquals("the whole title shows", 2, layouts.single().lineCount)
+        assertFalse("lines ${layouts.single().lineCount} cut ${layouts.single().hasVisualOverflow} ellipsized ${layouts.single().isLineEllipsized(layouts.single().lineCount - 1)}", layouts.single().isLineEllipsized(layouts.single().lineCount - 1))
+    }
+
+    @Test
+    fun theOutlinesGapFollowsTheFloatedLabelInRightToLeft() {
+        // A 300px field whose floated label and its gap reach from 40px to 100px after the start.
+        assertEquals(40f..100f, depollsoft.pitchperfect.ui.outlineGap(300f, 40f, 100f, LayoutDirection.Ltr))
+        assertEquals(200f..260f, depollsoft.pitchperfect.ui.outlineGap(300f, 40f, 100f, LayoutDirection.Rtl))
+    }
 }
