@@ -125,6 +125,18 @@ class PausingStopsNotesTest {
     }
 
     @Test
+    fun theKeysTabLeavesNotesAloneWhenAnotherTabIsOnScreen() {
+        // Every tab stays composed; the Keys tab, off screen, must not silence the notes it
+        // shares with the tab that is showing (here a note the widget started).
+        val tonic = Key.getMajorKeys().first { it.friendlyName == "C" }.note
+        tonic.play()
+        screens.launch(PitchPerfectActivity::class.java)
+        screens.settle()
+        assertTrue("the Pitch Pipe tab's note kept sounding", tonic in sounding)
+        tonic.stop()
+    }
+
+    @Test
     fun aScreenReaderNotesPendingStopDoesNotCutOffTheSamePitchPlayedLater() {
         SettingsModel.toggleNotes = false
         val controller = screens.launch(PitchPerfectActivity::class.java)
