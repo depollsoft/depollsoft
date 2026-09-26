@@ -209,6 +209,16 @@ object TagLists {
         return true
     }
 
+    /**
+     * Applies [order], a drag's result, only while the lists still stand in [baseline], the order
+     * the drag began from. A sync can reorder the lists mid-drag, and a drop landing before the
+     * screen notices must not write the stale order over it.
+     */
+    fun reorder(
+        baseline: List<String>,
+        order: List<String>,
+    ): Boolean = baseline == customKeys.toList() && reorder(order)
+
     /** Replaces the registry with the cloud copy. [info] is the raw `listInfo` map; [listKeys] the keys of `lists`. */
     internal fun applyRemote(
         info: Map<*, *>?,

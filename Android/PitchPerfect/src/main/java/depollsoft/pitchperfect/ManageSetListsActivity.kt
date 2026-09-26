@@ -151,7 +151,6 @@ fun ManageSetListsScreen(
     val reorder =
         rememberReorderState<String>(listState, state, keyOf = { it }) { _, order ->
             state.model.reorderLists(order)
-            true
         }
     val byId = state.rows.associateBy { it.id }
     val rows = state.rows.filterNot(state::isCustom) + reorder.shownOrder(state.customIds, listState).mapNotNull { byId[it] }

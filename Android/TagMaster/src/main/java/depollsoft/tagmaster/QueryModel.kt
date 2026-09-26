@@ -41,12 +41,23 @@ class QueryModel {
     var minimumRating: Double? by StateField(null)
     var minimumDownloads: Int? by StateField(null)
 
-    /** Starts over from the first page. */
+    /**
+     * Which run of pages a response belongs to. [refresh] starts a new one, so a page still
+     * loading from before it is dropped rather than appended to the new first page. Private and
+     * without accessors, so it is not stored with the query.
+     */
+    private var generation = 0
+
+    /** Starts over from the first page, even when every result had already loaded. */
     fun refresh() {
+        generation++
         mostRecentResult = TagQueryResult()
         mostRecentResult.start = 0
         mostRecentResult.count = 0
         tags.clear()
+        statusText = null
+        hasMoreResults = true
+        isLoading = false
         fetchResults()
     }
 
@@ -55,6 +66,7 @@ class QueryModel {
         if (isLoading) return
         if (!hasMoreResults) return
         isLoading = true
+        val asked = generation
         Tag
             .query(
                 query,
@@ -71,6 +83,7 @@ class QueryModel {
                 null,
             ).continueWith<Void> { task ->
                 main.post {
+                    if (asked != generation) return@post
                     if (task.isFaulted) {
                         statusText = "An error has occurred: " + task.error.message
                         isLoading = false

@@ -131,14 +131,19 @@ class SongEditorState(
             titleMissing = true
             return false
         }
-        val existing = original
-        if (existing != null) {
-            existing.name = name
-            existing.key = key
+        val editing = original
+        // A sync can swap the list's copy of the song while the editor is open; edit the copy
+        // the list holds now, or the change would land on a detached song and never be stored.
+        val current = editing?.let { song -> list.songs.firstOrNull { it.id == song.id } }
+        if (current != null) {
+            current.name = name
+            current.key = key
             list.notifyOfChange()
         } else {
             list.addSong(
                 PitchedSong().also {
+                    // Deleted on another device while being edited: saving puts it back.
+                    if (editing != null) it.id = editing.id
                     it.name = name
                     it.key = key
                 },

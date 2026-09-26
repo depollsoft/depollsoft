@@ -8,6 +8,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
@@ -82,6 +86,9 @@ fun rememberTextViewPaint(style: TextStyle): TextPaint {
  * rounded-up line width (or takes whatever wider width its constraints ask for), and
  * `Layout.draw` starts the line at `(width - ((int) lineWidth & ~1)) >> 1`, so an odd line width
  * starts a pixel further in than Compose's own centering would.
+ *
+ * Text wider than the space it gets (a long label at a large font size) wraps onto centred lines
+ * as the TextView did, rather than running past both edges.
  */
 @Composable
 fun ViewCenteredText(
@@ -93,7 +100,27 @@ fun ViewCenteredText(
     val line = rememberDesiredWidth(text, style)
     val wrapped = ceil(line).toInt()
     val even = line.toInt() and 1.inv()
-    Layout({ Text(text, style = style, color = color, maxLines = 1, softWrap = false) }, modifier) { measurables, constraints ->
+    // Whether the line overflows is only known when measuring; the flag recomposes the text as
+    // wrapping on the next frame (and back, should the space grow).
+    var tooWide by remember(text, style) { mutableStateOf(false) }
+    Layout(
+        {
+            if (tooWide) {
+                Text(text, style = style.copy(textAlign = TextAlign.Center), color = color)
+            } else {
+                Text(text, style = style, color = color, maxLines = 1, softWrap = false)
+            }
+        },
+        modifier,
+    ) { measurables, constraints ->
+        val overflows = constraints.hasBoundedWidth && wrapped > constraints.maxWidth
+        if (overflows != tooWide) tooWide = overflows
+        if (tooWide) {
+            val width = constraints.maxWidth
+            val placeable = measurables.single().measure(Constraints(minWidth = width, maxWidth = width, maxHeight = constraints.maxHeight))
+            val height = maxOf(placeable.height, constraints.minHeight)
+            return@Layout layout(width, height) { placeable.placeRelative(0, (height - placeable.height) / 2) }
+        }
         val width = maxOf(wrapped, constraints.minWidth).coerceAtMost(constraints.maxWidth)
         val placeable =
             measurables.single().measure(

@@ -179,6 +179,38 @@ class SongModelsTest {
     }
 
     @Test
+    fun anEditSavedAfterASyncReplacedTheSongLandsOnTheListsCurrentCopy() {
+        val list = SongList("default")
+        val original = song("Blue Skies", Key.getMajorKeys()[6])
+        list.addSong(original)
+        val editor = SongEditorState(list, original.id)
+        editor.titleChanged(TextFieldValue("Blue Skies (tag)"))
+
+        // Another device changed the key; the sync swaps in a new copy of the song.
+        val synced = song("Blue Skies", Key.getMajorKeys()[3]).also { it.id = original.id }
+        list.songs.replaceWith(listOf(synced))
+
+        assertTrue(editor.save())
+        assertEquals("Blue Skies (tag)", list.songs.single().name)
+        assertEquals(original.id, list.songs.single().id)
+    }
+
+    @Test
+    fun anEditSavedAfterTheSongWasDeletedElsewherePutsItBack() {
+        val list = SongList("default")
+        val original = song("Blue Skies", Key.getMajorKeys()[6])
+        list.addSong(original)
+        val editor = SongEditorState(list, original.id)
+        editor.titleChanged(TextFieldValue("Blue Skies (tag)"))
+
+        list.songs.replaceWith(emptyList())
+
+        assertTrue(editor.save())
+        assertEquals("Blue Skies (tag)", list.songs.single().name)
+        assertEquals(original.id, list.songs.single().id)
+    }
+
+    @Test
     fun anEditorForASongNoLongerInTheListAddsANewOne() {
         val list = SongList("default")
         val editor = SongEditorState(list, "gone")

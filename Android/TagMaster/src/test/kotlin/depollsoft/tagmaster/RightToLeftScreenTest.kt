@@ -58,4 +58,11 @@ class RightToLeftScreenTest : ComposeScreenTest() {
         idle()
         assertEquals(2f, stars())
     }
+
+    @Test
+    fun anOutlinedFieldsLabelNotchIsMirrored() {
+        // A 300px field whose label notch opens 60px wide from 36px after the start.
+        assertEquals(36f..96f, depollsoft.tagmaster.ui.outlineNotch(300f, 36f, 60f, androidx.compose.ui.unit.LayoutDirection.Ltr))
+        assertEquals(204f..264f, depollsoft.tagmaster.ui.outlineNotch(300f, 36f, 60f, androidx.compose.ui.unit.LayoutDirection.Rtl))
+    }
 }

@@ -39,7 +39,10 @@ fun NoteListScreen(
     isCurrentPage: Boolean,
     notes: List<Note> = remember { Note.getPrunedNotes() },
 ) {
-    val stopPlaying = { notes.forEach { it.stop() } }
+    val stopPlaying = {
+        BriefNotes.cancelAll()
+        notes.forEach { it.stop() }
+    }
     LifecycleResumeEffect(notes) { onPauseOrDispose { stopPlaying() } }
     OnPageVisibilityChange(isCurrentPage) { current -> if (!current) stopPlaying() }
 

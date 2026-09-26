@@ -183,6 +183,43 @@ class BrowseAndResultsScreenTest : ComposeScreenTest() {
         }
 
     @Test
+    fun refreshingAQueryThatHasLoadedEverythingAsksAgain() {
+        respond = { ScreenshotFixtures.catalogPage(it, available = 5) }
+        catalog {
+            val activity = results("heart")
+            settle(activity.model)
+            assertFalse(activity.model.hasMoreResults)
+            val before = requested.size
+            click("refresh")
+            settle(activity.model)
+            assertEquals("Refresh fetched the first page again", before + 1, requested.size)
+            assertEquals(5, activity.model.tags.size)
+        }
+    }
+
+    @Test
+    fun aPageStillLoadingWhenRefreshIsPressedIsDropped() {
+        val release = java.util.concurrent.CountDownLatch(1)
+        respond = { url ->
+            if ("start=21" in url.toString()) release.await(10, java.util.concurrent.TimeUnit.SECONDS)
+            ScreenshotFixtures.catalogPage(url)
+        }
+        catalog {
+            val activity = results("heart")
+            val model = activity.model
+            settle(model)
+            model.fetchResults() // page 2, held
+            ScreenTestSupport.await("page 2 to be asked for") { synchronized(requested) { requested.any { "start=21" in it } } }
+            model.refresh()
+            release.countDown()
+            ScreenTestSupport.await("both answers to arrive") { synchronized(requested) { requested.size } == 3 && !model.isLoading }
+            idle()
+            assertEquals("only the refreshed first page is shown", 20, model.tags.size)
+            assertEquals(2147483200, model.tags.first().id)
+        }
+    }
+
+    @Test
     fun aResultRowOpensItsTag() =
         catalog {
             val activity = results("heart")

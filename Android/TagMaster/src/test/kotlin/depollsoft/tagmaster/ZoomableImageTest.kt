@@ -3,6 +3,15 @@ package depollsoft.tagmaster
 import android.app.Application
 import android.graphics.Bitmap
 import androidx.compose.foundation.layout.size
+import org.robolectric.annotation.GraphicsMode
+import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.background
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.testTag
@@ -81,5 +90,25 @@ class ZoomableImageTest {
         compose.waitForIdle()
         assertTrue("zoomed by the drag: ${state.scale}", state.scale > 1.2f)
         assertTrue("not the stepped zoom", state.scale != 1.75f)
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    fun aZoomedPageStaysInsideItsAreaAndOffTheToolbarAbove() {
+        val image = Bitmap.createBitmap(300, 400, Bitmap.Config.ARGB_8888).apply { eraseColor(android.graphics.Color.BLACK) }
+        compose.setContent {
+            Column {
+                Box(Modifier.fillMaxWidth().height(40.dp).background(Color.White).testTag("above"))
+                ZoomableImage(image, Modifier.size(300.dp, 400.dp).testTag("image"), state = state)
+            }
+        }
+        compose.waitForIdle()
+        compose.onNodeWithTag("image").performTouchInput { doubleClick(center) }
+        compose.onNodeWithTag("image").performTouchInput { doubleClick(center) }
+        compose.waitForIdle()
+        assertEquals(3f, state.scale, 0.001f)
+        val above = compose.onNodeWithTag("above").captureToImage().toPixelMap()
+        val dark = (0 until above.width).count { x -> (0 until above.height).any { y -> above[x, y].red < 0.5f } }
+        assertEquals("columns of the bar above painted by the page", 0, dark)
     }
 }

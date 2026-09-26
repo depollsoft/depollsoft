@@ -220,7 +220,7 @@ fun QuartetIllustration(
     val phase by loopingPhase(moving, (QuartetArtwork.PERIOD * 1000).toInt(), QuartetArtwork.PHASESTART, QuartetArtwork.PHASEEND)
     Box(
         modifier
-            .size(216.dp, 96.dp)
+            .size(QuartetArtwork.WIDTH.dp, QuartetArtwork.HEIGHT.dp)
             .drawBehind {
                 drawIntoCanvas {
                     QuartetRenderer.draw(it.nativeCanvas, size.width.roundToInt(), size.height.roundToInt(), phase, moving, dark)

@@ -47,6 +47,7 @@ import depollsoft.tagmaster.barbershop.Video
 import depollsoft.tagmaster.ui.RemoteImage
 import depollsoft.tagmaster.ui.StatusIndicator
 import depollsoft.tagmaster.ui.TagMasterTheme
+import depollsoft.tagmaster.ui.ReadingWidth
 import depollsoft.tagmaster.ui.TagMasterType
 import depollsoft.tagmaster.ui.TagMasterType.withoutLineHeight
 import depollsoft.tagmaster.ui.formatDate
@@ -186,72 +187,74 @@ fun VideosPage(
     val colors = TagMasterTheme.colors
     val videos = tag.videos.orEmpty()
     // The teaching video and the heading stay put; only the performances scroll, as the
-    // ListView below them did.
-    Column(modifier.fillMaxSize()) {
-        val teaching = tag.teachingVideo
-        if (teaching.isPresent()) {
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, top = 16.dp),
-            ) {
-                Text(
-                    stringResource(R.string.TeachingVideo),
-                    Modifier.semantics { heading() },
-                    style = TagMasterType.titleLarge,
-                    color = colors.text,
-                )
-                VideoRow(
-                    thumbnail = String.format("https://img.youtube.com/vi/%s/2.jpg", teaching),
-                    watch = String.format("https://www.youtube.com/watch?v=%s", teaching),
-                    rows = listOf(stringResource(R.string.Teacher) to (tag.teacher ?: "null")),
-                    padding = 0.dp,
-                    modifier = Modifier.testTag("teachingVideo"),
-                )
+    // ListView below them did. The page keeps the other pages' 640dp reading width.
+    ReadingWidth(modifier.fillMaxSize()) { inset ->
+        Column(Modifier.fillMaxSize()) {
+            val teaching = tag.teachingVideo
+            if (teaching.isPresent()) {
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp + inset, end = 16.dp + inset, top = 16.dp),
+                ) {
+                    Text(
+                        stringResource(R.string.TeachingVideo),
+                        Modifier.semantics { heading() },
+                        style = TagMasterType.titleLarge,
+                        color = colors.text,
+                    )
+                    VideoRow(
+                        thumbnail = String.format("https://img.youtube.com/vi/%s/2.jpg", teaching),
+                        watch = String.format("https://www.youtube.com/watch?v=%s", teaching),
+                        rows = listOf(stringResource(R.string.Teacher) to (tag.teacher ?: "null")),
+                        padding = 0.dp,
+                        modifier = Modifier.testTag("teachingVideo"),
+                    )
+                }
             }
-        }
-        Text(
-            stringResource(R.string.UserSubmissions),
-            Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, top = 16.dp)
-                .semantics { heading() },
-            style = TagMasterType.titleLarge,
-            color = colors.text,
-        )
-        if (videos.isEmpty()) {
             Text(
-                stringResource(R.string.NoVideos),
+                stringResource(R.string.UserSubmissions),
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                style = TagMasterType.bodyLarge,
+                    .padding(start = 16.dp + inset, end = 16.dp + inset, top = 16.dp)
+                    .semantics { heading() },
+                style = TagMasterType.titleLarge,
                 color = colors.text,
             )
-        }
-        val listState = rememberLazyListState()
-        LazyColumn(
-            Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .listViewScrollbar(listState, top = 16.dp, bottom = 16.dp, divider = 1.dp)
-                .testTag("videoList"),
-            state = listState,
-            contentPadding = PaddingValues(vertical = 16.dp),
-        ) {
-            // A LazyColumn refuses a repeated key, and the catalog may list a video twice.
-            itemsIndexed(videos, key = { index, video -> "${video.id}:$index" }) { index, video ->
-                Column {
-                    // ListView's divider: 1dp between rows, taking its own space.
-                    if (index > 0) {
-                        Box(
-                            Modifier
-                                .fillMaxWidth()
-                                .height(1.dp)
-                                .background(colors.outlineVariant),
-                        )
+            if (videos.isEmpty()) {
+                Text(
+                    stringResource(R.string.NoVideos),
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp + inset),
+                    style = TagMasterType.bodyLarge,
+                    color = colors.text,
+                )
+            }
+            val listState = rememberLazyListState()
+            LazyColumn(
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .listViewScrollbar(listState, top = 16.dp, bottom = 16.dp, divider = 1.dp)
+                    .testTag("videoList"),
+                state = listState,
+                contentPadding = PaddingValues(start = inset, top = 16.dp, end = inset, bottom = 16.dp),
+            ) {
+                // A LazyColumn refuses a repeated key, and the catalog may list a video twice.
+                itemsIndexed(videos, key = { index, video -> "${video.id}:$index" }) { index, video ->
+                    Column {
+                        // ListView's divider: 1dp between rows, taking its own space.
+                        if (index > 0) {
+                            Box(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(1.dp)
+                                    .background(colors.outlineVariant),
+                            )
+                        }
+                        UserVideoRow(video)
                     }
-                    UserVideoRow(video)
                 }
             }
         }

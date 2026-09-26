@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
@@ -154,6 +155,9 @@ fun ZoomableImage(
 
     Box(
         modifier
+            // The zoomed page is drawn past the box; PhotoView sat in a clipping FrameLayout, so
+            // it never painted over the toolbar above it.
+            .clipToBounds()
             .onSizeChanged { size = it }
             .pointerInput(image, state) {
                 var lastTapUp = -1L

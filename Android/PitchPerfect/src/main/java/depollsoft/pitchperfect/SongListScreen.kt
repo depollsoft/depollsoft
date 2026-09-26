@@ -130,7 +130,7 @@ fun SongListScreen(
         }
         PlateFab(
             R.drawable.ic_add_button,
-            description = null,
+            description = stringResource(R.string.AddSong),
             onClick = {
                 context.startActivity(
                     Intent(context, AddSongActivity::class.java).putExtra(AddSongActivity.LIST_EXTRA, model.currentListId),
@@ -190,7 +190,6 @@ private fun SongRows(
     val reorder =
         rememberReorderState<String>(listState, list, keyOf = { it }) { _, order ->
             list.reorder(order)
-            true
         }
     val byId = list.songs.associateBy { it.id }
     val songs = reorder.shownOrder(list.songs.map { it.id }, listState).mapNotNull { byId[it] }

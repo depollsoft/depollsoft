@@ -72,12 +72,15 @@ class TagMasterScreenshotTest {
         ScreenshotFixtures.clearPrivacyChoices()
         ScreenshotFixtures.cacheTags()
         ScreenshotFixtures.pinVersion()
+        // The Home footer's copyright year: the goldens show 2026 whatever year they verify in.
+        depollsoft.tagmaster.ui.FooterYear.pinned = 2026
         AuthState.setTestSource { false }
     }
 
     @After
     fun tearDown() {
         AuthState.setTestSource(null)
+        depollsoft.tagmaster.ui.FooterYear.pinned = null
         TimeZone.setDefault(defaultZone)
         ScreenTestSupport.finish(controller)
         ScreenTestSupport.clearTagCaches()

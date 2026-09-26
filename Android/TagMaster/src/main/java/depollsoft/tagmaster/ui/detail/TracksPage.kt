@@ -128,8 +128,11 @@ fun TracksPage(
             player.select(null)
         }
     }
-    LaunchedEffect(selected, tag) {
-        val location = available.getOrNull(selected)?.second
+    // Keyed on the part's location, not the tag: a refresh brings a new Tag with the same id,
+    // which compares equal, so a part it removed or moved would keep playing the old file.
+    val location = available.getOrNull(selected)?.second
+    LaunchedEffect(selected, location) {
+        if (selected >= 0 && location == null) selected = -1
         if (location != player.location) player.select(location)
     }
     val landscape = LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE

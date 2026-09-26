@@ -15,6 +15,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.text.rememberTextMeasurer
 
@@ -108,8 +109,11 @@ fun PlateOutlinedField(
                     }.drawBehind {
                         val stroke = strokeWidth.toPx()
                         // The label sits in a gap cut from the outline's top edge, opening as it floats up.
-                        val gapStart = LABEL_START.toPx() - LABEL_GAP.toPx() * floated
-                        val gapEnd = LABEL_START.toPx() + (labelWidth + LABEL_GAP.toPx()) * floated
+                        val startEdge = LABEL_START.toPx() - LABEL_GAP.toPx() * floated
+                        val endEdge = LABEL_START.toPx() + (labelWidth + LABEL_GAP.toPx()) * floated
+                        val gap = outlineGap(size.width, startEdge, endEdge, layoutDirection)
+                        val gapStart = gap.start
+                        val gapEnd = gap.endInclusive
                         clipRect(right = gapStart) { outline(strokeColor, stroke) }
                         clipRect(left = gapEnd) { outline(strokeColor, stroke) }
                         clipRect(left = gapStart, right = gapEnd, top = stroke * 2) { outline(strokeColor, stroke) }
@@ -265,3 +269,16 @@ fun PlateFilledField(
 }
 
 private const val IDLE_UNDERLINE_ALPHA = 0.478f
+
+/**
+ * The span cut from the outline's top edge for a label reaching from [startEdge] to [endEdge]
+ * after the start edge. The label is placed from the start, so in a right-to-left layout the gap
+ * is mirrored across the field's [width].
+ */
+internal fun outlineGap(
+    width: Float,
+    startEdge: Float,
+    endEdge: Float,
+    layoutDirection: LayoutDirection,
+): ClosedFloatingPointRange<Float> =
+    if (layoutDirection == LayoutDirection.Rtl) (width - endEdge)..(width - startEdge) else startEdge..endEdge

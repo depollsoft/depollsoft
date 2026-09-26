@@ -28,7 +28,8 @@ class ListModel private constructor(
     var ids: List<Int>
         get() = store
         set(value) {
-            val next = value.toList()
+            // Each tag once: a row is keyed by its id, and a repeated key would crash the list.
+            val next = value.distinct()
             store.replaceWith(next)
             changed()
         }
@@ -109,7 +110,9 @@ class ListModel private constructor(
     }
 
     /** Replaces the contents with a cloud copy; stored locally only, as [fromFirestore] requires. */
-    private fun replaceFromRemote(value: List<Int>) {
+    private fun replaceFromRemote(remote: List<Int>) {
+        // Another client, or an older one, may have stored a tag twice; rows are keyed by id.
+        val value = remote.distinct()
         if (value == store.snapshot()) return
         store.replaceWith(value)
         changed()
@@ -164,7 +167,9 @@ class ListModel private constructor(
             val lists = mutableMapOf<String, StateList<Int>>()
             stored?.forEach { (key, value) ->
                 if (key is String && value is Collection<*>) {
-                    lists[key] = value as? StateList<Int> ?: StateList(value.filterIsInstance<Int>())
+                    // Each tag once, whatever was stored: rows are keyed by id.
+                    val ids = value.filterIsInstance<Int>()
+                    lists[key] = if (value is StateList<*> && value.size == ids.distinct().size) value as StateList<Int> else StateList(ids.distinct())
                 }
             }
             return lists

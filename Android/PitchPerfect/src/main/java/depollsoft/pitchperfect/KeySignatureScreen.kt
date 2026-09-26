@@ -22,6 +22,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -58,13 +59,18 @@ fun KeySignatureScreen(
     model: KeySignatureModel = remember { KeySignatureModel() },
 ) {
     val stopPlaying = {
+        BriefNotes.cancelAll()
         model.majorKeys.forEach { it.note.stop() }
         model.minorKeys.forEach { it.note.stop() }
     }
     // The tab silences its notes as it comes up and as it goes, and its switch only shows while
     // it is the tab on screen.
     var resumed by remember { mutableStateOf(false) }
+    // Every tab stays composed, and the notes are shared with the other tabs: only the tab on
+    // screen silences them as the app comes back, as only the current fragment was resumed.
+    val onScreen by rememberUpdatedState(isCurrentPage)
     LifecycleResumeEffect(model) {
+        if (onScreen) stopPlaying()
         resumed = true
         onPauseOrDispose {
             resumed = false

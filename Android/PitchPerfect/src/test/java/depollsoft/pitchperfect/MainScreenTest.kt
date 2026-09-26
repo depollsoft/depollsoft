@@ -6,6 +6,7 @@ import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTextReplacement
@@ -173,6 +174,7 @@ class MainScreenTest {
         compose.onNodeWithTag(TestTags.SET_LIST_SELECTOR).assertIsDisplayed()
         compose.onNodeWithTag(TestTags.SONG_LIST).assertIsDisplayed()
         compose.onNodeWithTag(TestTags.ADD_SONG_FAB).assertIsDisplayed()
+        compose.onNodeWithContentDescription("Add Song").assertIsDisplayed()
         compose.onNodeWithText("Blue Skies").assertIsDisplayed()
     }
 
