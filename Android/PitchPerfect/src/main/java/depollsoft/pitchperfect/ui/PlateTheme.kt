@@ -1,5 +1,6 @@
 package depollsoft.pitchperfect.ui
 
+import androidx.compose.material.LocalTextStyle
 import android.content.Context
 import android.graphics.Typeface
 import androidx.compose.material.MaterialTheme
@@ -22,6 +23,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.em
 import androidx.core.content.res.ResourcesCompat
 import depollsoft.compose.inWholePixels
+import depollsoft.compose.viewParagraph
 import depollsoft.pitchperfect.R
 
 /**
@@ -97,7 +99,7 @@ fun plateText(
         fontStyle = style,
         letterSpacing = letterSpacing.em,
         platformStyle = PlatformTextStyle(includeFontPadding = true),
-    )
+    ).viewParagraph()
 
 @Composable
 fun PlateTheme(content: @Composable () -> Unit) {
@@ -126,6 +128,12 @@ fun PlateTheme(content: @Composable () -> Unit) {
             onError = colors.ground,
         )
     CompositionLocalProvider(LocalPlateColors provides colors) {
-        MaterialTheme(colors = material, content = content)
+        MaterialTheme(colors = material) {
+            // Text drawn with the default style lays out its paragraphs as a TextView did.
+            CompositionLocalProvider(
+                LocalTextStyle provides LocalTextStyle.current.viewParagraph(),
+                content = content,
+            )
+        }
     }
 }

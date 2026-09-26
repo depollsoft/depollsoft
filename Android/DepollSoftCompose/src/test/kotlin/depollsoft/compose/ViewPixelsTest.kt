@@ -1,5 +1,7 @@
 package depollsoft.compose
 
+import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -171,5 +173,24 @@ class ViewPixelsTest {
             val t = step / 10f
             assertEquals(interpolator.getInterpolation(t), ListMotion.easing.transform(t), 0.0001f)
         }
+    }
+    @Test
+    fun paragraphsTakeTheirDirectionFromTheTextAndSitAtTheLayoutsStart() {
+        var rtl: TextStyle? = null
+        var ltr: TextStyle? = null
+        var centred: TextStyle? = null
+        compose.setContent {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                rtl = TextStyle().viewParagraph()
+                centred = TextStyle(textAlign = TextAlign.Center).viewParagraph()
+            }
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) { ltr = TextStyle().viewParagraph() }
+        }
+        compose.waitForIdle()
+        // English in a right-to-left locale reads left to right, from the layout's (right) edge.
+        assertEquals(TextDirection.Content, rtl!!.textDirection)
+        assertEquals(TextAlign.Right, rtl!!.textAlign)
+        assertEquals(TextAlign.Left, ltr!!.textAlign)
+        assertEquals(TextAlign.Center, centred!!.textAlign)
     }
 }

@@ -1,5 +1,7 @@
 package depollsoft.tagmaster.ui
 
+import depollsoft.compose.viewParagraph
+import androidx.compose.material3.LocalTextStyle
 import android.content.Context
 import android.content.res.Configuration
 import android.util.TypedValue
@@ -147,7 +149,12 @@ fun TagMasterTheme(content: @Composable () -> Unit) {
     val colors = remember(context, configuration.uiMode) { tagMasterColors(context) }
     CompositionLocalProvider(LocalTagMasterColors provides colors) {
         MaterialTheme(colorScheme = colors.toColorScheme()) {
-            CompositionLocalProvider(LocalRippleConfiguration provides colors.controlHighlight.asRipple(), content = content)
+            // Text drawn with the default style lays out its paragraphs as a TextView did.
+            CompositionLocalProvider(
+                LocalRippleConfiguration provides colors.controlHighlight.asRipple(),
+                LocalTextStyle provides LocalTextStyle.current.viewParagraph(),
+                content = content,
+            )
         }
     }
 }

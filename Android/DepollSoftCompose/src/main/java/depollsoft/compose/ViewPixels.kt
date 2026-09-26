@@ -1,5 +1,8 @@
 package depollsoft.compose
 
+import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
@@ -36,6 +39,28 @@ fun TextStyle.inWholePixels(density: Density): TextStyle =
 @Composable
 @ReadOnlyComposable
 fun TextStyle.inWholePixels(): TextStyle = inWholePixels(LocalDensity.current)
+
+/**
+ * [this] style laid out as a TextView lays out a paragraph. Its direction comes from its first
+ * strong character, where Compose would use the layout direction and read untranslated English
+ * right to left in a right-to-left locale (".here", "tags 2"). Unless the style already aligns
+ * its text, it sits at the layout's start edge as `gravity="start"` put it: Compose's
+ * [TextAlign.Start] would follow the text's own direction instead.
+ */
+@Composable
+@ReadOnlyComposable
+fun TextStyle.viewParagraph(): TextStyle =
+    copy(
+        textDirection = TextDirection.Content,
+        textAlign =
+            if (textAlign != TextAlign.Unspecified) {
+                textAlign
+            } else if (LocalLayoutDirection.current == LayoutDirection.Rtl) {
+                TextAlign.Right
+            } else {
+                TextAlign.Left
+            },
+    )
 
 /**
  * [dp] in pixels as the View code computed it, `(dp * displayMetrics.density).toInt()`: truncated
