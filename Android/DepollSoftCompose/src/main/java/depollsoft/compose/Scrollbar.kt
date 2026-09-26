@@ -12,11 +12,11 @@ import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.lazy.LazyListLayoutInfo
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleStartEffect
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -152,13 +153,20 @@ private fun Modifier.viewScrollbar(
         }
     val fade = remember { ScrollbarFade() }
     val alpha = remember { Animatable(1f) }
-    DisposableEffect(fade) {
+    val scrolling by rememberUpdatedState(isScrolling)
+    // A View awakens its scrollbars whenever its window becomes visible: when the screen first
+    // shows, and again when it comes back from behind another.
+    LifecycleStartEffect(fade) {
         fade.wake(INITIAL_DELAY)
-        onDispose { fade.stop() }
+        onStopOrDispose { fade.stop() }
     }
     LaunchedEffect(fade) {
-        snapshotFlow { isScrolling() }.collect { scrolling ->
-            if (scrolling) fade.hold() else if (fade.visible) fade.wake(SCROLL_DELAY)
+        var wasScrolling = false
+        snapshotFlow { scrolling() }.collect { now ->
+            // Only a scroll ending shortens the fade; the first report, idle, keeps the initial
+            // 1.2 seconds.
+            if (now) fade.hold() else if (wasScrolling && fade.visible) fade.wake(SCROLL_DELAY)
+            wasScrolling = now
         }
     }
     LaunchedEffect(fade.fading) {

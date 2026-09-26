@@ -33,9 +33,13 @@ object SnackbarTiming {
     const val SLIDE_MILLIS = 250
 
     /**
-     * [millis], stretched to the timeout the person has asked accessibility services for
-     * (Android 10 and later). Earlier, a snackbar with an action stays up while touch exploration
-     * is on, so a screen reader can reach the action. Null means until dismissed.
+     * How long a snackbar asked to stay up [millis] is shown, as MDC's `Snackbar.getDuration` and
+     * `SnackbarManager` worked it out. On Android 10 and later MDC handed its duration constant
+     * itself (LENGTH_SHORT -1, LENGTH_LONG 0) to the accessibility manager, which returns the
+     * larger of it and the timeouts the person asked for; with none set, both come back 0, which
+     * SnackbarManager shows for [LONG_MILLIS]. So a short snackbar stays up as long as a long one
+     * there. Earlier, a snackbar with an action stays up while touch exploration is on, so a
+     * screen reader can reach the action. Null means until dismissed.
      */
     fun shownFor(
         accessibility: AccessibilityManager?,
@@ -44,11 +48,28 @@ object SnackbarTiming {
     ): Long? {
         val manager = accessibility ?: return millis
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            val flags = AccessibilityManager.FLAG_CONTENT_TEXT or (if (hasAction) AccessibilityManager.FLAG_CONTENT_CONTROLS else 0)
-            return manager.getRecommendedTimeoutMillis(millis.toInt(), flags).toLong()
+            val requested =
+                when (millis) {
+                    SHORT_MILLIS -> LENGTH_SHORT
+                    LONG_MILLIS -> LENGTH_LONG
+                    else -> millis.toInt()
+                }
+            val flags =
+                AccessibilityManager.FLAG_CONTENT_ICONS or AccessibilityManager.FLAG_CONTENT_TEXT or
+                    (if (hasAction) AccessibilityManager.FLAG_CONTENT_CONTROLS else 0)
+            val recommended = manager.getRecommendedTimeoutMillis(requested, flags)
+            return when {
+                recommended > 0 -> recommended.toLong()
+                recommended == LENGTH_SHORT -> SHORT_MILLIS
+                else -> LONG_MILLIS
+            }
         }
         return if (hasAction && manager.isTouchExplorationEnabled) null else millis
     }
+
+    // MDC's BaseTransientBottomBar duration constants.
+    private const val LENGTH_SHORT = -1
+    private const val LENGTH_LONG = 0
 }
 
 /** A message on screen: its text, its action's label, and how it can end. */

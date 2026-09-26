@@ -86,6 +86,22 @@ class LabelTooltipStateTest {
         assertFalse(tooltip.visible)
     }
 
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun aMouseSweepingAcrossShowsNothingUntilItRests() {
+        show()
+        compose.mainClock.autoAdvance = false
+        compose.onNodeWithTag("anchor").performMouseInput { enter(Offset(2f, 24f)) }
+        // Past the hover slop every 300ms, for longer than the 500ms long-press timeout.
+        for (step in 1..4) {
+            compose.mainClock.advanceTimeBy(300)
+            compose.onNodeWithTag("anchor").performMouseInput { moveTo(Offset(2f + step * 10f, 24f)) }
+            assertFalse("still moving at step $step", tooltip.visible)
+        }
+        compose.mainClock.advanceTimeBy(700)
+        assertTrue("shown once the mouse rests", tooltip.visible)
+    }
+
     @Test
     fun aFingerDoesNotHover() {
         show()

@@ -1,18 +1,21 @@
 package depollsoft.compose
 
-import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import kotlin.math.PI
+import kotlin.math.cos
 
 /**
  * How list rows move, taken from RecyclerView's DefaultItemAnimator so every list in both apps
  * moves the same way: a row fades in or out in 120ms, rows slide to new places in 250ms, and a
  * row whose contents change cross-fades in 250ms. A drag lifts its row in [LIFT_MILLIS] and
- * settles it into its slot in [SETTLE_MILLIS].
+ * settles it into its slot in [SETTLE_MILLIS]. Every one of them follows [easing], the curve
+ * those animators and ItemTouchHelper's settle took from ValueAnimator.
  */
 object ListMotion {
     const val FADE_MILLIS = 120
@@ -24,10 +27,13 @@ object ListMotion {
     /** How high a dragged row floats above the list. */
     val liftedElevation = 6.dp
 
-    val fade: FiniteAnimationSpec<Float> = tween(FADE_MILLIS)
-    val placement: FiniteAnimationSpec<IntOffset> = tween(MOVE_MILLIS, easing = FastOutSlowInEasing)
+    /** ValueAnimator's default interpolator, AccelerateDecelerateInterpolator. */
+    val easing = Easing { fraction -> (cos((fraction + 1) * PI) / 2 + 0.5).toFloat() }
 
-    fun <T> change(): FiniteAnimationSpec<T> = tween(CHANGE_MILLIS)
+    val fade: FiniteAnimationSpec<Float> = tween(FADE_MILLIS, easing = easing)
+    val placement: FiniteAnimationSpec<IntOffset> = tween(MOVE_MILLIS, easing = easing)
+
+    fun <T> change(): FiniteAnimationSpec<T> = tween(CHANGE_MILLIS, easing = easing)
 }
 
 /**

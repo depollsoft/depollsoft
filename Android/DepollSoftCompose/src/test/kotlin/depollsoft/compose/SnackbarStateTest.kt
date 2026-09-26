@@ -67,7 +67,19 @@ class SnackbarStateTest {
     }
 
     @Test
-    fun aShortMessageStaysOneAndAHalfSecondsOnceItHasSlidIn() {
+    fun aShortMessageStaysAsLongAsALongOneOnAndroid10AndLater() {
+        // MDC handed LENGTH_SHORT (-1) to the accessibility manager, which returns 0 when no
+        // timeout is set, and SnackbarManager shows 0 for LENGTH_LONG's 2750ms.
+        start()
+        show("Cache cleared", millis = SnackbarTiming.SHORT_MILLIS)
+        assertEquals("Cache cleared", after(SnackbarTiming.SLIDE_MILLIS + 2650L)?.message)
+        assertNull(after(200))
+        assertEquals(listOf(false), results)
+    }
+
+    @Test
+    @Config(sdk = [28])
+    fun aShortMessageStaysOneAndAHalfSecondsBeforeAndroid10() {
         start()
         show("Cache cleared", millis = SnackbarTiming.SHORT_MILLIS)
         // The slide takes 250ms; then 1500ms.
@@ -139,5 +151,12 @@ class SnackbarStateTest {
         shadowOf(accessibility).setInteractiveUiTimeout(20_000)
         assertEquals(20_000L, SnackbarTiming.shownFor(accessibility, SnackbarTiming.LONG_MILLIS, hasAction = true))
         assertEquals(SnackbarTiming.SHORT_MILLIS, SnackbarTiming.shownFor(null, SnackbarTiming.SHORT_MILLIS, hasAction = false))
+    }
+
+    @Test
+    fun aShortMessageStretchesToTheReadingTimeoutAsked() {
+        assertEquals(SnackbarTiming.LONG_MILLIS, SnackbarTiming.shownFor(accessibility, SnackbarTiming.SHORT_MILLIS, hasAction = false))
+        shadowOf(accessibility).setNonInteractiveUiTimeout(5_000)
+        assertEquals(5_000L, SnackbarTiming.shownFor(accessibility, SnackbarTiming.SHORT_MILLIS, hasAction = false))
     }
 }
