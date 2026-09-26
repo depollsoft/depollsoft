@@ -6,7 +6,7 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -65,11 +65,14 @@ public class JsonSerializer {
   private static Map<Class<?>, String> typeAliases;
   private static Map<String, Class<?>> revTypeAliases;
 
+  // Tags are read on background threads while preferences are read on the main thread, so these
+  // caches are shared between threads. With plain HashMaps, racing first lookups lost accessors for
+  // the rest of the process, and every object read afterwards silently lacked those fields.
   static {
-    JsonSerializer.properties = new HashMap<Class<?>, List<Pair<Method, Method>>>();
-    JsonSerializer.revProperties = new HashMap<Pair<Class<?>, String>, Pair<Method, Method>>();
-    JsonSerializer.typeAliases = new HashMap<Class<?>, String>();
-    JsonSerializer.revTypeAliases = new HashMap<String, Class<?>>();
+    JsonSerializer.properties = new ConcurrentHashMap<Class<?>, List<Pair<Method, Method>>>();
+    JsonSerializer.revProperties = new ConcurrentHashMap<Pair<Class<?>, String>, Pair<Method, Method>>();
+    JsonSerializer.typeAliases = new ConcurrentHashMap<Class<?>, String>();
+    JsonSerializer.revTypeAliases = new ConcurrentHashMap<String, Class<?>>();
   }
 
   public static Object deserialize(JSONObject object) {
@@ -180,6 +183,8 @@ public class JsonSerializer {
         continue;
       Pair<Method, Method> propPair = new Pair<Method, Method>(getter, m);
       props.add(propPair);
+      // Every accessor is published before the class is marked as known, so a thread that finds
+      // the class in [properties] also finds all of its accessors here.
       JsonSerializer.revProperties.put(new Pair<Class<?>, String>(type, propName), propPair);
     }
     JsonSerializer.properties.put(type, props);

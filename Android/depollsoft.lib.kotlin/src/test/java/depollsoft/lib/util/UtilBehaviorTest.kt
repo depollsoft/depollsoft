@@ -2,6 +2,7 @@ package depollsoft.lib.util
 
 import depollsoft.lib.activity.RichApplication
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -53,5 +54,27 @@ class UtilBehaviorTest {
         assertEquals(5, holder.i)
         assertEquals(true, holder.b)
         assertEquals("z", holder.s)
+    }
+
+    @Test
+    fun aNonNullPreferenceThatReadsBackNullKeepsItsDefault() {
+        val key = "pref_double_${System.nanoTime()}"
+        val holder = object {
+            var rating: Double by preference(key, 2.5)
+        }
+        assertEquals(2.5, holder.rating, 0.0)
+        // An unreadable stored entry comes back as null; the reader must not crash on it.
+        Preferences.set(key, null)
+        assertEquals(2.5, holder.rating, 0.0)
+    }
+
+    @Test
+    fun aNullablePreferenceKeepsAStoredNull() {
+        val key = "pref_nullable_${System.nanoTime()}"
+        val holder = object {
+            var filter: Boolean? by preference(key, true)
+        }
+        holder.filter = null
+        assertNull(holder.filter)
     }
 }
