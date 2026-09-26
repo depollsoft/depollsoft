@@ -54,20 +54,22 @@ class ReorderStateTest {
         heightDp: Int = 400,
         bottomPaddingDp: Int = 0,
         followSource: Boolean = false,
+        hideMissing: Boolean = false,
+        trailingRows: Int = 0,
     ) {
         compose.setContent {
             CompositionLocalProvider(LocalHapticFeedback provides haptics) {
                 reorder =
                     rememberReorderState(listState, keyOf = { it }) { _, order ->
-                        if (refuse) return@rememberReorderState false
+                        if (refuse) return@rememberReorderState
                         commits += order
                         rows.clear()
                         rows.addAll(order)
-                        true
                     }
                 val source = rows.toList()
                 if (followSource) LaunchedEffect(source) { reorder.sourceChanged(source) }
-                val shown = reorder.shownOrder(rows.toList(), listState)
+                // As Pitch Perfect's songs list shows only the songs the list still holds.
+                val shown = reorder.shownOrder(rows.toList(), listState).let { order -> if (hideMissing) order.filter { it in rows } else order }
                 LazyColumn(
                     state = listState,
                     modifier = Modifier.height(heightDp.dp),
@@ -86,6 +88,7 @@ class ReorderStateTest {
                             Box(Modifier.size(ROW_DP.dp).testTag("handle:$row").reorderHandle(reorder, row, { rows.toList() }, enabled = true))
                         }
                     }
+                    items(trailingRows) { Box(Modifier.fillMaxWidth().height(ROW_DP.dp)) }
                 }
             }
         }
@@ -300,6 +303,102 @@ class ReorderStateTest {
         compose.waitForIdle()
         assertEquals(0, listState.firstVisibleItemIndex)
         assertEquals("R1", listState.layoutInfo.visibleItemsInfo.first().key)
+    }
+
+    @Test
+    fun aGestureTheSystemCancelsStoresNothing() {
+        show()
+        drag("A", rowPx * 1.5f)
+        compose.waitForIdle()
+        assertEquals(listOf("B", "A", "C", "D"), reorder.order(rows))
+        compose.onNodeWithTag("handle:A").performTouchInput { cancel() }
+        compose.waitForIdle()
+        assertNull(reorder.dragging)
+        assertTrue("nothing stored", commits.isEmpty())
+        assertEquals(listOf("A", "B", "C", "D"), rows.toList())
+    }
+
+    @Test
+    fun aRowHeldStillAtAnEdgeDoesNotScroll() {
+        rows.clear()
+        rows.addAll((0 until 30).map { "R$it" })
+        show(heightDp = ROW_DP * 5)
+        compose.runOnIdle { listState.requestScrollToItem(10) }
+        compose.waitForIdle()
+        val top = listState.layoutInfo.visibleItemsInfo.first().key as String
+        val bottom = listState.layoutInfo.visibleItemsInfo.last().key as String
+        for (row in listOf(top, bottom)) {
+            compose.onNodeWithTag("handle:$row").performTouchInput { down(center) }
+            compose.mainClock.advanceTimeBy(1000)
+            compose.waitForIdle()
+            assertEquals("holding $row still scrolls nothing", 10, listState.firstVisibleItemIndex)
+            release(row)
+            compose.waitForIdle()
+        }
+        assertTrue("nothing stored", commits.isEmpty())
+    }
+
+    @Test
+    fun theListStopsScrollingOnceTheRowReachesItsSectionsEnd() {
+        // D, the section's last row, dragged down toward the bottom edge over rows that are not
+        // part of the section: there is nowhere further for it to go.
+        show(heightDp = ROW_DP * 5, trailingRows = 20)
+        drag("D", rowPx * 0.9f, steps = 4)
+        compose.mainClock.advanceTimeBy(1000)
+        compose.waitForIdle()
+        assertEquals("the list stayed put", 0, listState.firstVisibleItemIndex)
+        assertEquals("the drag is still held", "D", reorder.dragging)
+        release("D")
+        compose.waitForIdle()
+    }
+
+    @Test
+    fun aRowDroppedInTheFrameItTradedPlacesSettlesFromTheFinger() {
+        show()
+        val slotOfA = top("A")
+        compose.mainClock.autoAdvance = false
+        compose.onNodeWithTag("handle:A").performTouchInput {
+            down(center)
+            moveBy(Offset(0f, rowPx * 1.2f))
+            up()
+        }
+        compose.mainClock.advanceTimeByFrame()
+        assertEquals("drawn where the finger let go", slotOfA + rowPx * 1.2f, top("A"), rowPx * 0.1f)
+        compose.mainClock.advanceTimeBy(ListMotion.SETTLE_MILLIS + 100L)
+        assertEquals("then settles one row down", slotOfA + rowPx, top("A"), 1f)
+        compose.mainClock.autoAdvance = true
+    }
+
+    @Test
+    fun aRowPickedUpWhileAnotherSettlesLiftsFromRest() {
+        show()
+        drag("A", rowPx * 1.5f)
+        compose.waitForIdle()
+        compose.mainClock.autoAdvance = false
+        release("A")
+        compose.mainClock.advanceTimeByFrame()
+        assertTrue("A is still lifted as it settles", reorder.lift > 0.5f)
+        compose.onNodeWithTag("handle:C").performTouchInput { down(center) }
+        compose.mainClock.advanceTimeByFrame()
+        assertTrue("C starts its lift from rest, got ${reorder.lift}", reorder.lift < 0.5f)
+        compose.mainClock.autoAdvance = true
+        release("C")
+        compose.waitForIdle()
+    }
+
+    @Test
+    fun aNeighbourDeletedMidDragIsPassedOver() {
+        show(hideMissing = true)
+        drag("A", rowPx * 0.5f)
+        compose.waitForIdle()
+        compose.runOnIdle { rows.remove("B") }
+        compose.waitForIdle()
+        compose.onNodeWithTag("handle:A").performTouchInput { repeat(6) { moveBy(Offset(0f, rowPx * 1.2f / 6)) } }
+        compose.waitForIdle()
+        assertEquals(listOf("C", "A", "D"), reorder.order(rows).filter { it in rows })
+        release("A")
+        compose.waitForIdle()
+        assertEquals(listOf("C", "A", "D"), commits.single())
     }
 
     private class RecordingHaptics : HapticFeedback {

@@ -2,7 +2,6 @@ package depollsoft.compose
 
 import android.os.Build
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -28,7 +27,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.PointerEvent
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.SuspendingPointerInputModifierNode
+import androidx.compose.ui.node.DelegatingNode
+import androidx.compose.ui.node.ModifierNodeElement
+import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -50,25 +54,29 @@ import kotlinx.coroutines.launch
  * - The row trades places with a neighbour once its far edge passes the neighbour's far edge
  *   (ItemTouchHelper.Callback.chooseDropTarget), and the neighbour slides aside. The new order is
  *   only previewed.
- * - Holding the row within 48dp of the list's padded top or bottom scrolls the list.
+ * - Taking the row toward the list's padded top or bottom, and holding it within 48dp of that
+ *   edge, scrolls the list, as ItemTouchHelper scrolled only while the drag headed that way. A row
+ *   held still where it was picked up never scrolls, and nothing scrolls past its section's ends.
  * - Releasing it commits the previewed order once, if it changed, and the row settles from where
  *   it was drawn into its slot over [ListMotion.SETTLE_MILLIS]. A drop the owner refuses, or a
- *   drag abandoned by [cancel], settles the row back into its slot in the source order the same
- *   way.
+ *   drag abandoned by [cancel] (including one the system takes away), settles the row back into
+ *   its slot in the source order the same way.
  *
  * The source is read when a drag starts; what it does while a drag is held is up to the owner.
  * Calling [sourceChanged] abandons the drag when the source moved on; not calling it keeps the
  * preview on screen until the drop, as the View screens that skipped refreshing mid-drag did.
+ * Items gone from the source ([shownOrder]'s latest) drop out of the preview either way.
  *
  * [keyOf] names the lazy-list key an item is shown under, so rows outside the section are never
- * drop targets. [commit] stores a new order and says whether it did.
+ * drop targets. [commit] stores a new order, if the owner accepts it; the rows settle to whatever
+ * order the source then holds.
  */
 @Stable
 class ReorderState<K : Any> internal constructor(
     private val listState: LazyListState,
     private val scope: CoroutineScope,
     internal var keyOf: (K) -> Any,
-    internal var commit: (baseline: List<K>, order: List<K>) -> Boolean,
+    internal var commit: (baseline: List<K>, order: List<K>) -> Unit,
 ) {
     /** Where drag feedback is felt; set from the composition that shows the list. */
     var haptics: HapticFeedback? = null
@@ -90,6 +98,15 @@ class ReorderState<K : Any> internal constructor(
     /** How far the finger has taken the held row from its slot in [preview], in pixels. */
     var offset by mutableFloatStateOf(0f)
         private set
+
+    /**
+     * How far the finger itself has moved since the drag started, in pixels; scrolling that keeps
+     * the row under the finger is not counted. Its sign says which edge the drag heads for.
+     */
+    private var travel by mutableFloatStateOf(0f)
+
+    /** The items the owner's source last held, from [shownOrder]; null before it has run. */
+    internal var present: Set<K>? = null
 
     private val liftAnimation = Animatable(0f)
 
@@ -128,16 +145,29 @@ class ReorderState<K : Any> internal constructor(
         item: K,
         source: List<K>,
     ): Boolean {
-        finishSettle()
-        if (dragging != null || source.size < 2 || item !in source) return false
+        val interrupted = endSettle()
+        if (dragging != null || source.size < 2 || item !in source) {
+            if (interrupted) animateLift(0f, from = 0f, millis = 0)
+            return false
+        }
         baseline = source.toList()
         preview = baseline
         dragging = item
         offset = 0f
+        travel = 0f
         slotTop = Float.NaN
         haptics?.dragStarted()
-        animateLift(1f)
+        // The row a settle was carrying is set down at once, so this one lifts from rest rather
+        // than from wherever that one's shadow had got to.
+        animateLift(1f, from = if (interrupted) 0f else null)
         return true
+    }
+
+    /** The finger moved the held row by [delta] pixels. */
+    fun fingerMoved(delta: Float) {
+        if (dragging == null) return
+        travel += delta
+        dragBy(delta)
     }
 
     /** Moves the held row by [delta] pixels, trading places with each neighbour it passes. */
@@ -145,7 +175,7 @@ class ReorderState<K : Any> internal constructor(
         val item = dragging ?: return
         offset += delta
         while (true) {
-            val order = preview ?: return
+            val order = currentPreview() ?: return
             val index = order.indexOf(item)
             val items = listState.layoutInfo.visibleItemsInfo
             val to =
@@ -153,11 +183,15 @@ class ReorderState<K : Any> internal constructor(
                     val next = items.firstOrNull { it.key == keyOf(order[index + 1]) } ?: return
                     if (offset <= next.size) return
                     offset -= next.size
+                    // The slot moves now; the list only lays it out in the next frame, and a drop
+                    // before then settles from here.
+                    if (!slotTop.isNaN()) slotTop += next.size
                     index + 1
                 } else if (offset < 0 && index > 0) {
                     val previous = items.firstOrNull { it.key == keyOf(order[index - 1]) } ?: return
                     if (-offset <= previous.size) return
                     offset += previous.size
+                    if (!slotTop.isNaN()) slotTop -= previous.size
                     index - 1
                 } else {
                     return
@@ -165,6 +199,17 @@ class ReorderState<K : Any> internal constructor(
             preview = order.toMutableList().apply { add(to, removeAt(index)) }
             haptics?.passed()
         }
+    }
+
+    /**
+     * The preview without items the source no longer holds: a row deleted mid-drag is no longer
+     * shown, so it is neither a neighbour to pass nor part of the order dropped.
+     */
+    private fun currentPreview(): List<K>? {
+        val order = preview ?: return null
+        val present = present ?: return order
+        if (order.all { it in present }) return order
+        return order.filter { it in present }.also { preview = it }
     }
 
     /**
@@ -185,6 +230,7 @@ class ReorderState<K : Any> internal constructor(
                 if (step == 0f) break
                 val scrolled = listState.scrollBy(step)
                 // The row's slot moved with the content; keep the row under the finger.
+                if (!slotTop.isNaN()) slotTop -= scrolled
                 dragBy(scrolled)
             }
         }
@@ -195,17 +241,23 @@ class ReorderState<K : Any> internal constructor(
         maxStep: Float,
     ): Float {
         val item = dragging ?: return 0f
+        val order = preview ?: return 0f
         val info = listState.layoutInfo
         val row = info.visibleItemsInfo.firstOrNull { it.key == keyOf(item) } ?: return 0f
         val top = row.offset + offset
         val bottom = top + row.size
         // ItemTouchHelper scrolled once the row left the RecyclerView's padded area, so a list
-        // padded clear of a floating button scrolls well above the screen's edge.
+        // padded clear of a floating button scrolls well above the screen's edge. It scrolled only
+        // toward the edge the drag heads for, and a row at its section's end has nowhere further
+        // to go: scrolling on would only carry its slot out of view and end the drag.
         val start = info.viewportStartOffset.toFloat() + info.beforeContentPadding
         val end = info.viewportEndOffset.toFloat() - info.afterContentPadding
+        val index = order.indexOf(item)
         return when {
-            top < start + edge && listState.canScrollBackward -> -maxStep * ((start + edge - top) / edge).coerceAtMost(1f)
-            bottom > end - edge && listState.canScrollForward -> maxStep * ((bottom - (end - edge)) / edge).coerceAtMost(1f)
+            travel < 0 && index > 0 && top < start + edge && listState.canScrollBackward ->
+                -maxStep * ((start + edge - top) / edge).coerceAtMost(1f)
+            travel > 0 && index < order.lastIndex && bottom > end - edge && listState.canScrollForward ->
+                maxStep * ((bottom - (end - edge)) / edge).coerceAtMost(1f)
             else -> 0f
         }
     }
@@ -213,8 +265,8 @@ class ReorderState<K : Any> internal constructor(
     /** The finger lifted: commits the previewed order if it changed, and settles the row. */
     fun drop() {
         val item = dragging ?: return
-        val order = preview ?: baseline
-        val start = baseline
+        val order = currentPreview() ?: baseline
+        val start = baseline.let { base -> present?.let { p -> base.filter { it in p } } ?: base }
         haptics?.dragEnded()
         endDrag(item)
         // A drop where nothing moved stores nothing. A refused one leaves the source as it was,
@@ -247,6 +299,7 @@ class ReorderState<K : Any> internal constructor(
         preview = null
         baseline = emptyList()
         offset = 0f
+        travel = 0f
         if (slotTop.isNaN()) {
             animateLift(0f)
             return
@@ -258,8 +311,8 @@ class ReorderState<K : Any> internal constructor(
             scope.launch {
                 try {
                     coroutineScope {
-                        launch { liftAnimation.animateTo(0f, tween(ListMotion.SETTLE_MILLIS, easing = FastOutSlowInEasing)) }
-                        animate(0f, 1f, animationSpec = tween(ListMotion.SETTLE_MILLIS, easing = FastOutSlowInEasing)) { value, _ -> settled = value }
+                        launch { liftAnimation.animateTo(0f, tween(ListMotion.SETTLE_MILLIS, easing = ListMotion.easing)) }
+                        animate(0f, 1f, animationSpec = tween(ListMotion.SETTLE_MILLIS, easing = ListMotion.easing)) { value, _ -> settled = value }
                     }
                 } finally {
                     if (settling == item) {
@@ -270,20 +323,36 @@ class ReorderState<K : Any> internal constructor(
             }
     }
 
+    /** Ends a settle in its slot, and sets the row down; see [endSettle]. */
     private fun finishSettle() {
-        settleJob?.cancel()
-        settleJob = null
-        if (settling != null) {
-            settling = null
-            settled = 1f
-            liftJob?.cancel()
-            liftJob = scope.launch { liftAnimation.snapTo(0f) }
-        }
+        if (endSettle()) animateLift(0f, from = 0f, millis = 0)
     }
 
-    private fun animateLift(target: Float) {
+    /** Stops a settle where it is and returns whether there was one; the caller sets the lift. */
+    private fun endSettle(): Boolean {
+        settleJob?.cancel()
+        settleJob = null
+        if (settling == null) return false
+        settling = null
+        settled = 1f
+        return true
+    }
+
+    /**
+     * Animates the lift to [target], first snapping it to [from] if given. Both happen in one job,
+     * so a later call cannot cancel the snap before it has run and leave the lift mid-way.
+     */
+    private fun animateLift(
+        target: Float,
+        from: Float? = null,
+        millis: Int = ListMotion.LIFT_MILLIS,
+    ) {
         liftJob?.cancel()
-        liftJob = scope.launch { liftAnimation.animateTo(target, tween(ListMotion.LIFT_MILLIS, easing = FastOutSlowInEasing)) }
+        liftJob =
+            scope.launch {
+                if (from != null) liftAnimation.snapTo(from)
+                if (millis == 0) liftAnimation.snapTo(target) else liftAnimation.animateTo(target, tween(millis, easing = ListMotion.easing))
+            }
     }
 }
 
@@ -312,7 +381,7 @@ fun <K : Any> rememberReorderState(
     listState: LazyListState,
     vararg inputs: Any?,
     keyOf: (K) -> Any,
-    commit: (baseline: List<K>, order: List<K>) -> Boolean,
+    commit: (baseline: List<K>, order: List<K>) -> Unit,
 ): ReorderState<K> {
     val scope = rememberCoroutineScope()
     val haptics = LocalHapticFeedback.current
@@ -336,7 +405,8 @@ fun <K : Any> ReorderState<K>.shownOrder(
     source: List<K>,
     listState: LazyListState,
 ): List<K> {
-    val order = order(source).toList()
+    val shown = source.toSet().also { present = it }
+    val order = order(source).filter { it in shown }
     val last = remember { arrayOfNulls<List<K>>(1) }
     SideEffect {
         val previous = last[0]
@@ -374,6 +444,10 @@ fun <K : Any> Modifier.reorderRow(
 /**
  * The drag handle's gesture: touching it picks [item] up out of [source], and dragging moves it.
  * The press is reported to [interactionSource], so the handle can ripple as an ImageButton did.
+ * A gesture the system takes away (a cancel) abandons the drag rather than dropping it.
+ *
+ * A new [source] or [interactionSource] takes effect for the next gesture without restarting one
+ * in progress; a new [state] or [item] starts over.
  */
 fun <K : Any> Modifier.reorderHandle(
     state: ReorderState<K>,
@@ -381,43 +455,94 @@ fun <K : Any> Modifier.reorderHandle(
     source: () -> List<K>,
     enabled: Boolean,
     interactionSource: MutableInteractionSource? = null,
-): Modifier =
-    if (!enabled) {
-        this
-    } else {
-        pointerInput(state, item) {
-            val edge = EDGE_ZONE.toPx()
-            val maxStep = MAX_SCROLL_PER_FRAME.toPx()
-            coroutineScope {
-                awaitEachGesture {
-                    val down = awaitFirstDown()
-                    if (!state.start(item, source())) return@awaitEachGesture
-                    down.consume()
-                    val press = PressInteraction.Press(down.position)
-                    interactionSource?.tryEmit(press)
-                    val scroller = launch { state.autoScroll(edge, maxStep) }
-                    var lifted = false
-                    try {
-                        while (isActive) {
-                            val event = awaitPointerEvent()
-                            val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                            if (!change.pressed) {
-                                lifted = true
-                                break
-                            }
-                            val delta = change.position.y - change.previousPosition.y
-                            change.consume()
-                            if (delta != 0f) state.dragBy(delta)
+): Modifier = if (!enabled) this else this then ReorderHandleElement(state, item, source, interactionSource)
+
+private class ReorderHandleElement<K : Any>(
+    val state: ReorderState<K>,
+    val item: K,
+    val source: () -> List<K>,
+    val interactionSource: MutableInteractionSource?,
+) : ModifierNodeElement<ReorderHandleNode<K>>() {
+    override fun create() = ReorderHandleNode(state, item, source, interactionSource)
+
+    override fun update(node: ReorderHandleNode<K>) = node.update(state, item, source, interactionSource)
+
+    override fun InspectorInfo.inspectableProperties() {
+        name = "reorderHandle"
+        properties["item"] = item
+    }
+
+    override fun equals(other: Any?): Boolean =
+        other is ReorderHandleElement<*> &&
+            other.state === state &&
+            other.item == item &&
+            other.source === source &&
+            other.interactionSource === interactionSource
+
+    override fun hashCode(): Int = ((state.hashCode() * 31 + item.hashCode()) * 31 + source.hashCode()) * 31 + interactionSource.hashCode()
+}
+
+private class ReorderHandleNode<K : Any>(
+    var state: ReorderState<K>,
+    var item: K,
+    var source: () -> List<K>,
+    var interactionSource: MutableInteractionSource?,
+) : DelegatingNode() {
+    private val pointer = delegate(SuspendingPointerInputModifierNode { track() })
+
+    fun update(
+        state: ReorderState<K>,
+        item: K,
+        source: () -> List<K>,
+        interactionSource: MutableInteractionSource?,
+    ) {
+        val restart = state !== this.state || item != this.item
+        this.state = state
+        this.item = item
+        this.source = source
+        this.interactionSource = interactionSource
+        if (restart) pointer.resetPointerInputHandler()
+    }
+
+    private suspend fun androidx.compose.ui.input.pointer.PointerInputScope.track() {
+        val edge = EDGE_ZONE.toPx()
+        val maxStep = MAX_SCROLL_PER_FRAME.toPx()
+        coroutineScope {
+            awaitEachGesture {
+                val down = awaitFirstDown()
+                // This gesture keeps the state, item and interaction source it started with.
+                val state = state
+                val item = item
+                val interactions = interactionSource
+                if (!state.start(item, source())) return@awaitEachGesture
+                down.consume()
+                val press = PressInteraction.Press(down.position)
+                interactions?.tryEmit(press)
+                val scroller = launch { state.autoScroll(edge, maxStep) }
+                var lifted = false
+                try {
+                    while (isActive) {
+                        val event: PointerEvent = awaitPointerEvent(PointerEventPass.Main)
+                        val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                        if (!change.pressed) {
+                            // A finger lifting arrives unconsumed; a cancel (the system taking
+                            // the touch stream) arrives already consumed.
+                            lifted = !change.isConsumed
+                            break
                         }
-                    } finally {
-                        scroller.cancel()
-                        interactionSource?.tryEmit(if (lifted) PressInteraction.Release(press) else PressInteraction.Cancel(press))
-                        if (lifted) state.drop() else state.cancel()
+                        val delta = change.position.y - change.previousPosition.y
+                        change.consume()
+                        if (delta != 0f) state.fingerMoved(delta)
                     }
+                } finally {
+                    scroller.cancel()
+                    interactions?.tryEmit(if (lifted) PressInteraction.Release(press) else PressInteraction.Cancel(press))
+                    if (lifted) state.drop() else state.cancel()
                 }
             }
         }
     }
+}
 
 /**
  * Keeps the list where it is by index through the next change to its rows. A lazy list
