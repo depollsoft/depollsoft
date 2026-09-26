@@ -116,13 +116,15 @@ final class MainFlowsUITests: XCTestCase {
         let renamed = app.buttons["\(title) Renamed, G"]
         XCTAssertTrue(renamed.waitForExistence(timeout: 10), "the row follows the edit")
         app.navigationBars.buttons["Done"].tap()
-        // Leaving edit mode is animated; a swipe during it is lost.
+        // Leaving edit mode is animated, and a swipe during it is lost: swipe
+        // again until the row's Delete shows.
         XCTAssertTrue(app.buttons["song.edit"].firstMatch.waitForNonExistence(timeout: 5))
-        Thread.sleep(forTimeInterval: 0.5)
-
-        renamed.swipeLeft()
         let delete = app.buttons["Delete"].firstMatch
-        XCTAssertTrue(delete.waitForExistence(timeout: 5))
+        for _ in 0..<3 where !delete.exists {
+            renamed.swipeLeft()
+            _ = delete.waitForExistence(timeout: 2)
+        }
+        XCTAssertTrue(delete.exists)
         delete.tap()
         XCTAssertTrue(renamed.waitForNonExistence(timeout: 5))
         XCTAssertTrue(element(beginningWith: "Nothing in this set list").waitForExistence(timeout: 5))

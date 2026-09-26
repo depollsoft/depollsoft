@@ -113,13 +113,7 @@ private struct NavigationTitleFace: UIViewControllerRepresentable {
             // every device; UIKit decides what that means for each bar style. It
             // must be UIKit's tint, not a SwiftUI one on the TabView: UIKit's greys
             // the selected item out under an alert and leaves the others be.
-            if let tabBar = tabBarController?.tabBar {
-                tabBar.tintColor = .label
-                // SwiftUI's tab items leave unselected buttons in the secondary
-                // label colour, which an alert greys well past UIKit's items (they
-                // took the label colour, dimmed with everything else).
-                TabBarInk.apply(to: tabBar)
-            }
+            if let tabBar = tabBarController?.tabBar { TabBarChrome.apply(to: tabBar) }
             guard let bar = navigationController?.navigationBar else { return }
             bar.tintColor = .label
             guard oswald else { return }
@@ -143,18 +137,38 @@ private struct NavigationTitleFace: UIViewControllerRepresentable {
     }
 }
 
-/// Unselected tab items in the label colour, as UIKit's own items drew them.
-enum TabBarInk {
+/// The tab bar as the app delegate set it up: tinted with the label colour on
+/// every device, which UIKit applies to its own bottom bar and dims under an
+/// alert. SwiftUI rewrites the bar's tint from its environment on every update,
+/// so the root's tint says the same (`color`), except over iPadOS 18's top tab
+/// bar (regular width), which kept the system accent.
+enum TabBarChrome {
+    static func isTopTabBar(horizontal: UserInterfaceSizeClass?) -> Bool {
+        guard UIDevice.current.userInterfaceIdiom == .pad, horizontal == .regular else { return false }
+        if #available(iOS 18.0, *) { return true }
+        return false
+    }
+
+    static func color(horizontal: UserInterfaceSizeClass?) -> Color? {
+        isTopTabBar(horizontal: horizontal) ? nil : Color(uiColor: .label)
+    }
+
     static func apply(to tabBar: UITabBar) {
-        for appearance in [tabBar.standardAppearance, tabBar.scrollEdgeAppearance].compactMap({ $0 }) {
-            guard appearance.stackedLayoutAppearance.normal.iconColor != .label else { continue }
-            for layout in [appearance.stackedLayoutAppearance, appearance.inlineLayoutAppearance,
-                           appearance.compactInlineLayoutAppearance] {
-                layout.normal.iconColor = .label
-            }
+        if tabBar.tintColor != .label { tabBar.tintColor = .label }
+        // SwiftUI's items leave unselected buttons in the secondary label colour,
+        // which an alert greys far past UIKit's items (they took the label colour).
+        if let standard = inked(tabBar.standardAppearance) { tabBar.standardAppearance = standard }
+        if let edge = tabBar.scrollEdgeAppearance, let inkedEdge = inked(edge) { tabBar.scrollEdgeAppearance = inkedEdge }
+    }
+
+    /// A copy with label-coloured unselected icons, or nil when it has them already.
+    private static func inked(_ appearance: UITabBarAppearance) -> UITabBarAppearance? {
+        guard appearance.stackedLayoutAppearance.normal.iconColor != .label else { return nil }
+        let copy = appearance.copy()
+        for layout in [copy.stackedLayoutAppearance, copy.inlineLayoutAppearance, copy.compactInlineLayoutAppearance] {
+            layout.normal.iconColor = .label
         }
-        tabBar.standardAppearance = tabBar.standardAppearance
-        if let edge = tabBar.scrollEdgeAppearance { tabBar.scrollEdgeAppearance = edge }
+        return copy
     }
 }
 

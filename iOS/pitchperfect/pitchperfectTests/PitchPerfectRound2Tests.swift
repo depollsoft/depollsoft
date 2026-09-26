@@ -75,8 +75,9 @@ final class UIKitChromeTests: PitchPerfectTestCase {
         app.show(tab: 3)
         app.manageSetLists()
         ScreenCatalog.settle(0.3)
-        guard !TabBarTint.isTopTabBar else {
-            XCTAssertNil(TabBarTint.color, "iPadOS 18's top tab bar kept the system accent")
+        guard !TabBarChrome.isTopTabBar(horizontal: UserInterfaceSizeClass(app.window.traitCollection.horizontalSizeClass)) else {
+            XCTAssertNil(TabBarChrome.color(horizontal: .regular), "iPadOS 18's top tab bar kept the system accent")
+            XCTAssertNotNil(TabBarChrome.color(horizontal: .compact), "at compact width it is a bottom bar again")
             return
         }
         let tabBar = try XCTUnwrap(app.descendants(of: UITabBar.self, in: app.window).first)
@@ -86,6 +87,10 @@ final class UIKitChromeTests: PitchPerfectTestCase {
             return [r, g, b, a]
         }
         XCTAssertEqual(rgba(tabBar.tintColor), rgba(.label), "a pushed screen keeps the bar's label tint")
+        // What the glyphs are drawn in: every item, selected or not, in the label colour.
+        let glyphs = app.descendants(of: UIImageView.self, in: tabBar).filter { $0.window != nil && !$0.isHidden }
+        XCTAssertFalse(glyphs.isEmpty)
+        for glyph in glyphs { XCTAssertEqual(rgba(glyph.tintColor), rgba(.label)) }
     }
 
     /// Under an alert UIKit greys the selected tab (its tint dims) and leaves the
@@ -94,7 +99,8 @@ final class UIKitChromeTests: PitchPerfectTestCase {
         let app = try launch()
         app.show(tab: 3)
         // iPadOS 18's top tab bar carries titles only.
-        try XCTSkipIf(TabBarTint.isTopTabBar, "no tab glyphs in the top tab bar")
+        try XCTSkipIf(TabBarChrome.isTopTabBar(horizontal: UserInterfaceSizeClass(app.window.traitCollection.horizontalSizeClass)),
+                      "no tab glyphs in the top tab bar")
         let tabBar = try XCTUnwrap(app.descendants(of: UITabBar.self, in: app.window).first)
         XCTAssertEqual(tabBar.tintAdjustmentMode, .normal)
         let alert = UIAlertController(title: "Test", message: nil, preferredStyle: .alert)
@@ -180,11 +186,9 @@ final class RowAndSettingsDetailTests: PitchPerfectTestCase {
         model.release(songs[0])
     }
 
-    /// Reopening Settings (a new List each time) finds it where it was left, even
-    /// at a large text size where the rows below the first screen are not built yet.
+    /// Reopening Settings finds it where it was left, even at a large text size:
+    /// it is one controller for the app's life, as UIKit's was.
     func testSettingsComesBackWhereItWasLeftAtALargeTextSize() throws {
-        SettingsScrollMemory.forget()
-        defer { SettingsScrollMemory.forget() }
         let app = try launch()
         // On the scene, so the presented sheet takes it too.
         let scene = try XCTUnwrap(ScreenCatalog.scene)
@@ -206,7 +210,7 @@ final class RowAndSettingsDetailTests: PitchPerfectTestCase {
         app.sheet.tap(id: "checkmark")
         settle { app.topPresented === app.host }
         let second = try openList()
-        XCTAssertFalse(first === second, "each presentation builds a new List")
+        XCTAssertTrue(first === second, "one Settings for the app's life, as UIKit presented it")
         settle { abs(second.contentOffset.y - place) < 0.5 }
         app.sheet.tap(id: "checkmark")
         settle { app.topPresented === app.host }
@@ -229,7 +233,7 @@ final class RowAndSettingsDetailTests: PitchPerfectTestCase {
 
     func testTableMarginsFollowUIKitsForTheDevice() throws {
         let app = try launch()
-        let screen = TableMargin.Container(size: app.window.bounds.size, traits: app.window.traitCollection, style: .plain)
+        let screen = TableMargin.Container(width: app.window.bounds.width, traits: app.window.traitCollection, style: .plain)
         XCTAssertEqual(TableMargin.measure(screen, in: app.window), UIDevice.current.userInterfaceIdiom == .pad ? 16 : 20)
     }
 
@@ -255,22 +259,30 @@ final class RowAndSettingsDetailTests: PitchPerfectTestCase {
         settle { reference.view.window != nil && table.bounds.width > 0 }
         table.layoutIfNeeded()
         let uikitMargin = table.layoutMargins.left
-        let container = TableMargin.Container(size: sheet.view.bounds.size, traits: sheet.traitCollection, style: .grouped)
+        let container = TableMargin.Container(width: sheet.view.bounds.width, traits: sheet.traitCollection, style: .grouped)
         XCTAssertEqual(TableMargin.measure(container, in: app.window), uikitMargin)
         sheet.dismiss(animated: false)
         settle { app.topPresented === app.host }
     }
 
-    func testTheSelectorPositionsAreWhereUIKitsStackPutThem() {
-        let titles = ["My Songs", "Saturday show", "Afterglow"]
-        let width: CGFloat = 802
-        let spans = SetListSelectorMetrics.positionSpans(titles: titles, width: width)
-        XCTAssertEqual(spans.count, 3)
-        XCTAssertEqual(spans[0].lowerBound, 0)
-        let frames = StackGeometry.frames(naturals: titles.map(SetListSelectorMetrics.naturalWidth(for:)), width: width)
-        XCTAssertEqual(frames.last?.width, SetListSelectorMetrics.newPositionWidth, "the + keeps its fixed width")
-        XCTAssertEqual(frames.last?.maxX ?? 0, width, accuracy: 0.5, "the row fills the frame")
-        XCTAssertEqual(frames[1].width, 1, "hairlines stay one point wide")
+    /// The rendered positions sit exactly where UIKit's `.fillProportionally`
+    /// stack puts the same pieces in a frame of the selector's width.
+    func testTheSelectorPositionsAreWhereUIKitsStackPutThem() throws {
+        let store = DPSongsModel.sharedInstance
+        let lists = [store.defaultSongList, try customList(named: "Saturday show"), try customList(named: "Afterglow")]
+        let app = try launch()
+        app.show(tab: 3)
+        let positions = try lists.map { try XCTUnwrap(app.ui.element(id: "setlist.\($0.id)")).accessibilityFrame }
+        let plus = try XCTUnwrap(app.ui.element(id: "setlist.new")).accessibilityFrame
+        let rowStart = positions[0].minX
+        let width = plus.maxX - rowStart
+        let titles = lists.map(store.displayName(for:))
+        let stack = StackGeometry.frames(naturals: titles.map(SetListSelectorMetrics.naturalWidth(for:)), width: width)
+        for (index, rendered) in positions.enumerated() {
+            XCTAssertEqual(rendered.minX - rowStart, stack[index * 2].minX, accuracy: 0.5, "\(titles[index]) starts where UIKit put it")
+            XCTAssertEqual(rendered.width, stack[index * 2].width, accuracy: 0.5, "\(titles[index]) is as wide")
+        }
+        XCTAssertEqual(plus.width, SetListSelectorMetrics.newPositionWidth, accuracy: 0.5, "the + keeps its fixed width")
     }
 }
 
@@ -304,15 +316,151 @@ final class CleanupHelperTests: PitchPerfectTestCase {
         app.host.dismiss(animated: false)
     }
 
-    func testSongsListMarginsFollowTheTableMargin() {
-        let list = UICollectionView(frame: CGRect(x: 0, y: 0, width: 400, height: 400),
-                                    collectionViewLayout: UICollectionViewFlowLayout())
-        SongListMargins.apply(to: list, tableMargin: 20)
-        XCTAssertFalse(list.preservesSuperviewLayoutMargins)
-        XCTAssertEqual(list.layoutMargins.left, 20)
-        XCTAssertEqual(list.layoutMargins.right, 4)
-        SongListMargins.apply(to: list, tableMargin: 16)
-        XCTAssertEqual(list.layoutMargins.left, 16, "a changed margin is applied again (iPad)")
-        XCTAssertEqual(list.layoutMargins.right, 8)
+    /// In edit mode the delete, disclosure and reorder controls sit where a real
+    /// UITableView in the same place puts them.
+    func testEditModeControlsSitWhereUIKitsTablePutsThem() throws {
+        seedSongs(["Blue Skies", "Shenandoah"])
+        let app = try launch()
+        app.editSongs()
+        ScreenCatalog.settle(0.6)
+        let list = try XCTUnwrap(app.descendants(of: UICollectionView.self, in: app.window).first { $0.window != nil })
+        func frame(_ name: String, in root: UIView, relativeTo base: UIView) -> CGRect? {
+            var found: UIView?
+            func walk(_ view: UIView) {
+                if found == nil, String(describing: type(of: view)) == name { found = view }
+                view.subviews.forEach(walk)
+            }
+            walk(root)
+            return found.map { $0.convert($0.bounds, to: base) }
+        }
+        let cell = try XCTUnwrap(list.visibleCells.min { $0.frame.minY < $1.frame.minY })
+        let delete = try XCTUnwrap(frame("_UICollectionViewListAccessoryControl", in: cell, relativeTo: list))
+        let reorder = try XCTUnwrap(frame("_UICollectionViewListCellReorderControl", in: cell, relativeTo: list))
+        let info = try XCTUnwrap(app.descendants(of: UIButton.self, in: cell).first).convert(
+            app.descendants(of: UIButton.self, in: cell).first!.bounds, to: list)
+
+        let reference = EditingTableReference(width: list.bounds.width, in: app.window)
+        XCTAssertEqual(delete.minX, reference.delete.minX, accuracy: 0.5, "delete control")
+        XCTAssertEqual(reorder.minX, reference.reorder.minX, accuracy: 0.5, "reorder control")
+        XCTAssertEqual(info.maxX, reference.info.maxX, accuracy: 0.5, "detail disclosure")
+    }
+}
+
+/// A real UITableView row in edit mode (delete, detail-disclosure editing
+/// accessory, reorder), as the UIKit Songs screen had it, laid out off screen.
+@MainActor
+private final class EditingTableReference: NSObject, UITableViewDataSource {
+    private(set) var delete = CGRect.zero
+    private(set) var reorder = CGRect.zero
+    private(set) var info = CGRect.zero
+
+    init(width: CGFloat, in window: UIWindow) {
+        super.init()
+        let screen = UIViewController()
+        let navigation = UINavigationController(rootViewController: screen)
+        navigation.view.frame = CGRect(x: 0, y: 0, width: width, height: 600)
+        navigation.view.isHidden = true
+        window.addSubview(navigation.view)
+        defer { navigation.view.removeFromSuperview() }
+        let table = UITableView(frame: CGRect(x: 0, y: 0, width: width, height: 600), style: .plain)
+        table.dataSource = self
+        screen.view.addSubview(table)
+        table.setEditing(true, animated: false)
+        navigation.view.layoutIfNeeded()
+        table.layoutIfNeeded()
+        guard let cell = table.visibleCells.first else { return }
+        cell.layoutIfNeeded()
+        func frame(_ name: String) -> CGRect {
+            var found: UIView?
+            func walk(_ view: UIView) {
+                if found == nil, String(describing: type(of: view)) == name { found = view }
+                view.subviews.forEach(walk)
+            }
+            walk(cell)
+            return found.map { $0.convert($0.bounds, to: table) } ?? .zero
+        }
+        delete = frame("UITableViewCellEditControl")
+        reorder = frame("UITableViewCellReorderControl")
+        info = cell.editingAccessoryView.map { $0.convert($0.bounds, to: table) } ?? .zero
+    }
+
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int { 1 }
+
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = UITableViewCell(style: .value1, reuseIdentifier: nil)
+        cell.textLabel?.text = "Blue Skies"
+        cell.editingAccessoryView = UIButton(type: .detailDisclosure)
+        return cell
+    }
+
+    func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool { true }
+    func tableView(_ tableView: UITableView, moveRowAt source: IndexPath, to destination: IndexPath) {}
+}
+
+@MainActor
+final class RobustnessTests: PitchPerfectTestCase {
+    /// The Major/Minor control stays the Keys bar's left item through what
+    /// rebuilds bars: Settings opening and closing, and leaving and coming back.
+    func testTheKeysBarKeepsItsSegmentedControl() throws {
+        let app = try launch()
+        func control() -> UISegmentedControl? {
+            app.descendants(of: UINavigationBar.self, in: app.window).first { $0.topItem?.title == "Keys" }?
+                .topItem?.leftBarButtonItem?.customView as? UISegmentedControl
+        }
+        app.show(tab: 2)
+        settle { control() != nil }
+        for _ in 0..<2 {
+            app.openSettings()
+            settle { app.topPresented !== app.host }
+            app.sheet.tap(id: "checkmark")
+            settle { app.topPresented === app.host }
+            settle { control() != nil }
+            app.show(tab: 3)
+            app.show(tab: 2)
+            settle { control() != nil }
+        }
+        let keys = try XCTUnwrap(control())
+        keys.selectedSegmentIndex = 1
+        keys.sendActions(for: .valueChanged)
+        XCTAssertEqual(app.models.keys.mode, .minor, "still wired to the model")
+        app.models.keys.mode = .major
+    }
+
+    func testTheUITestSongStoreHooksSetTheSongsAsideAndBack() throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: "UITestSongStoreTests"))
+        defaults.removePersistentDomain(forName: "UITestSongStoreTests")
+        defaults.set(["mine": ["name": "Mine"]], forKey: DPSongsModel.songListsKey)
+        UITestSongStore.prepare(["PP_STASH_SONGS": "1", "PP_LEGACY_SONGS_JSON": #"{"*type":"List","*items":[]}"#],
+                                defaults: defaults)
+        XCTAssertNil(defaults.object(forKey: DPSongsModel.songListsKey), "set aside for the test")
+        XCTAssertNotNil(defaults.object(forKey: DPSongsModel.legacySongsKey), "the legacy fixture seeded")
+        UITestSongStore.prepare(["PP_STASH_SONGS": "1"], defaults: defaults)
+        defaults.set(["test": [:]], forKey: DPSongsModel.songListsKey)
+        UITestSongStore.prepare(["PP_UNSTASH_SONGS": "1"], defaults: defaults)
+        XCTAssertEqual((defaults.dictionary(forKey: DPSongsModel.songListsKey)?["mine"] as? [String: String])?["name"], "Mine",
+                       "a second stash never overwrote the first; the unstash restored it")
+        defaults.removePersistentDomain(forName: "UITestSongStoreTests")
+    }
+
+    func testSetListsReorderControlsSitWhereUIKitsTablePutsThem() throws {
+        _ = try customList(named: "Saturday show")
+        let app = try launch()
+        app.show(tab: 3)
+        app.manageSetLists()
+        ScreenCatalog.settle(0.6)
+        var reorder: UIView?
+        func walk(_ view: UIView) {
+            if reorder == nil, view.window != nil, !view.isHidden,
+               String(describing: type(of: view)) == "_UICollectionViewListCellReorderControl" { reorder = view }
+            view.subviews.forEach(walk)
+        }
+        settle { walk(app.window); return reorder != nil }
+        let control = try XCTUnwrap(reorder)
+        var ancestor = control.superview
+        while let current = ancestor, !(current is UICollectionView) { ancestor = current.superview }
+        let list = try XCTUnwrap(ancestor)
+        let frame = control.convert(control.bounds, to: list)
+        XCTAssertEqual(frame.maxX, list.bounds.width - TableMargin.lastMeasured(.plain), accuracy: 0.5,
+                       "the reorder control ends the table margin from the edge, as UIKit's did")
     }
 }

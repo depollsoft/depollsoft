@@ -320,11 +320,18 @@ private struct LoginExplanation: UIViewRepresentable {
         + "Signing in syncs your song list and settings. You control optional analytics and crash reports in Privacy choices."
         + "</p>"
 
-    static var text: NSAttributedString? {
-        try? NSAttributedString(data: Data(html.utf8),
-                                options: [.documentType: NSAttributedString.DocumentType.html,
-                                          .characterEncoding: String.Encoding.utf8.rawValue],
-                                documentAttributes: nil)
+    /// Typeset once, on first use, and kept: HTML import is slow, and it spins
+    /// the run loop, so it cannot run inside a `static let`'s one-time initializer
+    /// (a nested access would re-enter it).
+    @MainActor private static var typeset: NSAttributedString?
+
+    @MainActor static var text: NSAttributedString? {
+        if let typeset { return typeset }
+        typeset = try? NSAttributedString(data: Data(html.utf8),
+                                          options: [.documentType: NSAttributedString.DocumentType.html,
+                                                    .characterEncoding: String.Encoding.utf8.rawValue],
+                                          documentAttributes: nil)
+        return typeset
     }
 
     func makeUIView(context: Context) -> UITextView {

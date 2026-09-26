@@ -138,6 +138,9 @@ struct PrivacyChoicesView: View {
             } footer: {
                 Text("Share screens visited, sessions, and app and device information with Google Analytics to understand app usage.")
                     .foregroundStyle(Color(uiColor: .label))
+                    // UITableView's phone footers: this text ⅓ pt higher, the next card ⅔ pt lower.
+                    .offset(y: FooterNudge.phone(-1.0 / 3.0))
+                    .padding(.bottom, FooterNudge.phone(2.0 / 3.0))
             }
             Section {
                 Toggle("Crash reports", isOn: $model.crashes)
@@ -148,6 +151,8 @@ struct PrivacyChoicesView: View {
             } footer: {
                 Text("Send crash reports, including stack traces and app and device information, to Google Firebase Crashlytics to help fix problems. Turning this off takes full effect the next time you start the app.")
                     .foregroundStyle(Color(uiColor: .label))
+                    .offset(y: FooterNudge.phone(-2.0 / 3.0))
+                    .padding(.bottom, FooterNudge.phone(1.0 / 3.0))
             }
             Section {
                 Button("Decline both") {
@@ -171,12 +176,23 @@ struct PrivacyChoicesView: View {
                 CancelButton { dismiss() }
             }
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Save choices") {
+                Button {
                     model.save()
                     dismiss()
+                } label: {
+                    // A plain UIBarButtonItem's title is set in the medium weight.
+                    Text("Save choices").fontWeight(.medium)
                 }
             }
         }
+    }
+}
+
+/// Sub-point corrections measured against UIKit's table on a phone; an iPad's
+/// table sets its footers differently.
+private enum FooterNudge {
+    static func phone(_ value: CGFloat) -> CGFloat {
+        UIDevice.current.userInterfaceIdiom == .phone ? value : 0
     }
 }
 

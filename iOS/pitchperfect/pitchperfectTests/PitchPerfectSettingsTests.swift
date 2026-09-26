@@ -152,7 +152,7 @@ final class PitchPerfectSettingsPresentationTests: PitchPerfectTestCase {
     func testTheSwitchesPersistAndShowTheirStateWhenReopened() throws {
         let app = try launch()
         app.ui.tap(id: "gearshape")
-        settle { app.topPresented !== app.host }
+        settle { app.sheet.elements.contains { ($0.accessibilityLabel ?? "").hasPrefix("Wake Lock") } }
         for label in ["Toggle Notes", "Wake Lock"] {
             let toggle = try XCTUnwrap(app.sheet.elements.first { ($0.accessibilityLabel ?? "").hasPrefix(label) })
             XCTAssertEqual(toggle.accessibilityValue, "0")

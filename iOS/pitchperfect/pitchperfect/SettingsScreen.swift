@@ -189,8 +189,10 @@ struct SettingsScreen: View {
                         }
                         .pickerStyle(.segmented)
                         .fixedSize()
+                        .offset(y: -2.0 / 3.0)
                         .accessibilityIdentifier("settings.theme")
                     }
+                    // UIKit's accessory control sat ⅔ pt higher in its cell.
                     .settingsRow(height: 52)
                 } header: {
                     PlateHeader("Pitch Pipe").settingsHeader()
@@ -202,10 +204,12 @@ struct SettingsScreen: View {
                         ActionRow(title: "Delete Account", busy: model.deleting, action: model.requestDelete)
                     }
                 } header: {
-                    PlateHeader("Account").settingsHeader()
+                    // UIKit's header and footer below the first section sat ⅓ and ⅔ pt higher.
+                    PlateHeader("Account").settingsHeader().padding(.bottom, -1.0 / 3.0)
                 } footer: {
                     Text("Log in to back up and synchronize your song list and settings.")
                         .settingsHeader()
+                        .offset(y: -2.0 / 3.0)
                 }
 
                 Section {
@@ -221,7 +225,7 @@ struct SettingsScreen: View {
                     .buttonStyle(UnhighlightedRowStyle())
                     .settingsRow(height: 51)
                 } header: {
-                    PlateHeader("Privacy").settingsHeader()
+                    PlateHeader("Privacy").settingsHeader().padding(.bottom, 1.0 / 3.0)
                 }
 
                 if model.isPrivateBuild {
@@ -242,8 +246,6 @@ struct SettingsScreen: View {
             .listStyle(.grouped)
             .scrollContentBackground(.hidden)
             .background(StaffBackground())
-            // The List's own scroll view, whichever rows happen to be built.
-            .background(EnclosedListFinder { SettingsScrollMemory.attach($0) }.frame(width: 0, height: 0))
         }
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
@@ -337,75 +339,6 @@ private struct ActionRow: View {
     }
 }
 
-/// Where Settings was scrolled to. UIKit presented one Settings controller for
-/// the app's lifetime, so reopening it (from any tab) found the table where it
-/// was left; each SwiftUI presentation builds a new List. The offset is filed as
-/// it changes and put back as the new List's content grows tall enough for it,
-/// unless the user scrolls first.
-@MainActor
-enum SettingsScrollMemory {
-    private static weak var list: UIScrollView?
-    private(set) static var offset: CGFloat?
-    /// The offset to hold the new list at while it settles.
-    private static var pending: CGFloat?
-    private static var attachedAt = Date.distantPast
-    /// How long a new List may still be laying out (and scrolling itself back to
-    /// the top) after it appears.
-    static let settlingTime: TimeInterval = 1
-    private static var restoring = false
-    private static var observations: [NSKeyValueObservation] = []
-
-    static func attach(_ scrollView: UIScrollView) {
-        guard list !== scrollView else { return }
-        list = scrollView
-        pending = offset
-        attachedAt = Date()
-        observations = [
-            scrollView.observe(\.contentSize) { view, _ in MainActor.assumeIsolated { restore(view) } },
-            scrollView.observe(\.contentOffset) { view, _ in MainActor.assumeIsolated { changed(view) } },
-        ]
-        restore(scrollView)
-    }
-
-    /// While settling, the list is held at the old place against its own layout;
-    /// the user's first drag (or the end of settling) hands it over.
-    private static var settling: Bool {
-        pending != nil && Date().timeIntervalSince(attachedAt) < settlingTime
-    }
-
-    private static func restore(_ view: UIScrollView) {
-        guard view === list, let target = pending, view.window != nil, view.bounds.height > 0 else { return }
-        guard settling, !view.isTracking, !view.isDragging else {
-            pending = nil
-            return
-        }
-        let top = -view.adjustedContentInset.top
-        let bottom = max(top, view.contentSize.height - view.bounds.height + view.adjustedContentInset.bottom)
-        let y = min(max(target, top), bottom)
-        guard view.contentOffset.y != y else { return }
-        restoring = true
-        view.contentOffset.y = y
-        restoring = false
-    }
-
-    /// A scroll: the user's, filed; the list's own while settling, undone.
-    private static func changed(_ view: UIScrollView) {
-        guard view === list, !restoring, view.window != nil else { return }
-        if pending != nil {
-            restore(view)
-            if pending != nil { return }
-        }
-        offset = view.contentOffset.y
-    }
-
-    static func forget() {
-        list = nil
-        offset = nil
-        pending = nil
-        observations = []
-    }
-}
-
 /// The UIKit rows took taps through a gesture recogniser on a table that allowed
 /// no selection: nothing highlighted when pressed.
 struct UnhighlightedRowStyle: ButtonStyle {
@@ -460,9 +393,104 @@ extension View {
 
     /// Settings as every tab presents it: a sheet with its own navigation bar.
     func settingsSheet(isPresented: Binding<Bool>) -> some View {
-        sheet(isPresented: isPresented) {
-            NavigationStack { SettingsScreen() }
+        background(SettingsPresenter(isPresented: isPresented).frame(width: 0, height: 0))
+    }
+}
+
+/// Settings as the UIKit app presented it: one controller for the app's life,
+/// presented from whichever tab asks, so reopening it (from any tab) finds it
+/// as it was left, scroll position and all.
+final class SettingsHost: UIHostingController<SettingsSheet> {
+    private struct Entry {
+        weak var window: UIWindow?
+        let host: SettingsHost
+    }
+
+    private static var hosts: [ObjectIdentifier: Entry] = [:]
+
+    static func existing(for window: UIWindow) -> SettingsHost? { hosts[ObjectIdentifier(window)]?.host }
+
+    /// The Settings for `window`'s app: one per window, kept as long as it is.
+    static func shared(for window: UIWindow) -> SettingsHost {
+        hosts = hosts.filter { $0.value.window != nil }
+        if let entry = hosts[ObjectIdentifier(window)] { return entry.host }
+        let host = SettingsHost()
+        hosts[ObjectIdentifier(window)] = Entry(window: window, host: host)
+        return host
+    }
+
+    /// Called once the sheet has gone, however it was closed.
+    var onClose: () -> Void = {}
+
+    private init() {
+        super.init(rootView: SettingsSheet())
+    }
+
+    @available(*, unavailable)
+    @MainActor required dynamic init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        if isBeingDismissed || presentingViewController == nil {
+            let close = onClose
+            onClose = {}
+            close()
         }
+    }
+}
+
+/// Settings with its own navigation bar.
+struct SettingsSheet: View {
+    var body: some View {
+        NavigationStack { SettingsScreen() }
+    }
+}
+
+/// Presents the window's `SettingsHost` while `isPresented` is true.
+private struct SettingsPresenter: UIViewControllerRepresentable {
+    @Binding var isPresented: Bool
+
+    final class Presenter: UIViewController {
+        /// Whether this tab's Settings is the one up: only its own tab closes it.
+        private var presenting = false
+
+        func sync(isPresented: Bool, close: @escaping () -> Void) {
+            guard isPresented != presenting else { return }
+            // Not during SwiftUI's update: a hosting controller made there never
+            // builds its NavigationStack's navigation controller.
+            DispatchQueue.main.async { [weak self] in
+                guard let self, let window = self.view.window else { return }
+                if isPresented {
+                    let host = SettingsHost.shared(for: window)
+                    guard !self.presenting, host.presentingViewController == nil else { return }
+                    self.presenting = true
+                    host.onClose = { [weak self] in
+                        self?.presenting = false
+                        close()
+                    }
+                    // From the window's root, not from this controller: a NavigationStack
+                    // presented from a controller inside another NavigationStack hands
+                    // its title and toolbar to the presenting screen's bar.
+                    var presenter = window.rootViewController ?? self
+                    while let next = presenter.presentedViewController { presenter = next }
+                    presenter.present(host, animated: true)
+                } else if self.presenting, let host = SettingsHost.existing(for: window),
+                          host.presentingViewController != nil, !host.isBeingDismissed {
+                    host.dismiss(animated: true)
+                }
+            }
+        }
+    }
+
+    func makeUIViewController(context: Context) -> Presenter {
+        let presenter = Presenter()
+        presenter.view.isHidden = true
+        return presenter
+    }
+
+    func updateUIViewController(_ presenter: Presenter, context: Context) {
+        let binding = $isPresented
+        presenter.sync(isPresented: isPresented) { binding.wrappedValue = false }
     }
 }
 

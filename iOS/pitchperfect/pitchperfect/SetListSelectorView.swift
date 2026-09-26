@@ -41,18 +41,6 @@ enum SetListSelectorMetrics {
         ])
     }
 
-    /// Where each position sits along the row: the frames UIKit's
-    /// `.fillProportionally` stack gave them.
-    @MainActor
-    static func positionSpans(titles: [String], width: CGFloat) -> [Range<CGFloat>] {
-        let frames = StackGeometry.frames(naturals: titles.map(naturalWidth(for:)), width: width)
-        // Positions are every other arranged view: position, hairline, position, …
-        return titles.indices.map { index in
-            let frame = frames[index * 2]
-            return frame.minX..<frame.maxX
-        }
-    }
-
     /// The width a position would like: its label (capped) plus both paddings.
     static func naturalWidth(for title: String) -> CGFloat {
         let label = ceil(labelText(title).size().width)

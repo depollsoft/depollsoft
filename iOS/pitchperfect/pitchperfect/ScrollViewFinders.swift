@@ -51,62 +51,57 @@ struct EnclosingScrollView: UIViewRepresentable {
     }
 }
 
-/// Finds the scroll view of the List this sits beside (as the List's background)
-/// and hands it over, independent of which of the List's rows exist yet.
-struct EnclosedListFinder: UIViewRepresentable {
-    let found: (UIScrollView) -> Void
+/// Sets the layout margins of the List cell this sits in. A SwiftUI List gives
+/// its cells margins of its own (16 or 20 pt, whatever the list's), and those
+/// place the edit-mode delete and reorder controls; UIKit's table put them at
+/// its margins. The reorder control sits 1.5 pt inside the cell's trailing margin.
+struct ListCellMargins: UIViewRepresentable {
+    let leading: CGFloat?
+    let trailing: CGFloat
 
-    final class Finder: UIView {
-        var found: (UIScrollView) -> Void = { _ in }
-        private weak var reported: UIScrollView?
+    /// A UITableView's: the delete control at `margin`, the reorder control ending `margin` from the edge.
+    static func table(_ margin: CGFloat) -> ListCellMargins {
+        ListCellMargins(leading: margin, trailing: margin + 1.5)
+    }
+
+    final class Setter: UIView {
+        var leading: CGFloat?
+        var trailing: CGFloat = 0
 
         override func didMoveToWindow() {
             super.didMoveToWindow()
-            find()
+            apply()
         }
 
         override func layoutSubviews() {
             super.layoutSubviews()
-            find()
+            apply()
         }
 
-        /// Looks for the List; it may build its scroll view a moment after this
-        /// joins the window, so a miss looks again on the next few turns.
-        private func find(attempt: Int = 0) {
+        func apply() {
             guard window != nil else { return }
-            var ancestor = superview
-            for _ in 0..<6 {
-                guard let current = ancestor else { break }
-                if let list = Self.firstCollectionView(in: current) {
-                    if list !== reported {
-                        reported = list
-                        found(list)
-                    }
-                    return
-                }
-                ancestor = current.superview
-            }
-            guard attempt < 20 else { return }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in self?.find(attempt: attempt + 1) }
-        }
-
-        private static func firstCollectionView(in view: UIView) -> UICollectionView? {
-            var queue = [view]
-            while !queue.isEmpty {
-                let next = queue.removeFirst()
-                if let list = next as? UICollectionView { return list }
-                queue.append(contentsOf: next.subviews)
-            }
-            return nil
+            var view = superview
+            while let current = view, !(current is UICollectionViewCell) { view = current.superview }
+            guard let cell = view as? UICollectionViewCell else { return }
+            var margins = cell.directionalLayoutMargins
+            if let leading { margins.leading = leading }
+            margins.trailing = trailing
+            guard cell.preservesSuperviewLayoutMargins || cell.directionalLayoutMargins != margins else { return }
+            cell.preservesSuperviewLayoutMargins = false
+            cell.directionalLayoutMargins = margins
         }
     }
 
-    func makeUIView(context: Context) -> Finder {
-        let finder = Finder()
-        finder.isUserInteractionEnabled = false
-        finder.isAccessibilityElement = false
-        return finder
+    func makeUIView(context: Context) -> Setter {
+        let setter = Setter()
+        setter.isUserInteractionEnabled = false
+        setter.isAccessibilityElement = false
+        return setter
     }
 
-    func updateUIView(_ finder: Finder, context: Context) { finder.found = found }
+    func updateUIView(_ setter: Setter, context: Context) {
+        setter.leading = leading
+        setter.trailing = trailing
+        setter.apply()
+    }
 }

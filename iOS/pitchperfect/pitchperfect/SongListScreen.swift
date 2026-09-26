@@ -405,17 +405,17 @@ private struct SongRows: View {
                             press: { pressed in pressed ? model.press(song) : model.release(song) },
                             activate: { model.activate(song) },
                             edit: { model.editSong(song) })
-                        .plateRow(contentIndent: model.isEditing ? SongRow.editingIndent : 0,
-                                  trailingOverhang: model.isEditing ? 40 : 0)
+                        // In edit mode the content starts past the delete control and
+                        // ends before the reorder control; the rule stays where it was.
+                        .plateRow(contentIndent: model.isEditing ? tableMargin + SongRow.deleteControlSpan : 0,
+                                  trailingOverhang: model.isEditing ? tableMargin + SongRow.reorderControlSpan : 0)
+                        .background(ListCellMargins.table(tableMargin).frame(width: 0, height: 0))
                         .id(ObjectIdentifier(song))
                         // Reordering is edit mode's; outside it a long press is a held note.
                         .moveDisabled(!model.isEditing)
                         .onAppear { model.rowAppeared(song, at: index) }
                         .onDisappear { model.rowDisappeared(song) }
-                        .background(EnclosingScrollView { list in
-                            model.listScrollView = list
-                            SongListMargins.apply(to: list, tableMargin: tableMargin)
-                        }.frame(width: 0, height: 0))
+                        .background(EnclosingScrollView { model.listScrollView = $0 }.frame(width: 0, height: 0))
                 }
                 .onDelete(perform: model.deleteSongs)
                 .onMove(perform: model.moveSongs)
@@ -435,21 +435,6 @@ private struct SongRows: View {
             }
             .modifier(ScrollMemory(model: model, songs: songs, proxy: proxy))
         }
-    }
-}
-
-/// UIKit put the edit controls at the table's margin; SwiftUI's list uses its
-/// own. (The reorder control on the other side already sat where UIKit's did.)
-enum SongListMargins {
-    static func apply(to list: UIScrollView, tableMargin: CGFloat) {
-        let shift = max(0, tableMargin - 16)
-        // The cells narrow by what the leading margin grew; the trailing margin
-        // gives it back to the reorder control.
-        let margins = UIEdgeInsets(top: list.layoutMargins.top, left: 16 + shift,
-                                   bottom: list.layoutMargins.bottom, right: max(0, 8 - shift))
-        guard list.preservesSuperviewLayoutMargins || list.layoutMargins != margins else { return }
-        list.preservesSuperviewLayoutMargins = false
-        list.layoutMargins = margins
     }
 }
 
@@ -533,23 +518,17 @@ struct SongRow: View {
                 Color(uiColor: .separator)
                     .frame(width: 1)
                     .padding(.leading, 22.0 / 3.0)
-                    .padding(.trailing, 15)
+                    .padding(.trailing, 9.5 - 1.0 / 3.0)
                     .accessibilityHidden(true)
             }
         }
-        // The list's leading margin puts the delete control at the table margin,
-        // as UIKit did, and moves the row's content along with it; the content
-        // takes the difference back on both sides.
-        .padding(.leading, isEditing ? -editShift : 0)
     }
 
-    private var editShift: CGFloat { max(0, tableMargin - 16) }
-
-    @Environment(\.tableMargin) private var tableMargin
-
-    /// How far edit mode moves a row's content in, past the delete control.
-    static let editingIndent: CGFloat = 124.0 / 3.0
-
+    /// With the cell's margins at the table's (see `ListCellMargins`), how far past
+    /// the leading margin edit mode starts a row's content (the delete control),
+    /// and how far past the trailing margin it ends it (the reorder control).
+    static let deleteControlSpan: CGFloat = 24
+    static let reorderControlSpan: CGFloat = 25.5
 }
 
 /// UIKit's detail-disclosure button.
@@ -594,7 +573,7 @@ private struct SongRowFace: View {
         }
         // Editing indents the row past the delete control and hands the trailing
         // edge to the accessory, as the UIKit cell's content view did.
-        .padding(.leading, isEditing ? 24 : 20)
+        .padding(.leading, 20)
         .padding(.trailing, isEditing ? 11 : 20)
         // 14 pt above and below the title (whose UILabel rounded its height up,
         // setting the text 2 px lower), plus the 1 pt a self-sizing UIKit cell

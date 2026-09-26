@@ -121,12 +121,20 @@ final class SongManagementUITests: XCTestCase {
     }
 
     /// A fresh app process given only the old storage (no earlier test code has
-    /// registered anything) shows the song. This replaces the simulator's saved
-    /// songs, as the one-time migration always did, and removes the song after.
+    /// registered anything) shows the song. The simulator's own songs are set
+    /// aside first and put back after, whatever happens in between.
     func testSongsSavedByTheOldAppDecodeInAFreshProcess() throws {
         let title = "Legacy \(Int(Date().timeIntervalSince1970) % 100_000)"
         let json = try JSONSerialization.data(withJSONObject: Self.legacySongs(named: title))
         app.terminate()
+        addTeardownBlock {
+            let restore = XCUIApplication()
+            restore.launchArguments = ["--uitesting"]
+            restore.launchEnvironment["PP_UNSTASH_SONGS"] = "1"
+            restore.launch()
+            restore.terminate()
+        }
+        app.launchEnvironment["PP_STASH_SONGS"] = "1"
         app.launchEnvironment["PP_LEGACY_SONGS_JSON"] = String(decoding: json, as: UTF8.self)
         app.launch()
         navigateToSongs()
@@ -139,12 +147,8 @@ final class SongManagementUITests: XCTestCase {
         app.launchEnvironment["PP_LEGACY_SONGS_JSON"] = nil
         app.launch()
         navigateToSongs()
-        let migrated = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(title), ")).firstMatch
-        XCTAssertTrue(migrated.waitForExistence(timeout: 10))
-        migrated.swipeLeft()
-        let delete = app.buttons["Delete"].firstMatch
-        XCTAssertTrue(delete.waitForExistence(timeout: 5))
-        delete.tap()
-        XCTAssertTrue(migrated.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(title), ")).firstMatch
+            .waitForExistence(timeout: 10), "migrated into the set-list storage")
+        app.terminate()
     }
 }

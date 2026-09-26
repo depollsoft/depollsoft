@@ -274,3 +274,15 @@ both platforms for when it grows one.
   reserved project `demo-pitchperfect`. Each test creates a fresh user and two
   clients: local edits produce the documented documents; remote create,
   rename, reorder, and delete update the local model.
+
+## Settings sync
+
+Toggle Notes and Wake Lock ride on the user document (`users/{uid}`, fields
+`toggleNotes` and `wakeLock`) alongside the set lists. A change made on the
+device is written with `merge: true`; a value that arrives from the account is
+applied locally only, never written back, and a field the account does not have
+yet leaves the device's value alone. That is Android's behaviour
+(`SettingsModel.restoring`); on iOS `DPSettingsModel` applies snapshots without
+going through its setters. `DPSongListSyncEmulatorTests.testSettingsFollowTheAccountBothWays`
+covers both directions against the emulator.
+

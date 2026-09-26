@@ -125,10 +125,20 @@ struct SetListsScreen: View {
         List {
             ForEach(model.lists, id: \.id) { list in
                 row(list)
+                    .overlay(alignment: .top) {
+                        // UIKit's table ruled its top at the same 20 pt inset as its
+                        // rows; a List's section rule runs to its own 16 pt margin.
+                        if list === model.lists.first {
+                            Plate.hairline.frame(height: 1).padding(.horizontal, 20)
+                                .accessibilityHidden(true)
+                        }
+                    }
             }
             .onMove(perform: model.move)
+            .listSectionSeparator(.hidden, edges: .top)
         }
         .plateList(fullScreen: true)
+        .tableMargins()
         .environment(\.editMode, .constant(.active))
         .navigationTitle("Set Lists")
         .navigationBarTitleDisplayMode(.inline)
@@ -159,7 +169,7 @@ struct SetListsScreen: View {
             model.select(list)
             dismiss()
         }
-        .plateRow(trailingOverhang: home ? 0 : 40, margin: 20)
+        .modifier(SetListRowFrame(movable: !home))
         // The UIKit table's own separator colour, not the system default.
         .listRowSeparatorTint(Plate.hairline)
         .moveDisabled(home)
@@ -192,6 +202,19 @@ struct SetListsScreen: View {
     }
 }
 
+/// A row's rule at the table's 20 pt inset, and the reorder control where UIKit's
+/// table put it: ending the system table margin from the edge.
+private struct SetListRowFrame: ViewModifier {
+    let movable: Bool
+    @Environment(\.tableMargin) private var tableMargin
+
+    func body(content: Content) -> some View {
+        content
+            .plateRow(trailingOverhang: movable ? tableMargin + SongRow.reorderControlSpan : 0, margin: 20)
+            .background(ListCellMargins(leading: nil, trailing: tableMargin + 1.5).frame(width: 0, height: 0))
+    }
+}
+
 /// The row menu's glyph at the size a system UIButton drew it there (18.5 pt).
 private enum SetListRowGlyph {
     static let ellipsis = UIImage(systemName: "ellipsis.circle",
@@ -211,6 +234,7 @@ private struct SetListRow<MenuContent: View>: View {
     let menuIdentifier: String
     /// What VoiceOver says about the row (the tappable part), apart from its menu.
     let rowLabel: String
+    @Environment(\.tableMargin) private var tableMargin
     let rowIdentifier: String
     let moveActions: [(name: String, perform: () -> Void)]
     @ViewBuilder let menu: () -> MenuContent
@@ -265,7 +289,9 @@ private struct SetListRow<MenuContent: View>: View {
             }
             .menuIndicator(.hidden)
             .padding(.leading, 8)
-            .padding(.trailing, movable ? 4 + 22.0 / 3.0 : 4)
+            // UIKit's button ended 4 pt inside its content view, which in turn
+            // ended (24 - table margin) before the reorder control.
+            .padding(.trailing, movable ? 4 + 22.0 / 3.0 - (tableMargin - 14) : 4)
             .accessibilityLabel("Actions for \(name)")
             .accessibilityIdentifier(menuIdentifier)
         }

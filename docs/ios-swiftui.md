@@ -93,16 +93,23 @@ the XCUITest bundles and `scripts/release/capture.py` use them.
   table's starts at the top), and `BarSymbol` draws bar symbols at UIKit's bar
   configuration. `plateList()` and `plateRow()` reproduce the UITableView rows:
   rules at the table margin UIKit would give the screen (`tableMargins(style:)`
-  measures a real table of the screen's style filling a navigation screen the
-  size of the screen's own container, so a sheet is measured as a sheet: 20 pt
-  on an iPhone 17, 16 pt on an iPad; Set Lists and Add songs set 20 pt
-  themselves), 1 pt rows added for separators, rules that stay put in edit
-  mode. The tab bar is tinted with the label colour through UIKit
-  (`tabBar.tintColor`) and SwiftUI alike wherever it is the bottom bar (SwiftUI
-  rewrites the bar's tint on every update); iPadOS 18's top tab bar kept the
+  measures, once per width and size classes, a real table of the screen's style
+  filling a navigation screen as wide as the screen's own container, so a sheet
+  is measured as a sheet: 20 pt on an iPhone 17, 16 pt on an iPad; a new screen
+  starts from the last margin measured, so nothing flashes from one to the
+  other; Set Lists and Add songs set their 20 pt rules themselves), 1 pt rows
+  added for separators, rules that stay put in edit mode. In edit mode the
+  List's delete and reorder controls are placed by each cell's layout margins,
+  which SwiftUI sets itself (16 or 20 pt): `ListCellMargins` sets them to the
+  table margin (the reorder control sits 1.5 pt inside the trailing one), which
+  puts the delete, detail-disclosure and reorder controls exactly where UIKit's
+  table put them on both devices. The tab bar (`TabBarChrome`) is tinted with the
+  label colour through UIKit (`tabBar.tintColor`) and SwiftUI alike wherever it
+  is a bottom bar, iPad at compact width included (SwiftUI rewrites the bar's
+  tint on every update); iPadOS 18's top tab bar (regular width) kept the
   system accent. Unselected items take the label colour through the bar's
-  appearance, as UIKit's items did: SwiftUI's leave them in the secondary
-  label colour, which an alert greys far past UIKit's.
+  appearance, as UIKit's items did: SwiftUI's leave them in the secondary label
+  colour, which an alert greys far past UIKit's.
 - **Sound.** `NotePlayer` sounds every note and makes playing observable.
   Notes, Keys and Songs rows press through `TouchPressSurface`, a transparent
   `UIView` with the UIKit cells' touch semantics: a press lasts until that
@@ -184,20 +191,20 @@ Deliberate differences from the UIKit screens:
 - Keys and Settings declared portrait-only orientation masks that UIKit never
   consulted (a plain navigation controller and a page sheet do not ask), so
   they were not carried over; nothing changes for users.
-- Settings remembers its scroll position across presentations (UIKit
-  reused one Settings controller for the app's life): the List's own scroll
-  view is found beside it, whichever rows exist, the offset is filed as the
-  user scrolls, and a new List is held at it while it settles (a second) unless
-  the user drags. Two held songs are both lit, as each UIKit cell kept its own
-  highlight.
+- Settings is one controller for the window's life (`SettingsHost`), presented
+  from UIKit as the UIKit app presented its singleton, so reopening it from any
+  tab finds it as it was left, scroll position included. It is made outside
+  SwiftUI's update (a hosting controller made during one never builds its
+  NavigationStack's navigation controller) and presented from the window's
+  root (a NavigationStack presented from inside another hands its bar items
+  to the presenting screen). Two held songs are both lit, as each UIKit cell
+  kept its own highlight.
 - Under an alert the unselected tab glyphs come out a little lighter than
   UIKit's, though every tint in the bar's hierarchy now matches UIKit's; the
   selected item and the titles match.
-- The row, rule and bar metrics match to the pixel on iPhone, edit mode
-  included: the Songs List's margins are set so its delete and reorder
-  controls sit where UIKit's did. On iPad SwiftUI places its edit controls,
-  and the edited rows' content, 4 pt from where UIKit had them; the List does
-  not follow its margins there.
+- The row, rule and bar metrics match to the pixel on iPhone and iPad, edit
+  mode included (see `ListCellMargins` above); a test compares the controls'
+  frames with a real UITableView row in edit mode laid out at the same width.
 - Keys still opens centred on C (above). Replaying UIKit's first scroll, made
   before its table had a size, does not reproduce where it landed; UIKit's
   iPad table opened at the top and its iPhone 17 table about two and a half

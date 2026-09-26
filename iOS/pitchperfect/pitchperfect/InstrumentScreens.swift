@@ -197,10 +197,17 @@ extension EnvironmentValues {
 }
 
 /// Measures the margin UIKit gives a table of the screen's style in the screen's
-/// own container, again whenever that container's size or size classes change.
+/// own container, again whenever that container's width or size classes change.
+/// It starts from the last margin measured for that style, so a screen does not
+/// flash from one margin to the other while it is measured.
 private struct TableMarginProbe: ViewModifier {
     let style: UITableView.Style
-    @State private var margin: CGFloat = 20
+    @State private var margin: CGFloat
+
+    init(style: UITableView.Style) {
+        self.style = style
+        _margin = State(initialValue: TableMargin.lastMeasured(style))
+    }
 
     func body(content: Content) -> some View {
         content
@@ -234,9 +241,10 @@ private struct TableMarginProbe: ViewModifier {
             }
 
             private func measure() {
-                // The screen's own controller's view: its size is the container's.
+                // The screen's own controller's view: its width is the container's.
                 guard let window, let container = owningViewController?.view, container.bounds.width > 0 else { return }
-                let key = TableMargin.Container(size: container.bounds.size, traits: container.traitCollection, style: style)
+                let key = TableMargin.Container(width: container.bounds.width, traits: container.traitCollection,
+                                                style: style)
                 guard key != measuredFor else { return }
                 measuredFor = key
                 let margin = TableMargin.measure(key, in: window)
@@ -260,43 +268,57 @@ private struct TableMarginProbe: ViewModifier {
     }
 }
 
+@MainActor
 enum TableMargin {
-    /// What a table's margins depend on: the size of the screen it fills, that
-    /// screen's size classes and the table's style.
-    struct Container: Equatable {
-        var size: CGSize
+    /// What a table's margins depend on: the width of the screen it fills, that
+    /// screen's size classes and the table's style (not its height).
+    struct Container: Hashable {
+        var width: CGFloat
         var horizontal: UIUserInterfaceSizeClass
         var vertical: UIUserInterfaceSizeClass
         var style: UITableView.Style
 
-        init(size: CGSize, traits: UITraitCollection, style: UITableView.Style) {
-            self.size = size
+        init(width: CGFloat, traits: UITraitCollection, style: UITableView.Style) {
+            self.width = width
             horizontal = traits.horizontalSizeClass
             vertical = traits.verticalSizeClass
             self.style = style
         }
     }
 
+    private static var measured: [Container: CGFloat] = [:]
+    private static var last: [UITableView.Style: CGFloat] = [:]
+
+    /// The last margin measured for tables of `style`, or the device's usual one.
+    static func lastMeasured(_ style: UITableView.Style) -> CGFloat {
+        last[style] ?? (UIDevice.current.userInterfaceIdiom == .pad ? 16 : 20)
+    }
+
     /// A table's leading layout margin when it fills a plain screen of `container`'s
-    /// size in a navigation controller, as the UIKit screens' tables did (a hosting
+    /// width in a navigation controller, as the UIKit screens' tables did (a hosting
     /// controller has other system margins), safe area aside (the List handles that).
+    /// Measured once per container.
     static func measure(_ container: Container, in window: UIWindow) -> CGFloat {
+        if let margin = measured[container] {
+            last[container.style] = margin
+            return margin
+        }
         let screen = UIViewController()
         let navigation = UINavigationController(rootViewController: screen)
         navigation.traitOverrides.horizontalSizeClass = container.horizontal
         navigation.traitOverrides.verticalSizeClass = container.vertical
-        navigation.view.frame = CGRect(origin: .zero, size: container.size)
+        navigation.view.frame = CGRect(x: 0, y: 0, width: container.width, height: 480)
         navigation.view.isHidden = true
         window.addSubview(navigation.view)
         defer { navigation.view.removeFromSuperview() }
-        navigation.view.layoutIfNeeded()
-        let table = UITableView(frame: screen.view.bounds, style: container.style)
-        table.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        let table = UITableView(frame: CGRect(x: 0, y: 0, width: container.width, height: 480), style: container.style)
         table.insetsLayoutMarginsFromSafeArea = false
         screen.view.addSubview(table)
         navigation.view.layoutIfNeeded()
-        table.layoutIfNeeded()
-        return table.layoutMargins.left
+        let margin = table.layoutMargins.left
+        measured[container] = margin
+        last[container.style] = margin
+        return margin
     }
 }
 

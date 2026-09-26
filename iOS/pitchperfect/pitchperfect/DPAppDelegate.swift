@@ -150,12 +150,7 @@ final class DPTestAppDelegate: UIResponder, UIApplicationDelegate {
 enum PitchPerfectMain {
     static func main() {
 #if DEBUG
-        // UI tests hand a fresh process the old app's saved songs this way; only
-        // the defaults are written, so nothing is registered before the store reads.
-        if let json = ProcessInfo.processInfo.environment["PP_LEGACY_SONGS_JSON"],
-           let songs = try? JSONSerialization.jsonObject(with: Data(json.utf8)) {
-            UserDefaults.standard.set(songs, forKey: DPSongsModel.legacySongsKey)
-        }
+        UITestSongStore.prepare(ProcessInfo.processInfo.environment)
 #endif
         if DPAppDelegate.isRunningTests {
             UIApplicationMain(CommandLine.argc, CommandLine.unsafeArgv, nil, NSStringFromClass(DPTestAppDelegate.self))
@@ -177,3 +172,38 @@ struct PitchPerfectApp: App {
         }
     }
 }
+
+#if DEBUG
+/// Launch hooks for UI tests that need the song store in a particular state,
+/// applied before anything reads it. Only defaults are touched, so nothing is
+/// registered or decoded before the store does it itself.
+enum UITestSongStore {
+    private static let keys = [DPSongsModel.songListsKey, DPSongsModel.currentListKey, DPSongsModel.legacySongsKey]
+    private static func stashed(_ key: String) -> String { "depollsoft.pitchperfect.uitest.stash." + key }
+    private static let stashMarker = "depollsoft.pitchperfect.uitest.stashed"
+
+    static func prepare(_ environment: [String: String], defaults: UserDefaults = .standard) {
+        // PP_STASH_SONGS: set the simulator's own songs aside (once) for a test.
+        if environment["PP_STASH_SONGS"] == "1", !defaults.bool(forKey: stashMarker) {
+            for key in keys {
+                defaults.set(defaults.object(forKey: key), forKey: stashed(key))
+                defaults.removeObject(forKey: key)
+            }
+            defaults.set(true, forKey: stashMarker)
+        }
+        // PP_LEGACY_SONGS_JSON: the old app's saved songs, as it stored them.
+        if let json = environment["PP_LEGACY_SONGS_JSON"],
+           let songs = try? JSONSerialization.jsonObject(with: Data(json.utf8)) {
+            defaults.set(songs, forKey: DPSongsModel.legacySongsKey)
+        }
+        // PP_UNSTASH_SONGS: put them back, replacing whatever the test left.
+        if environment["PP_UNSTASH_SONGS"] == "1", defaults.bool(forKey: stashMarker) {
+            for key in keys {
+                defaults.set(defaults.object(forKey: stashed(key)), forKey: key)
+                defaults.removeObject(forKey: stashed(key))
+            }
+            defaults.removeObject(forKey: stashMarker)
+        }
+    }
+}
+#endif
