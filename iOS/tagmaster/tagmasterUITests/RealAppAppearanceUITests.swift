@@ -197,8 +197,10 @@ final class RealAppAppearanceUITests: TagMasterUITestCase {
         return true
     }
 
+    /// Screenshots stay in portrait pixels: a phone's landscape page bar lies along
+    /// their left edge, and its glass must stay out of the region.
     private var landscapeRegion: CGRect {
-        pad ? CGRect(x: 0.45, y: 0.45, width: 0.5, height: 0.45) : CGRect(x: 0.1, y: 0.45, width: 0.8, height: 0.45)
+        pad ? CGRect(x: 0.45, y: 0.45, width: 0.5, height: 0.45) : CGRect(x: 0.22, y: 0.36, width: 0.55, height: 0.3)
     }
 
     func testTheDetailShowsThePoleOnEveryPageInBothAppearances() throws {

@@ -24,6 +24,9 @@ struct TMPageScroll<Content: View>: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 4)
         }
+        // UIKit's scroller ended at the safe area's foot (its keyboard guide), above the
+        // page bar, and clipped there; the page never scrolled beneath the bar.
+        .clipped()
         .background(TMReadableProbe(width: $readable).accessibilityHidden(true))
     }
 }

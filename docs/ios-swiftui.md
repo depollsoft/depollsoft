@@ -255,9 +255,11 @@ each over an `@Observable` model.
 - **Catalog access is injected.** `TMCatalog` runs queries (tests pass
   `TMFixtureCatalog`), and `TMTagStore` loads rows on demand.
   `DPTagQueryResult.failed` separates "no matches" from "catalog unreachable".
-- **UIKit metrics are copied deliberately.** `tmLabelMetrics` lays text out on
-  UILabel's line-height grid. Rows use UITableViewCell's 20pt margins and
-  section-aware separator insets. Filters keep `UISegmentedControl` because it
+- **UIKit metrics are copied deliberately.** `tmLabelMetrics` lays text out as
+  UILabel does: lines a line height plus the font's leading apart, the whole
+  rounded up to the pixel grid (a wrapped two-line facts line was 2.5 pt short
+  on iPad before the leading was added). Rows use UITableView's measured
+  margins (below) and section-aware separator insets. Filters keep `UISegmentedControl` because it
   sizes segments to their titles, and fall back to a menu when a row is narrow
   or the text size is an accessibility size.
 - **Alerts.** The list-naming alert stays a `UIAlertController`
@@ -267,10 +269,17 @@ each over an `@Observable` model.
   (`TMBackdrop`, applied by `TMScreenBackground` alone):
   - `.own` on a phone or a collapsed split: the screen's colour and a pole
     fitted to it.
-  - `.windowSlice` beside the list (the detail column, the placeholder, and on
-    iOS 17 the list column too): the colour plus the screen's slice of one
-    window-wide pole (`TMWindowWatermark`), so both columns show a single pole.
-  - `.glassColumn` for the list column from iOS 18: the screen draws nothing;
+  - `.windowSlice` beside the list (the detail column, the placeholder, and
+    before iOS 26 the list column too): the colour plus the screen's slice of
+    one window-wide pole (`TMWindowWatermark`), so both columns show a single
+    pole. The slice is a small UIKit view that places the pole from its own live
+    position in the window (and follows it for a moment after anything that can
+    move it), not from SwiftUI's global frame: UIKit moves a pushed, revealed or
+    resized screen without SwiftUI laying it out again, and a slice placed from
+    an earlier frame would land a column away. Before iOS 26 UIKit's list column
+    was a clear view over the split's pole, which the slice reproduces exactly
+    without depending on the column's own fill being cleared.
+  - `.glassColumn` for the list column from iOS 26: the screen draws nothing;
     UIKit's glass sidebar is the surface and the split's pole lies beneath it.
     Grouped screens colour their hosting view there (`TMPageColorHook`), as
     UIKit did. Browse's pages are the one place something must be cleared: the
@@ -278,14 +287,22 @@ each over an `@Observable` model.
   Detail pages draw theirs inside each TabView page (`tmTabPageBackground`), so
   no UIKit container needs clearing. Columns get their policy through the route
   wrappers (`tmRoute(in:)`); a stack does not pass its environment to pushed
-  screens. `RealAppAppearanceUITests` checks the pole's grey and diagonal spread
-  in the launched app, in light and dark (`--appearance`, debug builds), on
-  every detail page, landscape, the iPad placeholder, Home, each Browse page, a
-  list and pushed results.
-- **Margins.** Rows read the table margin from the environment: 20 points on
-  iPhone, 16 in the iPad sidebar (`tmTableMargin`). Inset-grouped screens
-  (Settings, Search, the list picker) set `contentMargins` to UIKit's card
-  position and pass the matching row inset down as `tmInsetRowMargin`. Rows apply it with
+  screens. `RealAppAppearanceUITests` checks the pole in the launched app, in
+  light and dark (`--appearance`, debug builds): its grey spread as a diagonal
+  band on every detail page, landscape, the iPad placeholder, Home, each Browse
+  page, a list and pushed results (on iPad in the list column where it draws a
+  slice, and in the detail column), and on iPad that the detail's pole stays
+  where the placeholder's was after page changes, a rotation and a keyboard.
+- **Margins.** UITableView's margins are measured, not assumed
+  (`TMTableMarginReader`: hidden plain and inset-grouped tables laid out at the
+  column's size, in the hierarchy only while they are measured). UIKit gives 20
+  points on most phones but 16 on an iPhone SE and in the iPad list column, and
+  not by width alone: a 375-point window is 20 on an iPhone 17 and 16 on an SE.
+  Each column passes its measurement down (`tmTableMargin`, `tmGroupedMargin`,
+  `tmGroupedTextInset`); inset-grouped screens (Settings, Search) put their
+  cards on the grouped margin and pass the row inset that puts text where
+  UIKit's cell put it down as `tmInsetRowMargin`. The list picker measures its
+  own sheet or popover. Rows apply it with
   `tmInsetRow()`, read inside the list: a screen's own `@Environment` sees the
   value from above its list, before the list's modifiers set it.
 - **UIKit controls kept where SwiftUI cannot match.** The filter menu fallback
@@ -363,7 +380,7 @@ each over an `@Observable` model.
   a chosen tag kept on top when the split collapses. The collapsed column is
   stored (`preferredCompactColumn`), decided at collapse and then following
   Back, as UIKit's top-column choice applied only at the moment of collapse.
-  The list column is glass only from iOS 18; on iOS 17 its screens draw their
+  The list column is glass only from iOS 26; before that its screens draw their
   window slice (`TMSplitRoot.backdrops`).
 - **Routing.** `TMRouter` owns the list stack, the detail column's stack (the
   sheet music reader) and the tag beside the list, which it reuses from tag to
@@ -434,14 +451,24 @@ each over an `@Observable` model.
     than holding it half-open under it.
 - **Behaviour that follows UIKit (second and third reviews).** Home and list
   rows are disabled while editing, as UIKit's tables did not select then; their
-  delete and reorder controls stay. Open Tag takes an edit whole when what was
+  delete and reorder controls stay. A tag row's facts keep, while editing, the
+  lines they had at rest and truncate the rest, as UIKit's rows kept their
+  height when the edit controls came in. Disabled bar items use UIKit's disabled
+  ink (a title and an image differ slightly, as UIKit's did), and Edit is set
+  in UIKit's medium weight. Summary and Details scroll above the page bar and
+  clip there, as UIKit's scroller ended at the safe area's foot; the key's
+  outline takes Sheet Music's height when that is the taller. Open Tag takes an edit whole when what was
   typed or pasted holds a digit and refuses it otherwise, as the UIKit field did,
   so a pasted "1e3" stays "1e3" and opens nothing instead of becoming tag 13.
 - **Accepted differences.** SwiftUI's edit-mode delete control reads "Remove"
-  to VoiceOver (UIKit's read "Delete"). iOS 17 layouts are not checked on a
-  simulator here (only iOS 26.5 is installed).
+  to VoiceOver (UIKit's read "Delete"). iOS 17 and 18 layouts are not checked on
+  a simulator here: only iOS 26.5 is installed, and Xcode 27 offers no older
+  simulator runtime to download. Random Tag says a tag "couldn't be loaded" when
+  the catalog can't be reached, where UIKit, which could not tell that apart
+  from no matches, said none could be selected; the query itself is UIKit's
+  (uncached, ids only).
 - **Remaining differences from UIKit.** The detail catalog's iPad goldens were
   recaptured with the real Home in the list column (the first ones used an
-  empty stand-in). Open: in the iPad sidebar, tag rows' media marks sit about
-  1.7 pt higher than UIKit's (about 4% of a Browse capture).
+  empty stand-in). The iPad sidebar's tag rows, once 1.7 pt off where a facts
+  line wrapped, now match (Browse and results under 0.1% of pixels).
 

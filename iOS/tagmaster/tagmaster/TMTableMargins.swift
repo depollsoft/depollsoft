@@ -39,8 +39,6 @@ struct TMTableMarginReader: UIViewRepresentable {
             accessibilityElementsHidden = true
             grouped.dataSource = self
             grouped.register(UITableViewCell.self, forCellReuseIdentifier: "row")
-            addSubview(plain)
-            addSubview(grouped)
         }
 
         @available(*, unavailable)
@@ -59,6 +57,14 @@ struct TMTableMarginReader: UIViewRepresentable {
         override func layoutSubviews() {
             super.layoutSubviews()
             guard window != nil, bounds.width > 0 else { return }
+            // The tables join the hierarchy only while they are measured, so nothing
+            // looking for a screen's scroll view ever finds one of them.
+            addSubview(plain)
+            addSubview(grouped)
+            defer {
+                plain.removeFromSuperview()
+                grouped.removeFromSuperview()
+            }
             let frame = CGRect(x: 0, y: 0, width: bounds.width, height: 200)
             plain.frame = frame
             grouped.frame = frame
