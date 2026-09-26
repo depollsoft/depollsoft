@@ -196,8 +196,21 @@ each over an `@Observable` model.
 - **Alerts.** The list-naming alert stays a `UIAlertController`
   (`TMListNamePrompt`, presented by `TMAlertPresenter`) because its message has
   to follow the typing. Every other alert is a SwiftUI `.alert`.
-- **Watermark.** `TMScreenBackground` draws the barber pole on phones and
-  stays clear beside the iPad split's single shared watermark.
+- **Watermark.** Every screen and every detail page draws its own backdrop
+  (`TMScreenBackground`, `tmTabPageBackground`) instead of relying on UIKit's
+  tab and column views being cleared in time. Inside the iPad split a screen
+  that must be opaque draws the colour plus its slice of the one window-wide
+  pole (`TMWindowWatermark`, placed by `tmWindowCanvas`), so the split still
+  shows a single continuous watermark. `RealAppAppearanceUITests` samples the
+  pole's pixels in the launched app, on every page and in both appearances.
+- **Margins.** Rows read the table margin from the environment: 20 points on
+  iPhone, 16 in the iPad sidebar (`tmTableMargin`). Inset-grouped screens
+  (Settings, Search, the list picker) set `contentMargins` to UIKit's card
+  position and pass the matching row inset down as `tmInsetRowMargin`.
+- **UIKit controls kept where SwiftUI cannot match.** The filter menu fallback
+  is UIKit's gray menu button (`TMFilterMenuButton`). Its representable answers
+  an unproposed width with its natural width, or `ViewThatFits` never picks the
+  segmented control.
 - Captures: `TagListsScreenCatalogTests` (iPhone `iphone-*`, iPad `ipad-*`).
 
 ## Tag Master tag detail
@@ -227,20 +240,33 @@ each over an `@Observable` model.
   items twice, once off screen, so only the copy in a window presents, once it has its
   final size. `TMPageTabBarBridge` gives the TabView's bar the
   `page-tab-bar`/`page-<Title>` identifiers and keeps it a bottom bar on iPad.
+- **Readable width.** `TMPageScroll` measures UIKit's readable guide in place
+  (`TMReadableProbe`, a view with 16-point margins) rather than assuming
+  672 points; on iOS 26 the guide is 896 points wide.
+- **UIKit-hosted pieces.** Sheet Music is UIKit's filled button
+  (`TMSheetMusicButton`), and Share presents `UIActivityViewController`
+  (`TMShareSheet`) with the title line and the link as two items, as before.
 - **Parity notes.** Bar symbols are the same `UIImage` a bar button item gets, offset
-  by its alignment insets. `TMFollowsUIKitTint` reads the live UIKit tint so accent
-  colours dim behind sheets as UIKit's did. Beside a list on iPad the TabView sits one
+  by its alignment insets. `TMFollowsUIKitTint` reads the live UIKit tint once per
+  route (accent and dimmed state together) so accent colours dim behind sheets as
+  UIKit's did. It must sit inside `tmClearColumnBackground`: `containerBackground`
+  only works as the outermost modifier of a column's root. Bar buttons dim their
+  white ink themselves; the bar keeps `tintAdjustmentMode = .normal` so Back
+  does not dim twice, and the page bar keeps unselected items in `.label`. Beside a list on iPad the TabView sits one
   pixel inside the column's safe area; flush, it grows into the unsafe strip under the
   floating list. That pixel is the remaining iPad difference.
 
 ## Tag Master shell
 
 - **Entry.** `TagMasterMain` (`TMShell.swift`) starts the SwiftUI `TagMasterApp`,
-  or a bare `TMTestAppDelegate` host under XCTest. `DPAppDelegate` keeps the
-  launch work (Firebase, consent, the cache serializers, list sync) through
-  `@UIApplicationDelegateAdaptor`. Opened URLs go to the sign-in providers first
-  (`+[DPAppDelegate handleAuthURL:]`) and otherwise to the router; Privacy
-  choices is offered whenever the scene becomes active.
+  or a bare `TMTestAppDelegate` host under XCTest. `DPAppDelegate` (now Swift)
+  keeps the launch work (Firebase, consent, the cache serializers, list sync)
+  through `@UIApplicationDelegateAdaptor`, with the saved-tag helpers beside it.
+  Opened URLs go to the sign-in providers first (`DPAppDelegate.handleAuthURL`,
+  with `authCanHandle` injectable for tests) and otherwise to the router.
+  Privacy choices is offered on the first active phase too
+  (`onChange(of:initial: true)`), from the key window's root once it exists.
+  `TMWindowTint` gives the window the accent before any screen appears.
 - **Layout.** iPhone is one `NavigationStack` (`TMStackRoot`) with Home at its
   root. iPad is a `NavigationSplitView` (`TMSplitRoot`): Home's stack in a
   320–400 pt column (36% of the width), the tag or `TMTagPlaceholder` beside it,
@@ -269,7 +295,14 @@ each over an `@Observable` model.
   `TMEditButton` for Edit/Done. `tmCharcoalBar` reaches the UIKit navigation
   controller SwiftUI draws with to give it the charcoal appearance, set back
   titles and, on Home, the Wickhop title (`TMHomeTitle`); SwiftUI has no
-  modifiers for those.
+  modifiers for those. SwiftUI rewrites the bar's title attributes when it
+  re-renders the toolbar, so the hook applies again on the next turn; its guard
+  compares the background colour. `toolbarBackground`/`toolbarColorScheme`
+  fight the hook and are not used.
+- **Real-app tests.** `RealAppAppearanceUITests` and `RealAppFlowUITests`
+  (tagmasterUITests) launch the app and check the watermark, page switching,
+  favouriting, making a list from a tag and search end to end. They leave the
+  saved lists alone (launch-argument defaults would shadow the app's writes).
 - **Tests.** `TMShellTestSupport.swift` hosts screens on a plain UIKit stack
   (`TMHostedScreen`, a test-only `TagDetailViewController`) and mounts the real
   shell (`mountShell`). `TMRouterTests` covers routing and the deep-link
@@ -305,11 +338,17 @@ each over an `@Observable` model.
     (`onAppear`) to the end of its disappearance (`onDisappear`), not from
     `viewDidAppear` to `viewWillDisappear`: a track keeps playing through a pop
     transition, and a back swipe the user abandons no longer stops it.
-  - "Rated" survives a refresh of the same tag; UIKit reset it to "Rate".
+  - "Rated" survives a refresh that fails; a refresh that loads the tag puts
+    Rate back, as UIKit did.
   - Before iOS 18 a list change arriving mid-scroll applies at once;
     `onScrollPhaseChange` (iOS 18) is what holds it until the scroll ends.
   - Swiping to delete a list closes the swipe before the confirmation, rather
     than holding it half-open under it.
+- **Kept differences, from the second audit.** On iOS 17 each column draws its
+  own watermark (no clear columns there). The Settings Privacy footer sits about
+  7 points lower (SwiftUI's one-line footer minimum). Home and list rows ignore
+  taps while editing, and Open Tag accepts only digits (a pasted "1e3" is
+  refused, not turned into 13).
 - **Remaining differences from UIKit.** The detail catalog's iPad goldens were
   recaptured with the real Home in the list column (the first ones used an
   empty stand-in). In the iPad sidebar, tag rows' media marks sit about 1.7 pt
