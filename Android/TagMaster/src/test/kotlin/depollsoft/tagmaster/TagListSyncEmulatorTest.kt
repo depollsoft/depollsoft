@@ -47,7 +47,7 @@ import java.net.URL
  * production Crashlytics project that way (see `ScreenTestSupport.startClean`).
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [28])
+@Config(application = Application::class, sdk = [35])
 class TagListSyncEmulatorTest {
     private lateinit var uid: String
     private lateinit var remoteDoc: DocumentReference
@@ -340,8 +340,15 @@ class TagListSyncEmulatorTest {
     private companion object {
         const val PROJECT = "demo-tagmaster"
         const val HOST = "localhost"
-        const val FIRESTORE_PORT = 8080
-        const val AUTH_PORT = 9099
+        // The Firebase SDKs' own variables, so the emulators can run on free ports:
+        // FIRESTORE_EMULATOR_HOST=localhost:8180 FIREBASE_AUTH_EMULATOR_HOST=localhost:9199
+        val FIRESTORE_PORT = emulatorPort("FIRESTORE_EMULATOR_HOST", 8080)
+        val AUTH_PORT = emulatorPort("FIREBASE_AUTH_EMULATOR_HOST", 9099)
+
+        fun emulatorPort(
+            variable: String,
+            default: Int,
+        ): Int = System.getenv(variable)?.substringAfterLast(':')?.toIntOrNull() ?: default
         const val SECOND_DEVICE_APP_NAME = "tagmaster-emulator-second-device"
         const val TIMEOUT_MS = 30_000L
     }
