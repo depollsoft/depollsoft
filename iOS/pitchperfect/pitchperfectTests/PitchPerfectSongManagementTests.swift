@@ -388,6 +388,8 @@ final class PitchPerfectSongManagementTests: PitchPerfectTestCase {
         app.songs.addSongsFromAnotherList()
         settle { app.topPresented !== app.host }
         let sheet = app.sheet
+        // The picker is presented from UIKit, as it always was; its bar lands a beat later.
+        sheet.wait { sheet.exists(id: "setlist.addSongs.confirm") && sheet.exists(label: "My Songs") }
         XCTAssertEqual(sheet.label(id: "xmark"), "Close")
         XCTAssertEqual(sheet.label(id: "setlist.addSongs.confirm"), "Add")
         XCTAssertFalse(sheet.isEnabled(id: "setlist.addSongs.confirm"))

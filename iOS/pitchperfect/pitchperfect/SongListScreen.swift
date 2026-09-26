@@ -418,7 +418,11 @@ private struct SongRows: View {
                             // SwiftUI's list uses its own. (The reorder control
                             // on the other side already sat where UIKit's did.)
                             list.preservesSuperviewLayoutMargins = false
-                            list.layoutMargins.left = tableMargin
+                            let shift = max(0, tableMargin - 16)
+                            list.layoutMargins.left = 16 + shift
+                            // The cells narrow by what the leading margin grew;
+                            // the trailing margin gives it back to the reorder control.
+                            list.layoutMargins.right = max(0, 8 - shift)
                         }.frame(width: 0, height: 0))
                 }
                 .onDelete(perform: model.deleteSongs)
@@ -551,10 +555,13 @@ struct SongRow: View {
                     .accessibilityHidden(true)
             }
         }
-        // The list's leading margin now puts the delete control at the table
-        // margin, as UIKit did; that moved the row's content by the same amount.
-        .offset(x: isEditing ? -max(0, tableMargin - 16) : 0)
+        // The list's leading margin puts the delete control at the table margin,
+        // as UIKit did, and moves the row's content along with it; the content
+        // takes the difference back on both sides.
+        .padding(.leading, isEditing ? -editShift : 0)
     }
+
+    private var editShift: CGFloat { max(0, tableMargin - 16) }
 
     @Environment(\.tableMargin) private var tableMargin
 

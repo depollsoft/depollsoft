@@ -67,7 +67,11 @@ final class SongManagementUITests: XCTestCase {
         field.typeText(title)
         let entered = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", title), object: field)
         XCTAssertEqual(XCTWaiter.wait(for: [entered], timeout: 30), .completed)
-        app.navigationBars["Add Song"].buttons["Done"].tap()
+        // Return dismisses focus so SwiftUI has the whole title before Done.
+        field.typeText("\n")
+        let save = app.navigationBars["Add Song"].buttons["Done"]
+        XCTAssertTrue(save.waitForExistence(timeout: 5))
+        save.tap()
         let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(title), ")).firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 10))
         app.navigationBars.buttons["Done"].tap()

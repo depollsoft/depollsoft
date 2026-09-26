@@ -470,7 +470,7 @@ struct KeysScreen: View {
         .toolbar {
             SettingsToolbarItem(isPresented: $showingSettings)
         }
-        .background(KeyModeBarItem(mode: $model.mode).frame(width: 0, height: 0))
+        .background(KeyModeBarItem(model: model).frame(width: 0, height: 0))
         .settingsSheet(isPresented: $showingSettings)
         .onDisappear { model.stopSounding() }
     }
@@ -481,11 +481,13 @@ struct KeysScreen: View {
 /// segmented Picker in a toolbar draws its own glass track inside the item's,
 /// and a hosted control in a toolbar item loses the item's inset.)
 struct KeyModeBarItem: UIViewControllerRepresentable {
-    @Binding var mode: KeyMode
+    let model: KeysModel
 
     final class Controller: UIViewController {
         let control = UISegmentedControl(items: ["Major", "Minor"])
-        var mode: Binding<KeyMode>?
+        var model: KeysModel? {
+            didSet { if model !== oldValue { follow() } }
+        }
         private lazy var item = UIBarButtonItem(customView: control)
 
         override func viewDidLoad() {
@@ -514,8 +516,20 @@ struct KeyModeBarItem: UIViewControllerRepresentable {
             owner.navigationItem.leftBarButtonItem = item
         }
 
+        /// Keeps the control on the model's mode, however it changes.
+        private func follow() {
+            guard let model else { return }
+            _ = view
+            withObservationTracking {
+                let index = model.mode.rawValue
+                if control.selectedSegmentIndex != index { control.selectedSegmentIndex = index }
+            } onChange: { [weak self] in
+                DispatchQueue.main.async { self?.follow() }
+            }
+        }
+
         @objc private func changed() {
-            mode?.wrappedValue = KeyMode(rawValue: control.selectedSegmentIndex) ?? .major
+            model?.mode = KeyMode(rawValue: control.selectedSegmentIndex) ?? .major
         }
     }
 
@@ -526,11 +540,7 @@ struct KeyModeBarItem: UIViewControllerRepresentable {
     }
 
     func updateUIViewController(_ controller: Controller, context: Context) {
-        controller.mode = $mode
-        _ = controller.view
-        if controller.control.selectedSegmentIndex != mode.rawValue {
-            controller.control.selectedSegmentIndex = mode.rawValue
-        }
+        controller.model = model
         controller.install()
     }
 }

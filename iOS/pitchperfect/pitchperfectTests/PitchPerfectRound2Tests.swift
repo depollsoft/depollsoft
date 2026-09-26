@@ -76,10 +76,10 @@ final class UIKitChromeTests: PitchPerfectTestCase {
         app.show(tab: 3)
         app.manageSetLists()
         ScreenCatalog.settle(0.3)
-        let tabBar = try XCTUnwrap(app.descendants(of: UITabBar.self, in: app.window).first)
         if TabTint.usesTopTabBar {
-            XCTAssertNil(TabTint.color)
+            XCTAssertNil(TabTint.color, "iPadOS 18's top tab bar kept the system accent")
         } else {
+            let tabBar = try XCTUnwrap(app.descendants(of: UITabBar.self, in: app.window).first)
             func rgba(_ color: UIColor) -> [CGFloat] {
                 var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
                 color.resolvedColor(with: tabBar.traitCollection).getRed(&r, green: &g, blue: &b, alpha: &a)
