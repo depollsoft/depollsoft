@@ -5,6 +5,7 @@ import android.content.Intent
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
 import bolts.Task
@@ -25,6 +26,18 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(application = Application::class, qualifiers = "w411dp-h891dp-xxhdpi")
 class PolishFlowScreenTest : ComposeScreenTest() {
+    @Test
+    fun theFootersCopyrightYearCanBePinned() {
+        depollsoft.tagmaster.ui.FooterYear.pinned = 1999
+        try {
+            launch(MeActivity::class.java)
+            compose.onNode(androidx.compose.ui.test.hasScrollToNodeAction()).performScrollToNode(androidx.compose.ui.test.hasText("© 1999"))
+            assertTrue(compose.onAllNodes(androidx.compose.ui.test.hasText("© 1999"), useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty())
+        } finally {
+            depollsoft.tagmaster.ui.FooterYear.pinned = null
+        }
+    }
+
     @Test
     fun enterTagIdRejectsAnOutOfRangeIdAndOpensAValidOne() {
         val activity = launch(MeActivity::class.java)

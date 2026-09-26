@@ -275,6 +275,17 @@ class TagListsTest {
         assertEquals(keys.reversed(), TagLists.customKeys.toList())
     }
 
+    @Test
+    fun aDragsOrderIsRefusedOnceTheListsHaveBeenReorderedUnderIt() {
+        val keys = listOf("One", "Two", "Three").map(TagLists::create)
+        // The drag began from keys and would move One to the end; a sync reverses the lists first.
+        assertTrue(TagLists.reorder(keys.reversed()))
+        assertFalse(TagLists.reorder(baseline = keys, order = listOf(keys[1], keys[2], keys[0])))
+        assertEquals("the synced order stands", keys.reversed(), TagLists.customKeys.toList())
+        assertTrue(TagLists.reorder(baseline = keys.reversed(), order = keys))
+        assertEquals(keys, TagLists.customKeys.toList())
+    }
+
     // MARK: - Keys
 
     @Test

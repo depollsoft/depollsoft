@@ -58,7 +58,6 @@ import depollsoft.tagmaster.R
 import depollsoft.tagmaster.SettingsActivity
 import depollsoft.tagmaster.SettingsModel
 import depollsoft.tagmaster.TagBrowserActivity
-import depollsoft.tagmaster.TagDetailActivity
 import depollsoft.tagmaster.TagListActivity
 import depollsoft.tagmaster.TagLists
 import depollsoft.tagmaster.TagPaneState
@@ -93,13 +92,7 @@ class HomeActions(
     private var scope: CoroutineScope? = null
 
     /** Opens [id] beside the list on a wide window, full-screen otherwise. */
-    fun openTag(id: Int) {
-        if (pane.hasDetailPane) {
-            pane.showTag(id)
-        } else {
-            context.startActivity(Intent(context, TagDetailActivity::class.java).putExtra(TagDetailActivity.TAG_ID_EXTRA, id))
-        }
-    }
+    fun openTag(id: Int) = pane.showTag(id)
 
     fun loadRandomTag(snackbars: Snackbars) {
         if (isLoadingRandom) return
@@ -189,8 +182,8 @@ fun HomeScreen(
     val changed = stringResource(R.string.saved_list_changed)
     val listsReorder =
         rememberReorderState<String>(listState, keyOf = { "list:$it" }) { baseline, order ->
-            // A list deleted or created mid-drag changes the set; then this order is not one.
-            baseline.toSet() == TagLists.customKeys.toSet() && TagLists.reorder(order)
+            // Any change mid-drag, a list added or deleted or the lists reordered, voids it.
+            TagLists.reorder(baseline, order)
         }
     val favoritesReorder =
         rememberReorderState<Int>(listState, keyOf = { "favorite:$it" }) { baseline, order ->
@@ -358,12 +351,20 @@ fun HomeScreen(
 
 /** The app name and version, attribution, links, copyright year and support links. */
 @OptIn(ExperimentalLayoutApi::class)
+/** The year the footer's copyright line shows. Screenshot tests pin it so goldens outlast New Year. */
+internal object FooterYear {
+    @androidx.annotation.VisibleForTesting
+    var pinned: Int? = null
+
+    fun current(): Int = pinned ?: GregorianCalendar().get(Calendar.YEAR)
+}
+
 @Composable
 private fun AboutFooter() {
     val colors = TagMasterTheme.colors
     val secondary = TagMasterType.bodySmall
     // The year is read whenever the footer comes back on screen, so it is right after New Year.
-    val year = remember { GregorianCalendar().get(Calendar.YEAR) }
+    val year = remember { FooterYear.current() }
     Column(
         Modifier
             .fillMaxWidth()

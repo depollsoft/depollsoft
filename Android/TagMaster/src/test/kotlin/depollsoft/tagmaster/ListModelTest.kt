@@ -44,6 +44,17 @@ class ListModelTest {
     }
 
     @Test
+    fun aListHoldsEachTagOnceHoweverItArrives() {
+        // Rows are keyed by tag id; a repeated id would crash the list that shows them.
+        val model = createTestListModel("test_list_repeats")
+        model.ids = listOf(7, 3, 7, 5, 3)
+        assertEquals(listOf(7, 3, 5), model.ids.toList())
+
+        val decoded = ListModel.decodeLists(mapOf("stored" to depollsoft.lib.state.StateList(listOf(9, 9, 1))))
+        assertEquals(listOf(9, 1), decoded.getValue("stored").toList())
+    }
+
+    @Test
     fun add_duplicateId_doesNotAddAgain() {
         val model = createTestListModel("test_list_dup")
         model.ids = listOf()
