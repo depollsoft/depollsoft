@@ -164,7 +164,9 @@ struct SetListsScreen: View {
                     }
                 })
         }
-        .plateRow(trailingOverhang: home ? 0 : 40)
+        .plateRow(trailingOverhang: home ? 0 : 40, margin: 20)
+        // The UIKit table's own separator colour, not the system default.
+        .listRowSeparatorTint(Plate.hairline)
         .moveDisabled(home)
         .deleteDisabled(true)
         .swipeActions(edge: .trailing) {
@@ -173,8 +175,10 @@ struct SetListsScreen: View {
                 // Red rather than the destructive role, which would take the row
                 // away before the confirmation is answered.
                 case .delete: Button("Delete") { model.confirmDelete(list) }.tint(.red)
-                case .duplicate: Button("Duplicate") { model.duplicate(list) }
-                case .rename: Button("Rename") { model.promptRename(list) }
+                // UIKit's `.normal` contextual actions are system grey; the app's
+                // label tint would otherwise paint them black (white in dark mode).
+                case .duplicate: Button("Duplicate") { model.duplicate(list) }.tint(Color(uiColor: .systemGray))
+                case .rename: Button("Rename") { model.promptRename(list) }.tint(Color(uiColor: .systemGray))
                 }
             }
         }

@@ -53,19 +53,52 @@ struct PitchPerfectRoot: View {
                 .tabItem { TabLabel(title: "Songs", image: "songs.png") }
                 .tag(PitchPerfectTab.songs)
         }
-        // On iPhone the tab bar is tinted with the label colour; the iPad's top
-        // tab bar kept the system accent, as UIKit drew them.
-        .tint(UIDevice.current.userInterfaceIdiom == .pad ? nil : Color(uiColor: .label))
-        .onAppear {
-            DPTheme.applyStoredAppearance()
-            WakeLock.apply()
-        }
+        // UIKit tinted the tab bar with the label colour on every device. Where
+        // the tab bar is the bottom bar (iPhone, and iPad before iPadOS 18) that
+        // is what it drew; iPadOS 18's top tab bar kept the system accent. The
+        // same tint is also set on the UITabBar itself (see NavigationTitleFace).
+        .tint(TabTint.color)
+        // The stored theme reaches the window as it gets one, before the first
+        // frame is drawn (UIKit applied it in didFinishLaunching).
+        .background(ThemeWindowHook().frame(width: 0, height: 0))
+        .onAppear { WakeLock.apply() }
         .onReceive(NotificationCenter.default.publisher(for: .settingsChanged)) { _ in WakeLock.apply() }
         .onOpenURL { DPAppDelegate.handle(url: $0) }
-        .onChange(of: scenePhase) { _, phase in
+        // `initial`: the scene is often already active when the root first
+        // appears, and the launch's own activation must offer Privacy choices.
+        .onChange(of: scenePhase, initial: true) { _, phase in
             if phase == .active { DPAppDelegate.sceneDidBecomeActive() }
         }
     }
+}
+
+enum TabTint {
+    static var usesTopTabBar: Bool {
+        guard UIDevice.current.userInterfaceIdiom == .pad else { return false }
+        if #available(iOS 18.0, *) { return true }
+        return false
+    }
+
+    static var color: Color? { usesTopTabBar ? nil : Color(uiColor: .label) }
+}
+
+/// Applies the stored theme to the window the moment the root joins it.
+private struct ThemeWindowHook: UIViewRepresentable {
+    final class Hook: UIView {
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            if window != nil { DPTheme.applyStoredAppearance() }
+        }
+    }
+
+    func makeUIView(context: Context) -> Hook {
+        let hook = Hook()
+        hook.isUserInteractionEnabled = false
+        hook.isAccessibilityElement = false
+        return hook
+    }
+
+    func updateUIView(_ hook: Hook, context: Context) {}
 }
 
 /// The tab icons ship as template images so Liquid Glass never morphs or flickers them.

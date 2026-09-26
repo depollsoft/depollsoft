@@ -281,13 +281,8 @@ struct LoginIntroScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            ScrollView {
-                LoginExplanation()
-                    .padding(.horizontal, 5)
-                    .padding(.vertical, 8)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .scrollBounceBehavior(.basedOnSize)
+            LoginExplanation()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             Button { model.signIn() } label: {
                 Text("Sign up or log in")
                     .font(.system(size: 15))
@@ -310,17 +305,36 @@ struct LoginIntroScreen: View {
     }
 }
 
-private struct LoginExplanation: View {
-    var body: some View {
-        // UIKit fonts rather than SwiftUI's .system(size:), which tracks its
-        // text differently from the HTML-typeset UIKit screen.
-        VStack(alignment: .leading, spacing: 50.0 / 3.0) {
-            Text("Recommended:").font(Font(UIFont.boldSystemFont(ofSize: 17) as CTFont))
-                + Text(" Log in to Pitch Perfect and we'll save your settings and song list to the cloud.")
-            Text("When you log in to Pitch Perfect, we'll automatically synchronize your settings and song list from device to device. Whether you just want to back up your songs or are working with multiple phones or tablets, logging in ensures that your data goes where you go.")
-            Text("Signing in syncs your song list and settings. You control optional analytics and crash reports in Privacy choices.")
-        }
-        .font(Font(UIFont.systemFont(ofSize: 17) as CTFont))
-        .foregroundStyle(Color(uiColor: .label))
+/// The explanation exactly as the UIKit screen showed it: the same HTML, typeset
+/// by a read-only UITextView, which scrolls when it must and lets its text be
+/// selected and copied.
+private struct LoginExplanation: UIViewRepresentable {
+    static let html = "<style>* {font-family: -apple-system; font-size: 17px;}</style>"
+        + "<p><b>Recommended:</b> Log in to Pitch Perfect and we'll save your settings and song list to the cloud.</p>"
+        + "<p>"
+        + "When you log in to Pitch Perfect, we'll automatically synchronize your settings and song list from device to device. "
+        + "Whether you just want to back up your songs or are working with multiple phones or tablets, logging in ensures that your "
+        + "data goes where you go."
+        + "</p>"
+        + "<p>"
+        + "Signing in syncs your song list and settings. You control optional analytics and crash reports in Privacy choices."
+        + "</p>"
+
+    static var text: NSAttributedString? {
+        try? NSAttributedString(data: Data(html.utf8),
+                                options: [.documentType: NSAttributedString.DocumentType.html,
+                                          .characterEncoding: String.Encoding.utf8.rawValue],
+                                documentAttributes: nil)
     }
+
+    func makeUIView(context: Context) -> UITextView {
+        let view = UITextView()
+        view.isEditable = false
+        view.backgroundColor = .clear
+        view.attributedText = Self.text
+        view.textColor = .label
+        return view
+    }
+
+    func updateUIView(_ view: UITextView, context: Context) {}
 }

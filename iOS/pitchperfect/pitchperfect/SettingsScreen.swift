@@ -192,8 +192,9 @@ struct SettingsScreen: View {
                         .accessibilityIdentifier("settings.theme")
                     }
                     .settingsRow(height: 52)
+                    .background(ListScrollViewReporter { SettingsScrollMemory.attach($0) }.frame(width: 0, height: 0))
                 } header: {
-                    PlateHeader("Pitch Pipe")
+                    PlateHeader("Pitch Pipe").settingsHeader()
                 }
 
                 Section {
@@ -202,9 +203,10 @@ struct SettingsScreen: View {
                         ActionRow(title: "Delete Account", busy: model.deleting, action: model.requestDelete)
                     }
                 } header: {
-                    PlateHeader("Account")
+                    PlateHeader("Account").settingsHeader()
                 } footer: {
                     Text("Log in to back up and synchronize your song list and settings.")
+                        .settingsHeader()
                 }
 
                 Section {
@@ -212,14 +214,15 @@ struct SettingsScreen: View {
                         HStack {
                             Text("Privacy choices").foregroundStyle(Color(uiColor: .label))
                             Spacer()
-                            Image(systemName: "chevron.forward")
-                                .font(.system(size: 17, weight: .semibold))
-                                .foregroundStyle(Color(uiColor: .tertiaryLabel))
+                            DisclosureIndicator()
+                                .accessibilityHidden(true)
                         }
+                        .contentShape(Rectangle())
                     }
+                    .buttonStyle(UnhighlightedRowStyle())
                     .settingsRow(height: 51)
                 } header: {
-                    PlateHeader("Privacy")
+                    PlateHeader("Privacy").settingsHeader()
                 }
 
                 if model.isPrivateBuild {
@@ -233,7 +236,7 @@ struct SettingsScreen: View {
                         .settingsRow()
                         ActionRow(title: "Copy Logs", busy: false, action: model.copyLogs)
                     } header: {
-                        PlateHeader("Private Build")
+                        PlateHeader("Private Build").settingsHeader()
                     }
                 }
             }
@@ -250,6 +253,7 @@ struct SettingsScreen: View {
             }
         }
         .onAppear { model.reload() }
+        .onDisappear { SettingsScrollMemory.save() }
         .alert(model.deleteTitle, isPresented: $model.confirmingDelete) {
             Button("Cancel", role: .cancel) { model.cancelDelete() }
             Button("Yes", role: .destructive) { model.confirmDelete() }
@@ -274,10 +278,14 @@ struct SettingsScreen: View {
 /// Engraved section label: tracked monospaced capitals in secondary ink.
 struct PlateHeader: View {
     let title: String
-    init(_ title: String) { self.title = title }
+    let uppercased: Bool
+    init(_ title: String, uppercased: Bool = true) {
+        self.title = title
+        self.uppercased = uppercased
+    }
 
     var body: some View {
-        Text(title.uppercased())
+        Text(uppercased ? title.uppercased() : title)
             .font(Plate.mono(12))
             .tracking(12 * 0.14)
             .foregroundStyle(Plate.inkSecondary)
@@ -320,20 +328,97 @@ private struct ActionRow: View {
             HStack {
                 Text(title).foregroundStyle(Color(uiColor: .label))
                 Spacer()
-                if busy { ProgressView() }
+                if busy { ActivitySpinner() }
             }
+            .contentShape(Rectangle())
         }
+        .buttonStyle(UnhighlightedRowStyle())
         .settingsRow(height: 51)
+    }
+}
+
+/// Where Settings was scrolled to. UIKit presented one Settings controller for
+/// the app's lifetime, so reopening it (from any tab) found the table where it
+/// was left; each SwiftUI presentation builds a new List.
+@MainActor
+enum SettingsScrollMemory {
+    private static weak var list: UIScrollView?
+    private(set) static var offset: CGFloat?
+
+    static func attach(_ scrollView: UIScrollView) {
+        guard list !== scrollView else { return }
+        list = scrollView
+        guard let offset else { return }
+        DispatchQueue.main.async {
+            scrollView.layoutIfNeeded()
+            let top = -scrollView.adjustedContentInset.top
+            let bottom = max(top, scrollView.contentSize.height - scrollView.bounds.height
+                                  + scrollView.adjustedContentInset.bottom)
+            scrollView.setContentOffset(CGPoint(x: 0, y: min(max(offset, top), bottom)), animated: false)
+        }
+    }
+
+    static func save() {
+        guard let list else { return }
+        offset = list.contentOffset.y
+    }
+
+    static func forget() {
+        list = nil
+        offset = nil
+    }
+}
+
+/// The UIKit rows took taps through a gesture recogniser on a table that allowed
+/// no selection: nothing highlighted when pressed.
+struct UnhighlightedRowStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View { configuration.label }
+}
+
+/// UIKit's medium activity indicator, in its own grey (SwiftUI's would take the
+/// label tint the instrument chrome sets).
+struct ActivitySpinner: UIViewRepresentable {
+    func makeUIView(context: Context) -> UIActivityIndicatorView {
+        let spinner = UIActivityIndicatorView(style: .medium)
+        spinner.startAnimating()
+        return spinner
+    }
+
+    func updateUIView(_ spinner: UIActivityIndicatorView, context: Context) {}
+}
+
+/// UIKit's disclosure indicator, from the cell accessory itself.
+struct DisclosureIndicator: UIViewRepresentable {
+    func makeUIView(context: Context) -> UIView {
+        let cell = UITableViewCell(style: .default, reuseIdentifier: nil)
+        cell.accessoryType = .disclosureIndicator
+        cell.frame = CGRect(x: 0, y: 0, width: 200, height: 44)
+        cell.layoutIfNeeded()
+        // The accessory image view the cell lays out, lifted out on its own.
+        let image = cell.subviews.compactMap { $0 as? UIButton }.first?.image(for: .normal)
+            ?? UIImage(systemName: "chevron.forward")
+        let view = UIImageView(image: image)
+        view.tintColor = .tertiaryLabel
+        view.contentMode = .center
+        return view
+    }
+
+    func updateUIView(_ view: UIView, context: Context) {}
+
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: UIView, context: Context) -> CGSize? {
+        uiView.intrinsicContentSize
     }
 }
 
 extension View {
     /// A UITableViewCell's frame: clear, 20 pt margins, and (for single-line
     /// rows) the cell's height.
+    /// UIKit set section headers and footers at the table margin; a grouped List
+    /// sets them at 16 pt.
+    fileprivate func settingsHeader() -> some View { modifier(SettingsHeaderInset()) }
+
     fileprivate func settingsRow(height: CGFloat? = nil) -> some View {
-        frame(minHeight: height)
-            .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
-            .listRowBackground(Color.clear)
+        modifier(SettingsRow(height: height))
     }
 
     /// Settings as every tab presents it: a sheet with its own navigation bar.
@@ -341,6 +426,27 @@ extension View {
         sheet(isPresented: isPresented) {
             NavigationStack { SettingsScreen() }
         }
+    }
+}
+
+/// A UITableViewCell's frame: clear, the table's margins, and its height.
+private struct SettingsRow: ViewModifier {
+    let height: CGFloat?
+    @Environment(\.tableMargin) private var margin
+
+    func body(content: Content) -> some View {
+        content
+            .frame(minHeight: height)
+            .listRowInsets(EdgeInsets(top: 0, leading: margin, bottom: 0, trailing: margin))
+            .listRowBackground(Color.clear)
+    }
+}
+
+private struct SettingsHeaderInset: ViewModifier {
+    @Environment(\.tableMargin) private var margin
+
+    func body(content: Content) -> some View {
+        content.padding(.horizontal, max(0, margin - 16))
     }
 }
 

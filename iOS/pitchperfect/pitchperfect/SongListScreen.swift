@@ -151,17 +151,18 @@ final class SongListModel {
 
     // MARK: Sounding
 
-    /// The row a finger is on, lit while it stays there.
-    private(set) var pressedSong: ObjectIdentifier?
+    /// The rows fingers are on, each lit while its own finger stays there (every
+    /// UIKit cell kept its own highlight, so two held songs both show).
+    private(set) var pressedSongs: Set<ObjectIdentifier> = []
 
     func press(_ song: DPPitchedSong) {
         guard let note = song.key?.note else { return }
-        pressedSong = song.rowID
+        pressedSongs.insert(song.rowID)
         player.pressBegan(note)
     }
 
     func release(_ song: DPPitchedSong) {
-        if pressedSong == song.rowID { pressedSong = nil }
+        pressedSongs.remove(song.rowID)
         guard let note = song.key?.note else { return }
         player.pressEnded(note)
     }
@@ -169,7 +170,7 @@ final class SongListModel {
     /// Momentary rows are lit while pressed; with Toggle Notes a row is lit while
     /// its note sounds, so pressing a sounding row goes dark at touch-down.
     func isLit(_ song: DPPitchedSong) -> Bool {
-        guard player.toggleNotes() else { return pressedSong == song.rowID }
+        guard player.toggleNotes() else { return pressedSongs.contains(song.rowID) }
         guard let note = song.key?.note else { return false }
         return player.isPlaying(note)
     }
@@ -181,7 +182,7 @@ final class SongListModel {
     }
 
     func stopSoundingRows() {
-        pressedSong = nil
+        pressedSongs = []
         player.stop(songs.compactMap { $0.key?.note })
     }
 
@@ -315,9 +316,8 @@ struct SongListScreen: View {
         .environment(\.editMode, .constant(model.isEditing ? .active : .inactive))
         .settingsSheet(isPresented: $model.showingSettings)
         .background(SongEditorPresenter(request: model.editor, didClose: model.editorDidClose).frame(width: 0, height: 0))
-        .sheet(isPresented: $model.showingAddFrom) {
-            AddSongsScreen(target: model.currentList)
-        }
+        .background(AddSongsPresenter(isPresented: $model.showingAddFrom, target: model.currentList)
+            .frame(width: 0, height: 0))
         .navigationDestination(isPresented: $model.showingManage) {
             SetListsScreen()
         }
@@ -392,6 +392,7 @@ struct SetListActions: View {
 
 private struct SongRows: View {
     let model: SongListModel
+    @Environment(\.tableMargin) private var tableMargin
 
     var body: some View {
         let songs = model.songs
@@ -411,7 +412,14 @@ private struct SongRows: View {
                         .moveDisabled(!model.isEditing)
                         .onAppear { model.rowAppeared(song, at: index) }
                         .onDisappear { model.rowDisappeared(song) }
-                        .background(ListScrollViewReporter { model.listScrollView = $0 }.frame(width: 0, height: 0))
+                        .background(ListScrollViewReporter { list in
+                            model.listScrollView = list
+                            // UIKit put the edit controls at the table's margin;
+                            // SwiftUI's list uses its own. (The reorder control
+                            // on the other side already sat where UIKit's did.)
+                            list.preservesSuperviewLayoutMargins = false
+                            list.layoutMargins.left = tableMargin
+                        }.frame(width: 0, height: 0))
                 }
                 .onDelete(perform: model.deleteSongs)
                 .onMove(perform: model.moveSongs)
@@ -458,7 +466,7 @@ private struct ScrollMemory: ViewModifier {
 }
 
 /// Finds the collection view a List row lives in and hands it to `found`.
-private struct ListScrollViewReporter: UIViewRepresentable {
+struct ListScrollViewReporter: UIViewRepresentable {
     let found: (UIScrollView) -> Void
 
     final class Reporter: UIView {
@@ -527,12 +535,10 @@ struct SongRow: View {
                 .notePress(began: { press(true) }, ended: { press(false) }, activate: activate)
                 .accessibilityLabel("\(title), \(key?.friendlyName() ?? "")")
             if isEditing {
-                Button(action: edit) {
-                    Image(uiImage: SongRow.detailDisclosure)
-                        .renderingMode(.template)
-                        .foregroundStyle(Color(uiColor: .systemBlue))
-                }
-                .buttonStyle(.borderless)
+                // UIKit's own detail-disclosure button, which greys out with the
+                // rest of the screen's tint while a sheet or alert is up.
+                DetailDisclosureButton(action: edit)
+                    .fixedSize()
                 .padding(.leading, 8)
                 .offset(y: -1.0 / 3.0)
                 .accessibilityLabel("More Info")
@@ -545,13 +551,38 @@ struct SongRow: View {
                     .accessibilityHidden(true)
             }
         }
+        // The list's leading margin now puts the delete control at the table
+        // margin, as UIKit did; that moved the row's content by the same amount.
+        .offset(x: isEditing ? -max(0, tableMargin - 16) : 0)
     }
+
+    @Environment(\.tableMargin) private var tableMargin
 
     /// How far edit mode moves a row's content in, past the delete control.
     static let editingIndent: CGFloat = 124.0 / 3.0
 
-    /// The system detail-disclosure glyph, exactly as UIKit's button draws it.
-    static let detailDisclosure: UIImage = UIButton(type: .detailDisclosure).image(for: .normal) ?? UIImage()
+}
+
+/// UIKit's detail-disclosure button.
+struct DetailDisclosureButton: UIViewRepresentable {
+    let action: () -> Void
+
+    func makeUIView(context: Context) -> UIButton {
+        let button = UIButton(type: .detailDisclosure)
+        button.tintColor = .systemBlue
+        button.addTarget(context.coordinator, action: #selector(Coordinator.tapped), for: .touchUpInside)
+        return button
+    }
+
+    func updateUIView(_ button: UIButton, context: Context) { context.coordinator.action = action }
+
+    func makeCoordinator() -> Coordinator { Coordinator(action: action) }
+
+    final class Coordinator: NSObject {
+        var action: () -> Void
+        init(action: @escaping () -> Void) { self.action = action }
+        @objc func tapped() { action() }
+    }
 }
 
 private struct SongRowFace: View {

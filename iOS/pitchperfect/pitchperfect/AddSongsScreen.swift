@@ -65,55 +65,30 @@ final class AddSongsModel {
     func sectionTitle(_ group: DPAddableSongs) -> String { store.displayName(for: group.list) }
 }
 
-struct AddSongsScreen: View {
-    @StateObject private var box: ModelBox<AddSongsModel>
-    private var model: AddSongsModel { box.model }
-    @Environment(\.dismiss) private var dismiss
-
-    init(target: DPSongList) {
-        _box = StateObject(wrappedValue: ModelBox(AddSongsModel(target: target)))
-    }
+/// The checklist itself, hosted by `AddSongsController`.
+struct AddSongsList: View {
+    let model: AddSongsModel
 
     var body: some View {
-        NavigationStack {
-            List {
-                ForEach(model.groups, id: \.list.id) { group in
-                    Section {
-                        ForEach(group.songs, id: \.rowID) { song in
-                            row(song)
-                        }
-                    } header: {
-                        PlateHeader(model.sectionTitle(group))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.top, 26.0 / 3.0)
-                            .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
+        List {
+            ForEach(model.groups, id: \.list.id) { group in
+                Section {
+                    ForEach(group.songs, id: \.rowID) { song in
+                        row(song)
                     }
-                }
-            }
-            .plateList(fullScreen: true)
-            .navigationTitle("Add songs")
-            .navigationBarTitleDisplayMode(.inline)
-            .instrumentChrome()
-            .toolbar {
-                ToolbarItemGroup(placement: .topBarLeading) {
-                    BarSymbolButton(systemName: "xmark") { dismiss() }
-                    Button(model.selectAllTitle) { model.toggleSelectAll() }
-                        .disabled(!model.canSelectAll)
-                        .accessibilityIdentifier("setlist.addSongs.selectAll")
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(model.confirmTitle) {
-                        model.confirm()
-                        dismiss()
-                    }
-                    .modifier(ProminentDone())
-                    .disabled(!model.canConfirm)
-                    .accessibilityIdentifier("setlist.addSongs.confirm")
+                } header: {
+                    // UIKit's engraved header: the list's own name, 14 pt above, 6 below.
+                    PlateHeader(model.sectionTitle(group), uppercased: false)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.top, 14)
+                        .padding(.bottom, 6)
+                        .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
                 }
             }
         }
-        .presentationDetents(UIDevice.current.userInterfaceIdiom == .pad ? [.large] : [.medium, .large])
-        .presentationDragIndicator(.hidden)
+        .plateList(fullScreen: true)
+        .environment(\.defaultMinListHeaderHeight, 0)
+        .instrumentChrome()
     }
 
     private func row(_ song: DPPitchedSong) -> some View {
@@ -128,10 +103,13 @@ struct AddSongsScreen: View {
                 KeyReadout(key: song.key, color: Plate.inkSecondary)
                     .fixedSize()
                 if chosen {
+                    // Where UIKit's checkmark accessory sat: the content view
+                    // shrank for it, 26 pt past the key and 7 px further in.
                     Image(systemName: "checkmark")
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(Color(uiColor: .systemBlue))
-                        .padding(.leading, 12)
+                        .padding(.leading, 26)
+                        .padding(.trailing, 7.0 / 3.0)
                 }
             }
             .padding(.horizontal, 20)
@@ -140,19 +118,133 @@ struct AddSongsScreen: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .plateRow()
+        .plateRow(margin: 20)
+        // The UIKit table's own separator colour, not the system default.
+        .listRowSeparatorTint(Plate.hairline)
         .accessibilityLabel("\(song.name ?? ""), \(song.key?.friendlyName() ?? "")")
         .accessibilityAddTraits(chosen ? [.isButton, .isSelected] : .isButton)
     }
 }
 
-/// UIKit's `.done` bar item: the prominent, tinted confirm button.
-private struct ProminentDone: ViewModifier {
-    func body(content: Content) -> some View {
-        if #available(iOS 26.0, *) {
-            content.buttonStyle(.glassProminent).tint(Color(uiColor: .systemBlue))
-        } else {
-            content.fontWeight(.semibold)
+/// Add songs as the UIKit screen was built: its own navigation controller with
+/// UIKit bar items (Close and Select all as separate items on the left, the
+/// `.done` Add on the right) over the SwiftUI checklist.
+final class AddSongsController: UIHostingController<AddSongsList> {
+    let model: AddSongsModel
+    var onFinish: () -> Void = {}
+    private lazy var selectAllItem: UIBarButtonItem = {
+        let item = UIBarButtonItem(title: "Select all", style: .plain, target: self, action: #selector(toggleSelectAll))
+        item.accessibilityIdentifier = "setlist.addSongs.selectAll"
+        return item
+    }()
+    private lazy var addItem: UIBarButtonItem = {
+        let item = UIBarButtonItem(title: "Add", style: .done, target: self, action: #selector(confirm))
+        item.accessibilityIdentifier = "setlist.addSongs.confirm"
+        return item
+    }()
+
+    init(model: AddSongsModel) {
+        self.model = model
+        super.init(rootView: AddSongsList(model: model))
+        navigationItem.title = "Add songs"
+        navigationItem.leftBarButtonItems = [
+            BarSymbol.item(systemName: "xmark", target: self, action: #selector(close)),
+            selectAllItem,
+        ]
+        navigationItem.rightBarButtonItem = addItem
+        refreshItems()
+    }
+
+    @available(*, unavailable)
+    @MainActor required dynamic init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    /// Follows the model's choices, as the UIKit screen refreshed its items on every tick.
+    private func refreshItems() {
+        withObservationTracking {
+            selectAllItem.isEnabled = model.canSelectAll
+            selectAllItem.title = model.selectAllTitle
+            addItem.isEnabled = model.canConfirm
+            addItem.title = model.confirmTitle
+        } onChange: { [weak self] in
+            DispatchQueue.main.async { self?.refreshItems() }
         }
+    }
+
+    @objc private func toggleSelectAll() { model.toggleSelectAll() }
+    @objc private func close() { finish() }
+
+    @objc private func confirm() {
+        guard model.confirm() > 0 else { return }
+        finish()
+    }
+
+    private func finish() {
+        let done = onFinish
+        if let presenting = presentingViewController {
+            presenting.dismiss(animated: true, completion: done)
+        } else {
+            done()
+        }
+    }
+
+    /// The picker as it is presented: a sheet (medium or large) on iPhone, a form sheet on iPad.
+    func embeddedInNavigation() -> UINavigationController {
+        let navigation = UINavigationController(rootViewController: self)
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            navigation.modalPresentationStyle = .formSheet
+        } else {
+            navigation.modalPresentationStyle = .pageSheet
+            navigation.sheetPresentationController?.detents = [.medium(), .large()]
+        }
+        return navigation
+    }
+}
+
+/// Presents Add songs from the Songs screen while `isPresented` is true.
+struct AddSongsPresenter: UIViewControllerRepresentable {
+    @Binding var isPresented: Bool
+    let target: DPSongList
+
+    final class Presenter: UIViewController, UIAdaptivePresentationControllerDelegate {
+        weak var shown: UINavigationController?
+        var close: () -> Void = {}
+
+        func sync(isPresented: Bool, target: DPSongList) {
+            if isPresented, shown == nil {
+                let controller = AddSongsController(model: AddSongsModel(target: target))
+                controller.onFinish = { [weak self] in self?.close() }
+                let navigation = controller.embeddedInNavigation()
+                shown = navigation
+                DispatchQueue.main.async { [weak self] in
+                    guard let self, self.shown === navigation else { return }
+                    var presenter: UIViewController = self
+                    while let next = presenter.presentedViewController { presenter = next }
+                    presenter.present(navigation, animated: true)
+                    navigation.presentationController?.delegate = self
+                }
+            } else if !isPresented, let navigation = shown {
+                shown = nil
+                if navigation.presentingViewController != nil, !navigation.isBeingDismissed {
+                    navigation.dismiss(animated: true)
+                }
+            }
+        }
+
+        /// A swipe down closes the picker without adding.
+        func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+            shown = nil
+            close()
+        }
+    }
+
+    func makeUIViewController(context: Context) -> Presenter {
+        let presenter = Presenter()
+        presenter.view.isHidden = true
+        return presenter
+    }
+
+    func updateUIViewController(_ presenter: Presenter, context: Context) {
+        presenter.close = { isPresented = false }
+        presenter.sync(isPresented: isPresented, target: target)
     }
 }

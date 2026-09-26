@@ -41,20 +41,15 @@ enum SetListSelectorMetrics {
         ])
     }
 
-    /// Where each position sits along the row, as ProportionalRow places them:
-    /// hairlines between positions, one more and the fixed "+" at the end, and
-    /// the positions sharing any spare width in proportion to their natural widths.
+    /// Where each position sits along the row: the frames UIKit's
+    /// `.fillProportionally` stack gave them.
+    @MainActor
     static func positionSpans(titles: [String], width: CGFloat) -> [Range<CGFloat>] {
-        let naturals = titles.map(naturalWidth(for:))
-        let fixed = CGFloat(titles.count) + newPositionWidth
-        let flexible = naturals.reduce(0, +)
-        let scale = flexible > 0 ? max(1, (width - fixed) / flexible) : 1
-        var x: CGFloat = 0
-        return naturals.enumerated().map { index, natural in
-            if index > 0 { x += 1 }
-            let start = x
-            x += natural * scale
-            return start..<x
+        let frames = StackGeometry.frames(naturals: titles.map(naturalWidth(for:)), width: width)
+        // Positions are every other arranged view: position, hairline, position, …
+        return titles.indices.map { index in
+            let frame = frames[index * 2]
+            return frame.minX..<frame.maxX
         }
     }
 
@@ -148,7 +143,6 @@ struct SetListSelector: View {
         .buttonStyle(.plain)
         .accessibilityLabel("New set list")
         .accessibilityIdentifier("setlist.new")
-        .layoutValue(key: FixedWidth.self, value: SetListSelectorMetrics.newPositionWidth)
     }
 }
 
@@ -222,7 +216,6 @@ private struct Hairline: View {
         Plate.hairline
             .frame(width: 1)
             .accessibilityHidden(true)
-            .layoutValue(key: FixedWidth.self, value: 1)
     }
 }
 
@@ -230,39 +223,90 @@ private struct NaturalWidth: LayoutValueKey {
     static let defaultValue: CGFloat? = nil
 }
 
-private struct FixedWidth: LayoutValueKey {
-    static let defaultValue: CGFloat? = nil
+/// The UIKit selector's own stack, laid out off screen, so the SwiftUI row puts
+/// every piece exactly where `.fillProportionally` did. (Its division of spare
+/// width is not a plain proportional share: the fixed hairlines and "+" take
+/// part in it and are then held to their constraints.)
+@MainActor
+enum StackGeometry {
+    private final class Sized: UIView {
+        var natural: CGSize = .zero
+        override var intrinsicContentSize: CGSize { natural }
+    }
+
+    private static var cache: [[CGFloat]: [CGRect]] = [:]
+
+    /// Frames of the arranged views in order: position, hairline, position, …,
+    /// hairline, "+". `naturals` are the positions' natural widths; `width` is
+    /// the frame the row scrolls within.
+    static func frames(naturals: [CGFloat], width: CGFloat) -> [CGRect] {
+        let key = naturals + [width]
+        if let frames = cache[key] { return frames }
+        let height = SetListSelectorMetrics.height
+        let scrollView = UIScrollView(frame: CGRect(x: 0, y: 0, width: width, height: height))
+        let stack = UIStackView()
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        stack.axis = .horizontal
+        stack.alignment = .fill
+        stack.distribution = .fillProportionally
+        stack.spacing = 0
+        scrollView.addSubview(stack)
+        NSLayoutConstraint.activate([
+            stack.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor),
+            stack.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor),
+            stack.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor),
+            stack.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor),
+            stack.heightAnchor.constraint(equalTo: scrollView.frameLayoutGuide.heightAnchor),
+            stack.widthAnchor.constraint(greaterThanOrEqualTo: scrollView.frameLayoutGuide.widthAnchor),
+        ])
+        func hairline() -> UIView {
+            let view = UIView()
+            view.translatesAutoresizingMaskIntoConstraints = false
+            view.widthAnchor.constraint(equalToConstant: 1).isActive = true
+            return view
+        }
+        for (index, natural) in naturals.enumerated() {
+            if index > 0 { stack.addArrangedSubview(hairline()) }
+            let position = Sized()
+            position.translatesAutoresizingMaskIntoConstraints = false
+            position.natural = CGSize(width: natural, height: height)
+            stack.addArrangedSubview(position)
+        }
+        stack.addArrangedSubview(hairline())
+        let plus = Sized()
+        plus.translatesAutoresizingMaskIntoConstraints = false
+        plus.natural = CGSize(width: SetListSelectorMetrics.newPositionWidth, height: height)
+        plus.widthAnchor.constraint(equalToConstant: SetListSelectorMetrics.newPositionWidth).isActive = true
+        stack.addArrangedSubview(plus)
+        scrollView.layoutIfNeeded()
+        let frames = stack.arrangedSubviews.map(\.frame)
+        cache[key] = frames
+        return frames
+    }
 }
 
-/// UIStackView's `.fillProportionally`: fixed pieces keep their width; the
-/// positions share what is left in proportion to their natural widths, so two
-/// or three positions fill the whole frame. When they do not fit, every
-/// position takes its natural width and the row scrolls.
+/// Places the selector's pieces at the frames UIKit's stack gave them. When the
+/// positions do not fit, every position keeps its natural width and the row scrolls.
 private struct ProportionalRow: Layout {
     /// The frame the row scrolls within; the positions never leave it part-empty.
     var minimumWidth: CGFloat
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let natural = subviews.reduce(CGFloat(0)) { $0 + width(of: $1) }
+        let frames = Self.frames(subviews, width: minimumWidth)
         let height = proposal.height ?? SetListSelectorMetrics.height
-        return CGSize(width: max(natural, minimumWidth), height: height)
+        return CGSize(width: max(frames.last?.maxX ?? 0, minimumWidth), height: height)
     }
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let fixed = subviews.filter { $0[FixedWidth.self] != nil }.reduce(CGFloat(0)) { $0 + width(of: $1) }
-        let flexible = subviews.filter { $0[FixedWidth.self] == nil }.reduce(CGFloat(0)) { $0 + width(of: $1) }
-        let scale = flexible > 0 ? max(1, (bounds.width - fixed) / flexible) : 1
-        var x = bounds.minX
-        for subview in subviews {
-            let natural = width(of: subview)
-            let width = subview[FixedWidth.self] != nil ? natural : natural * scale
-            subview.place(at: CGPoint(x: x, y: bounds.minY), anchor: .topLeading,
-                          proposal: ProposedViewSize(width: width, height: bounds.height))
-            x += width
+        let frames = Self.frames(subviews, width: minimumWidth)
+        for (subview, frame) in zip(subviews, frames) {
+            subview.place(at: CGPoint(x: bounds.minX + frame.minX, y: bounds.minY), anchor: .topLeading,
+                          proposal: ProposedViewSize(width: frame.width, height: bounds.height))
         }
     }
 
-    private func width(of subview: LayoutSubview) -> CGFloat {
-        subview[FixedWidth.self] ?? subview[NaturalWidth.self] ?? 0
+    private static func frames(_ subviews: Subviews, width: CGFloat) -> [CGRect] {
+        let naturals = subviews.compactMap { $0[NaturalWidth.self] }
+        return MainActor.assumeIsolated { StackGeometry.frames(naturals: naturals, width: width) }
     }
 }

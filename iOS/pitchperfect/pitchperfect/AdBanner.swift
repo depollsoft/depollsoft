@@ -124,6 +124,10 @@ struct InstrumentPage<Content: View>: View {
                     .accessibilityHidden(true)
             }
         }
+        // UIKit's screens pinned the banner to the safe area's foot and never made
+        // room for the keyboard: it covered the banner and the rows beneath it.
+        .ignoresSafeArea(.keyboard, edges: .bottom)
         .staffScreenBackground()
+        .tableMargins()
     }
 }

@@ -153,19 +153,114 @@ private struct TopEdgeEffectHidden: ViewModifier {
 extension View {
     func plateList(fullScreen: Bool = false) -> some View { modifier(PlateListStyle(fullScreen: fullScreen)) }
 
-    /// A transparent row whose rule runs from 20 pt in from the list's edge to
-    /// 20 pt from the other. `contentIndent` is how far the list has moved the
-    /// row's content in (edit mode's delete control), so the rule stays put.
-    /// `trailingOverhang` carries the rule on under the reorder control, which
-    /// sits beyond the row's content.
+    /// A transparent row whose rule runs from the table margin in from the list's
+    /// edge to the same distance from the other. `contentIndent` is how far the
+    /// list has moved the row's content in (edit mode's delete control), so the
+    /// rule stays put. `trailingOverhang` carries the rule on under the reorder
+    /// control, which sits beyond the row's content. `margin` fixes the inset (the
+    /// UIKit tables that set `separatorInset` themselves); otherwise it is the
+    /// system table margin, 20 pt on an iPhone 17 and 16 pt on an iPad.
     func plateRow(_ insets: EdgeInsets = EdgeInsets(), contentIndent: CGFloat = 0,
-                  trailingOverhang: CGFloat = 0) -> some View {
-        listRowInsets(insets)
+                  trailingOverhang: CGFloat = 0, margin: CGFloat? = nil) -> some View {
+        modifier(PlateRow(insets: insets, contentIndent: contentIndent,
+                          trailingOverhang: trailingOverhang, fixedMargin: margin))
+    }
+
+    /// Gives the screen's rows the margin a UITableView would have had here.
+    func tableMargins() -> some View { modifier(TableMarginProbe()) }
+}
+
+private struct PlateRow: ViewModifier {
+    let insets: EdgeInsets
+    let contentIndent: CGFloat
+    let trailingOverhang: CGFloat
+    let fixedMargin: CGFloat?
+    @Environment(\.tableMargin) private var tableMargin
+
+    func body(content: Content) -> some View {
+        let margin = fixedMargin ?? tableMargin
+        content
+            .listRowInsets(insets)
             .listRowBackground(Color.clear)
-            .alignmentGuide(.listRowSeparatorLeading) { _ in 20 - contentIndent }
+            .alignmentGuide(.listRowSeparatorLeading) { _ in margin - contentIndent }
             .alignmentGuide(.listRowSeparatorTrailing) { dimensions in
-                dimensions.width - 20 + trailingOverhang
+                dimensions.width - margin + trailingOverhang
             }
+    }
+}
+
+extension EnvironmentValues {
+    /// The layout margin a UITableView gets on this device (its separators and
+    /// value labels sit this far in).
+    @Entry var tableMargin: CGFloat = 20
+}
+
+/// Measures the margin UIKit gives a plain table in this window, once per width.
+private struct TableMarginProbe: ViewModifier {
+    @State private var margin: CGFloat = 20
+
+    func body(content: Content) -> some View {
+        content
+            .environment(\.tableMargin, margin)
+            .background(Probe { if $0 != margin { margin = $0 } }.frame(width: 0, height: 0))
+    }
+
+    private struct Probe: UIViewRepresentable {
+        let measured: (CGFloat) -> Void
+
+        final class View: UIView {
+            var measured: (CGFloat) -> Void = { _ in }
+            private var measuredWidth: CGFloat = 0
+
+            override func didMoveToWindow() {
+                super.didMoveToWindow()
+                measure()
+            }
+
+            override func layoutSubviews() {
+                super.layoutSubviews()
+                measure()
+            }
+
+            private func measure() {
+                guard let window, window.bounds.width != measuredWidth else { return }
+                measuredWidth = window.bounds.width
+                let margin = TableMargin.measure(in: window)
+                let report = measured
+                DispatchQueue.main.async { report(margin) }
+            }
+        }
+
+        func makeUIView(context: Context) -> View {
+            let view = View()
+            view.isUserInteractionEnabled = false
+            view.isAccessibilityElement = false
+            return view
+        }
+
+        func updateUIView(_ view: View, context: Context) { view.measured = measured }
+    }
+}
+
+enum TableMargin {
+    /// A plain UITableView's leading layout margin at this window's size and traits,
+    /// safe area aside (the List handles that itself).
+    static func measure(in window: UIWindow) -> CGFloat {
+        // A plain screen in a navigation controller, where the UIKit tables sat;
+        // a hosting controller has other system margins.
+        let screen = UIViewController()
+        let navigation = UINavigationController(rootViewController: screen)
+        navigation.view.frame = window.bounds
+        navigation.view.isHidden = true
+        window.addSubview(navigation.view)
+        let table = UITableView(frame: screen.view.bounds, style: .plain)
+        table.insetsLayoutMarginsFromSafeArea = false
+        screen.view.addSubview(table)
+        navigation.view.layoutIfNeeded()
+        table.layoutIfNeeded()
+        let margin = table.layoutMargins.left
+        navigation.view.removeFromSuperview()
+        return margin
     }
 }
 
@@ -242,16 +337,19 @@ struct NoteRow: View {
             parts.append(NoteSpelling.parts(alternate))
         }
         return parts.enumerated().map { index, part in
-            let measured = part.1.boundingRect(with: CGSize(width: CGFloat.greatestFiniteMagnitude, height: .greatestFiniteMagnitude),
-                                               options: [.usesLineFragmentOrigin], context: nil).size
-            return Part(id: index, text: part.0, size: CGSize(width: pixelCeil(measured.width), height: pixelCeil(measured.height)))
+            Part(id: index, text: part.0, size: Self.fittedSize(part.1))
         }
     }
 
-    @Environment(\.displayScale) private var displayScale
+    @Environment(\.tableMargin) private var tableMargin
 
-    /// UILabel's sizeToFit rounds up to whole device pixels.
-    private func pixelCeil(_ value: CGFloat) -> CGFloat { ceil(value * displayScale) / displayScale }
+    /// The size a UILabel took after `sizeToFit`, which is what placed each spelling.
+    private static let sizer = UILabel()
+    static func fittedSize(_ text: NSAttributedString) -> CGSize {
+        sizer.attributedText = text
+        sizer.sizeToFit()
+        return sizer.bounds.size
+    }
 
     var body: some View {
         let parts = self.parts
@@ -270,7 +368,8 @@ struct NoteRow: View {
                     .font(Plate.mono(14))
                     .kerning(14 * 0.04)
                     .foregroundStyle(Plate.inkSecondary)
-                    .padding(.trailing, 20)
+                    // A value1 cell's detail label ends at the table margin.
+                    .padding(.trailing, tableMargin)
             }
             .frame(height: 52)
             .offset(y: 4.0 / 3.0)
@@ -369,19 +468,70 @@ struct KeysScreen: View {
         .navigationBarTitleDisplayMode(.inline)
         .instrumentChrome()
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Picker("Key mode", selection: $model.mode) {
-                    Text("Major").tag(KeyMode.major)
-                    Text("Minor").tag(KeyMode.minor)
-                }
-                .pickerStyle(.segmented)
-                .fixedSize()
-                .accessibilityIdentifier("keys.mode")
-            }
             SettingsToolbarItem(isPresented: $showingSettings)
         }
+        .background(KeyModeBarItem(mode: $model.mode).frame(width: 0, height: 0))
         .settingsSheet(isPresented: $showingSettings)
         .onDisappear { model.stopSounding() }
+    }
+}
+
+/// Major / Minor, as the UIKit bar carried it: a UISegmentedControl sized to fit,
+/// as the custom view of the screen's own left bar button item. (SwiftUI's
+/// segmented Picker in a toolbar draws its own glass track inside the item's,
+/// and a hosted control in a toolbar item loses the item's inset.)
+struct KeyModeBarItem: UIViewControllerRepresentable {
+    @Binding var mode: KeyMode
+
+    final class Controller: UIViewController {
+        let control = UISegmentedControl(items: ["Major", "Minor"])
+        var mode: Binding<KeyMode>?
+        private lazy var item = UIBarButtonItem(customView: control)
+
+        override func viewDidLoad() {
+            super.viewDidLoad()
+            control.sizeToFit()
+            control.accessibilityIdentifier = "keys.mode"
+            control.addTarget(self, action: #selector(changed), for: .valueChanged)
+        }
+
+        override func didMove(toParent parent: UIViewController?) {
+            super.didMove(toParent: parent)
+            install()
+        }
+
+        override func viewWillAppear(_ animated: Bool) {
+            super.viewWillAppear(animated)
+            install()
+        }
+
+        /// The navigation item the screen's bar shows: the stack's controller that holds this one.
+        func install() {
+            guard let navigation = navigationController else { return }
+            var owner: UIViewController? = self
+            while let current = owner, current.parent !== navigation { owner = current.parent }
+            guard let owner, owner.navigationItem.leftBarButtonItem !== item else { return }
+            owner.navigationItem.leftBarButtonItem = item
+        }
+
+        @objc private func changed() {
+            mode?.wrappedValue = KeyMode(rawValue: control.selectedSegmentIndex) ?? .major
+        }
+    }
+
+    func makeUIViewController(context: Context) -> Controller {
+        let controller = Controller()
+        controller.view.isHidden = true
+        return controller
+    }
+
+    func updateUIViewController(_ controller: Controller, context: Context) {
+        controller.mode = $mode
+        _ = controller.view
+        if controller.control.selectedSegmentIndex != mode.rawValue {
+            controller.control.selectedSegmentIndex = mode.rawValue
+        }
+        controller.install()
     }
 }
 

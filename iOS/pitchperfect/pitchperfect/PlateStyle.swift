@@ -28,6 +28,10 @@ enum Plate {
     static func mono(_ size: CGFloat) -> Font { Font(DPTheme.monospacedFont(size: size) as CTFont) }
     static func music(_ size: CGFloat) -> Font { Font.custom("MusiQwik", fixedSize: size) }
     static func noteHedz(_ size: CGFloat) -> Font { Font.custom("NoteHedz", fixedSize: size) }
+    /// The song editor's music faces scale with Dynamic Type, as its SwiftUI always
+    /// did; the UIKit lists' fixed UIFonts did not.
+    static func scaledMusic(_ size: CGFloat) -> Font { Font.custom("MusiQwik", size: size) }
+    static func scaledNoteHedz(_ size: CGFloat) -> Font { Font.custom("NoteHedz", size: size) }
 
     /// NoteHedz's sharp and flat glyphs.
     static let sharpGlyph = "\u{00EC}"
@@ -60,6 +64,13 @@ struct StaffBackground: View {
         }
         .clipped()
         .accessibilityHidden(true)
+    }
+}
+
+/// The staff as a UIKit pattern colour, for the few screens still laid out in UIKit.
+enum StaffPattern {
+    static let color = UIColor { traits in
+        UIColor(patternImage: DPTheme.staffTileImage(dark: traits.userInterfaceStyle == .dark))
     }
 }
 
@@ -98,6 +109,9 @@ private struct NavigationTitleFace: UIViewControllerRepresentable {
             apply()
         }
         func apply() {
+            // The app delegate tinted the tab bar itself with the label colour on
+            // every device; UIKit decides what that means for each bar style.
+            tabBarController?.tabBar.tintColor = .label
             guard let bar = navigationController?.navigationBar else { return }
             bar.tintColor = .label
             guard oswald else { return }

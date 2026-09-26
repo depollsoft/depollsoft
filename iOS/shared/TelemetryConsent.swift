@@ -131,12 +131,20 @@ struct PrivacyChoicesView: View {
             }
             Section {
                 Toggle("Usage analytics", isOn: $model.analytics)
+                    // UISwitch kept its green; the sheet's label tint is for its bar items.
+                    .tint(nil)
+                    // A cell's accessory switch sat 6 pt further in than SwiftUI's.
+                    .padding(.trailing, 6)
             } footer: {
                 Text("Share screens visited, sessions, and app and device information with Google Analytics to understand app usage.")
                     .foregroundStyle(Color(uiColor: .label))
             }
             Section {
                 Toggle("Crash reports", isOn: $model.crashes)
+                    // UISwitch kept its green; the sheet's label tint is for its bar items.
+                    .tint(nil)
+                    // A cell's accessory switch sat 6 pt further in than SwiftUI's.
+                    .padding(.trailing, 6)
             } footer: {
                 Text("Send crash reports, including stack traces and app and device information, to Google Firebase Crashlytics to help fix problems. Turning this off takes full effect the next time you start the app.")
                     .foregroundStyle(Color(uiColor: .label))

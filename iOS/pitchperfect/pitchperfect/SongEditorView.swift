@@ -211,7 +211,7 @@ private struct KeySignatureRow: View {
         Button(action: action) {
             HStack(alignment: .center) {
                 Text(SongEditorSpeech.signatureGlyphs(numAccidentals: Int(key.numAccidentals)))
-                    .font(Plate.music(44))
+                    .font(Plate.scaledMusic(44))
                     .accessibilityHidden(true)
                 Spacer(minLength: 16)
                 KeyName(key: key, size: 22, color: selected ? Plate.onLit : Plate.ink)
@@ -241,7 +241,7 @@ private struct KeyName: View {
                 .font(Plate.text(size))
             if SongEditorSpeech.accidental(of: key) != Int(Natural.rawValue) {
                 Text(SongEditorSpeech.accidental(of: key) == Int(Sharp.rawValue) ? "\u{00EC}" : "\u{00ED}")
-                    .font(Plate.noteHedz(size * 1.2))
+                    .font(Plate.scaledNoteHedz(size * 1.2))
             }
         }
         .foregroundStyle(color)
@@ -314,43 +314,96 @@ final class SongEditorSession {
     }
 }
 
-/// The editor's content: the form over the staff, the banner docked below on iPhone.
-struct SongEditorScreen: View {
-    let session: SongEditorSession
-
-    private var isPhone: Bool { UIDevice.current.userInterfaceIdiom == .phone }
-
-    var body: some View {
-        VStack(spacing: 0) {
-            SongEditorView(model: session.model)
-                .padding(.bottom, 8)
-            if isPhone {
-                BannerAdSlot()
-                    .accessibilityHidden(true)
-            }
-        }
-        .staffScreenBackground()
-    }
-}
-
-/// The editor as the Songs tab presents it, built as the UIKit editor was: its
+/// The editor as the Songs tab presents it, laid out as the UIKit editor was: its
 /// own navigation controller, titled Add Song or Edit Song, with Close and Done
-/// bar items. (A SwiftUI NavigationStack in a UIKit-presented controller hands
-/// its title and toolbar to the presenting screen's bar instead.)
-final class SongEditorController: UIHostingController<SongEditorScreen> {
+/// bar items; the SwiftUI form hosted over the staff; and, on iPhone, the banner
+/// pinned to the safe area's foot. Only the hosted form makes room for the
+/// keyboard, which covers the banner as it did in UIKit. (A SwiftUI
+/// NavigationStack in a UIKit-presented controller hands its title and toolbar
+/// to the presenting screen's bar instead.)
+final class SongEditorController: UIViewController {
     let session: SongEditorSession
+    private let form: UIHostingController<SongEditorFormHost>
+    private let banner = BannerHostView()
+    private var bannerHeight: NSLayoutConstraint?
+
+    private var isPhone: Bool { traitCollection.userInterfaceIdiom == .phone }
 
     init(request: SongEditorRequest) {
         session = SongEditorSession(request: request)
-        super.init(rootView: SongEditorScreen(session: session))
+        form = UIHostingController(rootView: SongEditorFormHost(model: session.model))
+        super.init(nibName: nil, bundle: nil)
         navigationItem.title = session.title
         navigationItem.leftBarButtonItem = BarSymbol.item(systemName: "xmark", target: self, action: #selector(close))
         navigationItem.rightBarButtonItem = BarSymbol.item(systemName: "checkmark", target: self, action: #selector(done))
     }
 
     @available(*, unavailable)
-    @MainActor required dynamic init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+    required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .systemBackground
+        edgesForExtendedLayout = .all
+
+        // The staff runs under the glass bars as a non-scrolling scroll view's
+        // pattern, which the bars sample; the pattern starts below the bars.
+        let backdrop = UIScrollView()
+        backdrop.isScrollEnabled = false
+        backdrop.backgroundColor = StaffPattern.color
+        backdrop.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(backdrop)
+        setContentScrollView(backdrop, for: .all)
+
+        addChild(form)
+        form.view.backgroundColor = .clear
+        form.view.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(form.view)
+        form.didMove(toParent: self)
+
+        let safe = view.safeAreaLayoutGuide
+        var constraints = [
+            backdrop.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            backdrop.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            backdrop.topAnchor.constraint(equalTo: view.topAnchor),
+            backdrop.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            form.view.topAnchor.constraint(equalTo: safe.topAnchor),
+            form.view.leadingAnchor.constraint(equalTo: safe.leadingAnchor),
+            form.view.trailingAnchor.constraint(equalTo: safe.trailingAnchor),
+        ]
+        if isPhone {
+            banner.translatesAutoresizingMaskIntoConstraints = false
+            banner.accessibilityElementsHidden = true
+            view.addSubview(banner)
+            let height = banner.heightAnchor.constraint(equalToConstant: 0)
+            bannerHeight = height
+            constraints += [
+                banner.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                banner.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                banner.bottomAnchor.constraint(equalTo: safe.bottomAnchor),
+                height,
+                form.view.bottomAnchor.constraint(equalTo: banner.topAnchor, constant: -8),
+            ]
+        } else {
+            constraints.append(form.view.bottomAnchor.constraint(equalTo: safe.bottomAnchor, constant: -8))
+        }
+        NSLayoutConstraint.activate(constraints)
+    }
+
+    override func viewWillLayoutSubviews() {
+        super.viewWillLayoutSubviews()
+        bannerHeight?.constant = AdBanner.size(width: view.bounds.width, landscape: banner.isLandscape).size.height
+    }
 
     @objc private func close() { session.cancel() }
     @objc private func done() { session.complete() }
+}
+
+/// The form as the editor controller hosts it: clear, so the staff shows through.
+struct SongEditorFormHost: View {
+    let model: SongEditorModel
+
+    var body: some View {
+        SongEditorView(model: model)
+    }
 }
