@@ -1,17 +1,19 @@
 package depollsoft.pitchperfect
 
 import android.app.Activity.RESULT_OK
+import android.graphics.Typeface
 import android.text.Html
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.CircularProgressIndicator
-import depollsoft.pitchperfect.ui.PlateText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -40,6 +43,7 @@ import depollsoft.pitchperfect.ui.AppCompatAlertDialog
 import depollsoft.pitchperfect.ui.DialogButton
 import depollsoft.pitchperfect.ui.LegacyText
 import depollsoft.pitchperfect.ui.PlateSettingsButton
+import depollsoft.pitchperfect.ui.PlateText
 import depollsoft.pitchperfect.ui.plateColors
 import depollsoft.pitchperfect.ui.plateText
 
@@ -89,7 +93,7 @@ fun LoginPromptDialog(
     isHoomiLogout: Boolean = false,
 ) {
     val context = LocalContext.current
-    val view = androidx.compose.ui.platform.LocalView.current
+    val view = LocalView.current
     var opening by rememberSaveable { mutableStateOf(false) }
     var status by rememberSaveable { mutableStateOf<Int?>(null) }
 
@@ -137,7 +141,7 @@ fun LoginPromptDialog(
         title = stringResource(R.string.LoginTitle),
         neutral = DialogButton(stringResource(R.string.SkipLogin), onDismiss),
     ) {
-        androidx.compose.foundation.layout.Column(
+        Column(
             Modifier
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp, vertical = 8.dp),
@@ -146,7 +150,7 @@ fun LoginPromptDialog(
                 explanation,
                 size = 16.sp,
                 color = colors.inkSecondary,
-                typeface = android.graphics.Typeface.DEFAULT,
+                typeface = Typeface.DEFAULT,
                 lineSpacingExtra = 4.dp,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -156,7 +160,7 @@ fun LoginPromptDialog(
                 }
                 val message = status ?: if (opening) R.string.OpeningSignIn else null
                 if (message != null) {
-                    if (opening) androidx.compose.foundation.layout.Spacer(Modifier.width(10.dp))
+                    if (opening) Spacer(Modifier.width(10.dp))
                     PlateText(
                         stringResource(message),
                         style = plateText(14.sp, colors.ink),
@@ -173,8 +177,7 @@ fun LoginPromptDialog(
             ) {
                 opening = true
                 status = null
-                // A live region may not speak a line that has only just appeared; say it outright,
-                // as the View did.
+                // A live region may not speak a line that has only just appeared; say it outright.
                 view.announceForAccessibility(context.getString(R.string.OpeningSignIn))
                 launcher.launch(LoginPrompt.createSignInIntent())
             }

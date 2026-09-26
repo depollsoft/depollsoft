@@ -1,9 +1,5 @@
 package depollsoft.tagmaster.ui
 
-import depollsoft.compose.ListMotion
-import depollsoft.compose.PlatformIcon
-import depollsoft.compose.viewPx
-import depollsoft.compose.ViewAlign
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
@@ -29,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.input.key.Key
@@ -48,6 +45,10 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import depollsoft.compose.ListMotion
+import depollsoft.compose.PlatformIcon
+import depollsoft.compose.ViewAlign
+import depollsoft.compose.viewPx
 import depollsoft.tagmaster.R
 import depollsoft.tagmaster.TagLists
 import depollsoft.tagmaster.ui.TagMasterType.withoutLineHeight
@@ -205,7 +206,7 @@ fun ManagedListRow(
                     }.testTag("listRow:$key"),
         )
         // Anchored to the row's end, where the thumb that opened it already is.
-        Box(Modifier.align(androidx.compose.ui.Alignment.TopEnd)) {
+        Box(Modifier.align(Alignment.TopEnd)) {
             ListRowMenu(menuOpen, key, dialogs) { menuOpen = false }
         }
     }

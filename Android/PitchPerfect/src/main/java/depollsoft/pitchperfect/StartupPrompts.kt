@@ -1,5 +1,6 @@
 package depollsoft.pitchperfect
 
+import android.graphics.Typeface
 import android.text.Html
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -75,7 +76,7 @@ fun ChangelogDialog(onDismiss: () -> Unit) {
             text,
             size = 16.sp,
             color = plateColors.inkSecondary,
-            typeface = android.graphics.Typeface.DEFAULT,
+            typeface = Typeface.DEFAULT,
             modifier =
                 Modifier
                     .heightIn(max = 480.dp)

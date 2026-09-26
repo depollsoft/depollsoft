@@ -96,7 +96,7 @@ class PitchPipeAppWidget : AppWidgetProvider() {
 
     /**
      * The system delivers widget broadcasts on the app's main thread, so each
-     * render (one face plus thirteen cells per size) used to stall the UI.
+     * render (one face plus thirteen cells per size) runs off it to keep the UI responsive.
      */
     private fun renderAsync(
         context: Context,

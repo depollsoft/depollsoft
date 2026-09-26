@@ -1,17 +1,16 @@
 package depollsoft.pitchperfect
 
-import depollsoft.compose.viewDp
 import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import depollsoft.pitchperfect.ui.PlateText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -47,7 +46,9 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import depollsoft.compose.viewDp
 import depollsoft.pitchperfect.ui.PlateFonts
+import depollsoft.pitchperfect.ui.PlateText
 import depollsoft.pitchperfect.ui.centerVerticallyLikeViews
 import depollsoft.pitchperfect.ui.plateColors
 import depollsoft.pitchperfect.ui.plateText
@@ -144,7 +145,7 @@ fun SetListSelector(
 }
 
 /**
- * Lays the positions out like the View's LinearLayout inside a filling HorizontalScrollView: at
+ * Lays the positions out like a LinearLayout inside a filling HorizontalScrollView: at
  * their own widths when they overflow, and otherwise sharing the spare width equally (the last
  * child, the "+" position, has a fixed width and no share).
  */
@@ -165,7 +166,7 @@ private fun PositionsRow(
         if (width > 0) scroll.scrollTo((left - (viewport - width) / 2).coerceAtLeast(0))
     }
     // Inside the scroll the row is offered unbounded width, so the viewport is measured outside it.
-    androidx.compose.foundation.layout.BoxWithConstraints(modifier) {
+    BoxWithConstraints(modifier) {
         val viewport = constraints.maxWidth
         PositionsLayout(scroll, viewport, selectedBounds, selectedIndex, content)
     }

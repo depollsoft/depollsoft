@@ -15,6 +15,7 @@ import depollsoft.lib.util.Preferences
 import depollsoft.lib.util.preference
 import depollsoft.lib.util.writeThroughPreference
 import depollsoft.pitchperfect.lib.PitchedSong
+import kotlin.math.abs
 import kotlin.random.Random
 
 class SongsModel private constructor() {
@@ -77,10 +78,6 @@ class SongsModel private constructor() {
             it.name
             it.order
         }
-    }
-
-    fun notifyListsChanged() {
-        listsChanged.changed()
     }
 
     // MARK: - Reading
@@ -337,7 +334,7 @@ class SongsModel private constructor() {
         lastSignInAt: Long?,
     ): Boolean {
         if (createdAt == null || lastSignInAt == null) return false
-        return kotlin.math.abs(lastSignInAt - createdAt) < NEW_ACCOUNT_WINDOW_MS
+        return abs(lastSignInAt - createdAt) < NEW_ACCOUNT_WINDOW_MS
     }
 
     /** Set while a sign-in is waiting for its first server snapshot to decide which lists stay. */
@@ -465,10 +462,6 @@ class SongsModel private constructor() {
         userDoc = null
         pruneOnServerSnapshot = false
         attachment.clear()
-    }
-
-    fun removeSongList(key: String) {
-        songLists = songLists - key
     }
 
     fun storeAll() {

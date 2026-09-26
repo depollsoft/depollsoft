@@ -1,14 +1,5 @@
 package depollsoft.tagmaster.ui
 
-import depollsoft.compose.listItemMotion
-import depollsoft.compose.shownOrder
-import depollsoft.compose.reorderRow
-import depollsoft.compose.reorderHandle
-import depollsoft.compose.recyclerScrollbar
-import depollsoft.compose.revealItem
-import depollsoft.compose.rememberReorderState
-import depollsoft.compose.ViewAlign
-import depollsoft.lib.util.appVersionName
 import android.content.Context
 import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
@@ -23,13 +14,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -40,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -53,6 +42,15 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import depollsoft.compose.ViewAlign
+import depollsoft.compose.listItemMotion
+import depollsoft.compose.recyclerScrollbar
+import depollsoft.compose.rememberReorderState
+import depollsoft.compose.reorderHandle
+import depollsoft.compose.reorderRow
+import depollsoft.compose.revealItem
+import depollsoft.compose.shownOrder
+import depollsoft.lib.util.appVersionName
 import depollsoft.tagmaster.ListModel
 import depollsoft.tagmaster.R
 import depollsoft.tagmaster.SettingsActivity
@@ -65,15 +63,15 @@ import depollsoft.tagmaster.TagSearchActivity
 import depollsoft.tagmaster.TeachableTagsActivity
 import depollsoft.tagmaster.await
 import depollsoft.tagmaster.barbershop.Tag
+import java.util.Calendar
+import java.util.GregorianCalendar
+import java.util.Random
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import java.util.Calendar
-import java.util.GregorianCalendar
-import java.util.Random
 
 /**
  * Home's two requests — a random tag, and a tag opened by its id — held by the activity so that
@@ -201,8 +199,7 @@ fun HomeScreen(
             listsReorder.cancel()
         }
     }
-    // Leaving the screen drops a drag in progress and the Remove confirmation, as the View
-    // editor's pause() did.
+    // Leaving the screen drops a drag in progress and the Remove confirmation.
     LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) {
         favoritesReorder.cancel()
         listsReorder.cancel()
@@ -386,7 +383,7 @@ private fun AboutFooter() {
         )
         FlowRow(
             Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp, androidx.compose.ui.Alignment.CenterHorizontally),
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
         ) {
             Row(verticalAlignment = ViewAlign.CenterVertically) {
                 Hyperlink(

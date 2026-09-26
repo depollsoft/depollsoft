@@ -1,13 +1,10 @@
 package depollsoft.pitchperfect
 
-import depollsoft.compose.ListMotion
-import depollsoft.compose.ViewAlign
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-
+import android.graphics.Typeface
 import android.os.Build
+import android.os.Bundle
 import android.view.HapticFeedbackConstants
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -23,21 +20,20 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import depollsoft.pitchperfect.ui.LegacyText
-import depollsoft.pitchperfect.ui.PlateText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -45,12 +41,16 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import depollsoft.compose.ListMotion
+import depollsoft.compose.ViewAlign
 import depollsoft.pitchperfect.lib.Key
 import depollsoft.pitchperfect.lib.KeyType
 import depollsoft.pitchperfect.lib.PitchedSong
+import depollsoft.pitchperfect.ui.LegacyText
 import depollsoft.pitchperfect.ui.PlateBackground
 import depollsoft.pitchperfect.ui.PlateFilledField
 import depollsoft.pitchperfect.ui.PlateFonts
@@ -102,7 +102,7 @@ class SongEditorState(
     }
 
     /** What the editor holds so far, for [restore] after the activity is recreated. */
-    fun save(into: android.os.Bundle) {
+    fun save(into: Bundle) {
         into.putString(SAVED_TITLE, title.text)
         into.putInt(SAVED_SELECTION_START, title.selection.start)
         into.putInt(SAVED_SELECTION_END, title.selection.end)
@@ -111,12 +111,12 @@ class SongEditorState(
         into.putBoolean(SAVED_TITLE_MISSING, titleMissing)
     }
 
-    fun restore(saved: android.os.Bundle) {
+    fun restore(saved: Bundle) {
         val text = saved.getString(SAVED_TITLE) ?: return
         title =
             TextFieldValue(
                 text,
-                androidx.compose.ui.text.TextRange(saved.getInt(SAVED_SELECTION_START), saved.getInt(SAVED_SELECTION_END)),
+                TextRange(saved.getInt(SAVED_SELECTION_START), saved.getInt(SAVED_SELECTION_END)),
             )
         (if (saved.getBoolean(SAVED_MINOR)) Key.getMinorKeys() else Key.getMajorKeys())
             .getOrNull(saved.getInt(SAVED_KEY))
@@ -263,7 +263,7 @@ private fun KeyPicker(
 
 /**
  * Brings the chosen key to the middle of the list when it first shows and after a mode switch:
- * the View scrolled it to half the list's height less half a 64dp row.
+ * half the list's height less half a 64dp row from the top.
  */
 @Composable
 private fun CenterChosenKey(
@@ -292,7 +292,7 @@ private fun KeyChoice(
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     // The row stays lit while it is the chosen key, and lights at once on press. Choosing a key
-    // cross-fades the old row out and the new one in, as notifyItemChanged did.
+    // cross-fades the old row out and the new one in.
     val chosenFill by animateColorAsState(if (chosen) colors.accent else colors.accent.copy(alpha = 0f), ListMotion.change(), label = "keyFill")
     val chosenInk by animateColorAsState(if (chosen) colors.onAccent else colors.ink, ListMotion.change(), label = "keyInk")
     val ink = if (pressed) colors.onAccent else chosenInk
@@ -313,7 +313,7 @@ private fun KeyChoice(
             },
         verticalAlignment = ViewAlign.CenterVertically,
     ) {
-        LegacyText(NoteText.keySignature(key), 24.sp, ink, android.graphics.Typeface.DEFAULT, Modifier.weight(1f).padding(start = 20.dp), wrapWidth = true)
+        LegacyText(NoteText.keySignature(key), 24.sp, ink, Typeface.DEFAULT, Modifier.weight(1f).padding(start = 20.dp), wrapWidth = true)
         LegacyText(NoteText.keyName(key), 22.sp, ink, PlateFonts.condensedTypeface, Modifier.padding(end = 20.dp), wrapWidth = true)
     }
 }

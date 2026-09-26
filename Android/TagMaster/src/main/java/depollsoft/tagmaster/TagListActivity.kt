@@ -26,17 +26,13 @@ import depollsoft.tagmaster.ui.setTagMasterContent
  * The list's name is the title, so a rename anywhere (including from another device) retitles the
  * screen; a delete anywhere closes it rather than leaving a screen onto nothing.
  */
-class TagListActivity :
-    TagPaneActivity() {
+class TagListActivity : SavedListActivity() {
     val listKey: String
         get() = intent?.getStringExtra(EXTRA_LIST_KEY).orEmpty()
 
     /** The name this screen is currently titled with. */
     val listName: String
         get() = TagLists.name(listKey)
-
-    lateinit var listEditor: SavedListEditor
-        private set
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,7 +50,7 @@ class TagListActivity :
                 hasTwoPanes(configuration.screenWidthDp, configuration.screenHeightDp),
                 listedIds = { model.ids.toList() },
             )
-        listEditor = SavedListEditor(savedInstanceState?.getBoolean(STATE_EDITING) == true, { model })
+        listEditor = SavedListEditor(wasEditing(savedInstanceState), { model })
         setTagMasterContent {
             val dialogs = rememberListDialogs()
             val exists = TagLists.customKeys.contains(key)
@@ -90,19 +86,8 @@ class TagListActivity :
         tagPane.restore(savedInstanceState)
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        if (::listEditor.isInitialized) outState.putBoolean(STATE_EDITING, listEditor.isEditing)
-        super.onSaveInstanceState(outState)
-    }
-
-    override fun onSearchRequested(): Boolean {
-        startActivity(Intent(this, TagSearchActivity::class.java))
-        return true
-    }
-
     companion object {
         const val EXTRA_LIST_KEY = "depollsoft.tagmaster.listKey"
-        private const val STATE_EDITING = "savedListEditing"
 
         fun intent(
             context: Context,

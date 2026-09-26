@@ -1,12 +1,9 @@
 package depollsoft.tagmaster.ui.detail
 
-import depollsoft.compose.rememberDrawable
-import depollsoft.compose.drawPlatform
-import depollsoft.compose.PlatformIcon
-import depollsoft.compose.ViewAlign
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.net.Uri
 import android.util.Base64
 import android.webkit.MimeTypeMap
@@ -23,6 +20,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -37,7 +35,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,12 +55,17 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.PlatformTextStyle
-import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import bolts.Task
+import depollsoft.compose.PlatformIcon
+import depollsoft.compose.ViewAlign
+import depollsoft.compose.drawPlatform
+import depollsoft.compose.rememberDrawable
 import depollsoft.lib.util.ContentCache
 import depollsoft.tagmaster.ListModel
 import depollsoft.tagmaster.MeActivity
@@ -74,11 +76,11 @@ import depollsoft.tagmaster.TagListActivity
 import depollsoft.tagmaster.TagLists
 import depollsoft.tagmaster.TeachableTagsActivity
 import depollsoft.tagmaster.barbershop.Tag
-import depollsoft.tagmaster.ui.ButtonStyle
 import depollsoft.tagmaster.ui.CompactBarberPole
 import depollsoft.tagmaster.ui.DialogButton
 import depollsoft.tagmaster.ui.ListDialogs
 import depollsoft.tagmaster.ui.LocalSnackbars
+import depollsoft.tagmaster.ui.Snackbars
 import depollsoft.tagmaster.ui.TagMasterButton
 import depollsoft.tagmaster.ui.TagMasterDialog
 import depollsoft.tagmaster.ui.TagMasterTheme
@@ -93,6 +95,7 @@ import depollsoft.tagmaster.ui.rememberNotePlayer
 import depollsoft.tagmaster.ui.rememberTextViewPaint
 import depollsoft.tagmaster.ui.textViewWidth
 import java.util.Locale
+import kotlin.math.ceil
 
 /**
  * The Summary page's request state: whether sheet music is being fetched, a rating being sent,
@@ -119,7 +122,7 @@ fun SummaryPage(
     DisposableEffect(requests) { onDispose { requests.active = false } }
     val canRate = !requests.rated && !requests.ratingSubmitting && !RatingsModel.isRated(tag.id)
 
-    DetailScroll(modifier, maxWidth = if (LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE) 960 else 640) {
+    DetailScroll(modifier, maxWidth = if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE) 960 else 640) {
         Column(Modifier.fillMaxWidth()) {
             val title = tag.title
             if (title != null) Text(title, style = TagMasterType.headlineSmall, color = colors.text)
@@ -156,7 +159,7 @@ fun SummaryPage(
                             modifier = Modifier.fillMaxWidth().testTag("sheetMusicLink"),
                             icon = R.drawable.ic_sheet_music,
                             enabled = !requests.sheetMusicLoading,
-                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 44.dp, vertical = 8.dp),
+                            contentPadding = PaddingValues(horizontal = 44.dp, vertical = 8.dp),
                             inset = 0.dp,
                         )
                         CompactBarberPole(
@@ -265,8 +268,8 @@ private fun summaryFacts(
     val body = TagMasterType.bodyMedium
     val bodyPaint = rememberTextViewPaint(body)
 
-    fun budget(text: String): (androidx.compose.ui.unit.Density) -> Int =
-        { _ -> textBudget(kotlin.math.ceil(bodyPaint.measureText(text)).toInt(), bodyPaint.textSize) }
+    fun budget(text: String): (Density) -> Int =
+        { _ -> textBudget(ceil(bodyPaint.measureText(text)).toInt(), bodyPaint.textSize) }
     val pairs = mutableListOf<DetailPair>()
     pairs += textPair(stringResource(R.string.TagId), "${tag.id}", budget("${tag.id}"))
     if (tag.parts.isPresent()) pairs += textPair(stringResource(R.string.Parts), "${tag.parts}", budget("${tag.parts}"))
@@ -282,7 +285,7 @@ private fun summaryFacts(
             stringResource(R.string.Rating),
             valueBudget = { density ->
                 with(density) {
-                    (80.dp.roundToPx() + (ratingText?.let { 8.dp.roundToPx() + kotlin.math.ceil(bodyPaint.measureText(it)).toInt() } ?: 0) +
+                    (80.dp.roundToPx() + (ratingText?.let { 8.dp.roundToPx() + ceil(bodyPaint.measureText(it)).toInt() } ?: 0) +
                         18.76.dp.roundToPx() + 56.dp.roundToPx())
                 }
             },
@@ -334,7 +337,7 @@ private fun summaryFacts(
 private fun textPair(
     caption: String,
     value: String,
-    budget: (androidx.compose.ui.unit.Density) -> Int,
+    budget: (Density) -> Int,
 ) = DetailPair(caption, budget) { lines ->
     Text(
         value,
@@ -356,10 +359,10 @@ private fun KeyNoteButton(tag: Tag) {
     val note = tag.keyNote
     val playing = note?.isPlaying == true
     val shape = RoundedCornerShape(8.dp)
-    // The View button's own state drawable: outlined, filled with the accent while activated.
+    // The button's state drawable: outlined, filled with the accent while activated.
     val background = rememberDrawable(R.drawable.key_button_background)
     // The accent fill is the press feedback (the ripple is transparent while pressed or
-    // activated); keyboard focus and hover show the control highlight, as the View button did.
+    // activated); keyboard focus and hover show the control highlight.
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
     val hovered by interactions.collectIsHoveredAsState()
@@ -438,7 +441,7 @@ private fun ListChips(
     }
 }
 
-/** An outlined Material 3 chip, measured as the View chips were. */
+/** An outlined Material 3 chip, measured as MDC's Chip. */
 @Composable
 private fun ListChip(
     text: String,
@@ -526,7 +529,7 @@ private fun removeFromList(
     tagId: Int,
     message: String,
     undo: String,
-    snackbars: depollsoft.tagmaster.ui.Snackbars,
+    snackbars: Snackbars,
 ) {
     val model = ListModel(key)
     val index = model.ids.indexOf(tagId)
@@ -545,7 +548,7 @@ private fun loadSheetMusic(
     context: Context,
     tag: Tag,
     requests: SummaryRequests,
-    snackbars: depollsoft.tagmaster.ui.Snackbars,
+    snackbars: Snackbars,
 ) {
     if (requests.sheetMusicLoading) return
     val location = tag.sheetMusicUri ?: return
@@ -591,7 +594,7 @@ private fun showSheetMusicError(
     context: Context,
     tag: Tag,
     requests: SummaryRequests,
-    snackbars: depollsoft.tagmaster.ui.Snackbars,
+    snackbars: Snackbars,
 ) {
     snackbars.show(context.getString(R.string.detail_sheet_music_failed), context.getString(R.string.detail_retry)) {
         loadSheetMusic(context, tag, requests, snackbars)
@@ -602,7 +605,7 @@ private fun submitRating(
     tag: Tag,
     rating: Int,
     requests: SummaryRequests,
-    snackbars: depollsoft.tagmaster.ui.Snackbars,
+    snackbars: Snackbars,
     context: Context,
 ) {
     if (requests.ratingSubmitting || requests.rated || RatingsModel.isRated(tag.id)) return
@@ -652,7 +655,7 @@ private fun RatingDialog(
                     .padding(top = 16.dp),
                 style = TagMasterType.bodyMedium,
                 color = colors.onSurfaceVariant,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                textAlign = TextAlign.Center,
             )
         }
     }

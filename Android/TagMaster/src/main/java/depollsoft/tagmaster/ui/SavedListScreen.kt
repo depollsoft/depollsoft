@@ -1,17 +1,8 @@
 package depollsoft.tagmaster.ui
 
-import depollsoft.compose.listItemMotion
-import depollsoft.compose.shownOrder
-import depollsoft.compose.reorderRow
-import depollsoft.compose.reorderHandle
-import depollsoft.compose.recyclerScrollbar
-import depollsoft.compose.revealItem
-import depollsoft.compose.rememberReorderState
-import depollsoft.compose.ViewAlign
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -25,6 +16,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import depollsoft.compose.ViewAlign
+import depollsoft.compose.listItemMotion
+import depollsoft.compose.recyclerScrollbar
+import depollsoft.compose.rememberReorderState
+import depollsoft.compose.reorderHandle
+import depollsoft.compose.reorderRow
+import depollsoft.compose.revealItem
+import depollsoft.compose.shownOrder
 import depollsoft.tagmaster.ListModel
 import depollsoft.tagmaster.R
 import depollsoft.tagmaster.TagPaneState
@@ -63,8 +62,7 @@ fun SavedListScreen(
         if (reorder.sourceChanged(ids)) view.announceForAccessibility(changed)
     }
     LaunchedEffect(editor.isEditing) { if (!editor.isEditing) reorder.cancel() }
-    // Leaving the screen drops a drag in progress and the Remove confirmation, as the View
-    // editor's pause() did.
+    // Leaving the screen drops a drag in progress and the Remove confirmation.
     LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) {
         reorder.cancel()
         editor.dismissRemoval()

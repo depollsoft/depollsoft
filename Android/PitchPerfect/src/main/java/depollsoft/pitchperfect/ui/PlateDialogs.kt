@@ -1,61 +1,67 @@
 package depollsoft.pitchperfect.ui
 
+import android.view.ContextThemeWrapper
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.layout.LayoutCoordinates
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onPlaced
-
-import androidx.compose.runtime.remember
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.size
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.core.graphics.drawable.toBitmap
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
 import depollsoft.compose.dialogFirstPassWidth
 import depollsoft.compose.dialogTitleFits
 import depollsoft.compose.dialogWindowWidth
+import depollsoft.pitchperfect.R
 
 /** A dialog button: engraved caps in ink, as MaterialAlertDialog's text buttons. */
 class DialogButton(
@@ -101,8 +107,7 @@ fun PlateAlertDialog(
                         if (outer != null && card != null && !outer.localBoundingBoxOf(card).contains(position)) onDismissRequest()
                     }
                 }.padding(horizontal = CARD_INSET, vertical = verticalInset)
-                // The system resized the old dialog window above the keyboard; this one keeps the
-                // card centred in the space the keyboard leaves.
+                // The card stays centred in the space the keyboard leaves.
                 .windowInsetsPadding(WindowInsets.ime),
         ) {
             Column(
@@ -151,10 +156,10 @@ fun AppCompatAlertDialog(
     val colors = plateColors
     val context = LocalView.current.context
     val background =
-        androidx.compose.runtime.remember(context) {
-            val themed = android.view.ContextThemeWrapper(context, depollsoft.pitchperfect.R.style.AlertDialogTheme)
+        remember(context) {
+            val themed = ContextThemeWrapper(context, R.style.AlertDialogTheme)
             themed.obtainStyledAttributes(intArrayOf(android.R.attr.colorBackgroundFloating)).run {
-                androidx.compose.ui.graphics.Color(getColor(0, android.graphics.Color.WHITE)).also { recycle() }
+                Color(getColor(0, android.graphics.Color.WHITE)).also { recycle() }
             }
         }
     Dialog(onDismissRequest, DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
@@ -176,8 +181,8 @@ fun AppCompatAlertDialog(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         if (icon != null) {
-                            androidx.compose.foundation.Image(
-                                androidx.compose.ui.graphics.painter.BitmapPainter(
+                            Image(
+                                BitmapPainter(
                                     rememberLauncherIcon(icon),
                                 ),
                                 contentDescription = null,
@@ -236,11 +241,11 @@ private fun AppCompatDialogTitle(
 
 /** [id] (an adaptive launcher icon included) drawn to a bitmap, as an ImageView would show it. */
 @Composable
-private fun rememberLauncherIcon(@androidx.annotation.DrawableRes id: Int): androidx.compose.ui.graphics.ImageBitmap {
+private fun rememberLauncherIcon(@androidx.annotation.DrawableRes id: Int): ImageBitmap {
     val context = LocalView.current.context
     val size = with(LocalDensity.current) { 32.dp.roundToPx() }
     return remember(id, size) {
-        val drawable = androidx.core.content.ContextCompat.getDrawable(context, id)!!
+        val drawable = ContextCompat.getDrawable(context, id)!!
         drawable.toBitmap(size, size).asImageBitmap()
     }
 }
@@ -309,7 +314,7 @@ fun PlateTextButton(
 }
 
 /**
- * Dims the screen behind a dialog as its View-era theme did: MaterialComponents' dialogs by 32%,
+ * Dims the screen behind a dialog as its XML theme sets: MaterialComponents' dialogs by 32%,
  * AppCompat's by 60%. Compose's dialog window would always use the platform's amount. The window
  * also fades out as it closes, however it is closed ([dialogEntrance] brings the card in).
  */
@@ -318,7 +323,7 @@ private fun MatchPlatformWindow(dim: Float) {
     val window = (LocalView.current.parent as? DialogWindowProvider)?.window ?: return
     SideEffect {
         window.setDimAmount(dim)
-        window.setWindowAnimations(depollsoft.pitchperfect.R.style.Animation_Plate_Dialog)
+        window.setWindowAnimations(R.style.Animation_Plate_Dialog)
     }
 }
 

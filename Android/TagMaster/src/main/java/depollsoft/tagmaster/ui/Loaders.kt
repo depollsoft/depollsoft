@@ -1,5 +1,6 @@
 package depollsoft.tagmaster.ui
 
+import android.content.res.Resources
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.provider.Settings
@@ -30,12 +31,13 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.currentStateAsState
 import depollsoft.tagmaster.BarberPoleLogo
 import depollsoft.tagmaster.QuartetArtwork
+import kotlin.math.floor
 import kotlin.math.roundToInt
 
 /** The barber-pole loader's artwork, drawn in the logo's own coordinates. */
 internal object BarberPoleRenderer {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val logo = BarberPoleLogo(android.content.res.Resources.getSystem())
+    private val logo = BarberPoleLogo(Resources.getSystem())
 
     /**
      * Draws the pole centered in [width] x [height] pixels. The stripes move with [stripePhase]
@@ -63,7 +65,7 @@ internal object BarberPoleRenderer {
         canvas.clipPath(logo.shaft)
         // In the logo's own coordinate system only stripe phase moves. The frame never rotates.
         canvas.rotate(BarberPoleLogo.AXIS_ANGLE)
-        val phase = stripePhase - kotlin.math.floor(stripePhase)
+        val phase = stripePhase - floor(stripePhase)
         for (index in BarberPoleLogo.REPEAT_MIN..BarberPoleLogo.REPEAT_MAX) {
             val band = canvas.save()
             canvas.translate(0f, (index + phase * BarberPoleLogo.PHASE_MULTIPLIER) * BarberPoleLogo.STRIPE_STEP)
@@ -156,8 +158,8 @@ fun loopingPhase(
 }
 
 /**
- * The compact barber-pole progress indicator (18.76 x 32dp). It keeps its space while idle, as
- * the View did with INVISIBLE, and says [description] while [loading].
+ * The compact barber-pole progress indicator (18.76 x 32dp). It keeps its space while idle and
+ * says [description] while [loading].
  */
 @Composable
 fun CompactBarberPole(

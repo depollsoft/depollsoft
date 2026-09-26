@@ -1,6 +1,6 @@
 package depollsoft.pitchperfect.ui
 
-import depollsoft.compose.inWholePixels
+import android.graphics.Paint
 import android.graphics.Typeface
 import android.os.Build
 import android.text.BoringLayout
@@ -30,6 +30,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
+import depollsoft.compose.inWholePixels
 import kotlin.math.ceil
 
 /**
@@ -57,7 +58,7 @@ fun LegacyText(
     val density = LocalDensity.current
     val paint =
         remember(size, color, typeface, letterSpacing, density) {
-            TextPaint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
                 // Whole pixels, as a TextView reads an XML text size.
                 textSize = with(density) { size.inWholePixels(density).toPx() }
                 this.color = color.toArgb()

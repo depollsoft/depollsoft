@@ -1,5 +1,6 @@
 package depollsoft.tagmaster
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -11,6 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import bolts.Task
 import depollsoft.tagmaster.barbershop.Tag
+import depollsoft.tagmaster.ui.SavedListEditor
 
 /**
  * A tag list screen that can open a tag beside itself in its [tagPane], which it creates in
@@ -46,6 +48,32 @@ abstract class TagPaneActivity : AppCompatActivity() {
     override fun onDestroy() {
         if (hasTagPane) tagPane.stop()
         super.onDestroy()
+    }
+}
+
+/**
+ * A [TagPaneActivity] whose list the user edits: the [listEditor]'s edit mode survives the activity
+ * being recreated, and the search key opens the search form.
+ */
+abstract class SavedListActivity : TagPaneActivity() {
+    lateinit var listEditor: SavedListEditor
+        protected set
+
+    /** Whether edit mode was on when the activity was last saved. */
+    protected fun wasEditing(savedInstanceState: Bundle?): Boolean = savedInstanceState?.getBoolean(STATE_EDITING) == true
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        if (::listEditor.isInitialized) outState.putBoolean(STATE_EDITING, listEditor.isEditing)
+        super.onSaveInstanceState(outState)
+    }
+
+    override fun onSearchRequested(): Boolean {
+        startActivity(Intent(this, TagSearchActivity::class.java))
+        return true
+    }
+
+    private companion object {
+        const val STATE_EDITING = "savedListEditing"
     }
 }
 
@@ -87,7 +115,7 @@ class TagPaneState(
             context.startActivity(
                 Intent(context, TagDetailActivity::class.java)
                     .putExtra(TagDetailActivity.TAG_ID_EXTRA, id)
-                    .addFlags(if (context is android.app.Activity) 0 else Intent.FLAG_ACTIVITY_NEW_TASK),
+                    .addFlags(if (context is Activity) 0 else Intent.FLAG_ACTIVITY_NEW_TASK),
             )
             return
         }

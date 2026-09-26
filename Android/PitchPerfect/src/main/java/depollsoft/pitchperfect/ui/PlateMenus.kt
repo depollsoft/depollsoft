@@ -1,16 +1,10 @@
 package depollsoft.pitchperfect.ui
 
-import depollsoft.compose.OpensOnMenuKey
-import androidx.compose.foundation.Image
+import androidx.appcompat.R as AppCompatR
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.Stable
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.ripple
 import androidx.compose.runtime.Composable
@@ -20,15 +14,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import depollsoft.compose.OpensOnMenuKey
 import depollsoft.pitchperfect.TestTags
 
 /** One entry of an overflow menu. */
@@ -48,7 +40,7 @@ class PlateMenuItem(
 fun PlateOverflowMenu(items: List<PlateMenuItem>) {
     val colors = plateColors
     var open by remember { mutableStateOf(false) }
-    val description = stringResource(androidx.appcompat.R.string.abc_action_menu_overflow_description)
+    val description = stringResource(AppCompatR.string.abc_action_menu_overflow_description)
     OpensOnMenuKey { open = true }
     WithTooltip(description) { showTooltip ->
         Box(
@@ -66,7 +58,7 @@ fun PlateOverflowMenu(items: List<PlateMenuItem>) {
                 .padding(start = 6.dp, end = 10.dp),
             contentAlignment = Alignment.Center,
         ) {
-            DrawableIcon(androidx.appcompat.R.drawable.abc_ic_menu_overflow_material, colors.ink)
+            DrawableIcon(AppCompatR.drawable.abc_ic_menu_overflow_material, colors.ink)
         }
         PlatePopupMenu(
             open,

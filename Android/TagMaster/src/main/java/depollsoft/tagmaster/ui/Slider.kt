@@ -1,8 +1,12 @@
 package depollsoft.tagmaster.ui
 
+import android.content.Context
+import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
+import android.util.TypedValue
+import androidx.appcompat.R as AppCompatR
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -40,9 +44,11 @@ import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.setProgress
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import com.google.android.material.R as MaterialR
 import kotlinx.coroutines.CancellationException
 
 /**
@@ -191,7 +197,7 @@ private class SliderGeometry {
 
     fun update(
         width: Float,
-        density: androidx.compose.ui.unit.Density,
+        density: Density,
     ) {
         val side = with(density) { SIDE_PADDING.toPx() }
         start = side
@@ -200,15 +206,15 @@ private class SliderGeometry {
 }
 
 private class SliderPaints(
-    context: android.content.Context,
+    context: Context,
 ) {
-    private val activeTrack = ContextCompat.getColorStateList(context, com.google.android.material.R.color.m3_slider_active_track_color)!!
-    private val inactiveTrack = ContextCompat.getColorStateList(context, com.google.android.material.R.color.m3_slider_inactive_track_color)!!
-    private val thumb = ContextCompat.getColorStateList(context, com.google.android.material.R.color.m3_slider_thumb_color)!!
-    private val inactiveStop = ContextCompat.getColorStateList(context, com.google.android.material.R.color.m3_slider_inactive_tick_marks_color)!!
+    private val activeTrack = ContextCompat.getColorStateList(context, MaterialR.color.m3_slider_active_track_color)!!
+    private val inactiveTrack = ContextCompat.getColorStateList(context, MaterialR.color.m3_slider_inactive_track_color)!!
+    private val thumb = ContextCompat.getColorStateList(context, MaterialR.color.m3_slider_thumb_color)!!
+    private val inactiveStop = ContextCompat.getColorStateList(context, MaterialR.color.m3_slider_inactive_tick_marks_color)!!
     private val focusHighlight =
-        android.util.TypedValue().let { value ->
-            context.theme.resolveAttribute(androidx.appcompat.R.attr.colorControlHighlight, value, true)
+        TypedValue().let { value ->
+            context.theme.resolveAttribute(AppCompatR.attr.colorControlHighlight, value, true)
             if (value.resourceId != 0) ContextCompat.getColor(context, value.resourceId) else value.data
         }
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -216,14 +222,14 @@ private class SliderPaints(
     private val rect = RectF()
 
     fun draw(
-        canvas: android.graphics.Canvas,
+        canvas: Canvas,
         geometry: SliderGeometry,
         height: Float,
         fraction: Float,
         enabled: Boolean,
         pressed: Boolean,
         focused: Boolean,
-        density: androidx.compose.ui.unit.Density,
+        density: Density,
     ) {
         val state = if (enabled) intArrayOf(android.R.attr.state_enabled) else intArrayOf()
         with(density) {
@@ -270,7 +276,7 @@ private class SliderPaints(
     }
 
     private fun track(
-        canvas: android.graphics.Canvas,
+        canvas: Canvas,
         left: Float,
         top: Float,
         right: Float,

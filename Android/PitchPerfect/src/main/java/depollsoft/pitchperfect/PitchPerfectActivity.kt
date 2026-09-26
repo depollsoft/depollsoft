@@ -1,9 +1,5 @@
 package depollsoft.pitchperfect
 
-import androidx.compose.runtime.CompositionLocalProvider
-import depollsoft.compose.LocalMenuKey
-import depollsoft.compose.MenuKey
-
 import android.content.Intent
 import android.content.res.Configuration
 import android.media.AudioManager
@@ -15,11 +11,14 @@ import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import com.google.android.gms.ads.AdListener
@@ -30,10 +29,14 @@ import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import depollsoft.compose.LocalMenuKey
+import depollsoft.compose.MenuKey
+import depollsoft.lib.privacy.PrivacyChoices
+import depollsoft.lib.privacy.TelemetryConsent
 import depollsoft.lib.util.RunUtils
 import depollsoft.pitchperfect.ui.PlateTheme
 
-class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.TelemetryConsent.Host {
+class PitchPerfectActivity : AppCompatActivity(), TelemetryConsent.Host {
     private var consentRevision = -1
     private var startupDialogsShown = false
     private var frameMonitor: FramePerformanceMonitor? = null
@@ -110,8 +113,8 @@ class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.Telemet
                                 openSettings = { startActivity(Intent(this@PitchPerfectActivity, SettingsActivity::class.java)) },
                             )
                         },
-                        modifier = androidx.compose.ui.Modifier.semantics { testTagsAsResourceId = true },
-                        overlay = { SongAnnouncements(songs, androidx.compose.ui.Modifier.align(androidx.compose.ui.Alignment.BottomCenter)) },
+                        modifier = Modifier.semantics { testTagsAsResourceId = true },
+                        overlay = { SongAnnouncements(songs, Modifier.align(Alignment.BottomCenter)) },
                     ) { tab ->
                         val current = pagerState.settledPage == tab.ordinal
                         when (tab) {
@@ -179,10 +182,10 @@ class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.Telemet
             adReady = false
             consentRevision = AdConsent.revision
         }
-        if (depollsoft.lib.privacy.PrivacyChoices(this).hasChosen) {
+        if (PrivacyChoices(this).hasChosen) {
             onPrivacyChoicesClosed()
         } else {
-            depollsoft.lib.privacy.TelemetryConsent.showIfNeeded(this)
+            TelemetryConsent.showIfNeeded(this)
         }
 
         if (SettingsModel.wakeLock) {
@@ -204,7 +207,7 @@ class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.Telemet
     }
 
     private fun showStartupDialogs() {
-        if (startupDialogsShown || isDestroyed || isFinishing || !depollsoft.lib.privacy.PrivacyChoices(this).hasChosen) return
+        if (startupDialogsShown || isDestroyed || isFinishing || !PrivacyChoices(this).hasChosen) return
         startupDialogsShown = true
         // First launch belongs to the first pitch: the login prompt waits for the next session.
         val isFirstLaunchEver = RunUtils.runOnce("firstLaunch")

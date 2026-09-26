@@ -1,6 +1,5 @@
 package depollsoft.tagmaster
 
-import depollsoft.compose.scrollViewScrollbar
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -24,8 +23,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -40,6 +39,8 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import com.google.android.material.R as MaterialR
+import depollsoft.compose.scrollViewScrollbar
 import depollsoft.lib.json.JsonSerializer
 import depollsoft.tagmaster.barbershop.TagCollection
 import depollsoft.tagmaster.barbershop.TagSortOptions
@@ -141,8 +142,8 @@ private fun SearchScreen(
                             // (reached by keyboard), has focus.
                             endIcon =
                                 FieldIcon(
-                                    com.google.android.material.R.drawable.mtrl_ic_cancel,
-                                    stringResource(com.google.android.material.R.string.clear_text_end_icon_content_description),
+                                    MaterialR.drawable.mtrl_ic_cancel,
+                                    stringResource(MaterialR.string.clear_text_end_icon_content_description),
                                     interactionSource = clearInteractions,
                                 ) {
                                     // Clearing hides the icon; a keyboard user who pressed it goes

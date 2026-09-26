@@ -81,10 +81,9 @@ fun rememberNotePlayer(): NotePlayer {
 /**
  * Wires [player] to presses, keyboard Enter/Space and accessibility clicks of this element.
  *
- * A finger sounds the note until it lifts, even if it drifts off the button, as the View buttons
- * stopped only on UP or CANCEL; a scroll that takes the gesture is that CANCEL. A tap that lifts on
- * the button plays the system click sound through [view], as a View's performClick did. Presses,
- * hover and focus are reported to [interactionSource] for the caller's indication.
+ * A finger sounds the note until it lifts, even if it drifts off the button, or until a scroll
+ * takes the gesture. A tap that lifts on the button plays the system click sound through [view].
+ * Presses, hover and focus are reported to [interactionSource] for the caller's indication.
  */
 fun Modifier.notePress(
     player: NotePlayer,

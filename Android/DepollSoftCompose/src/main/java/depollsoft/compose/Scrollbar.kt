@@ -9,6 +9,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.foundation.lazy.LazyListItemInfo
 import androidx.compose.foundation.lazy.LazyListLayoutInfo
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
@@ -23,8 +24,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleStartEffect
 import kotlin.math.abs
@@ -261,7 +262,7 @@ suspend fun LazyListState.revealItem(index: Int) {
     // Item offsets start after the top padding; the box ends before the bottom padding.
     val end = layoutInfo.viewportSize.height - layoutInfo.beforeContentPadding - layoutInfo.afterContentPadding
 
-    suspend fun settleOn(shown: androidx.compose.foundation.lazy.LazyListItemInfo) {
+    suspend fun settleOn(shown: LazyListItemInfo) {
         when {
             shown.offset < 0 -> animateScrollBy(shown.offset.toFloat())
             shown.offset + shown.size > end -> animateScrollBy((shown.offset + shown.size - end).toFloat())

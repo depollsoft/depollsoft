@@ -1,8 +1,5 @@
 package depollsoft.tagmaster.ui.detail
 
-import depollsoft.compose.listViewScrollbar
-import depollsoft.compose.scrollViewScrollbar
-import depollsoft.compose.ViewAlign
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
@@ -26,6 +23,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
@@ -36,18 +34,21 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import depollsoft.compose.ViewAlign
+import depollsoft.compose.listViewScrollbar
+import depollsoft.compose.scrollViewScrollbar
 import depollsoft.tagmaster.R
 import depollsoft.tagmaster.barbershop.Tag
 import depollsoft.tagmaster.barbershop.Video
+import depollsoft.tagmaster.ui.ReadingWidth
 import depollsoft.tagmaster.ui.RemoteImage
 import depollsoft.tagmaster.ui.StatusIndicator
 import depollsoft.tagmaster.ui.TagMasterTheme
-import depollsoft.tagmaster.ui.ReadingWidth
 import depollsoft.tagmaster.ui.TagMasterType
 import depollsoft.tagmaster.ui.TagMasterType.withoutLineHeight
 import depollsoft.tagmaster.ui.formatDate
@@ -287,7 +288,7 @@ private fun VideoRow(
     thumbnail: String,
     watch: String,
     rows: List<Pair<String, String>>,
-    padding: androidx.compose.ui.unit.Dp,
+    padding: Dp,
     modifier: Modifier = Modifier,
     multitrack: Boolean? = null,
 ) {
@@ -314,7 +315,7 @@ private fun VideoRow(
                         stringResource(R.string.Multitrack),
                         multitrack,
                         minHeight = 0.dp,
-                        labelAlignment = androidx.compose.ui.Alignment.Top,
+                        labelAlignment = Alignment.Top,
                     )
                 }
             }

@@ -1,15 +1,10 @@
 package depollsoft.pitchperfect
 
-import depollsoft.compose.MenuKey
-import depollsoft.compose.LocalMenuKey
-import depollsoft.compose.ListMotion
-import depollsoft.compose.ViewAlign
-import androidx.compose.animation.core.animateFloatAsState
-
+import android.graphics.Typeface
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.Image
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -24,8 +19,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import depollsoft.pitchperfect.ui.PlateText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -35,10 +30,8 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -49,6 +42,10 @@ import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import depollsoft.compose.ListMotion
+import depollsoft.compose.LocalMenuKey
+import depollsoft.compose.MenuKey
+import depollsoft.compose.ViewAlign
 import depollsoft.pitchperfect.lib.PitchedSong
 import depollsoft.pitchperfect.ui.DrawableIcon
 import depollsoft.pitchperfect.ui.LegacyText
@@ -59,6 +56,7 @@ import depollsoft.pitchperfect.ui.PlateMenuItem
 import depollsoft.pitchperfect.ui.PlateOverflowMenu
 import depollsoft.pitchperfect.ui.PlatePrimaryButton
 import depollsoft.pitchperfect.ui.PlateSectionHeader
+import depollsoft.pitchperfect.ui.PlateText
 import depollsoft.pitchperfect.ui.PlateTheme
 import depollsoft.pitchperfect.ui.PlateTopBar
 import depollsoft.pitchperfect.ui.plateColors
@@ -116,7 +114,7 @@ class AddSongsFromListActivity : AppCompatActivity() {
         private set
 
     /** The Menu key opens the Select all menu, as the window action bar's overflow did. */
-    private val menuKey = depollsoft.compose.MenuKey()
+    private val menuKey = MenuKey()
 
     @OptIn(ExperimentalComposeUiApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -126,7 +124,7 @@ class AddSongsFromListActivity : AppCompatActivity() {
         addable = AddableSongs(model, intent.getStringExtra(LIST_EXTRA) ?: model.currentListId)
         setContent {
             PlateTheme {
-                androidx.compose.runtime.CompositionLocalProvider(depollsoft.compose.LocalMenuKey provides menuKey) {
+                CompositionLocalProvider(LocalMenuKey provides menuKey) {
                     Column(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
                         val count = addable.count
                         val label =
@@ -248,7 +246,7 @@ private fun AddableRow(
             song.key?.let { NoteText.keyName(it) } ?: "",
             18.sp,
             if (pressed) colors.onAccent else colors.inkSecondary,
-            android.graphics.Typeface.MONOSPACE,
+            Typeface.MONOSPACE,
             Modifier.padding(end = 12.dp),
             letterSpacing = 0.06f,
             wrapWidth = true,

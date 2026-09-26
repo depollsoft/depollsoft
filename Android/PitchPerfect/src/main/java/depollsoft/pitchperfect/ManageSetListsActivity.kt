@@ -1,12 +1,5 @@
 package depollsoft.pitchperfect
 
-import depollsoft.compose.listItemMotion
-import depollsoft.compose.shownOrder
-import depollsoft.compose.reorderRow
-import depollsoft.compose.reorderHandle
-import depollsoft.compose.ReorderState
-import depollsoft.compose.rememberReorderState
-import depollsoft.compose.ViewAlign
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
@@ -26,8 +19,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.platform.LocalHapticFeedback
-import depollsoft.pitchperfect.ui.PlateText
 import androidx.compose.material.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -40,7 +31,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -52,14 +42,22 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import depollsoft.compose.ReorderState
+import depollsoft.compose.ViewAlign
+import depollsoft.compose.listItemMotion
+import depollsoft.compose.rememberReorderState
+import depollsoft.compose.reorderHandle
+import depollsoft.compose.reorderRow
+import depollsoft.compose.shownOrder
 import depollsoft.pitchperfect.ui.DrawableIcon
 import depollsoft.pitchperfect.ui.PlateBackground
 import depollsoft.pitchperfect.ui.PlateFab
 import depollsoft.pitchperfect.ui.PlateFonts
 import depollsoft.pitchperfect.ui.PlatePopupMenu
-import depollsoft.pitchperfect.ui.PopupMenuItem
+import depollsoft.pitchperfect.ui.PlateText
 import depollsoft.pitchperfect.ui.PlateTheme
 import depollsoft.pitchperfect.ui.PlateTopBar
+import depollsoft.pitchperfect.ui.PopupMenuItem
 import depollsoft.pitchperfect.ui.plateColors
 import depollsoft.pitchperfect.ui.plateText
 

@@ -58,7 +58,7 @@ private val LocalUsualViewConfiguration = compositionLocalOf<ViewConfiguration?>
 
 /**
  * A pager inside [content] starts a swipe only past the platform's paging touch slop, twice the
- * usual one, as ViewPager2 did, so a finger that drifts sideways on a row scrolls the list or
+ * usual one, so a finger that drifts sideways on a row scrolls the list or
  * plays its note instead of turning the page. Wrap each page in [UsualTouchSlop] so the page's
  * own scrolling keeps the usual slop.
  */

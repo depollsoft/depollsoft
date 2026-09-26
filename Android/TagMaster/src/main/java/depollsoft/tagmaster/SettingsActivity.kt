@@ -1,7 +1,5 @@
 package depollsoft.tagmaster
 
-import depollsoft.compose.scrollViewScrollbar
-import depollsoft.compose.ViewAlign
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.os.Bundle
@@ -10,7 +8,6 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,7 +31,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,7 +51,11 @@ import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import depollsoft.compose.ViewAlign
+import depollsoft.compose.scrollViewScrollbar
 import depollsoft.lib.auth.SignInOutcome
+import depollsoft.lib.kotlin.R as LibKotlinR
+import depollsoft.lib.privacy.TelemetryConsent
 import depollsoft.lib.ui.ChangelogViewer
 import depollsoft.lib.util.AppLog
 import depollsoft.tagmaster.ui.BarberPoleWatermark
@@ -64,7 +64,6 @@ import depollsoft.tagmaster.ui.DialogButton
 import depollsoft.tagmaster.ui.DropdownField
 import depollsoft.tagmaster.ui.LocalSnackbars
 import depollsoft.tagmaster.ui.ReadingWidth
-import depollsoft.tagmaster.ui.Snackbars
 import depollsoft.tagmaster.ui.TagMasterButton
 import depollsoft.tagmaster.ui.TagMasterDialog
 import depollsoft.tagmaster.ui.TagMasterTheme
@@ -326,8 +325,8 @@ private fun SettingsScreen(activity: SettingsActivity) {
                     WideButton(R.string.ViewChangelog, ButtonStyle.Outlined, "changelogButton", Modifier.padding(top = 24.dp)) {
                         activity.showChangelog()
                     }
-                    WideButton(depollsoft.lib.kotlin.R.string.privacy_title, ButtonStyle.Filled, "privacyChoicesButton", Modifier.padding(top = 16.dp)) {
-                        depollsoft.lib.privacy.TelemetryConsent.show(activity)
+                    WideButton(LibKotlinR.string.privacy_title, ButtonStyle.Filled, "privacyChoicesButton", Modifier.padding(top = 16.dp)) {
+                        TelemetryConsent.show(activity)
                     }
                     PrivateBuildDiagnostics(activity)
                 }

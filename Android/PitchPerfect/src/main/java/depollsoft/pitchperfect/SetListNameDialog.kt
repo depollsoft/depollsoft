@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -43,9 +44,9 @@ fun SetListNameDialog(
     val renaming = listId != null
     val initial = remember(listId) { listId?.let { model.displayName(it) }.orEmpty() }
     var value by rememberSaveable(listId, stateSaver = TextFieldValue.Saver) {
-        androidx.compose.runtime.mutableStateOf(TextFieldValue(initial, TextRange(initial.length)))
+        mutableStateOf(TextFieldValue(initial, TextRange(initial.length)))
     }
-    var error by rememberSaveable(listId) { androidx.compose.runtime.mutableStateOf<String?>(null) }
+    var error by rememberSaveable(listId) { mutableStateOf<String?>(null) }
     val focus = remember { FocusRequester() }
 
     fun submit() {

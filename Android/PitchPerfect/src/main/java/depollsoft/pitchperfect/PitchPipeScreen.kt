@@ -10,7 +10,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 /**
  * The Pitch Pipe tab. Leaving the tab, or the app, silences it. The "notes play until pressed
  * again" setting is picked up as it changes (a change synced from another device included), and
- * read again whenever the tab or the app comes back, as the fragment's onResume read it.
+ * read again whenever the tab or the app comes back.
  */
 @Composable
 fun PitchPipeScreen(

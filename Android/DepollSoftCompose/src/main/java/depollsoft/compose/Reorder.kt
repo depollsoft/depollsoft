@@ -29,12 +29,13 @@ import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.PointerEvent
 import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.SuspendingPointerInputModifierNode
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.node.DelegatingNode
 import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.platform.InspectorInfo
-import androidx.compose.ui.layout.onPlaced
-import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -64,7 +65,7 @@ import kotlinx.coroutines.launch
  *
  * The source is read when a drag starts; what it does while a drag is held is up to the owner.
  * Calling [sourceChanged] abandons the drag when the source moved on; not calling it keeps the
- * preview on screen until the drop, as the View screens that skipped refreshing mid-drag did.
+ * preview on screen until the drop.
  * Items gone from the source ([shownOrder]'s latest) drop out of the preview either way.
  *
  * [keyOf] names the lazy-list key an item is shown under, so rows outside the section are never
@@ -504,7 +505,7 @@ private class ReorderHandleNode<K : Any>(
         if (restart) pointer.resetPointerInputHandler()
     }
 
-    private suspend fun androidx.compose.ui.input.pointer.PointerInputScope.track() {
+    private suspend fun PointerInputScope.track() {
         val edge = EDGE_ZONE.toPx()
         val maxStep = MAX_SCROLL_PER_FRAME.toPx()
         coroutineScope {

@@ -1,8 +1,5 @@
 package depollsoft.tagmaster.ui
 
-import depollsoft.compose.ListMotion
-import depollsoft.compose.PlatformIcon
-import depollsoft.compose.ViewAlign
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -50,16 +47,16 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.error
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
-import androidx.compose.ui.semantics.LiveRegionMode
-import androidx.compose.ui.semantics.liveRegion
-import androidx.compose.ui.semantics.error
-import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
@@ -69,6 +66,10 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.android.material.R as MaterialR
+import depollsoft.compose.ListMotion
+import depollsoft.compose.PlatformIcon
+import depollsoft.compose.ViewAlign
 import depollsoft.tagmaster.ui.TagMasterType.withoutLineHeight
 import kotlin.math.roundToInt
 
@@ -271,9 +272,9 @@ fun OutlinedField(
                     val spoken =
                         stringResource(
                             if (overflowed) {
-                                com.google.android.material.R.string.character_counter_overflowed_content_description
+                                MaterialR.string.character_counter_overflowed_content_description
                             } else {
-                                com.google.android.material.R.string.character_counter_content_description
+                                MaterialR.string.character_counter_content_description
                             },
                             count,
                             limit,
@@ -343,7 +344,7 @@ fun DropdownField(
             value = TextFieldValue(choices.getOrElse(selected.coerceAtLeast(0)) { "" }),
             textStyle = TagMasterType.bodyMedium.withoutLineHeight(),
             textColor = colors.text,
-            endIcon = FieldIcon(com.google.android.material.R.drawable.mtrl_dropdown_arrow, rotation = arrow),
+            endIcon = FieldIcon(MaterialR.drawable.mtrl_dropdown_arrow, rotation = arrow),
             active = expanded,
             modifier =
                 Modifier

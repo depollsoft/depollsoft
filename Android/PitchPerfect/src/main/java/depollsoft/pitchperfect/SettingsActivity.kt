@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import depollsoft.pitchperfect.ui.PlateText
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -36,9 +35,11 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.auth.auth
 import com.google.firebase.functions.functions
+import depollsoft.lib.privacy.TelemetryConsent
 import depollsoft.lib.util.AppLog
 import depollsoft.pitchperfect.ui.AppCompatAlertDialog
 import depollsoft.pitchperfect.ui.DialogButton
+import depollsoft.pitchperfect.ui.PlateText
 import depollsoft.pitchperfect.ui.PlateTheme
 import depollsoft.pitchperfect.ui.PlateTopBar
 import depollsoft.pitchperfect.ui.plateColors
@@ -88,7 +89,7 @@ class SettingsActivity(
                 },
                 showChangelog = { dialog = SettingsDialog.CHANGELOG },
                 openLink = { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(it))) },
-                privacyChoices = { depollsoft.lib.privacy.TelemetryConsent.show(this) },
+                privacyChoices = { TelemetryConsent.show(this) },
                 copyLogs = ::copyLogs,
             )
         setContent {

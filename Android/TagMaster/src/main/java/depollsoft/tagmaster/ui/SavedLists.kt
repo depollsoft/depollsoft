@@ -1,8 +1,5 @@
 package depollsoft.tagmaster.ui
 
-import depollsoft.compose.ListMotion
-import depollsoft.compose.PlatformIcon
-import depollsoft.compose.ViewAlign
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
@@ -26,13 +23,13 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isAltPressed
@@ -47,11 +44,14 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
-import androidx.compose.ui.semantics.invisibleToUser
+import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
+import depollsoft.compose.ListMotion
+import depollsoft.compose.PlatformIcon
+import depollsoft.compose.ViewAlign
 import depollsoft.tagmaster.ListModel
 import depollsoft.tagmaster.R
 import depollsoft.tagmaster.await
@@ -167,7 +167,7 @@ fun RemoveFromListDialog(
 /** A hairline across the top of a row, the divider between saved rows. */
 fun Modifier.topDivider(
     show: Boolean,
-    color: androidx.compose.ui.graphics.Color,
+    color: Color,
 ) = if (!show) {
     this
 } else {
@@ -267,7 +267,7 @@ fun SavedTagRow(
                                 .drawBehind { if (highlight.alpha > 0f) drawRect(highlight) }
                                 .then(
                                     if (editing) {
-                                        Modifier.clearAndSetSemantics { invisibleToUser() }
+                                        Modifier.clearAndSetSemantics { hideFromAccessibility() }
                                     } else {
                                         Modifier
                                             .clickable { onOpen(id) }

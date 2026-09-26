@@ -1,9 +1,5 @@
 package depollsoft.pitchperfect
 
-import depollsoft.compose.listViewScrollbar
-import depollsoft.compose.ViewAlign
-import depollsoft.pitchperfect.ui.hairlineWidth
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,10 +8,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import depollsoft.pitchperfect.ui.LegacyText
-import depollsoft.pitchperfect.ui.PlateText
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,8 +21,13 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import depollsoft.compose.ViewAlign
+import depollsoft.compose.listViewScrollbar
 import depollsoft.pitchperfect.lib.Note
+import depollsoft.pitchperfect.ui.LegacyText
 import depollsoft.pitchperfect.ui.PlateFonts
+import depollsoft.pitchperfect.ui.PlateText
+import depollsoft.pitchperfect.ui.hairlineWidth
 import depollsoft.pitchperfect.ui.plateColors
 import depollsoft.pitchperfect.ui.plateText
 

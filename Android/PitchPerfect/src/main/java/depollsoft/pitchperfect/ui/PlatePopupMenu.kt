@@ -50,7 +50,7 @@ class PopupMenuItem(
 enum class MenuPlacement { BELOW_ANCHOR, OVER_ANCHOR_END }
 
 /**
- * A PopupMenu as the View screens showed it: a plain list on the platform's floating-panel colour
+ * A PopupMenu: a plain list on the platform's floating-panel colour
  * (white, or grey 800 at night) hanging from the anchor's bottom start corner, 48dp rows of 16sp
  * text inset 16dp, as wide as the widest row and at least 196dp.
  * Place it inside the anchor's layout; it hangs from the anchor's bounds. It grows in from the
