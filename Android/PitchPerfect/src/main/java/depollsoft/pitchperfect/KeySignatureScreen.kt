@@ -27,6 +27,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -158,7 +161,17 @@ private fun KeyRow(
             },
         verticalAlignment = ViewAlign.CenterVertically,
     ) {
-        LegacyText(NoteText.keySignature(key), 24.sp, ink, android.graphics.Typeface.DEFAULT, Modifier.weight(1f).padding(start = 20.dp), wrapWidth = true)
+        // The staff is left-to-right text, which a Layout keeps at its left; in a right-to-left row it
+        // belongs at the row's start, clear of the key name.
+        LegacyText(
+            NoteText.keySignature(key),
+            24.sp,
+            ink,
+            android.graphics.Typeface.DEFAULT,
+            Modifier.weight(1f).padding(start = 20.dp),
+            align = if (LocalLayoutDirection.current == LayoutDirection.Rtl) TextAlign.End else TextAlign.Start,
+            wrapWidth = true,
+        )
         LegacyText(NoteText.keyName(key), 22.sp, ink, PlateFonts.condensedTypeface, Modifier.padding(end = 20.dp), wrapWidth = true)
     }
 }
