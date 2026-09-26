@@ -186,8 +186,7 @@ private fun SongRows(
     list: SongList,
     listState: LazyListState,
 ) {
-    // Songs trade places by id; a synced change waits until the drop, as the View list, which
-    // skipped refreshing mid-drag, did.
+    // Songs trade places by id; a synced change waits until the drop.
     val reorder =
         rememberReorderState<String>(listState, list, keyOf = { it }) { _, order ->
             list.reorder(order)

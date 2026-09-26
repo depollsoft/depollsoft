@@ -37,7 +37,7 @@ open class TagSearchResultsActivity :
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // A rotated screen keeps the results it loaded, as the retained query fragment did.
+        // A rotated screen keeps the results it loaded.
         val fresh = !retained.isRetained
         model =
             retained.models {

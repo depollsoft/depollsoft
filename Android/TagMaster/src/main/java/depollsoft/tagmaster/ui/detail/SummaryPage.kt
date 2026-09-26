@@ -362,10 +362,10 @@ private fun KeyNoteButton(tag: Tag) {
     val note = tag.keyNote
     val playing = note?.isPlaying == true
     val shape = RoundedCornerShape(8.dp)
-    // The View button's own state drawable: outlined, filled with the accent while activated.
+    // The button's state drawable: outlined, filled with the accent while activated.
     val background = rememberDrawable(R.drawable.key_button_background)
     // The accent fill is the press feedback (the ripple is transparent while pressed or
-    // activated); keyboard focus and hover show the control highlight, as the View button did.
+    // activated); keyboard focus and hover show the control highlight.
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
     val hovered by interactions.collectIsHoveredAsState()
@@ -444,7 +444,7 @@ private fun ListChips(
     }
 }
 
-/** An outlined Material 3 chip, measured as the View chips were. */
+/** An outlined Material 3 chip, measured as MDC's Chip. */
 @Composable
 private fun ListChip(
     text: String,

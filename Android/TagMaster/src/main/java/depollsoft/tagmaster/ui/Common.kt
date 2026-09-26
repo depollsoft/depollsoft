@@ -222,8 +222,7 @@ fun EmptyState(
 }
 
 /**
- * Lists and forms keep a readable measure on wide windows, as the View screens' content insets
- * did: [content] is handed the horizontal inset that centres it at most [maxWidth] wide, to add as
+ * Lists and forms keep a readable measure on wide windows: [content] is handed the horizontal inset that centres it at most [maxWidth] wide, to add as
  * padding inside its scrolling container. The container keeps the full width, so its scrollbar
  * stays at the edge and its margins still scroll. In the narrow list pane of the two-pane layout
  * the inset is zero.

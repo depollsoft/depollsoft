@@ -65,7 +65,7 @@ import kotlinx.coroutines.launch
  *
  * The source is read when a drag starts; what it does while a drag is held is up to the owner.
  * Calling [sourceChanged] abandons the drag when the source moved on; not calling it keeps the
- * preview on screen until the drop, as the View screens that skipped refreshing mid-drag did.
+ * preview on screen until the drop.
  * Items gone from the source ([shownOrder]'s latest) drop out of the preview either way.
  *
  * [keyOf] names the lazy-list key an item is shown under, so rows outside the section are never

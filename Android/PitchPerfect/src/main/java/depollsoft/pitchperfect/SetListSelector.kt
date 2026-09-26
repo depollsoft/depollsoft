@@ -145,7 +145,7 @@ fun SetListSelector(
 }
 
 /**
- * Lays the positions out like the View's LinearLayout inside a filling HorizontalScrollView: at
+ * Lays the positions out like a LinearLayout inside a filling HorizontalScrollView: at
  * their own widths when they overflow, and otherwise sharing the spare width equally (the last
  * child, the "+" position, has a fixed width and no share).
  */

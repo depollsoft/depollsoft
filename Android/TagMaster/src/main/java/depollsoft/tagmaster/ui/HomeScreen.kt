@@ -202,8 +202,7 @@ fun HomeScreen(
             listsReorder.cancel()
         }
     }
-    // Leaving the screen drops a drag in progress and the Remove confirmation, as the View
-    // editor's pause() did.
+    // Leaving the screen drops a drag in progress and the Remove confirmation.
     LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) {
         favoritesReorder.cancel()
         listsReorder.cancel()

@@ -107,8 +107,7 @@ fun PlateAlertDialog(
                         if (outer != null && card != null && !outer.localBoundingBoxOf(card).contains(position)) onDismissRequest()
                     }
                 }.padding(horizontal = CARD_INSET, vertical = verticalInset)
-                // The system resized the old dialog window above the keyboard; this one keeps the
-                // card centred in the space the keyboard leaves.
+                // The card stays centred in the space the keyboard leaves.
                 .windowInsetsPadding(WindowInsets.ime),
         ) {
             Column(
@@ -315,7 +314,7 @@ fun PlateTextButton(
 }
 
 /**
- * Dims the screen behind a dialog as its View-era theme did: MaterialComponents' dialogs by 32%,
+ * Dims the screen behind a dialog as its XML theme sets: MaterialComponents' dialogs by 32%,
  * AppCompat's by 60%. Compose's dialog window would always use the platform's amount. The window
  * also fades out as it closes, however it is closed ([dialogEntrance] brings the card in).
  */

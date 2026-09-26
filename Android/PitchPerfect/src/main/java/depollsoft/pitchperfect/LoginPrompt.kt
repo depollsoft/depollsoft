@@ -177,8 +177,7 @@ fun LoginPromptDialog(
             ) {
                 opening = true
                 status = null
-                // A live region may not speak a line that has only just appeared; say it outright,
-                // as the View did.
+                // A live region may not speak a line that has only just appeared; say it outright.
                 view.announceForAccessibility(context.getString(R.string.OpeningSignIn))
                 launcher.launch(LoginPrompt.createSignInIntent())
             }

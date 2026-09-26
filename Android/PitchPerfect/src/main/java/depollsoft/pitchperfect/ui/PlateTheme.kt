@@ -50,7 +50,7 @@ val LocalPlateColors =
 val plateColors: PlateColors
     @Composable get() = LocalPlateColors.current
 
-/** The typefaces the View layouts named. */
+/** The app's typefaces. */
 object PlateFonts {
     /** `@font/oswald_medium`: engraved captions, titles and buttons. */
     val oswald = FontFamily(Font(R.font.oswald_medium, FontWeight.Medium))
@@ -113,8 +113,7 @@ fun PlateTheme(content: @Composable () -> Unit) {
             accent = colorResource(R.color.plate_accent),
             onAccent = colorResource(R.color.plate_on_accent),
         )
-    // Controls borrowed from Material take the ink as their active color, as the View theme's
-    // dialogs and switches did.
+    // Controls borrowed from Material take the ink as their active color.
     val material =
         lightColors(
             primary = colors.ink,

@@ -158,8 +158,8 @@ fun loopingPhase(
 }
 
 /**
- * The compact barber-pole progress indicator (18.76 x 32dp). It keeps its space while idle, as
- * the View did with INVISIBLE, and says [description] while [loading].
+ * The compact barber-pole progress indicator (18.76 x 32dp). It keeps its space while idle and
+ * says [description] while [loading].
  */
 @Composable
 fun CompactBarberPole(

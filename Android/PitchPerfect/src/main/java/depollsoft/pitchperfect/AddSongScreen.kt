@@ -265,7 +265,7 @@ private fun KeyPicker(
 
 /**
  * Brings the chosen key to the middle of the list when it first shows and after a mode switch:
- * the View scrolled it to half the list's height less half a 64dp row.
+ * half the list's height less half a 64dp row from the top.
  */
 @Composable
 private fun CenterChosenKey(
@@ -294,7 +294,7 @@ private fun KeyChoice(
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     // The row stays lit while it is the chosen key, and lights at once on press. Choosing a key
-    // cross-fades the old row out and the new one in, as notifyItemChanged did.
+    // cross-fades the old row out and the new one in.
     val chosenFill by animateColorAsState(if (chosen) colors.accent else colors.accent.copy(alpha = 0f), ListMotion.change(), label = "keyFill")
     val chosenInk by animateColorAsState(if (chosen) colors.onAccent else colors.ink, ListMotion.change(), label = "keyInk")
     val ink = if (pressed) colors.onAccent else chosenInk

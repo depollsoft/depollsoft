@@ -24,7 +24,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * What a detail page's caption/value rows need to lay out as the View pages did: whether this is
+ * What a detail page's caption/value rows need to lay out: whether this is
  * the Summary's compact fact list (28dp rows; 48dp for Rating) and each row's value width budget.
  */
 class DetailPair(

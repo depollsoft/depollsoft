@@ -26,8 +26,7 @@ import com.google.android.material.R as MaterialR
 import depollsoft.tagmaster.R
 
 /**
- * Tag Master's colors, read from the activity's XML theme so the Compose screens paint exactly
- * the colors the View screens did, in light and dark.
+ * Tag Master's colors, read from the activity's XML theme in light and dark.
  *
  * Material 3's text appearances color text with `android:textColorPrimary`, which the platform
  * theme resolves to Material's own neutral (#1D1B20 / #E6E0E9), not the app's `colorOnSurface`;
@@ -140,7 +139,7 @@ private fun TagMasterColors.toColorScheme(): ColorScheme =
         error = error,
     )
 
-/** The Tag Master theme: the XML theme's colors, and Material 3 type set the way the Views set it. */
+/** The Tag Master theme: the XML theme's colors and Material 3 type. */
 @Composable
 fun TagMasterTheme(content: @Composable () -> Unit) {
     val context = LocalContext.current

@@ -298,8 +298,8 @@ private val RAIL_ITEM = 72.dp
 private val RAIL_TOP = 8.dp
 
 /**
- * One destination. The View kept a regular and a bold copy of the label and showed one, so the
- * item's content is always as wide as the widest; both are laid out here for the same reason.
+ * One destination. Both a regular and a bold copy of the label are laid out and one is shown, so
+ * the item is as wide as the wider of the two whichever is selected.
  */
 @Composable
 private fun NavigationItem(

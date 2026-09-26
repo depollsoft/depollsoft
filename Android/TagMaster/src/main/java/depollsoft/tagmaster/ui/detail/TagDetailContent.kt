@@ -79,7 +79,7 @@ fun TagDetailContent(
     val refreshFailed = stringResource(R.string.detail_tag_refresh_failed, state.tagId)
     val retry = stringResource(R.string.detail_retry)
     // Up while this tag's refresh has failed; the next load, another tag or leaving the screen
-    // takes it down, as the fragment dismissed it at the start of every load and on destroy.
+    // takes it down.
     LaunchedEffect(state.refreshFailed, state.tagId) {
         if (state.refreshFailed) {
             snackbars.showNow(refreshFailed, retry, indefinite = true) { state.retry() }
@@ -167,7 +167,7 @@ private fun DetailPages(
                     0 -> SummaryPage(tag, dialogs)
                     1 -> DetailsPage(tag)
                     // A track stops once the pager has settled on another page, not halfway
-                    // through a swipe that may yet come back, as the fragment paused only then.
+                    // through a swipe that may yet come back.
                     2 -> TracksPage(tag, current = pager.settledPage == 2)
                     else -> VideosPage(tag)
                 }

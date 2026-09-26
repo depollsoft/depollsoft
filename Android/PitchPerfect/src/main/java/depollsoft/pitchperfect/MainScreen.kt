@@ -204,7 +204,7 @@ internal fun AdArea(
 ) {
     if (!slot.visible) return
     val context = LocalContext.current
-    // `?android:textAppearanceSmall`, italic, as the View layout styled the link.
+    // The link is `?android:textAppearanceSmall`, italic.
     val linkColor = remember(context) { smallTextColor(context) }
     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
         PlateText(

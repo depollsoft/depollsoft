@@ -89,7 +89,7 @@ private class SoundsWhileHeldNode(
                             // The final pass, after the list has had its chance to claim the finger for a scroll.
                             val event = awaitPointerEvent(PointerEventPass.Final)
                             val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                            // Lifting, or a scroll taking the finger (the View's ACTION_CANCEL).
+                            // Lifting, or a scroll taking the finger.
                             if (!change.pressed || change.isConsumed) break
                             if (toggle && change.positionChanged() && change.uptimeMillis - down.uptimeMillis > TOGGLE_SLOP_MS) {
                                 held.stop()

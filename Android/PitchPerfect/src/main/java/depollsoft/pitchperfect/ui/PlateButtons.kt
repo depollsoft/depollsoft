@@ -305,7 +305,7 @@ private fun PlateButtonFrame(
 
 /**
  * The plate surface under an elevated control. In the dark theme MaterialComponents lightens an
- * elevated surface with a white overlay; [overlay] is the amount the View-era screens showed.
+ * elevated surface with a white overlay of [overlay].
  */
 private fun elevatedSurface(
     colors: PlateColors,

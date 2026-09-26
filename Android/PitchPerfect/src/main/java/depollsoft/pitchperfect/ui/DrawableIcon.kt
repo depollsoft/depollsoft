@@ -13,9 +13,9 @@ import depollsoft.compose.drawPlatform
 import depollsoft.compose.rememberDrawable
 
 /**
- * An icon drawn by its own Drawable, tinted and stretched to [size]. The vector drawables
- * rasterize exactly as they did in the View screens this way; Compose's vector painter
- * anti-aliases their edges a little differently.
+ * An icon drawn by its own Drawable, tinted and stretched to [size], so the vector drawables
+ * rasterize as the platform draws them; Compose's vector painter anti-aliases their edges a
+ * little differently.
  */
 @Composable
 fun DrawableIcon(
@@ -26,7 +26,7 @@ fun DrawableIcon(
     alpha: Float = 1f,
 ) {
     val drawable = rememberDrawable(icon, tint)
-    // The View code set the icon's alpha as a truncated byte.
+    // The icon's alpha is a truncated byte.
     val byteAlpha = (alpha * 255).toInt() / 255f
     Box(
         modifier

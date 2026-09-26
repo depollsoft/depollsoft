@@ -27,7 +27,7 @@ import depollsoft.tagmaster.R
 import depollsoft.tagmaster.barbershop.Tag
 import java.util.Date
 
-/** The visibility rule the View bindings used: absent, `false` and integer zero hide a field. */
+/** Whether a tag field shows: absent, `false` and integer zero hide it. */
 fun Any?.isPresent(): Boolean =
     when (this) {
         null -> false

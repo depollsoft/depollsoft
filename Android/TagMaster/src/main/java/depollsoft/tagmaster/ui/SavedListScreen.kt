@@ -63,8 +63,7 @@ fun SavedListScreen(
         if (reorder.sourceChanged(ids)) view.announceForAccessibility(changed)
     }
     LaunchedEffect(editor.isEditing) { if (!editor.isEditing) reorder.cancel() }
-    // Leaving the screen drops a drag in progress and the Remove confirmation, as the View
-    // editor's pause() did.
+    // Leaving the screen drops a drag in progress and the Remove confirmation.
     LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) {
         reorder.cancel()
         editor.dismissRemoval()
