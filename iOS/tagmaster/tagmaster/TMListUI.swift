@@ -19,7 +19,7 @@ extension EnvironmentValues {
 }
 
 enum TMTheme {
-    static var accent: Color { Color(uiColor: DPAppDelegate.accentColor()) }
+    static var accent: Color { Color(uiColor: DPAppDelegate.accentColor) }
 
     /// A tint as UIKit shows it: its own colour, or UIKit's dimmed grey while dimmed.
     static func tint(_ color: UIColor, dimmed: Bool) -> Color {
@@ -33,7 +33,7 @@ enum TMTheme {
     /// The row wash for the tag open beside a list: the accent at 14% (22% in dark).
     static let selectionWash = Color(uiColor: UIColor { traits in
         let alpha: CGFloat = traits.userInterfaceStyle == .dark ? 0.22 : 0.14
-        return DPAppDelegate.accentColor().resolvedColor(with: traits).withAlphaComponent(alpha)
+        return DPAppDelegate.accentColor.resolvedColor(with: traits).withAlphaComponent(alpha)
     })
 
 }

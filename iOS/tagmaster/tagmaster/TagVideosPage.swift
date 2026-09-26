@@ -197,7 +197,7 @@ struct TMSafariView: UIViewControllerRepresentable {
 
     func makeUIViewController(context: Context) -> SFSafariViewController {
         let browser = SFSafariViewController(url: url)
-        browser.preferredControlTintColor = DPAppDelegate.accentColor()
+        browser.preferredControlTintColor = DPAppDelegate.accentColor
         browser.delegate = context.coordinator
         context.coordinator.onFinish = onFinish
         return browser

@@ -377,7 +377,7 @@ struct TMKeyNoteButton: View {
 
     /// UIKit's high-contrast accent, for white text on the filled key in light mode.
     static let highContrastAccent: UIColor = {
-        let accent = DPAppDelegate.accentColor() ?? .tintColor
+        let accent = DPAppDelegate.accentColor
         return UIColor { traits in
             let contrast = UITraitCollection(traitsFrom: [traits, UITraitCollection(accessibilityContrast: .high)])
             return accent.resolvedColor(with: contrast)
@@ -408,7 +408,7 @@ struct TMSheetMusicButton: UIViewRepresentable {
         let button = UIButton(configuration: configuration)
         button.setTitle("Sheet Music", for: .normal)
         button.titleLabel?.adjustsFontForContentSizeCategory = true
-        button.tintColor = DPAppDelegate.accentColor()
+        button.tintColor = DPAppDelegate.accentColor
         button.addAction(UIAction { _ in context.coordinator.action() }, for: .touchUpInside)
         button.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         return button
@@ -420,7 +420,12 @@ struct TMSheetMusicButton: UIViewRepresentable {
     }
 
     func sizeThatFits(_ proposal: ProposedViewSize, uiView button: UIButton, context: Context) -> CGSize? {
-        let width = proposal.width ?? UIView.layoutFittingExpandedSize.width
+        // Asked for its ideal size (no width proposed), the button gives its natural
+        // width, as a UIButton's intrinsic size would; never an unbounded one.
+        guard let width = proposal.width, width.isFinite else {
+            let natural = button.intrinsicContentSize
+            return CGSize(width: natural.width, height: max(44, natural.height))
+        }
         let fitted = button.systemLayoutSizeFitting(CGSize(width: width, height: UIView.layoutFittingCompressedSize.height),
                                                     withHorizontalFittingPriority: .required,
                                                     verticalFittingPriority: .fittingSizeLevel)

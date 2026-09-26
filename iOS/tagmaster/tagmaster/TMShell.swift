@@ -100,8 +100,8 @@ private struct TMWindowTint: UIViewRepresentable {
     final class Probe: UIView {
         override func didMoveToWindow() {
             super.didMoveToWindow()
-            if let window, window.tintColor != DPAppDelegate.accentColor() {
-                window.tintColor = DPAppDelegate.accentColor()
+            if let window, window.tintColor != DPAppDelegate.accentColor {
+                window.tintColor = DPAppDelegate.accentColor
             }
         }
     }

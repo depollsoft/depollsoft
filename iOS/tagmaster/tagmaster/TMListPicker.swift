@@ -74,7 +74,7 @@ final class TMListPickerModel {
 
 struct TMListPicker: View {
     /// The rows set their accent explicitly, as the UIKit cells did.
-    private let accent = Color(DPAppDelegate.accentColor() ?? .tintColor)
+    private let accent = TMTheme.accent
     @State var model: TMListPickerModel
     /// Closes the picker; the presenter owns how.
     var onDone: (() -> Void)?
@@ -210,7 +210,7 @@ struct TMListPickerPresenter: UIViewRepresentable {
 /// centred in its column, the name 48 pt in, the count at the trailing edge
 /// (or beside the checkmark accessory).
 struct TMPickerRowLayout: View {
-    private let accent = Color(DPAppDelegate.accentColor() ?? .tintColor)
+    private let accent = TMTheme.accent
     let symbol: String
     let iconColor: Color
     let name: String
@@ -258,7 +258,7 @@ struct TMPickerRowLayout: View {
 
 /// A navigation bar Done button in UIKit's .done style: the prominent accent glass on iOS 26.
 struct TMDoneButton: View {
-    private let accent = Color(DPAppDelegate.accentColor() ?? .tintColor)
+    private let accent = TMTheme.accent
     let action: () -> Void
 
     var body: some View {

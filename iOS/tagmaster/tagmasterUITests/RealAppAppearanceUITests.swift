@@ -128,8 +128,8 @@ final class RealAppAppearanceUITests: TagMasterUITestCase {
         XCTAssertTrue(app.buttons["page-Latest"].existsOrWait(timeout: 10))
         Thread.sleep(forTimeInterval: 1.5)
         attach(XCUIScreen.main.screenshot().image, "browse")
-        app.navigationBars.buttons.element(boundBy: 0).tap()
-        let teachable = app.buttons["Teachable Tags"]
+        app.navigationBars.buttons["Home"].tap()
+        let teachable = app.buttons["home.lists.teachable"]
         XCTAssertTrue(teachable.existsOrWait(timeout: 5))
         teachable.tap()
         Thread.sleep(forTimeInterval: 1.5)
@@ -140,5 +140,108 @@ final class RealAppAppearanceUITests: TagMasterUITestCase {
                          : CGRect(x: 0.05, y: 0.62, width: 0.9, height: 0.22)
         XCTAssertGreaterThan(watermarkShare(shot, region: region), 0.03,
                              "Teachable Tags: the barber pole is missing")
+    }
+}
+
+/// The main journeys through the real app, in the real process and shell, against
+/// the live catalog (tag 1809, as the store capture uses).
+final class RealAppFlowUITests: TagMasterUITestCase {
+    private var app: XCUIApplication!
+
+    override func setUpWithError() throws {
+        continueAfterFailure = false
+        app = XCUIApplication()
+        // A clean slate of saved tags and lists for each journey.
+        app.launchArguments = ["--uitesting", "-depollsoft.pitchperfect.lists", "<dict/>",
+                               "-depollsoft.tagmaster.listInfo", "<dict/>"]
+        app.launchArguments += ["-telemetry.chosen", "YES", "-telemetry.analytics", "NO", "-telemetry.crashes", "NO"]
+        app.launch()
+        XCTAssertTrue(app.buttons["Browse"].existsOrWait(timeout: 15))
+    }
+
+    private func openTag(_ id: String) {
+        app.buttons["Open Tag"].tap()
+        let alert = app.alerts["Open Tag"]
+        XCTAssertTrue(alert.existsOrWait(timeout: 5))
+        alert.textFields.firstMatch.typeText(id)
+        alert.buttons["Open"].tap()
+        let share = app.navigationBars.buttons["Share"]
+        for _ in 0..<2 {
+            if share.existsOrWait(timeout: 30) { break }
+            let retry = app.buttons["Retry"].firstMatch
+            if retry.exists { retry.tap() }
+        }
+        XCTAssertTrue(share.existsOrWait(timeout: 60), "The tag never loaded")
+    }
+
+    private func backToHome() {
+        guard UIDevice.current.userInterfaceIdiom == .phone else { return }
+        let back = app.navigationBars.buttons["Home"]
+        if back.exists { back.tap() }
+        XCTAssertTrue(app.buttons["Browse"].existsOrWait(timeout: 5))
+    }
+
+    func testBrowseOpensATagAndItsPagesSwitch() {
+        app.buttons["Browse"].tap()
+        let row = app.collectionViews.firstMatch.tagRows.firstMatch
+        XCTAssertTrue(row.existsOrWait(timeout: 60), "Latest never listed a tag")
+        row.tap()
+        XCTAssertTrue(app.navigationBars.buttons["Share"].existsOrWait(timeout: 60))
+        for page in ["Details", "Tracks", "Videos", "Summary"] {
+            let tab = app.buttons["page-\(page)"]
+            XCTAssertTrue(tab.existsOrWait(timeout: 5))
+            tab.tap()
+            XCTAssertTrue(tab.isSelected, "\(page) is the page showing")
+        }
+    }
+
+    func testFavoritingATagPutsItOnHome() {
+        openTag("1809")
+        if app.navigationBars.buttons["Add Favorite"].exists {
+            app.navigationBars.buttons["Add Favorite"].tap()
+        } else {
+            app.navigationBars.buttons["Favorite and Teachable options"].tap()
+            let add = app.buttons["Add Favorite"]
+            XCTAssertTrue(add.existsOrWait(timeout: 5))
+            add.tap()
+        }
+        backToHome()
+        let favorite = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Tag ID 1809'")).firstMatch
+        for _ in 0..<4 where !favorite.existsOrWait(timeout: 2) { app.collectionViews.firstMatch.swipeUp() }
+        XCTAssertTrue(favorite.exists, "The favourite is listed on Home")
+    }
+
+    func testANewListTakesATagFromTheDetail() {
+        app.buttons["home.lists.new"].tap()
+        let alert = app.alerts["New list"]
+        XCTAssertTrue(alert.existsOrWait(timeout: 5))
+        alert.textFields.firstMatch.typeText("Warmups")
+        alert.buttons["Create"].tap()
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Warmups'")).firstMatch
+            .existsOrWait(timeout: 5))
+
+        openTag("1809")
+        let addToList = app.buttons["summary.chip.add"]
+        XCTAssertTrue(addToList.existsOrWait(timeout: 10))
+        addToList.tap()
+        let warmups = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'picker.row.' AND label == 'Warmups'")).firstMatch
+        XCTAssertTrue(warmups.existsOrWait(timeout: 5))
+        warmups.tap()
+        XCTAssertTrue(warmups.isSelected, "The tag is now in Warmups")
+        app.buttons["picker.done"].tap()
+        backToHome()
+        let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Warmups'")).firstMatch
+        XCTAssertTrue(row.existsOrWait(timeout: 5))
+        XCTAssertTrue(row.label.contains("1 tag") || app.staticTexts["1 tag"].exists, "The list counts its one tag")
+    }
+
+    func testSearchListsMatchingTags() {
+        app.navigationBars.buttons["Search"].tap()
+        let field = app.searchFields.firstMatch
+        XCTAssertTrue(field.existsOrWait(timeout: 5))
+        field.tap()
+        field.typeText("Lost\n")
+        XCTAssertTrue(app.collectionViews.firstMatch.tagRows.firstMatch.existsOrWait(timeout: 60),
+                      "Searching for a title lists tags")
     }
 }

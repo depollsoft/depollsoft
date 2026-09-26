@@ -63,8 +63,6 @@
 		267164521D38CDC1968AAC40 /* TagDetailModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3EB4589130B21CE82596F66 /* TagDetailModelTests.swift */; };
 		61BB84ACAAE403FF40C387C0 /* TagDetailBehaviorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5ACCAC905EF5ED8D39B302D /* TagDetailBehaviorTests.swift */; };
 		748DCF0CF473E34A3C8659DE /* TagTracksPlaybackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B68C2BB88A7D2B53A58D50DA /* TagTracksPlaybackTests.swift */; };
-		770C1215EB5E9700C7032102 /* TMReviewFeedbackTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C36C96E7D1FF307734116155 /* TMReviewFeedbackTests.m */; };
-		87A98CE19182449419D1CFA9 /* TagmasterAppLogicTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A55ECC451157267C8FD5DA6 /* TagmasterAppLogicTests.m */; };
 		D452D485E8A8FCAF1446E344 /* TagDetailLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C37C8637F4CEC03ED771843 /* TagDetailLayoutTests.swift */; };
 		88B1B18AB26853AFE59192B7 /* TMShellTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = C830AC314319D8B9E2FA6AB5 /* TMShellTestSupport.swift */; };
 		BBCA090527B9C26B067B05EC /* TMRouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37A4BC3BD26DC513A62F59B6 /* TMRouterTests.swift */; };
@@ -96,11 +94,9 @@
 		63712EF215130B21007997CC /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EF115130B21007997CC /* Foundation.framework */; };
 		63712EF415130B21007997CC /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EF315130B21007997CC /* CoreGraphics.framework */; };
 		63712EFC15130B21007997CC /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 63712EFA15130B21007997CC /* InfoPlist.strings */; };
-		63712F0215130B21007997CC /* DPAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 63712F0115130B21007997CC /* DPAppDelegate.m */; };
 		63712F0E15130B21007997CC /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EEF15130B21007997CC /* UIKit.framework */; };
 		63712F0F15130B21007997CC /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EF115130B21007997CC /* Foundation.framework */; };
 		63712F1815130B21007997CC /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 63712F1615130B21007997CC /* InfoPlist.strings */; };
-		63712F1B15130B21007997CC /* tagmasterTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 63712F1A15130B21007997CC /* tagmasterTests.m */; };
 		638E739117F7C097000FFE53 /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 638E739017F7C097000FFE53 /* MediaPlayer.framework */; };
 		638E739317F7CAB3000FFE53 /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 638E739217F7CAB3000FFE53 /* MessageUI.framework */; };
 		638E739717F7DE1B000FFE53 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 638E739617F7D3F7000FFE53 /* Icon.png */; };
@@ -236,8 +232,6 @@
 		C3EB4589130B21CE82596F66 /* TagDetailModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagDetailModelTests.swift; sourceTree = "<group>"; };
 		B5ACCAC905EF5ED8D39B302D /* TagDetailBehaviorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagDetailBehaviorTests.swift; sourceTree = "<group>"; };
 		B68C2BB88A7D2B53A58D50DA /* TagTracksPlaybackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagTracksPlaybackTests.swift; sourceTree = "<group>"; };
-		C36C96E7D1FF307734116155 /* TMReviewFeedbackTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TMReviewFeedbackTests.m; sourceTree = "<group>"; };
-		1A55ECC451157267C8FD5DA6 /* TagmasterAppLogicTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TagmasterAppLogicTests.m; sourceTree = "<group>"; };
 		1C37C8637F4CEC03ED771843 /* TagDetailLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagDetailLayoutTests.swift; sourceTree = "<group>"; };
 		C830AC314319D8B9E2FA6AB5 /* TMShellTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMShellTestSupport.swift; sourceTree = "<group>"; };
 		37A4BC3BD26DC513A62F59B6 /* TMRouterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMRouterTests.swift; sourceTree = "<group>"; };
@@ -269,13 +263,9 @@
 		63712EF915130B21007997CC /* tagmaster-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "tagmaster-Info.plist"; sourceTree = "<group>"; };
 		63712EFB15130B21007997CC /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		63712EFF15130B21007997CC /* tagmaster-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "tagmaster-Prefix.pch"; sourceTree = "<group>"; };
-		63712F0015130B21007997CC /* DPAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DPAppDelegate.h; sourceTree = "<group>"; };
-		63712F0115130B21007997CC /* DPAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPAppDelegate.m; sourceTree = "<group>"; };
 		63712F0B15130B21007997CC /* tagmasterTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = tagmasterTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		63712F1515130B21007997CC /* tagmasterTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "tagmasterTests-Info.plist"; sourceTree = "<group>"; };
 		63712F1715130B21007997CC /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		63712F1915130B21007997CC /* tagmasterTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = tagmasterTests.h; sourceTree = "<group>"; };
-		63712F1A15130B21007997CC /* tagmasterTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = tagmasterTests.m; sourceTree = "<group>"; };
 		638E739017F7C097000FFE53 /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
 		638E739217F7CAB3000FFE53 /* MessageUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MessageUI.framework; path = System/Library/Frameworks/MessageUI.framework; sourceTree = SDKROOT; };
 		638E739617F7D3F7000FFE53 /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
@@ -485,8 +475,6 @@
 			isa = PBXGroup;
 			children = (
 				63D9472B151465B5000C8784 /* Barbershop */,
-				63712F0015130B21007997CC /* DPAppDelegate.h */,
-				63712F0115130B21007997CC /* DPAppDelegate.m */,
 				A7C030000000000000000010 /* TMQuartetArtwork.h */,
 				A7C030000000000000000011 /* TMQuartetArtwork.m */,
 				A7C010000000000000000010 /* TMLogoArtwork.h */,
@@ -575,8 +563,6 @@
 		63712F1315130B21007997CC /* tagmasterTests */ = {
 			isa = PBXGroup;
 			children = (
-				63712F1915130B21007997CC /* tagmasterTests.h */,
-				63712F1A15130B21007997CC /* tagmasterTests.m */,
 				C0DEFACE00000000000010A2 /* DPTagXMLParserTests.m */,
 				C0DEFACE00000000000010A3 /* DPRemoteLocationTests.m */,
 				C0DEFACE00000000000010A4 /* TagmasterModelsTests.m */,
@@ -599,8 +585,6 @@
 				6AB6D145785607DE279B141C /* TMListTestSupport.swift */,
 				82E540A4B83FC994BE71E907 /* TagListsScreenCatalogTests.swift */,
 				1C37C8637F4CEC03ED771843 /* TagDetailLayoutTests.swift */,
-				1A55ECC451157267C8FD5DA6 /* TagmasterAppLogicTests.m */,
-				C36C96E7D1FF307734116155 /* TMReviewFeedbackTests.m */,
 				B68C2BB88A7D2B53A58D50DA /* TagTracksPlaybackTests.swift */,
 				B5ACCAC905EF5ED8D39B302D /* TagDetailBehaviorTests.swift */,
 				C3EB4589130B21CE82596F66 /* TagDetailModelTests.swift */,
@@ -869,7 +853,6 @@
 			files = (
 				1E927AD622AB2BF20018E370 /* DPAppDelegate.swift in Sources */,
 				638E73A117F7E21A000FFE53 /* DPHomeViewController.m in Sources */,
-				63712F0215130B21007997CC /* DPAppDelegate.m in Sources */,
 				A7C030000000000000000001 /* TMQuartetArtwork.m in Sources */,
 				A7C010000000000000000001 /* TMLogoArtwork.m in Sources */,
 				63D9471F1513198D000C8784 /* DPTag.m in Sources */,
@@ -931,7 +914,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				63712F1B15130B21007997CC /* tagmasterTests.m in Sources */,
 				C0DEFACE00000000000010B2 /* DPTagXMLParserTests.m in Sources */,
 				C0DEFACE00000000000010B3 /* DPRemoteLocationTests.m in Sources */,
 				C0DEFACE00000000000010B4 /* TagmasterModelsTests.m in Sources */,
@@ -954,8 +936,6 @@
 				EDDD53E6339D688A6F4AA4CB /* TMListTestSupport.swift in Sources */,
 				69E48122D0696556161BC803 /* TagListsScreenCatalogTests.swift in Sources */,
 				D452D485E8A8FCAF1446E344 /* TagDetailLayoutTests.swift in Sources */,
-				87A98CE19182449419D1CFA9 /* TagmasterAppLogicTests.m in Sources */,
-				770C1215EB5E9700C7032102 /* TMReviewFeedbackTests.m in Sources */,
 				748DCF0CF473E34A3C8659DE /* TagTracksPlaybackTests.swift in Sources */,
 				61BB84ACAAE403FF40C387C0 /* TagDetailBehaviorTests.swift in Sources */,
 				267164521D38CDC1968AAC40 /* TagDetailModelTests.swift in Sources */,

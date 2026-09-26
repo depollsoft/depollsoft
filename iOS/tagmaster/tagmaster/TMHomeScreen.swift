@@ -398,7 +398,7 @@ struct TMHomeScreen: View {
         Button { model.newList() } label: {
             HStack(spacing: 0) {
                 Image(systemName: "plus.circle")
-                    .foregroundStyle(TMTheme.tint(DPAppDelegate.accentColor(), dimmed: dimmed))
+                    .foregroundStyle(TMTheme.tint(DPAppDelegate.accentColor, dimmed: dimmed))
                     .frame(width: 24)
                     .padding(.trailing, 15)
                 Text("New list…").tmFont(.body).foregroundStyle(Color(uiColor: .label))
@@ -548,7 +548,7 @@ struct TMHomeCredits: View {
             Text(title)
                 .tmFont(.footnote)
                 .multilineTextAlignment(.center)
-                .foregroundStyle(TMTheme.tint(DPAppDelegate.accentColor(), dimmed: dimmed))
+                .foregroundStyle(TMTheme.tint(DPAppDelegate.accentColor, dimmed: dimmed))
                 .padding(4)
                 .frame(maxWidth: .infinity, minHeight: 44)
                 .contentShape(Rectangle())

@@ -108,7 +108,10 @@ struct TMFilterMenuButton: UIViewRepresentable {
     }
 
     func sizeThatFits(_ proposal: ProposedViewSize, uiView button: UIButton, context: Context) -> CGSize? {
-        let width = proposal.width ?? button.intrinsicContentSize.width
+        guard let width = proposal.width, width.isFinite else {
+            let natural = button.intrinsicContentSize
+            return CGSize(width: natural.width, height: max(44, natural.height))
+        }
         let fitted = button.systemLayoutSizeFitting(CGSize(width: width, height: UIView.layoutFittingCompressedSize.height),
                                                     withHorizontalFittingPriority: .required,
                                                     verticalFittingPriority: .fittingSizeLevel)

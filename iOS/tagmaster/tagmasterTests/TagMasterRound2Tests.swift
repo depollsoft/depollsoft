@@ -179,7 +179,7 @@ final class TagMasterRound2Tests: TMBehaviorTestCase {
     func testTheShellGivesTheWindowTheAccentBeforeAnyScreenAppears() {
         let router = TMRouter()
         let shell = mountShell(router)
-        XCTAssertEqual(shell.tintColor, DPAppDelegate.accentColor())
+        XCTAssertEqual(shell.tintColor, DPAppDelegate.accentColor)
     }
 
     // MARK: Helpers

@@ -12,7 +12,7 @@
 import SwiftUI
 
 private struct TMAccentKey: EnvironmentKey {
-    static let defaultValue = Color(DPAppDelegate.accentColor() ?? .tintColor)
+    static let defaultValue = TMTheme.accent
 }
 
 extension EnvironmentValues {
@@ -37,7 +37,7 @@ private struct TMTintFollower: ViewModifier {
     @State private var dimmed = false
 
     func body(content: Content) -> some View {
-        let accent = Color(tint ?? DPAppDelegate.accentColor() ?? .tintColor)
+        let accent = Color(tint ?? DPAppDelegate.accentColor)
         content
             .environment(\.tmAccent, accent)
             .environment(\.tmTintDimmed, dimmed)
