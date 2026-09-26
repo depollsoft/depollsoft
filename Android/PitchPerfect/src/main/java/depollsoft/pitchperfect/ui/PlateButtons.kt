@@ -2,24 +2,21 @@ package depollsoft.pitchperfect.ui
 
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
-import androidx.compose.foundation.interaction.collectIsHoveredAsState
-import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.ui.unit.Dp
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -31,21 +28,29 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -104,10 +109,10 @@ fun PlateExtendedFab(
                     val stroke = 1.dp.toPx()
                     drawRoundRect(
                         colors.hairline,
-                        androidx.compose.ui.geometry.Offset(stroke / 2f, stroke / 2f),
-                        androidx.compose.ui.geometry.Size(size.width - stroke, size.height - stroke),
-                        androidx.compose.ui.geometry.CornerRadius(size.height / 2f - stroke / 2f),
-                        style = androidx.compose.ui.graphics.drawscope.Stroke(stroke),
+                        Offset(stroke / 2f, stroke / 2f),
+                        Size(size.width - stroke, size.height - stroke),
+                        CornerRadius(size.height / 2f - stroke / 2f),
+                        style = Stroke(stroke),
                     )
                 }
                 .clip(shape)
@@ -123,7 +128,7 @@ fun PlateExtendedFab(
             Spacer(Modifier.width(12.dp))
             PlateText(
                 text.uppercase(),
-                style = plateText(14.sp, colors.ink, weight = androidx.compose.ui.text.font.FontWeight.Medium, letterSpacing = 0.08928572f),
+                style = plateText(14.sp, colors.ink, weight = FontWeight.Medium, letterSpacing = 0.08928572f),
             )
         }
     }
@@ -261,7 +266,7 @@ fun PlateContainedButton(
     PlateButtonFrame(modifier, true, onClick, fill = elevatedSurface(colors, BUTTON_ELEVATION_OVERLAY), elevation = 2.dp) {
         PlateText(
             text,
-            style = plateText(14.sp, colors.ink, weight = androidx.compose.ui.text.font.FontWeight.Medium, letterSpacing = 0.08928572f),
+            style = plateText(14.sp, colors.ink, weight = FontWeight.Medium, letterSpacing = 0.08928572f),
             maxLines = 1,
             align = TextAlign.Center,
         )
@@ -274,9 +279,9 @@ private fun PlateButtonFrame(
     modifier: Modifier,
     enabled: Boolean,
     onClick: () -> Unit,
-    fill: androidx.compose.ui.graphics.Color,
-    stroke: androidx.compose.ui.graphics.Color? = null,
-    elevation: androidx.compose.ui.unit.Dp = 0.dp,
+    fill: Color,
+    stroke: Color? = null,
+    elevation: Dp = 0.dp,
     label: @Composable () -> Unit,
 ) {
     val shape = RoundedCornerShape(2.dp)

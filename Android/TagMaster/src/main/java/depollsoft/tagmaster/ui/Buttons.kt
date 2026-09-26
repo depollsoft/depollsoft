@@ -1,7 +1,5 @@
 package depollsoft.tagmaster.ui
 
-import depollsoft.compose.PlatformIcon
-import depollsoft.compose.ViewAlign
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -17,17 +15,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import depollsoft.compose.PlatformIcon
+import depollsoft.compose.ViewAlign
 import depollsoft.tagmaster.ui.TagMasterType.withoutLineHeight
 
 /** The Material 3 button styles the screens use. */
@@ -135,7 +136,7 @@ private class InsetShape(
                         },
                     )
                 }
-            is Outline.Generic -> Outline.Generic(Path().apply { addPath(inner.path, androidx.compose.ui.geometry.Offset(0f, inset)) })
+            is Outline.Generic -> Outline.Generic(Path().apply { addPath(inner.path, Offset(0f, inset)) })
         }
     }
 }

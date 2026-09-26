@@ -1,8 +1,11 @@
 package depollsoft.tagmaster.ui
 
 import android.content.Context
+import android.content.res.Configuration
 import android.util.TypedValue
+import android.view.ContextThemeWrapper
 import androidx.annotation.AttrRes
+import androidx.appcompat.R as AppCompatR
 import androidx.compose.material.ripple.RippleAlpha
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -19,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import com.google.android.material.R as MaterialR
 import depollsoft.tagmaster.R
 
 /**
@@ -85,25 +89,25 @@ private fun Context.resColor(id: Int) = Color(ContextCompat.getColor(this, id))
 fun tagMasterColors(context: Context): TagMasterColors {
     val dark =
         context.resources.configuration.uiMode and
-            android.content.res.Configuration.UI_MODE_NIGHT_MASK == android.content.res.Configuration.UI_MODE_NIGHT_YES
-    val chromeContext = android.view.ContextThemeWrapper(context, R.style.ThemeOverlay_TagMaster_Chrome)
+            Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+    val chromeContext = ContextThemeWrapper(context, R.style.ThemeOverlay_TagMaster_Chrome)
     val onChrome = context.resColor(R.color.brand_on_chrome)
     return TagMasterColors(
-        primary = context.attrColor(androidx.appcompat.R.attr.colorPrimary),
-        onPrimary = context.attrColor(com.google.android.material.R.attr.colorOnPrimary),
-        secondaryContainer = context.attrColor(com.google.android.material.R.attr.colorSecondaryContainer),
-        onSecondaryContainer = context.attrColor(com.google.android.material.R.attr.colorOnSecondaryContainer),
-        onSurface = context.attrColor(com.google.android.material.R.attr.colorOnSurface),
-        onSurfaceVariant = context.attrColor(com.google.android.material.R.attr.colorOnSurfaceVariant),
-        outline = context.attrColor(com.google.android.material.R.attr.colorOutline),
-        outlineVariant = context.attrColor(com.google.android.material.R.attr.colorOutlineVariant),
-        surface = context.attrColor(com.google.android.material.R.attr.colorSurface),
-        surfaceContainerHigh = context.attrColor(com.google.android.material.R.attr.colorSurfaceContainerHigh),
-        surfaceContainerHighest = context.attrColor(com.google.android.material.R.attr.colorSurfaceContainerHighest),
+        primary = context.attrColor(AppCompatR.attr.colorPrimary),
+        onPrimary = context.attrColor(MaterialR.attr.colorOnPrimary),
+        secondaryContainer = context.attrColor(MaterialR.attr.colorSecondaryContainer),
+        onSecondaryContainer = context.attrColor(MaterialR.attr.colorOnSecondaryContainer),
+        onSurface = context.attrColor(MaterialR.attr.colorOnSurface),
+        onSurfaceVariant = context.attrColor(MaterialR.attr.colorOnSurfaceVariant),
+        outline = context.attrColor(MaterialR.attr.colorOutline),
+        outlineVariant = context.attrColor(MaterialR.attr.colorOutlineVariant),
+        surface = context.attrColor(MaterialR.attr.colorSurface),
+        surfaceContainerHigh = context.attrColor(MaterialR.attr.colorSurfaceContainerHigh),
+        surfaceContainerHighest = context.attrColor(MaterialR.attr.colorSurfaceContainerHighest),
         background = context.attrColor(android.R.attr.colorBackground),
-        error = context.attrColor(androidx.appcompat.R.attr.colorError),
-        controlHighlight = context.attrColor(androidx.appcompat.R.attr.colorControlHighlight),
-        chromeHighlight = chromeContext.attrColor(androidx.appcompat.R.attr.colorControlHighlight),
+        error = context.attrColor(AppCompatR.attr.colorError),
+        controlHighlight = context.attrColor(AppCompatR.attr.colorControlHighlight),
+        chromeHighlight = chromeContext.attrColor(AppCompatR.attr.colorControlHighlight),
         text = context.attrColor(android.R.attr.textColorPrimary),
         textSecondary = context.attrColor(android.R.attr.textColorSecondary),
         chrome = context.resColor(R.color.brand_chrome),

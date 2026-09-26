@@ -1,7 +1,5 @@
 package depollsoft.tagmaster
 
-import depollsoft.compose.PlatformIcon
-import depollsoft.compose.ViewAlign
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.graphics.Bitmap
@@ -54,6 +52,8 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import bolts.Task
+import depollsoft.compose.PlatformIcon
+import depollsoft.compose.ViewAlign
 import depollsoft.tagmaster.barbershop.Tag
 import depollsoft.tagmaster.ui.BarAction
 import depollsoft.tagmaster.ui.CompactBarberPole

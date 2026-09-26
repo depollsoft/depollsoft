@@ -1,13 +1,13 @@
 package depollsoft.tagmaster.ui
 
-import depollsoft.compose.PlatformIcon
-import depollsoft.compose.ViewAlign
-import depollsoft.compose.OpensOnMenuKey
+import android.app.Activity
 import android.content.Context
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.util.TypedValue
+import android.view.ContextThemeWrapper
 import androidx.annotation.DrawableRes
+import androidx.appcompat.R as AppCompatR
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -47,6 +47,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import depollsoft.compose.OpensOnMenuKey
+import depollsoft.compose.PlatformIcon
+import depollsoft.compose.ViewAlign
 import depollsoft.tagmaster.R
 import depollsoft.tagmaster.ui.TagMasterType.withoutLineHeight
 
@@ -169,9 +172,9 @@ fun TagMasterTopBar(
         }
     var menuOpen by remember { mutableStateOf(false) }
     // A screen's own bar names its window, as the activity title bound to the toolbar did.
-    val activity = context as? android.app.Activity
+    val activity = context as? Activity
     if (paneTitle == null && activity != null) SideEffect { activity.title = title }
-    val navIcon = remember(context) { themeDrawableRes(context, androidx.appcompat.R.attr.homeAsUpIndicator) }
+    val navIcon = remember(context) { themeDrawableRes(context, AppCompatR.attr.homeAsUpIndicator) }
     val overflowIcon = remember(context) { overflowDrawableRes(context) }
 
     if (overflow.isNotEmpty()) OpensOnMenuKey { menuOpen = true }
@@ -186,7 +189,7 @@ fun TagMasterTopBar(
                 .semantics { this.paneTitle = paneTitle ?: title },
             content = {
                 if (onNavigateUp != null) {
-                    val up = context.getString(androidx.appcompat.R.string.abc_action_bar_up_description)
+                    val up = context.getString(AppCompatR.string.abc_action_bar_up_description)
                     WithTooltip(up, Modifier.layoutId("nav")) { tooltip ->
                         Box(
                             Modifier
@@ -224,7 +227,7 @@ fun TagMasterTopBar(
                 }
                 if (overflow.isNotEmpty()) {
                     Box(Modifier.layoutId("overflow")) {
-                        val more = context.getString(androidx.appcompat.R.string.abc_action_menu_overflow_description)
+                        val more = context.getString(AppCompatR.string.abc_action_menu_overflow_description)
                         WithTooltip(more) { tooltip ->
                             Box(
                                 Modifier
@@ -369,17 +372,17 @@ private fun themeDrawableRes(
     context: Context,
     attr: Int,
 ): Int {
-    val chrome = android.view.ContextThemeWrapper(context, R.style.ThemeOverlay_TagMaster_Chrome)
-    val value = android.util.TypedValue()
+    val chrome = ContextThemeWrapper(context, R.style.ThemeOverlay_TagMaster_Chrome)
+    val value = TypedValue()
     chrome.theme.resolveAttribute(attr, value, true)
     return value.resourceId
 }
 
 /** The overflow button's icon, from the theme's `actionOverflowButtonStyle`. */
 private fun overflowDrawableRes(context: Context): Int {
-    val chrome = android.view.ContextThemeWrapper(context, R.style.ThemeOverlay_TagMaster_Chrome)
-    val attrs = intArrayOf(android.R.attr.src, androidx.appcompat.R.attr.srcCompat)
-    val array = chrome.obtainStyledAttributes(null, attrs, androidx.appcompat.R.attr.actionOverflowButtonStyle, 0)
+    val chrome = ContextThemeWrapper(context, R.style.ThemeOverlay_TagMaster_Chrome)
+    val attrs = intArrayOf(android.R.attr.src, AppCompatR.attr.srcCompat)
+    val array = chrome.obtainStyledAttributes(null, attrs, AppCompatR.attr.actionOverflowButtonStyle, 0)
     return try {
         array.getResourceId(1, 0).takeIf { it != 0 } ?: array.getResourceId(0, R.drawable.ic_more_vert)
     } finally {

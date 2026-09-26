@@ -1,19 +1,20 @@
 package depollsoft.tagmaster.ui.detail
 
-import depollsoft.compose.scrollViewScrollbar
-import depollsoft.compose.ViewAlign
 import android.animation.ValueAnimator
-import android.os.Build
 import android.content.Context
+import android.os.Build
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -36,6 +37,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ShareCompat
+import depollsoft.compose.ViewAlign
+import depollsoft.compose.scrollViewScrollbar
 import depollsoft.tagmaster.FavoritesModel
 import depollsoft.tagmaster.R
 import depollsoft.tagmaster.TagDetailState
@@ -135,7 +138,7 @@ private fun DetailPages(
     state: TagDetailState,
     tag: Tag,
     dialogs: ListDialogs,
-    pager: androidx.compose.foundation.pager.PagerState,
+    pager: PagerState,
 ) {
     // A tag chosen in the pane fades in, when the system allows motion.
     val reveal = remember { Animatable(1f) }
@@ -185,7 +188,7 @@ private fun LoadingState(tagId: Int) {
             .scrollViewScrollbar(scroll)
             .verticalScroll(scroll)
             .padding(24.dp),
-        verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
+        verticalArrangement = Arrangement.Center,
         horizontalAlignment = ViewAlign.CenterHorizontally,
     ) {
         Column(
@@ -233,7 +236,7 @@ private fun ErrorState(state: TagDetailState) {
             .verticalScroll(scroll)
             .padding(32.dp)
             .testTag("detailError"),
-        verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
+        verticalArrangement = Arrangement.Center,
         horizontalAlignment = ViewAlign.CenterHorizontally,
     ) {
         Text(
@@ -250,7 +253,7 @@ private fun ErrorState(state: TagDetailState) {
             style = ButtonStyle.Tonal,
             icon = R.drawable.ic_refresh,
             enabled = !state.isLoading,
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 24.dp, vertical = 10.dp),
+            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp),
         )
     }
 }

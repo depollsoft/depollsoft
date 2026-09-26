@@ -1,9 +1,5 @@
 package depollsoft.tagmaster.ui
 
-import depollsoft.compose.rememberDrawable
-import depollsoft.compose.PlatformIcon
-import depollsoft.compose.drawCenterInside
-import depollsoft.compose.ViewAlign
 import android.content.Intent
 import android.net.Uri
 import androidx.annotation.DrawableRes
@@ -23,6 +19,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.platform.LocalContext
@@ -35,10 +32,16 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import depollsoft.compose.PlatformIcon
+import depollsoft.compose.ViewAlign
+import depollsoft.compose.drawCenterInside
+import depollsoft.compose.rememberDrawable
 import depollsoft.tagmaster.R
 
 /** The barber pole behind a screen's content, at its own size and centered (CENTER_INSIDE). */
@@ -59,7 +62,7 @@ fun Hyperlink(
     modifier: Modifier = Modifier,
     style: TextStyle = TagMasterType.bodySmall,
     textAlign: TextAlign? = TextAlign.Center,
-    contentAlignment: androidx.compose.ui.Alignment = ViewAlign.Center,
+    contentAlignment: Alignment = ViewAlign.Center,
 ) {
     val context = LocalContext.current
     val shown =
@@ -144,10 +147,10 @@ fun ActionTitle(
     Text(
         text,
         modifier = modifier.fillMaxWidth(),
-        style = TagMasterType.titleLarge.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Medium),
+        style = TagMasterType.titleLarge.copy(fontWeight = FontWeight.Medium),
         color = TagMasterTheme.colors.text,
         maxLines = maxLines,
-        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+        overflow = TextOverflow.Ellipsis,
     )
 }
 
@@ -163,7 +166,7 @@ fun ActionDetail(
         style = TagMasterType.bodyMedium,
         color = TagMasterTheme.colors.onSurfaceVariant,
         maxLines = 1,
-        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+        overflow = TextOverflow.Ellipsis,
     )
 }
 
@@ -176,7 +179,7 @@ fun BoxScope.SearchFab(onClick: () -> Unit) {
         onClick = onClick,
         modifier =
             Modifier
-                .align(androidx.compose.ui.Alignment.BottomEnd)
+                .align(Alignment.BottomEnd)
                 .padding(end = 16.dp, bottom = 16.dp)
                 .semantics { contentDescription = label }
                 .testTag("searchButton"),

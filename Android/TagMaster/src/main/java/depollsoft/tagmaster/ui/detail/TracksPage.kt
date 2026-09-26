@@ -1,8 +1,10 @@
 package depollsoft.tagmaster.ui.detail
 
-import depollsoft.compose.drawPlatform
-import depollsoft.compose.PlatformIcon
-import depollsoft.compose.ViewAlign
+import android.content.res.Configuration
+import android.graphics.drawable.Drawable
+import android.os.Handler
+import android.os.Looper
+import androidx.appcompat.R as AppCompatR
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -54,6 +56,9 @@ import androidx.core.graphics.drawable.DrawableCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import depollsoft.compose.PlatformIcon
+import depollsoft.compose.ViewAlign
+import depollsoft.compose.drawPlatform
 import depollsoft.tagmaster.R
 import depollsoft.tagmaster.barbershop.RemoteLocation
 import depollsoft.tagmaster.barbershop.Tag
@@ -135,7 +140,7 @@ fun TracksPage(
         if (selected >= 0 && location == null) selected = -1
         if (location != player.location) player.select(location)
     }
-    val landscape = LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+    val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     @Composable
     fun notes(modifier: Modifier) {
@@ -238,8 +243,8 @@ private fun RadioIndicator(
             val attributes =
                 context.obtainStyledAttributes(
                     null,
-                    intArrayOf(android.R.attr.button, androidx.appcompat.R.attr.buttonCompat, androidx.appcompat.R.attr.buttonTint),
-                    androidx.appcompat.R.attr.radioButtonStyle,
+                    intArrayOf(android.R.attr.button, AppCompatR.attr.buttonCompat, AppCompatR.attr.buttonTint),
+                    AppCompatR.attr.radioButtonStyle,
                     0,
                 )
             try {
@@ -257,15 +262,15 @@ private fun RadioIndicator(
     // Frames of the drawable's own transition ask for a redraw through its callback.
     var frame by remember { mutableIntStateOf(0) }
     DisposableEffect(indicator) {
-        val main = android.os.Handler(android.os.Looper.getMainLooper())
+        val main = Handler(Looper.getMainLooper())
         indicator.callback =
-            object : android.graphics.drawable.Drawable.Callback {
-                override fun invalidateDrawable(who: android.graphics.drawable.Drawable) {
+            object : Drawable.Callback {
+                override fun invalidateDrawable(who: Drawable) {
                     frame++
                 }
 
                 override fun scheduleDrawable(
-                    who: android.graphics.drawable.Drawable,
+                    who: Drawable,
                     what: Runnable,
                     `when`: Long,
                 ) {
@@ -273,7 +278,7 @@ private fun RadioIndicator(
                 }
 
                 override fun unscheduleDrawable(
-                    who: android.graphics.drawable.Drawable,
+                    who: Drawable,
                     what: Runnable,
                 ) {
                     main.removeCallbacks(what, who)

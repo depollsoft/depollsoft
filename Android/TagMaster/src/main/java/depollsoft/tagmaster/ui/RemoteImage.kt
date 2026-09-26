@@ -2,6 +2,8 @@ package depollsoft.tagmaster.ui
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Paint
+import android.graphics.RectF
 import android.util.LruCache
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
@@ -16,10 +18,10 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.net.URL
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 private const val MAX_DOWNLOAD_BYTES = 8 * 1024 * 1024
 
@@ -65,8 +67,8 @@ fun RemoteImage(
                     it.nativeCanvas.drawBitmap(
                         image,
                         null,
-                        android.graphics.RectF(left, top, left + width, top + height),
-                        android.graphics.Paint(android.graphics.Paint.FILTER_BITMAP_FLAG),
+                        RectF(left, top, left + width, top + height),
+                        Paint(Paint.FILTER_BITMAP_FLAG),
                     )
                 }
             },

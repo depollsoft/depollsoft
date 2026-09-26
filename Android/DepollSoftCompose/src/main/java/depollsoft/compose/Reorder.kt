@@ -29,12 +29,13 @@ import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.PointerEvent
 import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.SuspendingPointerInputModifierNode
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.node.DelegatingNode
 import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.platform.InspectorInfo
-import androidx.compose.ui.layout.onPlaced
-import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -504,7 +505,7 @@ private class ReorderHandleNode<K : Any>(
         if (restart) pointer.resetPointerInputHandler()
     }
 
-    private suspend fun androidx.compose.ui.input.pointer.PointerInputScope.track() {
+    private suspend fun PointerInputScope.track() {
         val edge = EDGE_ZONE.toPx()
         val maxStep = MAX_SCROLL_PER_FRAME.toPx()
         coroutineScope {

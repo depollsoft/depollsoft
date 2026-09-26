@@ -1,6 +1,5 @@
 package depollsoft.tagmaster
 
-import depollsoft.compose.revealItem
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.viewModels
@@ -19,6 +18,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import depollsoft.compose.revealItem
 import depollsoft.tagmaster.barbershop.TagCollection
 import depollsoft.tagmaster.barbershop.TagSortOptions
 import depollsoft.tagmaster.ui.BarAction

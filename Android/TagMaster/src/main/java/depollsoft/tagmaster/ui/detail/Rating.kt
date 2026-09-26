@@ -1,12 +1,15 @@
 package depollsoft.tagmaster.ui.detail
 
 import android.content.Context
+import android.content.res.ColorStateList
+import android.graphics.Canvas
 import android.graphics.Shader
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ClipDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.LayerDrawable
 import android.view.Gravity
+import androidx.appcompat.R as AppCompatR
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -86,7 +89,7 @@ internal class StarBar(
         // ProgressBar.applyProgressTints: each tint goes to its layer, in the default SRC_IN mode.
         backgroundTint?.let { drawable.findDrawableByLayerId(android.R.id.background)?.setTintList(it) }
         secondaryTint?.let { drawable.findDrawableByLayerId(android.R.id.secondaryProgress)?.setTintList(it) }
-        (progressTint?.let { android.content.res.ColorStateList.valueOf(it) } ?: styleProgressTint)?.let {
+        (progressTint?.let { ColorStateList.valueOf(it) } ?: styleProgressTint)?.let {
             drawable.findDrawableByLayerId(android.R.id.progress)?.setTintList(it)
         }
         drawable.state = intArrayOf(android.R.attr.state_enabled)
@@ -100,7 +103,7 @@ internal class StarBar(
      * reaches into.
      */
     fun draw(
-        canvas: android.graphics.Canvas,
+        canvas: Canvas,
         rating: Float,
         stepSize: Float,
     ) {
@@ -192,7 +195,7 @@ fun RatingPicker(
 ) {
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
-    val bar = remember(context, configuration.uiMode) { StarBar(context, androidx.appcompat.R.attr.ratingBarStyle, null) }
+    val bar = remember(context, configuration.uiMode) { StarBar(context, AppCompatR.attr.ratingBarStyle, null) }
     val density = LocalDensity.current
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
 

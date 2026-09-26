@@ -2,6 +2,8 @@ package depollsoft.tagmaster
 
 import android.content.Intent
 import android.os.Bundle
+import depollsoft.lib.privacy.PrivacyChoices
+import depollsoft.lib.privacy.TelemetryConsent
 import depollsoft.lib.ui.ChangelogViewer
 import depollsoft.tagmaster.ui.HomeActions
 import depollsoft.tagmaster.ui.HomeScreen
@@ -43,7 +45,7 @@ class MeActivity :
         setTagMasterContent { HomeScreen(tagPane, home, listEditor) }
         tagPane.restore(savedInstanceState)
 
-        if (depollsoft.lib.privacy.PrivacyChoices(this).hasChosen) {
+        if (PrivacyChoices(this).hasChosen) {
             val viewer = ChangelogViewer(this, this.getString(R.string.Changelog))
             viewer.setTitle(getString(R.string.home_changelog_title))
             viewer.setIcon(R.mipmap.ic_launcher)
@@ -58,7 +60,7 @@ class MeActivity :
 
     override fun onResume() {
         super.onResume()
-        depollsoft.lib.privacy.TelemetryConsent.showIfNeeded(this)
+        TelemetryConsent.showIfNeeded(this)
     }
 
     override fun onDestroy() {

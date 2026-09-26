@@ -1,7 +1,5 @@
 package depollsoft.tagmaster
 
-import depollsoft.compose.scrollViewScrollbar
-import depollsoft.compose.ViewAlign
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.os.Bundle
@@ -55,7 +53,11 @@ import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import depollsoft.compose.ViewAlign
+import depollsoft.compose.scrollViewScrollbar
 import depollsoft.lib.auth.SignInOutcome
+import depollsoft.lib.kotlin.R as LibKotlinR
+import depollsoft.lib.privacy.TelemetryConsent
 import depollsoft.lib.ui.ChangelogViewer
 import depollsoft.lib.util.AppLog
 import depollsoft.tagmaster.ui.BarberPoleWatermark
@@ -326,8 +328,8 @@ private fun SettingsScreen(activity: SettingsActivity) {
                     WideButton(R.string.ViewChangelog, ButtonStyle.Outlined, "changelogButton", Modifier.padding(top = 24.dp)) {
                         activity.showChangelog()
                     }
-                    WideButton(depollsoft.lib.kotlin.R.string.privacy_title, ButtonStyle.Filled, "privacyChoicesButton", Modifier.padding(top = 16.dp)) {
-                        depollsoft.lib.privacy.TelemetryConsent.show(activity)
+                    WideButton(LibKotlinR.string.privacy_title, ButtonStyle.Filled, "privacyChoicesButton", Modifier.padding(top = 16.dp)) {
+                        TelemetryConsent.show(activity)
                     }
                     PrivateBuildDiagnostics(activity)
                 }

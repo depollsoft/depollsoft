@@ -1,9 +1,5 @@
 package depollsoft.tagmaster.ui
 
-import depollsoft.compose.listItemMotion
-import depollsoft.compose.listViewScrollbar
-import depollsoft.compose.ListMotion
-import depollsoft.compose.ViewAlign
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -32,6 +28,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
+import depollsoft.compose.ListMotion
+import depollsoft.compose.ViewAlign
+import depollsoft.compose.listItemMotion
+import depollsoft.compose.listViewScrollbar
 import depollsoft.tagmaster.QueryModel
 import depollsoft.tagmaster.R
 import kotlin.math.abs

@@ -1,7 +1,5 @@
 package depollsoft.tagmaster.ui
 
-import depollsoft.compose.inWholePixels
-import depollsoft.compose.ViewAlign
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -22,6 +20,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -39,10 +38,13 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
+import com.google.android.material.R as MaterialR
 import depollsoft.compose.DIALOG_MIN_WIDTH_FRACTION
+import depollsoft.compose.ViewAlign
 import depollsoft.compose.dialogFirstPassWidth
 import depollsoft.compose.dialogMinWidthFraction
 import depollsoft.compose.dialogTitleFits
+import depollsoft.compose.inWholePixels
 import depollsoft.tagmaster.ui.TagMasterType.withoutLineHeight
 
 /** One dialog button: a text button, optionally in the error color for a destructive choice. */
@@ -128,7 +130,7 @@ fun TagMasterDialog(
                     Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp, vertical = 14.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp, androidx.compose.ui.Alignment.End),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
                 ) {
                     dismiss?.let { DialogTextButton(it) }
                     confirm?.let { DialogTextButton(it) }
@@ -146,7 +148,7 @@ fun TagMasterDialog(
 @Composable
 fun MaterialDialogMotion() {
     val window = (LocalView.current.parent as? DialogWindowProvider)?.window
-    SideEffect { window?.setWindowAnimations(com.google.android.material.R.style.MaterialAlertDialog_Material3_Animation) }
+    SideEffect { window?.setWindowAnimations(MaterialR.style.MaterialAlertDialog_Material3_Animation) }
 }
 
 /**

@@ -1,16 +1,7 @@
 package depollsoft.pitchperfect
 
-import depollsoft.compose.listItemMotion
-import depollsoft.compose.shownOrder
-import depollsoft.compose.reorderRow
-import depollsoft.compose.reorderHandle
-import depollsoft.compose.ReorderState
-import depollsoft.compose.rememberReorderState
-import depollsoft.compose.ViewAlign
-import depollsoft.compose.SnackbarTiming
-import depollsoft.compose.rememberSnackbarState
-import depollsoft.compose.SlidingSnackbarHost
 import android.content.Intent
+import android.graphics.Typeface
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
@@ -32,10 +23,9 @@ import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Snackbar
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
-import depollsoft.pitchperfect.ui.PlateText
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,20 +49,31 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import depollsoft.compose.ReorderState
+import depollsoft.compose.SlidingSnackbarHost
+import depollsoft.compose.SnackbarTiming
+import depollsoft.compose.ViewAlign
+import depollsoft.compose.listItemMotion
+import depollsoft.compose.rememberReorderState
+import depollsoft.compose.rememberSnackbarState
+import depollsoft.compose.reorderHandle
+import depollsoft.compose.reorderRow
+import depollsoft.compose.shownOrder
 import depollsoft.pitchperfect.lib.PitchedSong
-import depollsoft.pitchperfect.ui.DrawableIcon
 import depollsoft.pitchperfect.ui.DialogButton
+import depollsoft.pitchperfect.ui.DrawableIcon
 import depollsoft.pitchperfect.ui.LegacyText
 import depollsoft.pitchperfect.ui.PlateActionIcon
 import depollsoft.pitchperfect.ui.PlateAlertDialog
 import depollsoft.pitchperfect.ui.PlateFab
 import depollsoft.pitchperfect.ui.PlateFonts
 import depollsoft.pitchperfect.ui.PlateMenuItem
-import depollsoft.pitchperfect.ui.PlatePopupMenu
-import depollsoft.pitchperfect.ui.PopupMenuItem
 import depollsoft.pitchperfect.ui.PlateOverflowMenu
-import depollsoft.pitchperfect.ui.plateColors
+import depollsoft.pitchperfect.ui.PlatePopupMenu
+import depollsoft.pitchperfect.ui.PlateText
+import depollsoft.pitchperfect.ui.PopupMenuItem
 import depollsoft.pitchperfect.ui.isTablet
+import depollsoft.pitchperfect.ui.plateColors
 import depollsoft.pitchperfect.ui.plateText
 
 /**
@@ -310,7 +311,7 @@ private fun SongRow(
                 song.key?.let { NoteText.keyName(it) } ?: "",
                 18.sp,
                 if (lit) colors.onAccent else colors.inkSecondary,
-                android.graphics.Typeface.MONOSPACE,
+                Typeface.MONOSPACE,
                 Modifier.padding(end = 20.dp),
                 letterSpacing = 0.06f,
                 wrapWidth = true,

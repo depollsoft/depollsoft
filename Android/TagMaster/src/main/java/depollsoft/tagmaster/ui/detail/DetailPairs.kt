@@ -1,18 +1,21 @@
 package depollsoft.tagmaster.ui.detail
 
-import depollsoft.compose.viewPx
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.AlignmentLine
 import androidx.compose.ui.layout.FirstBaseline
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Measurable
+import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.layout.ParentDataModifier
+import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import depollsoft.compose.viewPx
 import depollsoft.tagmaster.ui.TagMasterTheme
 import depollsoft.tagmaster.ui.TagMasterType
 import depollsoft.tagmaster.ui.rememberTextViewPaint
@@ -105,8 +108,8 @@ fun DetailPairs(
 }
 
 private class Row(
-    val caption: androidx.compose.ui.layout.Placeable,
-    val value: androidx.compose.ui.layout.Placeable,
+    val caption: Placeable,
+    val value: Placeable,
     val captionTop: Int,
     val valueTop: Int,
     val valueLeft: Int,
@@ -116,7 +119,7 @@ private class Row(
 }
 
 /** DetailPairLayout's measure: baselines aligned, centered in a row at least [rowHeightDp] tall. */
-private fun androidx.compose.ui.layout.MeasureScope.measurePair(
+private fun MeasureScope.measurePair(
     captionMeasurable: Measurable,
     valueMeasurable: Measurable,
     lines: LineCount,
@@ -132,8 +135,8 @@ private fun androidx.compose.ui.layout.MeasureScope.measurePair(
     var valueTop = if (captionWidth < 0) caption.height + gap else 0
     val captionBaseline = caption[FirstBaseline]
     val valueBaseline = value[FirstBaseline]
-    if (captionWidth >= 0 && captionBaseline != androidx.compose.ui.layout.AlignmentLine.Unspecified &&
-        valueBaseline != androidx.compose.ui.layout.AlignmentLine.Unspecified
+    if (captionWidth >= 0 && captionBaseline != AlignmentLine.Unspecified &&
+        valueBaseline != AlignmentLine.Unspecified
     ) {
         captionTop = max(0, valueBaseline - captionBaseline)
         valueTop = max(0, captionBaseline - valueBaseline)

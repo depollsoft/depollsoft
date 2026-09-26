@@ -1,13 +1,5 @@
 package depollsoft.tagmaster.ui
 
-import depollsoft.compose.listItemMotion
-import depollsoft.compose.shownOrder
-import depollsoft.compose.reorderRow
-import depollsoft.compose.reorderHandle
-import depollsoft.compose.recyclerScrollbar
-import depollsoft.compose.revealItem
-import depollsoft.compose.rememberReorderState
-import depollsoft.compose.ViewAlign
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,6 +17,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import depollsoft.compose.ViewAlign
+import depollsoft.compose.listItemMotion
+import depollsoft.compose.recyclerScrollbar
+import depollsoft.compose.rememberReorderState
+import depollsoft.compose.reorderHandle
+import depollsoft.compose.reorderRow
+import depollsoft.compose.revealItem
+import depollsoft.compose.shownOrder
 import depollsoft.tagmaster.ListModel
 import depollsoft.tagmaster.R
 import depollsoft.tagmaster.TagPaneState

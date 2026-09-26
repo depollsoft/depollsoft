@@ -32,6 +32,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import kotlin.math.PI
@@ -143,7 +144,7 @@ fun ZoomableImage(
         motion[0] =
             scope.launch {
                 val max = reach(state.scale)
-                val decay = splineBasedDecay<Float>(view.context.resources.displayMetrics.let { androidx.compose.ui.unit.Density(it.density) })
+                val decay = splineBasedDecay<Float>(view.context.resources.displayMetrics.let { Density(it.density) })
                 coroutineScope {
                     val x = Animatable(state.offset.x).apply { updateBounds(-max.x, max.x) }
                     val y = Animatable(state.offset.y).apply { updateBounds(-max.y, max.y) }

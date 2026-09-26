@@ -1,20 +1,13 @@
 package depollsoft.pitchperfect
 
-import depollsoft.compose.scrollViewScrollbar
-import depollsoft.compose.ViewAlign
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
-import depollsoft.lib.util.appVersionName
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.runtime.getValue
-
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,36 +15,42 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Switch
 import androidx.compose.material.SwitchDefaults
-import depollsoft.pitchperfect.ui.PlateText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.appcompat.app.AppCompatDelegate
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import depollsoft.compose.ViewAlign
+import depollsoft.compose.scrollViewScrollbar
+import depollsoft.lib.kotlin.R as LibKotlinR
+import depollsoft.lib.util.appVersionName
 import depollsoft.pitchperfect.ui.PlateBackground
 import depollsoft.pitchperfect.ui.PlateContainedButton
 import depollsoft.pitchperfect.ui.PlateSectionHeader
 import depollsoft.pitchperfect.ui.PlateSettingsButton
+import depollsoft.pitchperfect.ui.PlateText
 import depollsoft.pitchperfect.ui.plateColors
 import depollsoft.pitchperfect.ui.plateText
 
@@ -141,7 +140,7 @@ fun SettingsScreen(
             if (state.watches.isNotEmpty()) {
                 Column(Modifier.padding(top = 28.dp).testTag(TestTags.WATCH_SECTION)) {
                     PlateSectionHeader(stringResource(R.string.SectionWatch))
-                    val context = androidx.compose.ui.platform.LocalContext.current
+                    val context = LocalContext.current
                     PlateText(
                         state.watches.joinToString("\n") { node ->
                             context.getString(if (node.installed) R.string.WatchInstalledOn else R.string.WatchNotInstalledOn, node.name)
@@ -203,7 +202,7 @@ fun SettingsScreen(
             )
             AboutFooter(state.licensed, actions.openLink)
             PlateContainedButton(
-                stringResource(depollsoft.lib.kotlin.R.string.privacy_title),
+                stringResource(LibKotlinR.string.privacy_title),
                 Modifier.padding(top = 16.dp).fillMaxWidth().testTag(TestTags.PRIVACY_CHOICES),
                 onClick = actions.privacyChoices,
             )

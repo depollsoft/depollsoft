@@ -24,8 +24,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.core.view.WindowCompat
-import depollsoft.compose.MenuKey
 import depollsoft.compose.LocalMenuKey
+import depollsoft.compose.MenuKey
 import depollsoft.compose.ShownSnackbar
 import depollsoft.compose.SlidingSnackbarHost
 import depollsoft.compose.SnackbarState

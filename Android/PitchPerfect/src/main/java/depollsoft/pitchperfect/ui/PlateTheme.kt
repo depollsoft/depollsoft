@@ -1,17 +1,16 @@
 package depollsoft.pitchperfect.ui
 
-import depollsoft.compose.inWholePixels
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.runtime.ReadOnlyComposable
+import android.content.Context
+import android.graphics.Typeface
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
@@ -19,8 +18,12 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.sp
+import androidx.core.content.res.ResourcesCompat
+import depollsoft.compose.inWholePixels
 import depollsoft.pitchperfect.R
 
 /**
@@ -53,8 +56,8 @@ object PlateFonts {
     val oswald = FontFamily(Font(R.font.oswald_medium, FontWeight.Medium))
 
     /** `sans-serif-condensed`: note and song names. */
-    val condensedTypeface: android.graphics.Typeface =
-        android.graphics.Typeface.create("sans-serif-condensed", android.graphics.Typeface.NORMAL)
+    val condensedTypeface: Typeface =
+        Typeface.create("sans-serif-condensed", Typeface.NORMAL)
 
     val condensed = FontFamily(androidx.compose.ui.text.font.Typeface(condensedTypeface))
 
@@ -62,9 +65,9 @@ object PlateFonts {
     val mono = FontFamily.Monospace
 
     /** The Oswald face as a platform typeface, for text drawn outside Compose's text layout. */
-    fun oswaldTypeface(context: android.content.Context): android.graphics.Typeface =
-        androidx.core.content.res.ResourcesCompat.getFont(context, R.font.oswald_medium)
-            ?: android.graphics.Typeface.create("sans-serif-condensed", android.graphics.Typeface.NORMAL)
+    fun oswaldTypeface(context: Context): Typeface =
+        ResourcesCompat.getFont(context, R.font.oswald_medium)
+            ?: Typeface.create("sans-serif-condensed", Typeface.NORMAL)
 }
 
 /**

@@ -1,11 +1,15 @@
 package depollsoft.pitchperfect
 
+import android.content.Context
+import android.view.View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,21 +18,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
-import depollsoft.pitchperfect.ui.PlateText
-import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalViewConfiguration
-import androidx.compose.ui.platform.ViewConfiguration
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.key
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,9 +36,12 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.ui.platform.ViewConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -47,6 +50,7 @@ import depollsoft.pitchperfect.ui.PlateBackground
 import depollsoft.pitchperfect.ui.PlateBottomNavigation
 import depollsoft.pitchperfect.ui.PlateDestination
 import depollsoft.pitchperfect.ui.PlateNavigationRail
+import depollsoft.pitchperfect.ui.PlateText
 import depollsoft.pitchperfect.ui.PlateTopBar
 import depollsoft.pitchperfect.ui.isTablet
 import depollsoft.pitchperfect.ui.plateColors
@@ -72,7 +76,7 @@ enum class MainTab(
 class AdSlot(
     val visible: Boolean,
     val heightPx: Int,
-    val banner: android.view.View?,
+    val banner: View?,
     val onRemoveAds: () -> Unit,
 )
 
@@ -84,7 +88,7 @@ class AdSlot(
 fun MainScreen(
     pagerState: PagerState,
     adSlot: AdSlot,
-    actions: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit,
+    actions: @Composable RowScope.() -> Unit,
     modifier: Modifier = Modifier,
     overlay: @Composable BoxScope.() -> Unit = {},
     page: @Composable (MainTab) -> Unit,
@@ -196,12 +200,12 @@ fun rememberPagingViewConfiguration(base: ViewConfiguration): ViewConfiguration 
 @Composable
 internal fun AdArea(
     slot: AdSlot,
-    endMargin: androidx.compose.ui.unit.Dp,
+    endMargin: Dp,
 ) {
     if (!slot.visible) return
     val context = LocalContext.current
     // `?android:textAppearanceSmall`, italic, as the View layout styled the link.
-    val linkColor = androidx.compose.runtime.remember(context) { smallTextColor(context) }
+    val linkColor = remember(context) { smallTextColor(context) }
     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
         PlateText(
             stringResource(R.string.RemoveAds),
@@ -223,7 +227,7 @@ internal fun AdArea(
     }
 }
 
-private fun smallTextColor(context: android.content.Context): Color {
+private fun smallTextColor(context: Context): Color {
     val appearance =
         context.obtainStyledAttributes(intArrayOf(android.R.attr.textAppearanceSmall)).run {
             getResourceId(0, 0).also { recycle() }

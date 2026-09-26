@@ -1,5 +1,7 @@
 package depollsoft.compose
 
+import android.graphics.Matrix
+import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import android.view.View
 import androidx.annotation.DrawableRes
@@ -100,11 +102,11 @@ fun DrawScope.drawFitCenter(
         drawPlatform(drawable, 0, 0, width, height, alpha)
         return
     }
-    val matrix = android.graphics.Matrix()
+    val matrix = Matrix()
     matrix.setRectToRect(
-        android.graphics.RectF(0f, 0f, intrinsicWidth.toFloat(), intrinsicHeight.toFloat()),
-        android.graphics.RectF(0f, 0f, width.toFloat(), height.toFloat()),
-        android.graphics.Matrix.ScaleToFit.CENTER,
+        RectF(0f, 0f, intrinsicWidth.toFloat(), intrinsicHeight.toFloat()),
+        RectF(0f, 0f, width.toFloat(), height.toFloat()),
+        Matrix.ScaleToFit.CENTER,
     )
     orient(drawable)
     drawable.setBounds(0, 0, intrinsicWidth, intrinsicHeight)

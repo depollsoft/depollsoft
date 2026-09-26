@@ -1,26 +1,18 @@
 package depollsoft.pitchperfect.ui
 
 import android.util.TypedValue
-import androidx.annotation.DrawableRes
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import android.view.HapticFeedbackConstants
 import android.view.SoundEffectConstants
+import androidx.annotation.DrawableRes
+import androidx.appcompat.R as AppCompatR
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.indication
-import androidx.compose.foundation.interaction.PressInteraction
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onKeyEvent
-import androidx.compose.ui.input.key.type
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -30,7 +22,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -39,23 +33,31 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CollectionInfo
 import androidx.compose.ui.semantics.CollectionItemInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.collectionInfo
 import androidx.compose.ui.semantics.collectionItemInfo
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.PlatformTextStyle
@@ -105,7 +107,7 @@ fun actionBarHeight(): Dp {
     val pixels =
         remember(context) {
             val value = TypedValue()
-            context.theme.resolveAttribute(androidx.appcompat.R.attr.actionBarSize, value, true)
+            context.theme.resolveAttribute(AppCompatR.attr.actionBarSize, value, true)
             TypedValue.complexToDimensionPixelSize(value.data, context.resources.displayMetrics)
         }
     return with(density) { pixels.toDp() }
@@ -160,7 +162,7 @@ fun PlateTopBar(
 @Composable
 private fun UpButton(onClick: () -> Unit) {
     val colors = plateColors
-    val description = androidx.compose.ui.res.stringResource(androidx.appcompat.R.string.abc_action_bar_up_description)
+    val description = stringResource(AppCompatR.string.abc_action_bar_up_description)
     WithTooltip(description) { showTooltip ->
         Box(
             Modifier
@@ -174,7 +176,7 @@ private fun UpButton(onClick: () -> Unit) {
                 ).semantics { contentDescription = description },
             contentAlignment = Alignment.Center,
         ) {
-            DrawableIcon(androidx.appcompat.R.drawable.abc_ic_ab_back_material, colors.ink)
+            DrawableIcon(AppCompatR.drawable.abc_ic_ab_back_material, colors.ink)
         }
     }
 }

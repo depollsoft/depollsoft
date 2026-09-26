@@ -1,5 +1,6 @@
 package depollsoft.tagmaster
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -87,7 +88,7 @@ class TagPaneState(
             context.startActivity(
                 Intent(context, TagDetailActivity::class.java)
                     .putExtra(TagDetailActivity.TAG_ID_EXTRA, id)
-                    .addFlags(if (context is android.app.Activity) 0 else Intent.FLAG_ACTIVITY_NEW_TASK),
+                    .addFlags(if (context is Activity) 0 else Intent.FLAG_ACTIVITY_NEW_TASK),
             )
             return
         }

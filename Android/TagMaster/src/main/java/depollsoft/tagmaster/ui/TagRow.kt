@@ -1,7 +1,5 @@
 package depollsoft.tagmaster.ui
 
-import depollsoft.compose.PlatformIcon
-import depollsoft.compose.ViewAlign
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -12,14 +10,19 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import depollsoft.compose.PlatformIcon
+import depollsoft.compose.ViewAlign
 import depollsoft.tagmaster.R
 import depollsoft.tagmaster.barbershop.Tag
 import java.util.Date
@@ -52,9 +55,9 @@ fun StatusIndicator(
     label: String,
     available: Boolean,
     modifier: Modifier = Modifier,
-    textColor: androidx.compose.ui.graphics.Color = TagMasterTheme.colors.onSurface,
-    minHeight: androidx.compose.ui.unit.Dp = 36.dp,
-    labelAlignment: androidx.compose.ui.Alignment.Vertical = ViewAlign.CenterVertically,
+    textColor: Color = TagMasterTheme.colors.onSurface,
+    minHeight: Dp = 36.dp,
+    labelAlignment: Alignment.Vertical = ViewAlign.CenterVertically,
 ) {
     val colors = TagMasterTheme.colors
     val description =

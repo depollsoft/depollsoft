@@ -1,9 +1,6 @@
 package depollsoft.pitchperfect
 
-import depollsoft.compose.listViewScrollbar
-import depollsoft.compose.ViewAlign
-import depollsoft.pitchperfect.ui.hairlineWidth
-
+import android.graphics.Typeface
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -15,16 +12,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import depollsoft.pitchperfect.ui.LegacyText
-import depollsoft.pitchperfect.ui.PlateText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -42,9 +37,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import depollsoft.compose.ViewAlign
+import depollsoft.compose.listViewScrollbar
 import depollsoft.pitchperfect.lib.Key
+import depollsoft.pitchperfect.ui.LegacyText
 import depollsoft.pitchperfect.ui.PlateExtendedFab
 import depollsoft.pitchperfect.ui.PlateFonts
+import depollsoft.pitchperfect.ui.PlateText
+import depollsoft.pitchperfect.ui.hairlineWidth
 import depollsoft.pitchperfect.ui.plateColors
 import depollsoft.pitchperfect.ui.plateText
 import kotlinx.coroutines.launch
@@ -158,7 +158,7 @@ private fun KeyRow(
             },
         verticalAlignment = ViewAlign.CenterVertically,
     ) {
-        LegacyText(NoteText.keySignature(key), 24.sp, ink, android.graphics.Typeface.DEFAULT, Modifier.weight(1f).padding(start = 20.dp), wrapWidth = true)
+        LegacyText(NoteText.keySignature(key), 24.sp, ink, Typeface.DEFAULT, Modifier.weight(1f).padding(start = 20.dp), wrapWidth = true)
         LegacyText(NoteText.keyName(key), 22.sp, ink, PlateFonts.condensedTypeface, Modifier.padding(end = 20.dp), wrapWidth = true)
     }
 }

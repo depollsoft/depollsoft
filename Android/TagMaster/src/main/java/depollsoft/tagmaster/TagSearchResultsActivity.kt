@@ -1,12 +1,12 @@
 package depollsoft.tagmaster
 
-import depollsoft.compose.revealItem
 import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.res.stringResource
+import depollsoft.compose.revealItem
 import depollsoft.lib.json.JsonSerializer
 import depollsoft.tagmaster.ui.BarAction
 import depollsoft.tagmaster.ui.ListDetailScaffold

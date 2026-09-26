@@ -1,5 +1,7 @@
 package depollsoft.pitchperfect
 
+import android.os.Handler
+import android.os.Looper
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
@@ -9,19 +11,20 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEvent
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.SuspendingPointerInputModifierNode
+import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.node.DelegatingNode
 import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.node.PointerInputModifierNode
 import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.input.pointer.positionChanged
 import depollsoft.pitchperfect.lib.Note
 import depollsoft.pitchperfect.ui.hairlineWidth
 import depollsoft.pitchperfect.ui.plateColors
@@ -155,7 +158,7 @@ fun CenterOnFirstLayout(
  * pitch pipe's cells do, or toggles in "notes play until pressed again" mode.
  */
 object BriefNotes {
-    private val main by lazy { android.os.Handler(android.os.Looper.getMainLooper()) }
+    private val main by lazy { Handler(Looper.getMainLooper()) }
     private val pending = mutableMapOf<Any, Runnable>()
 
     fun activate(note: Note): Boolean = activate(note, { note.isPlaying }, { note.play() }, { note.stop() })
@@ -203,7 +206,7 @@ fun OnPageVisibilityChange(
     isCurrentPage: Boolean,
     onChange: (current: Boolean) -> Unit,
 ) {
-    val previous = androidx.compose.runtime.remember { booleanArrayOf(isCurrentPage) }
+    val previous = remember { booleanArrayOf(isCurrentPage) }
     LaunchedEffect(isCurrentPage) {
         if (previous[0] != isCurrentPage) {
             previous[0] = isCurrentPage

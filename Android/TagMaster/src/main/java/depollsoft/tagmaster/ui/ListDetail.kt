@@ -1,6 +1,5 @@
 package depollsoft.tagmaster.ui
 
-import depollsoft.compose.ViewAlign
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -23,6 +22,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import depollsoft.compose.ViewAlign
 import depollsoft.tagmaster.R
 import depollsoft.tagmaster.TagPaneState
 import depollsoft.tagmaster.ui.detail.TagDetailContent
