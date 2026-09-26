@@ -139,8 +139,35 @@ class JsonRoundTripPropertyTest {
         }
     }
 
+    /**
+     * Runs [block] with the serializer's alias tables restored afterwards: they are global, and an
+     * alias left registered would change how other tests store a StateList.
+     */
+    @Suppress("UNCHECKED_CAST")
+    private fun withAliasesRestored(block: () -> Unit) {
+        val tables =
+            listOf("typeAliases", "revTypeAliases").map { name ->
+                JsonSerializer::class.java.getDeclaredField(name).apply { isAccessible = true }.get(null) as MutableMap<Any, Any>
+            }
+        val saved = tables.map { HashMap(it) }
+        try {
+            block()
+        } finally {
+            tables.zip(saved).forEach { (table, copy) ->
+                table.clear()
+                table.putAll(copy)
+            }
+        }
+    }
+
     @Test
-    fun listsStoredUnderALegacyAliasLoadAsStateLists() {
+    fun listsStoredUnderALegacyAliasLoadAsStateLists() = withAliasesRestored {
+        // The first alias a class gets wins; clear any another test left, restored afterwards.
+        listOf("typeAliases", "revTypeAliases").forEach { name ->
+            @Suppress("UNCHECKED_CAST")
+            val table = JsonSerializer::class.java.getDeclaredField(name).apply { isAccessible = true }.get(null) as MutableMap<Any, Any>
+            table.entries.removeAll { it.key == StateList::class.java || it.value == StateList::class.java }
+        }
         JsonSerializer.registerAlias(StateList::class.java, "PropertyTestLegacyList")
         repeat(100) { seed ->
             val random = Random(3000L + seed)
