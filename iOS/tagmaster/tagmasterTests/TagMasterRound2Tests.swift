@@ -110,7 +110,7 @@ final class TagMasterRound2Tests: TMBehaviorTestCase {
         let button = try XCTUnwrap(buttons.first)
         XCTAssertEqual(button.configuration?.cornerStyle, .medium)
         XCTAssertEqual(button.configuration?.contentInsets, NSDirectionalEdgeInsets(top: 8, leading: 44, bottom: 8, trailing: 44))
-        XCTAssertEqual(button.configuration?.image, UIImage(systemName: "doc.richtext"))
+        XCTAssertTrue(String(describing: button.configuration?.image).contains("system: doc.richtext)"))
     }
 
     func testThePlayersTwoCaptionsShareOneWidthSoBothSlidersEndTogether() {

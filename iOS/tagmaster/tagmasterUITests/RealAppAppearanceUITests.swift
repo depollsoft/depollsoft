@@ -198,13 +198,16 @@ final class RealAppFlowUITests: TagMasterUITestCase {
     func testFavoritingATagPutsItOnHome() {
         openTag("1809")
         // Saved lists persist between runs; the tag may already be a favourite.
+        var added = false
         if app.navigationBars.buttons["Add Favorite"].exists {
             app.navigationBars.buttons["Add Favorite"].tap()
+            added = true
         } else if app.navigationBars.buttons["Favorite and Teachable options"].exists {
             app.navigationBars.buttons["Favorite and Teachable options"].tap()
             let add = app.buttons["Add Favorite"]
             if add.existsOrWait(timeout: 3) {
                 add.tap()
+                added = true
             } else {
                 XCTAssertTrue(app.buttons["Remove Favorite"].exists, "The sheet offers one or the other")
                 app.buttons["Cancel"].tap()
@@ -214,6 +217,13 @@ final class RealAppFlowUITests: TagMasterUITestCase {
         let favorite = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Tag ID 1809'")).firstMatch
         for _ in 0..<4 where !favorite.existsOrWait(timeout: 2) { app.collectionViews.firstMatch.swipeUp() }
         XCTAssertTrue(favorite.exists, "The favourite is listed on Home")
+        // Leave Home as it was found: later journeys (the store captures) read it.
+        guard added else { return }
+        favorite.swipeLeft()
+        let delete = app.buttons["Delete"].firstMatch
+        XCTAssertTrue(delete.existsOrWait(timeout: 5))
+        delete.tap()
+        XCTAssertTrue(favorite.waitForNonExistence(timeout: 5), "Swiping removes the favourite")
     }
 
     func testANewListTakesATagFromTheDetail() {
@@ -241,6 +251,17 @@ final class RealAppFlowUITests: TagMasterUITestCase {
         let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", name)).firstMatch
         XCTAssertTrue(row.existsOrWait(timeout: 5))
         XCTAssertTrue(row.label.hasSuffix("1 tag"), "The list counts its one tag: \(row.label)")
+
+        // Deleting asks first, then the list goes; this also leaves Home as it was.
+        row.swipeLeft()
+        let delete = app.buttons["Delete"].firstMatch
+        XCTAssertTrue(delete.existsOrWait(timeout: 5))
+        delete.tap()
+        let confirm = app.alerts.firstMatch
+        XCTAssertTrue(confirm.existsOrWait(timeout: 5), "Deleting a list asks first")
+        XCTAssertTrue(row.exists, "The row stays until the question is answered")
+        confirm.buttons["Delete"].tap()
+        XCTAssertTrue(row.waitForNonExistence(timeout: 5), "The list is gone")
     }
 
     func testSearchListsMatchingTags() {
