@@ -66,6 +66,17 @@ class DetailTracksAndVideosScreenTest : ComposeScreenTest() {
         assertTrue(exists("part:0"))
     }
 
+    @Test
+    fun aRefreshThatDropsTheChosenPartLetsGoOfItsTrack() {
+        val activity = open(ScreenTestSupport.fixtureTag(), 2)
+        click("part:4")
+        node("playPause").assertIsEnabled()
+        // The same tag, refreshed without its bass track: a new Tag equal to the old by id.
+        activity.detail.showLoaded(ScreenTestSupport.fixtureTag().apply { bassTrackUri = null })
+        idle()
+        node("playPause").assertIsNotEnabled()
+    }
+
     /** Leaving the app stops a learning track, even one still downloading. */
     @Test
     fun pausingStopsATrack() {
@@ -154,6 +165,24 @@ class DetailTracksAndVideosScreenTest : ComposeScreenTest() {
         idle()
         assertTrue(exists("video:20"))
         assertEquals(before, node("teachingVideo").fetchSemanticsNode().boundsInRoot)
+    }
+
+    @Test
+    @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun theVideosKeepTheReadingWidthOnAWideScreen() {
+        val tag =
+            ScreenTestSupport.fixtureTag().apply {
+                teachingVideo = "teach"
+                videos = (1..3).map { index -> Video().apply { id = index; sungBy = "Quartet $index"; youTubeCode = "v$index" } }.toMutableList()
+            }
+        open(tag, 3)
+        val density = app.resources.displayMetrics.density
+        val screen = app.resources.configuration.screenWidthDp * density
+        for (id in listOf("teachingVideo", "video:1")) {
+            val bounds = node(id).fetchSemanticsNode().boundsInRoot
+            assertTrue("$id within a centred 640dp column: $bounds", bounds.width <= 640 * density + 1f)
+            assertEquals("$id centred", screen / 2f, bounds.center.x, density * 2f)
+        }
     }
 
     @Test
