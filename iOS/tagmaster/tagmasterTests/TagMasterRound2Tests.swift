@@ -194,7 +194,7 @@ final class TagMasterRound3Tests: TMBehaviorTestCase {
         detail.tagId = 1809
         mountInNavigation(detail)
         spinUntil("the detail settles", timeout: 5) { !detail.model.fetchPending }
-        ScreenCatalog.settle(0.3)
+        spinUntil("the key is shown", timeout: 5) { UIDriver(self.window).exists(id: "summary.key") }
         func heights() throws -> (key: CGFloat, sheet: CGFloat) {
             ScreenCatalog.settle(0.3)
             let key = try XCTUnwrap(UIDriver(window).element(id: "summary.key")).accessibilityFrame
@@ -262,15 +262,20 @@ final class TagMasterRound3Tests: TMBehaviorTestCase {
             guard let low = iconXs.min(), let high = iconXs.max(), let textX else { return nil }
             return (CGFloat(low + high + 1) / 2, CGFloat(textX))
         }
-        let size = CGSize(width: 375, height: 500)
+        // As presented: a half-height sheet on iPhone; a 340-point popover on iPad.
+        // Both are compact width.
+        let pad = UIDevice.current.userInterfaceIdiom == .pad
+        let size = CGSize(width: pad ? 340 : 375, height: 500)
         let fixture = TMLegacyPickerFixture()
         let fixtureWindow = mount(fixture, size: size)
+        fixtureWindow.traitOverrides.horizontalSizeClass = .compact
         settle()
         let cell = try XCTUnwrap(fixture.tableView.cellForRow(at: IndexPath(row: 0, section: 0)))
         let uikit = try XCTUnwrap(inkEdges(in: fixtureWindow, row: cell.convert(cell.bounds, to: nil)))
 
         let picker = UIHostingController(rootView: TMListPicker(model: TMListPickerModel(tagId: 1809)))
         mount(picker, size: size)
+        window.traitOverrides.horizontalSizeClass = .compact
         settle()
         ScreenCatalog.settle(0.3)
         let row = try XCTUnwrap(UIDriver(window).element(id: "picker.row.new")).accessibilityFrame

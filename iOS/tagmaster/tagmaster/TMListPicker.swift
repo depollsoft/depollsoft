@@ -99,7 +99,10 @@ struct TMListPicker: View {
             // A hardware keyboard would otherwise light the first row as focused.
             .focusEffectDisabled()
             .modifier(TMClearNavigationContainer())
-            .tmInsetGroupMargins(25.33)
+            // UIKit's cards sat 4 pt further in on iPad's popover than on the phone's
+            // sheet, whichever size class the popover reports.
+            .tmInsetGroupMargins(UIDevice.current.userInterfaceIdiom == .pad ? 21.33 : 25.33,
+                                 always: UIDevice.current.userInterfaceIdiom == .pad)
             .focusEffectDisabled()
             .accessibilityIdentifier("picker.table")
             .navigationTitle("Add to list")

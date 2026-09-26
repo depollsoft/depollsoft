@@ -421,8 +421,8 @@ extension EnvironmentValues {
 extension View {
     /// On iPhone UITableView's inset groups sat further in than SwiftUI's; `margin`
     /// is the SwiftUI content margin that puts the cards where UIKit's were.
-    func tmInsetGroupMargins(_ margin: CGFloat) -> some View {
-        modifier(TMInsetGroupMargins(margin: margin))
+    func tmInsetGroupMargins(_ margin: CGFloat, always: Bool = false) -> some View {
+        modifier(TMInsetGroupMargins(margin: margin, always: always))
     }
 
     /// A row inside an inset-grouped card, on the card's own margin. The margin is
@@ -454,10 +454,12 @@ private struct TMInsetRowInsets: ViewModifier {
 
 private struct TMInsetGroupMargins: ViewModifier {
     let margin: CGFloat
+    /// Apply at a regular width too (the iPad popover).
+    var always = false
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     func body(content: Content) -> some View {
-        if sizeClass == .compact {
+        if sizeClass == .compact || always {
             // The cards moved in; the rows' own insets shrink by as much, so text stays put.
             content.contentMargins(.horizontal, margin, for: .scrollContent)
                 .environment(\.tmInsetRowMargin, 20 - (margin - 16))
