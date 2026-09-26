@@ -214,9 +214,12 @@ Pitch Perfect's tests, beyond the hosted unit suites:
   by touch, Notes and Keys, a song added, edited and deleted, a set list created,
   managed and deleted, and a setting that outlives its sheet.
 - `SongManagementUITests.testSongsSavedByTheOldAppDecodeInAFreshProcess` seeds
-  the pre-set-list app's saved songs (a literal fixture) into a fresh app
-  process, where nothing has registered the serializer's aliases, and finds the
-  song; the store registers them itself before it reads.
+  the pre-set-list app's saved songs (a literal fixture, handed over in the
+  DEBUG-only `PP_LEGACY_SONGS_JSON` launch variable, which only writes the
+  defaults) into a fresh app process, where nothing has registered the
+  serializer's aliases, and finds the song; the store registers them itself
+  before it reads. The song flow works in a set list of its own, so songs
+  other runs left in My Songs never push its rows off screen.
 - `DPSongListSyncEmulatorTests` (set lists and settings, both ways) run against
   the emulators in an ad-hoc signed simulator build, which gives Firebase Auth
   the keychain: add `CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=`

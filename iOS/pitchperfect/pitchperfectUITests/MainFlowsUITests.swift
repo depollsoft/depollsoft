@@ -36,6 +36,12 @@ final class MainFlowsUITests: XCTestCase {
         app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", prefix)).firstMatch
     }
 
+    /// The switch itself, not the row around it.
+    private func flip(_ toggle: XCUIElement) {
+        let control = toggle.switches.firstMatch
+        (control.exists ? control : toggle).tap()
+    }
+
     func testThePitchPipeSwitchesRangeByTouch() {
         tab("Pitch Pipe")
         let low = element("Octave range C to C")
@@ -63,9 +69,31 @@ final class MainFlowsUITests: XCTestCase {
         XCTAssertTrue(element("C major, no sharps or flats").waitForExistence(timeout: 5))
     }
 
+    /// Makes a set list of its own and switches to it, so a flow's songs are the
+    /// only rows on screen whatever other runs left in My Songs.
+    private func makeSetList(_ name: String) {
+        app.buttons["setlist.new"].tap()
+        let field = app.textFields["setlist.name.field"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        field.typeText(name)
+        app.alerts.buttons["Create"].tap()
+        XCTAssertTrue(element(beginningWith: "\(name), ").waitForExistence(timeout: 5))
+    }
+
+    private func deleteSetList(_ name: String) {
+        element(beginningWith: "\(name), ").press(forDuration: 1.0)
+        app.buttons["Delete set list…"].tap()
+        app.alerts.buttons["Delete"].tap()
+        XCTAssertTrue(element(beginningWith: "\(name), ").waitForNonExistence(timeout: 5))
+    }
+
     func testASongIsAddedEditedAndDeleted() {
         tab("Songs")
-        let title = "Flow \(Int(Date().timeIntervalSince1970) % 100_000)"
+        let stamp = Int(Date().timeIntervalSince1970) % 100_000
+        let list = "Songs \(stamp)"
+        let title = "Flow \(stamp)"
+        makeSetList(list)
+
         app.navigationBars.buttons["Edit"].tap()
         app.navigationBars.buttons["Add"].tap()
         let field = app.textFields["songTitleField"]
@@ -76,26 +104,29 @@ final class MainFlowsUITests: XCTestCase {
         XCTAssertTrue(g.waitForExistence(timeout: 5))
         g.tap()
         app.navigationBars["Add Song"].buttons["Done"].tap()
-        let row = app.buttons["\(title), G"]
-        XCTAssertTrue(row.waitForExistence(timeout: 10), "the new song's row, in G")
+        XCTAssertTrue(app.buttons["\(title), G"].waitForExistence(timeout: 10), "the new song's row, in G")
 
         // Edit: the row's More Info opens the editor on it.
-        let rows = app.buttons.matching(identifier: "song.edit")
-        rows.element(boundBy: rows.count - 1).tap()
-        let editField = app.textFields["songTitleField"]
+        app.buttons["song.edit"].firstMatch.tap()
         XCTAssertTrue(app.navigationBars["Edit Song"].waitForExistence(timeout: 10))
+        let editField = app.textFields["songTitleField"]
         editField.tap()
         editField.typeText(" Renamed\n")
         app.navigationBars["Edit Song"].buttons["Done"].tap()
         let renamed = app.buttons["\(title) Renamed, G"]
         XCTAssertTrue(renamed.waitForExistence(timeout: 10), "the row follows the edit")
         app.navigationBars.buttons["Done"].tap()
+        // Leaving edit mode is animated; a swipe during it is lost.
+        XCTAssertTrue(app.buttons["song.edit"].firstMatch.waitForNonExistence(timeout: 5))
+        Thread.sleep(forTimeInterval: 0.5)
 
         renamed.swipeLeft()
         let delete = app.buttons["Delete"].firstMatch
         XCTAssertTrue(delete.waitForExistence(timeout: 5))
         delete.tap()
         XCTAssertTrue(renamed.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(element(beginningWith: "Nothing in this set list").waitForExistence(timeout: 5))
+        deleteSetList(list)
     }
 
     func testASetListIsCreatedManagedAndDeleted() {
@@ -131,14 +162,14 @@ final class MainFlowsUITests: XCTestCase {
         let toggle = app.switches.matching(NSPredicate(format: "label BEGINSWITH %@", "Toggle Notes")).firstMatch
         XCTAssertTrue(toggle.waitForExistence(timeout: 5))
         let before = toggle.value as? String
-        toggle.tap()
+        flip(toggle)
         XCTAssertNotEqual(toggle.value as? String, before)
         app.navigationBars["Settings"].buttons["Done"].tap()
 
         app.navigationBars.buttons["Settings"].tap()
         XCTAssertTrue(toggle.waitForExistence(timeout: 5))
         XCTAssertNotEqual(toggle.value as? String, before, "the choice was kept")
-        toggle.tap()
+        flip(toggle)
         XCTAssertEqual(toggle.value as? String, before)
         app.navigationBars["Settings"].buttons["Done"].tap()
     }

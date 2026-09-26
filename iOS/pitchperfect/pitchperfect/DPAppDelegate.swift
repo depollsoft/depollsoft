@@ -149,6 +149,14 @@ final class DPTestAppDelegate: UIResponder, UIApplicationDelegate {
 @main
 enum PitchPerfectMain {
     static func main() {
+#if DEBUG
+        // UI tests hand a fresh process the old app's saved songs this way; only
+        // the defaults are written, so nothing is registered before the store reads.
+        if let json = ProcessInfo.processInfo.environment["PP_LEGACY_SONGS_JSON"],
+           let songs = try? JSONSerialization.jsonObject(with: Data(json.utf8)) {
+            UserDefaults.standard.set(songs, forKey: DPSongsModel.legacySongsKey)
+        }
+#endif
         if DPAppDelegate.isRunningTests {
             UIApplicationMain(CommandLine.argc, CommandLine.unsafeArgv, nil, NSStringFromClass(DPTestAppDelegate.self))
         } else {

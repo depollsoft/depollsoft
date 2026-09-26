@@ -125,19 +125,18 @@ final class SongManagementUITests: XCTestCase {
     /// songs, as the one-time migration always did, and removes the song after.
     func testSongsSavedByTheOldAppDecodeInAFreshProcess() throws {
         let title = "Legacy \(Int(Date().timeIntervalSince1970) % 100_000)"
-        let plist = try PropertyListSerialization.data(fromPropertyList: Self.legacySongs(named: title),
-                                                       format: .xml, options: 0)
+        let json = try JSONSerialization.data(withJSONObject: Self.legacySongs(named: title))
         app.terminate()
-        app.launchArguments += ["-depollsoft.pitchperfect.Songs", String(decoding: plist, as: UTF8.self)]
+        app.launchEnvironment["PP_LEGACY_SONGS_JSON"] = String(decoding: json, as: UTF8.self)
         app.launch()
         navigateToSongs()
         // The row reads "<title>, <key name>": the key came back too (E flat major).
         let row = app.buttons.matching(NSPredicate(format: "label == %@", "\(title), E")).firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 10), "the legacy song decoded with its key")
 
-        // Without the legacy argument, the migrated song is in the new storage.
+        // Without the old storage, the migrated song is in the new storage.
         app.terminate()
-        app.launchArguments = Array(app.launchArguments.dropLast(2))
+        app.launchEnvironment["PP_LEGACY_SONGS_JSON"] = nil
         app.launch()
         navigateToSongs()
         let migrated = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(title), ")).firstMatch
