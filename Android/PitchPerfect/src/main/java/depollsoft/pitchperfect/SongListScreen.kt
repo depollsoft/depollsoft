@@ -289,6 +289,7 @@ private fun SongRow(
                     stop = { song.stop() },
                 ).semantics(mergeDescendants = true) {
                     role = Role.Button
+                    contentDescription = SongKeys.spokenSong(song.name, song.key)
                     selected = lit
                     onClick {
                         BriefNotes.activate(

@@ -492,8 +492,121 @@ class TagMasterScreenshotTest {
             driver.showTag(activity, HEART)
             capture(activity, "tablet_teachable_tag_night")
         }
+
+    // ==================== Right to left, 200% font, landscape, dark ====================
+
+    // Recorded from the Compose screens (there is no View rendering of these to diff against), so a
+    // mirroring, wrapping or sizing regression shows. Right to left uses Hebrew so digits stay Western.
+
+    @Test
+    @Config(qualifiers = RTL)
+    fun homePopulatedRtl() =
+        withCatalog {
+            ScreenshotFixtures.populateLists()
+            capture(launch(MeActivity::class.java), "rtl_home_populated")
+        }
+
+    @Test
+    @Config(qualifiers = RTL)
+    fun customListEditingRtl() =
+        withCatalog {
+            val (afterglow, _) = ScreenshotFixtures.populateLists()
+            val app = org.robolectric.RuntimeEnvironment.getApplication()
+            val activity = launch(TagListActivity::class.java, TagListActivity.intent(app, afterglow))
+            driver.startEditing(activity)
+            capture(activity, "rtl_list_editing")
+        }
+
+    @Test
+    @Config(qualifiers = RTL)
+    fun browseRtl() = withCatalog { capture(launch(TagBrowserActivity::class.java), "rtl_browse") }
+
+    @Test
+    @Config(qualifiers = RTL)
+    fun searchRtl() = withCatalog { capture(launch(TagSearchActivity::class.java), "rtl_search") }
+
+    @Test
+    @Config(qualifiers = RTL)
+    fun detailSummaryRtl() {
+        ScreenshotFixtures.populateLists()
+        detail(0, "rtl_detail_summary")
+    }
+
+    @Test
+    @Config(qualifiers = RTL)
+    fun detailTracksRtl() = detail(2, "rtl_detail_tracks")
+
+    @Test
+    @Config(qualifiers = RTL)
+    fun settingsRtl() = withCatalog { capture(launch(SettingsActivity::class.java), "rtl_settings") }
+
+    @Test
+    @Config(fontScale = 2f)
+    fun homePopulatedLargeFont() =
+        withCatalog {
+            ScreenshotFixtures.populateLists()
+            capture(launch(MeActivity::class.java), "font200_home_populated")
+        }
+
+    @Test
+    @Config(fontScale = 2f)
+    fun searchLargeFont() = withCatalog { capture(launch(TagSearchActivity::class.java), "font200_search") }
+
+    @Test
+    @Config(fontScale = 2f)
+    fun resultsLargeFont() =
+        withCatalog {
+            capture(launch(TagSearchResultsActivity::class.java, resultsIntent("heart")), "font200_results")
+        }
+
+    @Test
+    @Config(fontScale = 2f)
+    fun detailSummaryLargeFont() {
+        ScreenshotFixtures.populateLists()
+        detail(0, "font200_detail_summary")
+    }
+
+    @Test
+    @Config(fontScale = 2f)
+    fun settingsLargeFont() = withCatalog { capture(launch(SettingsActivity::class.java), "font200_settings") }
+
+    @Test
+    @Config(qualifiers = LANDSCAPE)
+    fun homePopulatedLandscape() =
+        withCatalog {
+            ScreenshotFixtures.populateLists()
+            capture(launch(MeActivity::class.java), "land_home_populated")
+        }
+
+    @Test
+    @Config(qualifiers = LANDSCAPE)
+    fun browseLandscape() = withCatalog { capture(launch(TagBrowserActivity::class.java), "land_browse") }
+
+    @Test
+    @Config(qualifiers = LANDSCAPE)
+    fun searchLandscape() = withCatalog { capture(launch(TagSearchActivity::class.java), "land_search") }
+
+    @Test
+    @Config(qualifiers = LANDSCAPE)
+    fun settingsLandscape() = withCatalog { capture(launch(SettingsActivity::class.java), "land_settings") }
+
+    @Test
+    @Config(qualifiers = PHONE_NIGHT)
+    fun searchNight() = withCatalog { capture(launch(TagSearchActivity::class.java), "search_night") }
+
+    @Test
+    @Config(qualifiers = PHONE_NIGHT)
+    fun detailTracksNight() = detail(2, "detail_tracks_night")
+
+    @Test
+    @Config(qualifiers = PHONE_NIGHT)
+    fun resultsNight() =
+        withCatalog {
+            capture(launch(TagSearchResultsActivity::class.java, resultsIntent("heart")), "results_night")
+        }
 }
 
+private const val RTL = "iw-ldrtl-w411dp-h891dp-xxhdpi"
 private const val PHONE = "w411dp-h891dp-xxhdpi"
 private const val PHONE_420 = "w411dp-h891dp-420dpi"
 private const val LANDSCAPE = "w891dp-h411dp-land-xxhdpi"

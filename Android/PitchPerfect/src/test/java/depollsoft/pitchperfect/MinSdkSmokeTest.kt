@@ -56,6 +56,46 @@ class MinSdkSmokeTest {
     }
 
     @Test
+    fun everyTabShows() {
+        val activity = screens.launchMain()
+        for (tab in MainTab.entries) {
+            with(screens) { activity.show(tab) }
+            assertTrue("$tab is showing", screens.isSelected(tab.testTag))
+        }
+        // Songs in edit mode, and the new set list prompt.
+        SongsModel.get().defaultSongList.addSong(ComposeScreens.song("Shenandoah"))
+        screens.click(TestTags.EDIT_SONGS)
+        assertTrue("editing", activity.songs.editing)
+        screens.click(TestTags.SET_LIST_ADD_POSITION)
+        assertTrue("the name prompt opens", screens.exists(TestTags.NAME_DIALOG_FIELD))
+    }
+
+    @Test
+    fun everyOtherScreenOpens() {
+        val song = ComposeScreens.song("Shenandoah")
+        SongsModel.get().defaultSongList.addSong(song)
+        val setList = SongsModel.get().createList("Contest Set")
+        val app = org.robolectric.RuntimeEnvironment.getApplication()
+        val screensToOpen =
+            listOf(
+                android.content.Intent(app, AddSongActivity::class.java).putExtra(AddSongActivity.LIST_EXTRA, SongsModel.DEFAULT_ID),
+                android.content.Intent(app, AddSongActivity::class.java)
+                    .putExtra(AddSongActivity.LIST_EXTRA, SongsModel.DEFAULT_ID)
+                    .putExtra(AddSongActivity.ID_EXTRA, song.id),
+                android.content.Intent(app, AddSongsFromListActivity::class.java).putExtra(AddSongsFromListActivity.LIST_EXTRA, setList),
+                android.content.Intent(app, ManageSetListsActivity::class.java),
+                android.content.Intent(app, SettingsActivity::class.java),
+            )
+        for (intent in screensToOpen) {
+            @Suppress("UNCHECKED_CAST")
+            val type = Class.forName(intent.component!!.className) as Class<android.app.Activity>
+            val controller = screens.launch(type, intent)
+            assertTrue("${type.simpleName} is composed", compose.onAllNodes(androidx.compose.ui.test.isRoot()).fetchSemanticsNodes().isNotEmpty())
+            controller.pause().stop().destroy()
+        }
+    }
+
+    @Test
     fun aLatchedPitchPipeNoteBreathes() {
         // A sounding note starts the glow, which reads the system's animator duration scale.
         SettingsModel.toggleNotes = true

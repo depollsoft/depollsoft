@@ -35,6 +35,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.semantics.toggleableState
@@ -234,7 +235,10 @@ private fun AddableRow(
             // A row is a checkbox to a screen reader: it has a checked state, and toggling it
             // announces the change.
             .clickable(interaction, indication = null, role = Role.Checkbox, onClick = onToggle)
-            .semantics(mergeDescendants = true) { toggleableState = ToggleableState(ticked) },
+            .semantics(mergeDescendants = true) {
+                contentDescription = SongKeys.spokenSong(song.name, song.key)
+                toggleableState = ToggleableState(ticked)
+            },
         verticalAlignment = ViewAlign.CenterVertically,
     ) {
         PlateText(

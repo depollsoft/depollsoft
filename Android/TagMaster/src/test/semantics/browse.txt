@@ -1,0 +1,20 @@
+window
+  pane="Tag Master"
+    Button desc="Navigate up" [click, longClick]
+    text="Tag Master"
+    Button desc="Refresh" [click, longClick]
+  collection=1x4 group [scroll]
+    collection=20x1 group [scroll]
+      desc="No Sheet music" | "No Learning tracks" text="Heart of My Heart 1" | "a.k.a. Also known as number 1" | "ID:" | "2147483200" | "Rating: " | "3.00" | "Posted: " | " 01/01/12" | "DLs:" | "1000" [click]
+      desc="No Sheet music" | "No Learning tracks" text="You Are My Sunshine 2" | "ID:" | "2147483201" | "Rating: " | "3.10" | "DLs:" | "1037" [click]
+      desc="No Sheet music" | "No Learning tracks" text="Sweet Adeline 3" | "ID:" | "2147483202" | "Rating: " | "3.20" | "DLs:" | "1074" [click]
+      desc="No Sheet music" | "No Learning tracks" text="The Old Songs 4" | "a.k.a. Also known as number 4" | "ID:" | "2147483203" | "Rating: " | "3.30" | "DLs:" | "1111" [click]
+      desc="No Sheet music" | "No Learning tracks" text="Down Our Way 5" | "ID:" | "2147483204" | "Rating: " | "3.40" | "DLs:" | "1148" [click]
+      desc="No Sheet music" | "No Learning tracks" text="Shenandoah 6" | "ID:" | "2147483205" | "Rating: " | "3.50" | "DLs:" | "1185" [click]
+      desc="No Sheet music" | "No Learning tracks" text="Blue Skies 7" | "a.k.a. Also known as number 7" | "ID:" | "2147483206" | "Rating: " | "3.60" | "DLs:" | "1222" [click]
+      desc="No Sheet music" | "No Learning tracks" text="When You Were Sweet Sixteen 8" | "ID:" | "2147483207" | "Rating: " | "3.70" | "Posted: " | " 01/08/12" | "DLs:" | "1259" [click]
+  Button desc="Search" [click]
+  Tab desc="Latest" selected [click]
+  Tab desc="Rating" unselected [click]
+  Tab desc="Downloads" unselected [click]
+  Tab desc="Classic" unselected [click]

@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
@@ -74,6 +75,8 @@ private fun NoteRow(
                 stop = { note.stop() },
             ).semantics(mergeDescendants = true) {
                 role = Role.Button
+                // The row shows its name in a music font whose letters would be spelled out.
+                contentDescription = NoteNames.spoken(note) + ", " + "%1.2f Hz".format(note.frequency)
                 selected = lit
                 onClick { BriefNotes.activate(note) }
             },

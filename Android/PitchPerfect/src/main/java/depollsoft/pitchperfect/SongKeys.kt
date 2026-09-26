@@ -28,6 +28,15 @@ object SongKeys {
         return "$spelled $mode, ${accidentalCount(key.numAccidentals)}"
     }
 
+    /**
+     * "Shenandoah, C minor, 3 flats": a song row read aloud. The row shows its key in a music
+     * font whose letters would otherwise be spelled out.
+     */
+    fun spokenSong(
+        title: String?,
+        key: Key?,
+    ): String = listOfNotNull(title?.takeIf { it.isNotEmpty() }, key?.let(::spokenName)).joinToString(", ")
+
     fun keysOf(minor: Boolean): List<Key> = if (minor) Key.getMinorKeys() else Key.getMajorKeys()
 
     /** Flipping the mode keeps the signature: a relative key shares it. */
