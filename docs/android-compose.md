@@ -129,9 +129,9 @@ new screens and changes need to keep doing:
 * Behaviour: Robolectric with the Compose test APIs in each app's `src/test`, mostly through the
   v2 rules in `androidx.compose.ui.test.junit4.v2`. `NotePressTest`, `TagMasterScreenshotTest`
   and the device-only `PrivacyConsentTest` still use the v1 rules.
-* Minimum SDK: every class runs on SDK 35 except each app's `MinSdkSmokeTest`, which opens the
-  main screens at the app's `minSdk` (and 26 for Pitch Perfect), where a call newer than that
-  throws. CI also runs `lintDebug -PlintNewApiOnly`, which fails on such a call; guard it with
+* Minimum SDK: every class runs on SDK 35 except each app's `MinSdkSmokeTest`, which opens every
+  screen (and Tag Master's detail pages, Pitch Perfect's tabs, edit mode and name prompt) at the
+  app's `minSdk` (and 26 for Pitch Perfect), where a call newer than that throws. CI also runs `lintDebug -PlintNewApiOnly`, which fails on such a call; guard it with
   a `Build.VERSION.SDK_INT` check lint can see, or `@RequiresApi` on the helper that makes it.
 * Pixels: Roborazzi screenshot tests (`*ScreenshotTest`) under `src/test`, goldens in
   `src/test/screenshots`, most at xxhdpi and xhdpi and a few (`dpi420_*`) at 420dpi.
@@ -145,6 +145,24 @@ new screens and changes need to keep doing:
   `verifyRoborazziDebug` for every selected app and uploads the actual and comparison images when a
   golden no longer matches. The screenshot setups pin the version name the about footers show, so
   a release doesn't change the goldens.
+* What a screen reader hears: `SemanticsSnapshotTest` in each app writes the merged semantics
+  tree of each main screen (roles, labels, text, state, actions, custom actions, live regions,
+  collections) with `SemanticsSnapshot` from DepollSoftCommon's test fixtures, and compares it
+  with `src/test/semantics/<name>.txt`. A new snapshot is written and fails once so it gets read;
+  `RECORD_SEMANTICS=1 ./gradlew :<App>:testDebugUnitTest --tests '*SemanticsSnapshotTest*'`
+  rewrites changed ones on purpose. Review the diff like a golden.
+* Layout variants: `MatrixScreenshotTest` (Pitch Perfect) and the last section of
+  `TagMasterScreenshotTest` pin right to left (Hebrew, so digits stay Western), 200% font,
+  landscape and tablet renderings of the key screens. These were recorded from the Compose screens,
+  not diffed against the Views.
+* Motion on the real screens: `SongListMotionTest` checks rows part-way through a sort's slide and a
+  removed row part-way through its fade. A disappearing lazy item leaves the semantics tree at
+  once, so a fade-out is checked by the row's ink in a capture, not by its node.
+* Seeded property tests: `JsonRoundTripPropertyTest` and `StateListPropertyTest`
+  (DepollSoftCommon) and `ReorderFuzzTest` (DepollSoftCompose) run many random cases from fixed
+  seeds; a failure names the seed, so it reproduces.
+* Journeys: each app's `JourneyScreenTest` follows a user across screens, starting each from the
+  intent the one before sent.
 * Pitfalls:
   * An infinite `withFrameMillis` loop never lets the test clock go idle; use
     `withInfiniteAnimationFrameMillis`, which tests park, and test the animation's maths directly.
