@@ -15,8 +15,8 @@ struct TagTracksPage: View {
     var body: some View {
         List {
             Section {
-                ForEach(Array(model.tracks.enumerated()), id: \.offset) { _, track in
-                    row(track)
+                ForEach(Array(model.tracks.enumerated()), id: \.offset) { index, track in
+                    row(track, last: index == model.tracks.count - 1)
                 }
             } header: {
                 // The recording notes and the player sit above the rows, as the
@@ -58,7 +58,7 @@ struct TagTracksPage: View {
         }
     }
 
-    private func row(_ track: DPTrack) -> some View {
+    private func row(_ track: DPTrack, last: Bool) -> some View {
         let loading = model.loadingTrack === track
         return Button { model.select(track) } label: {
             HStack(spacing: 15) {
@@ -78,6 +78,9 @@ struct TagTracksPage: View {
             }
             .frame(minHeight: 52)
             .contentShape(Rectangle())
+            // UIKit's rules ended 20 pt from the trailing edge; the section's last is full width.
+            .alignmentGuide(.listRowSeparatorTrailing) { last ? $0.width * 2 : $0[.trailing] }
+            .alignmentGuide(.listRowSeparatorLeading) { last ? -$0.width : $0[.listRowSeparatorLeading] }
         }
         .listRowInsets(EdgeInsets(top: 0, leading: 19, bottom: 0, trailing: 20))
         .listRowBackground(Color.clear)
@@ -89,6 +92,7 @@ struct TagTracksPage: View {
 /// The inline learning-track player: play/pause, stop, a scrub bar with an elapsed
 /// counter, and a balance slider that lowers one side to bring a part in or out.
 struct TMTrackPlayer: View {
+    @Environment(\.tmAccent) private var accent
     @Bindable var model: TMTrackPlayerModel
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AccessibilityFocusState private var playPauseFocused: Bool
@@ -125,11 +129,7 @@ struct TMTrackPlayer: View {
                         .accessibilityLabel("Position")
                         .accessibilityValue(model.counterText)
                         .accessibilityIdentifier("tagmaster.trackPlayer.position")
-                        Text(model.counterText)
-                            .font(.caption.monospacedDigit())
-                            .foregroundStyle(Color(.secondaryLabel))
-                            .frame(minWidth: 72, alignment: .trailing)
-                            .fixedSize()
+                        TMPlayerCaption(counter: model.counterText, showsCounter: true)
                             .accessibilityIdentifier("tagmaster.trackPlayer.counter")
                     }
                     HStack(spacing: 8) {
@@ -137,27 +137,28 @@ struct TMTrackPlayer: View {
                                in: 0...1) {
                             Text("Balance")
                         } minimumValueLabel: {
-                            Image(systemName: "l.circle")
+                            Image(uiImage: TMBalanceImages.left)
+                                .renderingMode(.template)
+                                .padding(.trailing, TMBalanceImages.extraGap)
                         } maximumValueLabel: {
-                            Image(systemName: "r.circle")
+                            Image(uiImage: TMBalanceImages.right)
+                                .renderingMode(.template)
+                                .padding(.leading, TMBalanceImages.extraGap)
                         }
                         .disabled(!model.isLoaded)
                         .accessibilityLabel("Balance")
                         .accessibilityValue(model.balanceDescription)
                         .accessibilityHint("Lowers one side to bring a part in or out.")
-                        .accessibilityAction(named: "Center balance", model.centerBalance)
+                        .accessibilityAction(named: "Center balance") { withAnimation { model.centerBalance() } }
                         .accessibilityIdentifier("tagmaster.trackPlayer.balance")
-                        .modifier(TMTwoFingerDoubleTap(action: model.centerBalance))
-                        Text("Balance")
-                            .font(.caption)
-                            .foregroundStyle(Color(.secondaryLabel))
-                            .frame(minWidth: 72, alignment: .trailing)
-                            .fixedSize()
+                        .modifier(TMTwoFingerDoubleTap { withAnimation { model.centerBalance() } })
+                        TMPlayerCaption(counter: model.counterText, showsCounter: false)
                             .accessibilityHidden(true)
                     }
                 }
             }
         }
+        .tint(accent)
         .padding(12)
         .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color(.secondarySystemBackground)))
         .accessibilityElement(children: .contain)
@@ -177,6 +178,46 @@ struct TMTrackPlayer: View {
         .buttonStyle(.borderless)
         .accessibilityLabel(label)
         .accessibilityIdentifier(identifier)
+    }
+}
+
+/// The balance slider's L and R images as UISlider drew them: the same fixed-size
+/// images (UISlider's value images did not grow with the text), as far from the
+/// track as UISlider put them. SwiftUI leaves 8 points between a value label and
+/// the track; UISlider left more, measured here from a real slider.
+enum TMBalanceImages {
+    static let left = UIImage(systemName: "l.circle") ?? UIImage()
+    static let right = UIImage(systemName: "r.circle") ?? UIImage()
+    static let swiftUIGap: CGFloat = 8
+
+    /// UISlider's distance from its leading edge to its track with these images.
+    static let uikitTrackInset: CGFloat = {
+        let slider = UISlider(frame: CGRect(x: 0, y: 0, width: 200, height: 31))
+        slider.minimumValueImage = left
+        slider.maximumValueImage = right
+        return slider.trackRect(forBounds: slider.bounds).minX
+    }()
+
+    static var extraGap: CGFloat { max(0, uikitTrackInset - left.size.width - swiftUIGap) }
+}
+
+/// The caption column beside both sliders. UIKit held the Balance caption to the
+/// counter's width (at least 72 pt), so both sliders end at the same x even when
+/// the counter grows with the text size; each row lays out both texts and shows one.
+struct TMPlayerCaption: View {
+    let counter: String
+    let showsCounter: Bool
+
+    var body: some View {
+        ZStack(alignment: .trailing) {
+            Text(counter).font(.caption.monospacedDigit()).opacity(showsCounter ? 1 : 0)
+                .accessibilityHidden(!showsCounter)
+            Text("Balance").font(.caption).opacity(showsCounter ? 0 : 1)
+                .accessibilityHidden(true)
+        }
+        .foregroundStyle(Color(.secondaryLabel))
+        .frame(minWidth: 72, alignment: .trailing)
+        .fixedSize()
     }
 }
 

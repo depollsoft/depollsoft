@@ -135,3 +135,47 @@ struct TMActionSheet: UIViewRepresentable {
         DispatchQueue.main.async { anchor.sync() }
     }
 }
+
+/// The share sheet as UIKit presented it: a UIActivityViewController with the
+/// two items the tag has always shared (its title line and its link), anchored to
+/// the Share button. ShareLink carries only one item plus an optional message,
+/// which many activities drop.
+struct TMShareSheet: UIViewRepresentable {
+    @Binding var isPresented: Bool
+    let items: [Any]
+
+    final class Coordinator: NSObject, UIPopoverPresentationControllerDelegate {
+        var dismissed: () -> Void = {}
+        func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+            dismissed()
+        }
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    func makeUIView(context: Context) -> TMPresentingAnchor { TMPresentingAnchor() }
+
+    func updateUIView(_ anchor: TMPresentingAnchor, context: Context) {
+        let binding = $isPresented
+        let coordinator = context.coordinator
+        coordinator.dismissed = { [weak anchor] in
+            anchor?.forget()
+            binding.wrappedValue = false
+        }
+        let items = items
+        anchor.alreadyUp = { $0 is UIActivityViewController }
+        anchor.make = { anchor in
+            let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
+            controller.completionWithItemsHandler = { _, _, _, _ in
+                anchor.forget()
+                binding.wrappedValue = false
+            }
+            controller.popoverPresentationController?.delegate = coordinator
+            controller.popoverPresentationController?.sourceView = anchor
+            controller.popoverPresentationController?.sourceRect = anchor.bounds
+            return controller
+        }
+        anchor.wanted = isPresented
+        DispatchQueue.main.async { anchor.sync() }
+    }
+}

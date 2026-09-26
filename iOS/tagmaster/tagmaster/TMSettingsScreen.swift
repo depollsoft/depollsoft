@@ -145,7 +145,6 @@ final class TMSettingsModel {
 
 struct TMSettingsScreen: View {
     @Bindable var model: TMSettingsModel
-    @Environment(\.tmTintDimmed) private var dimmed
 
     var body: some View {
         List {
@@ -165,11 +164,17 @@ struct TMSettingsScreen: View {
                 ForEach(Array(TMSettingsModel.filters.enumerated()), id: \.offset) { index, filter in
                     TMFilterRow(filter: filter, selection: $model.filterSelections[index])
                 }
-            } header: { TMSectionHeader("Random Tag Filters") } footer: { TMSectionFooter("Random Tag only picks tags that match these filters.") }
+            } header: { TMSectionHeader("Random Tag Filters") } footer: {
+                TMSectionFooter("Random Tag only picks tags that match these filters.").padding(.bottom, -5.0 / 3)
+            }
 
             Section {
                 actionRow("Privacy choices") { model.privacyChoices() }
             } header: { TMSectionHeader("Privacy") }
+            // UITableView put Privacy straight under the filters' one-line footer (with
+            // the footer's 5/3 pt trimmed above) and left 22/3 pt more below it than a
+            // SwiftUI list does (see the bottom margin).
+            .listSectionSpacing(.custom(0))
 
             if model.build.isPrivate {
                 Section {
@@ -179,7 +184,7 @@ struct TMSettingsScreen: View {
             }
         }
         .listStyle(.insetGrouped)
-        .tmInsetGroupedMetrics()
+        .tmInsetGroupedMetrics(bottom: 30 + 22.0 / 3)
         .scrollContentBackground(.hidden)
         .background { TMScreenBackground(grouped: true) }
         .onAppear { model.refresh() }
@@ -202,11 +207,13 @@ struct TMSettingsScreen: View {
         Button(action: action) {
             Text(title)
                 .tmFont(.body)
-                .foregroundStyle(TMTheme.tint(DPAppDelegate.accentColor(), dimmed: dimmed))
+                // UIKit coloured these rows' text outright, not with the tint, so an
+                // alert over Settings left them in colour.
+                .foregroundStyle(TMTheme.accent)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
         }
-        .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
+        .tmInsetRow()
     }
 
     private func clearRow(_ title: String, _ list: TMSettingsModel.Clearing) -> some View {
@@ -214,7 +221,7 @@ struct TMSettingsScreen: View {
         return Button { model.clearTapped(list) } label: {
             HStack {
                 Text(title)
-                    .foregroundStyle(count > 0 ? TMTheme.tint(.systemRed, dimmed: dimmed) : Color(uiColor: .tertiaryLabel))
+                    .foregroundStyle(count > 0 ? Color(uiColor: .systemRed) : Color(uiColor: .tertiaryLabel))
                 Spacer()
                 Text(TMSettingsModel.tagCount(count)).foregroundStyle(Color(uiColor: .secondaryLabel))
             }
@@ -222,7 +229,7 @@ struct TMSettingsScreen: View {
             .contentShape(Rectangle())
         }
         .disabled(count == 0)
-        .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
+        .tmInsetRow()
     }
 }
 

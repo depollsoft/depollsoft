@@ -29,5 +29,8 @@ struct TMTagPlaceholder: View {
         }
         .padding(.horizontal, 24)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // UIKit centred it in the safe area, which a keyboard (typing a search in the
+        // list column) does not shrink; SwiftUI's would lift it out of the way.
+        .ignoresSafeArea(.keyboard)
     }
 }

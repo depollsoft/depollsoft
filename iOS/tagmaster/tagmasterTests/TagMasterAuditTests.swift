@@ -267,12 +267,20 @@ final class TMShellAuditTests: TMBehaviorTestCase {
         XCTAssertTrue(source.listing === latest, "The tag keeps stepping through Latest when Rating shows")
     }
 
-    func testTheSplitSharesItsWatermarkOnlyWhereTheColumnsCanBeClear() {
-        if #available(iOS 18.0, *) {
-            XCTAssertTrue(TMSplitRoot.columnsCanBeClear)
-        } else {
-            XCTAssertFalse(TMSplitRoot.columnsCanBeClear, "iOS 17 keeps each screen's own watermark")
-        }
+    func testEachColumnGetsOneBackdropPolicyOnEverySystem() {
+        let window = CGRect(x: 0, y: 0, width: 1024, height: 1366)
+        // iOS 18 on: the glass list column over the split's pole; the detail draws its slice.
+        let clear = TMSplitRoot.backdrops(regular: true, window: window, columnsCanBeClear: true)
+        XCTAssertEqual(clear.list, .glassColumn(window))
+        XCTAssertEqual(clear.detail, .windowSlice(window))
+        // iOS 17: no clear columns, so both columns draw their slice of the one pole.
+        let opaque = TMSplitRoot.backdrops(regular: true, window: window, columnsCanBeClear: false)
+        XCTAssertEqual(opaque.list, .windowSlice(window))
+        XCTAssertEqual(opaque.detail, .windowSlice(window))
+        let collapsed = TMSplitRoot.backdrops(regular: false, window: window)
+        XCTAssertEqual(collapsed.list, .own)
+        XCTAssertEqual(collapsed.detail, .own)
+        if #available(iOS 18.0, *) { XCTAssertTrue(TMSplitRoot.columnsCanBeClear) }
     }
 
     /// The key commands of controllers and views actually in the window: a screen

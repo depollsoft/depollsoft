@@ -29,7 +29,8 @@ final class TMHostedScreen: UIHostingController<AnyView>, TMTagListSource {
         self.listing = listing
         searchModel = search
         settingsModel = settings
-        super.init(rootView: AnyView(view))
+        // The shell's routes install the tint follower; hosted screens get the same one.
+        super.init(rootView: AnyView(view.tmFollowsUIKitTint()))
     }
 
     @available(*, unavailable)
@@ -133,7 +134,7 @@ final class TagDetailViewController: UIViewController {
     init(model: TagDetailModel? = nil) {
         let model = model ?? TagDetailModel()
         self.model = model
-        hosting = UIHostingController(rootView: AnyView(TMTagRoute(model: model)))
+        hosting = UIHostingController(rootView: AnyView(TMTagRoute(model: model).tmFollowsUIKitTint()))
         super.init(nibName: nil, bundle: nil)
         model.navigator = TMDetailNavigator(
             showTag: { [weak self] id in

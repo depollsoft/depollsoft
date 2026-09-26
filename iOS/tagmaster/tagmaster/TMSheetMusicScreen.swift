@@ -32,7 +32,6 @@ struct TMSheetMusicScreen: View {
             .background(Color(.systemBackground).ignoresSafeArea())
             .navigationTitle(document.title)
             .navigationBarTitleDisplayMode(.inline)
-            .tmFollowsUIKitTint()
             .toolbar {
                 if let key = document.writtenKey {
                     if #available(iOS 26.0, *) {
@@ -49,7 +48,7 @@ struct TMSheetMusicScreen: View {
                                     label: state.fullScreen ? "Show list" : "Full screen",
                                     action: state.toggleFullScreen)
                     }
-                    ShareLink(item: document.fileURL) { TMBarButton.symbol("square.and.arrow.up") }
+                    ShareLink(item: document.fileURL) { TMBarLabel("square.and.arrow.up") }
                         .accessibilityLabel("Share")
                 }
             }

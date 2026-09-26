@@ -16,17 +16,25 @@ struct TMOpenTagPrompt: Identifiable, Equatable {
     let id = UUID()
     var text = ""
 
-    /// Keeps only the digits, as the field's keyboard filter did.
-    static func filter(_ text: String) -> String { text.filter(\.isASCIIDigit) }
+    /// The UIKit field's rule, applied to an edit from `old` to `new`: what was
+    /// typed or pasted is taken whole if it holds a digit (or nothing was
+    /// inserted), and refused otherwise. A paste like "1e3" is kept as typed and
+    /// then opens nothing, rather than being quietly turned into tag 13.
+    static func accept(old: String, new: String) -> String {
+        let oldChars = Array(old), newChars = Array(new)
+        var prefix = 0
+        while prefix < oldChars.count, prefix < newChars.count, oldChars[prefix] == newChars[prefix] { prefix += 1 }
+        var suffix = 0
+        while suffix < oldChars.count - prefix, suffix < newChars.count - prefix,
+              oldChars[oldChars.count - 1 - suffix] == newChars[newChars.count - 1 - suffix] { suffix += 1 }
+        let inserted = newChars[prefix..<(newChars.count - suffix)]
+        return inserted.isEmpty || inserted.contains(where: \.isNumber) ? new : old
+    }
 
     var tagId: Int? {
         guard let value = Int32(text), value > 0 else { return nil }
         return Int(value)
     }
-}
-
-private extension Character {
-    var isASCIIDigit: Bool { ("0"..."9").contains(self) }
 }
 
 @MainActor
@@ -124,7 +132,10 @@ final class TMHomeModel: TMTagListing {
 
     // MARK: - Destinations
 
+    // A UITableView ignores row taps while editing; so do these rows.
+
     func activate(_ title: String) {
+        guard !isEditing else { return }
         switch title {
         case "Browse": navigator?.show(.browse)
         case "Random Tag": randomTag()
@@ -135,10 +146,18 @@ final class TMHomeModel: TMTagListing {
 
     func search() { navigator?.show(.search) }
     func settings() { navigator?.show(.settings) }
-    func openTeachable() { navigator?.show(.teachable) }
-    func openList(_ key: String) { navigator?.show(.list(key)) }
+    func openTeachable() {
+        guard !isEditing else { return }
+        navigator?.show(.teachable)
+    }
+
+    func openList(_ key: String) {
+        guard !isEditing else { return }
+        navigator?.show(.list(key))
+    }
 
     func openTag(_ tagId: Int) {
+        guard !isEditing else { return }
         navigator?.showTag(tagId)
         syncSelection()
     }
@@ -194,7 +213,10 @@ final class TMHomeModel: TMTagListing {
 
     // MARK: - Lists
 
-    func newList() { namePrompt = .create() }
+    func newList() {
+        guard !isEditing else { return }
+        namePrompt = .create()
+    }
 
     func commitNewList(_ name: String) {
         _ = TMTagLists.createList(named: name)
@@ -376,7 +398,7 @@ struct TMHomeScreen: View {
         Button { model.newList() } label: {
             HStack(spacing: 0) {
                 Image(systemName: "plus.circle")
-                    .foregroundStyle(TMTheme.tint(DPAppDelegate.accentColor(), dimmed: dimmed))
+                    .foregroundStyle(TMTheme.tint(DPAppDelegate.accentColor, dimmed: dimmed))
                     .frame(width: 24)
                     .padding(.trailing, 15)
                 Text("New list…").tmFont(.body).foregroundStyle(Color(uiColor: .label))
@@ -391,33 +413,89 @@ struct TMHomeScreen: View {
     }
 }
 
+extension EnvironmentValues {
+    /// A row's leading and trailing inset inside an inset-grouped card.
+    @Entry var tmInsetRowMargin: CGFloat = 20
+}
+
 extension View {
+    /// On iPhone UITableView's inset groups sat further in than SwiftUI's; `margin`
+    /// is the SwiftUI content margin that puts the cards where UIKit's were.
+    func tmInsetGroupMargins(_ margin: CGFloat, always: Bool = false) -> some View {
+        modifier(TMInsetGroupMargins(margin: margin, always: always))
+    }
+
+    /// A row inside an inset-grouped card, on the card's own margin. The margin is
+    /// read where the row is built, inside the list: a screen's own `@Environment`
+    /// sees the value from above the list, before the list's modifiers set it.
+    func tmInsetRow() -> some View {
+        modifier(TMInsetRowInsets())
+    }
+
     /// UITableView's inset-grouped spacing above the first section.
-    func tmInsetGroupedMetrics() -> some View {
+    func tmInsetGroupedMetrics(bottom: CGFloat = 30) -> some View {
         contentMargins(.top, 15, for: .scrollContent)
             // UITableView ends an inset-grouped table 30pt below its last section (SwiftUI: 20).
-            .contentMargins(.bottom, 30, for: .scrollContent)
+            .contentMargins(.bottom, bottom, for: .scrollContent)
             .listSectionSpacing(.custom(16.0 / 3))
+            .tmInsetGroupMargins(20)
+            // The 16-point column margin is the plain lists'; inset groups keep their own.
+            .environment(\.tmTableMargin, 20)
+    }
+}
+
+private struct TMInsetRowInsets: ViewModifier {
+    @Environment(\.tmInsetRowMargin) private var margin
+
+    func body(content: Content) -> some View {
+        content.listRowInsets(EdgeInsets(top: 0, leading: margin, bottom: 0, trailing: margin))
+    }
+}
+
+private struct TMInsetGroupMargins: ViewModifier {
+    let margin: CGFloat
+    /// Apply at a regular width too (the iPad popover).
+    var always = false
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
+    func body(content: Content) -> some View {
+        if sizeClass == .compact || always {
+            // The cards moved in; the rows' own insets shrink by as much, so text stays put.
+            content.contentMargins(.horizontal, margin, for: .scrollContent)
+                .environment(\.tmInsetRowMargin, 20 - (margin - 16))
+        } else {
+            content
+        }
     }
 }
 
 /// A grouped section's title, on UITableView's margins.
 struct TMSectionHeader: View {
     let title: String
+    @Environment(\.tmTableMargin) private var margin
+    @Environment(\.tmInsetRowMargin) private var rowMargin
     init(_ title: String) { self.title = title }
 
     var body: some View {
-        Text(title).padding(.leading, 4).offset(y: 4)
+        // SwiftUI sets section text 16 points in; UIKit set it on the table's margin
+        // (less whatever an inset group's own margin already moved it).
+        Text(title).padding(.leading, TMSectionHeader.inset(margin, rowMargin)).offset(y: 4)
+    }
+
+    static func inset(_ margin: CGFloat, _ rowMargin: CGFloat) -> CGFloat {
+        (margin - 16) - (20 - rowMargin)
     }
 }
 
 /// A grouped section's explanation, on UITableView's margins.
 struct TMSectionFooter: View {
     let text: String
+    @Environment(\.tmTableMargin) private var margin
+    @Environment(\.tmInsetRowMargin) private var rowMargin
     init(_ text: String) { self.text = text }
 
     var body: some View {
-        Text(text).padding(.horizontal, 4)
+        Text(text).padding(.horizontal, TMSectionHeader.inset(margin, rowMargin))
     }
 }
 
@@ -487,7 +565,7 @@ struct TMHomeCredits: View {
             Text(title)
                 .tmFont(.footnote)
                 .multilineTextAlignment(.center)
-                .foregroundStyle(TMTheme.tint(DPAppDelegate.accentColor(), dimmed: dimmed))
+                .foregroundStyle(TMTheme.tint(DPAppDelegate.accentColor, dimmed: dimmed))
                 .padding(4)
                 .frame(maxWidth: .infinity, minHeight: 44)
                 .contentShape(Rectangle())
@@ -506,7 +584,10 @@ extension View {
                                    set: { if !$0 { prompt.wrappedValue = nil } }),
               presenting: prompt.wrappedValue) { _ in
             TextField("", text: Binding(get: { prompt.wrappedValue?.text ?? "" },
-                                        set: { prompt.wrappedValue?.text = TMOpenTagPrompt.filter($0) }))
+                                        set: { new in
+                                            guard let old = prompt.wrappedValue?.text else { return }
+                                            prompt.wrappedValue?.text = TMOpenTagPrompt.accept(old: old, new: new)
+                                        }))
                 .keyboardType(.decimalPad)
                 .submitLabel(.go)
             Button("Cancel", role: .cancel) { prompt.wrappedValue = nil }

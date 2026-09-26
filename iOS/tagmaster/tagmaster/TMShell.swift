@@ -31,19 +31,96 @@ struct TagMasterApp: App {
     var body: some Scene {
         WindowGroup {
             TMRootView(router: router)
+                .preferredColorScheme(TagMasterApp.testAppearance)
                 .onOpenURL { url in
                     if !DPAppDelegate.handleAuthURL(url) { router.open(url) }
                 }
                 // Every activation, the first included, offers Privacy choices until
-                // they are made; the hop lets the window become key first.
+                // they are made; leaving the active phase cancels an offer in flight.
                 .onChange(of: scenePhase, initial: true) { _, phase in
-                    guard phase == .active else { return }
-                    DispatchQueue.main.async {
-                        guard let presenter = TMRouteNavigator.topController() else { return }
-                        TelemetryConsent.presentIfNeeded(from: presenter)
+                    if phase == .active {
+                        TMPrivacyOffer.shared.sceneBecameActive()
+                    } else {
+                        TMPrivacyOffer.shared.sceneResigned()
                     }
                 }
         }
+    }
+}
+
+/// Offers Privacy choices from the active window's root, as the UIKit delegate
+/// did, until the user makes them. It never stacks over an alert or the sign-in
+/// sheet: a root that is presenting ends this activation's offer, as it did in
+/// UIKit. A root not yet able to present (no active key window, not in the
+/// window, mid-transition) is retried briefly. The offer counts as made only once
+/// UIKit has accepted the presentation, so a refused attempt leaves it pending.
+@MainActor
+final class TMPrivacyOffer {
+    static let shared = TMPrivacyOffer()
+
+    enum Readiness { case ready(UIViewController), notYet, busy }
+
+    var hasChosen: () -> Bool = { TelemetryConsent.hasChosen }
+    var readiness: () -> Readiness = { TMPrivacyOffer.activeRoot() }
+    var present: (UIViewController) -> Void = { TelemetryConsent.present(from: $0) }
+    var retryDelay: TimeInterval = 0.25
+    var attempts = 40
+
+    /// Shown this session: UIKit accepted the presentation.
+    private(set) var shown = false
+    /// An offer is waiting for a root that can present it.
+    private(set) var pending = false
+    private var generation = 0
+
+    func sceneBecameActive() {
+        guard !hasChosen(), !shown else { return }
+        pending = true
+        generation += 1
+        attempt(generation, remaining: attempts, delay: 0)
+    }
+
+    /// Stale attempts stop; the offer stays pending for the next activation.
+    func sceneResigned() {
+        generation += 1
+    }
+
+    private func attempt(_ token: Int, remaining: Int, delay: TimeInterval) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [self] in
+            guard token == generation, pending else { return }
+            guard !hasChosen(), !shown else { pending = false; return }
+            switch readiness() {
+            case .ready(let root):
+                present(root)
+                if root.presentedViewController != nil {
+                    shown = true
+                    pending = false
+                } else if remaining > 0 {
+                    attempt(token, remaining: remaining - 1, delay: retryDelay)
+                }
+            case .notYet:
+                if remaining > 0 { attempt(token, remaining: remaining - 1, delay: retryDelay) }
+            case .busy:
+                break
+            }
+        }
+    }
+
+    /// The foreground-active scene's key window root, if it can present now.
+    static func activeRoot() -> Readiness {
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        guard let scene = scenes.first(where: { $0.activationState == .foregroundActive }),
+              let root = scene.keyWindow?.rootViewController,
+              root.viewIfLoaded?.window != nil else { return .notYet }
+        if root.presentedViewController != nil { return .busy }
+        if root.transitionCoordinator != nil || root.isBeingPresented || root.isBeingDismissed { return .notYet }
+        return .ready(root)
+    }
+
+    /// For tests: forget this session's offer.
+    func reset() {
+        shown = false
+        pending = false
+        generation += 1
     }
 }
 
@@ -61,17 +138,46 @@ final class TMTestAppDelegate: UIResponder, UIApplicationDelegate {
 
 // MARK: - Environment
 
+/// How a screen's surface shows the barber pole. The shell sets it per column;
+/// `TMScreenBackground` is the one place that acts on it.
+enum TMBackdrop: Equatable {
+    /// A stack of its own (iPhone, a collapsed split): the screen draws its colour
+    /// and a watermark fitted to itself.
+    case own
+    /// Beside another column: the screen draws its colour and its slice of one
+    /// watermark laid over the whole window, so both columns show a single pole.
+    case windowSlice(CGRect)
+    /// The iPad list column from iOS 18: UIKit's glass sidebar is the surface and
+    /// the split's watermark lies beneath it, so the screen draws nothing.
+    case glassColumn(CGRect)
+
+    var isGlassColumn: Bool {
+        if case .glassColumn = self { true } else { false }
+    }
+}
+
+extension TagMasterApp {
+    /// UI tests ask for an appearance with `--appearance dark|light`: the
+    /// simulator does not always take XCUIDevice's. Debug builds only.
+    static var testAppearance: ColorScheme? {
+#if DEBUG
+        let arguments = ProcessInfo.processInfo.arguments
+        if let index = arguments.firstIndex(of: "--appearance"), index + 1 < arguments.count {
+            return arguments[index + 1] == "dark" ? .dark : .light
+        }
+#endif
+        return nil
+    }
+}
+
 extension EnvironmentValues {
-    /// True inside the iPad split, which draws one watermark behind both columns;
-    /// screens there leave their own backdrop clear.
-    @Entry var tmSharedWatermark = false
+    @Entry var tmBackdrop: TMBackdrop = .own
 }
 
 // MARK: - Root
 
 struct TMRootView: View {
     let router: TMRouter
-    @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
         if UIDevice.current.userInterfaceIdiom == .pad {
@@ -80,6 +186,28 @@ struct TMRootView: View {
             TMStackRoot(router: router)
         }
     }
+}
+
+/// Gives the window the accent as soon as the root is in it, before its first
+/// frame, as the UIKit delegate did when it made the window.
+private struct TMWindowTint: UIViewRepresentable {
+    final class Probe: UIView {
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            if let window, window.tintColor != DPAppDelegate.accentColor {
+                window.tintColor = DPAppDelegate.accentColor
+            }
+        }
+    }
+
+    func makeUIView(context: Context) -> Probe {
+        let probe = Probe()
+        probe.isUserInteractionEnabled = false
+        probe.isAccessibilityElement = false
+        return probe
+    }
+
+    func updateUIView(_ probe: Probe, context: Context) {}
 }
 
 /// iPhone: one stack, Home at its root.
@@ -93,29 +221,52 @@ struct TMStackRoot: View {
                     TMRouteScreen(route: route, router: router)
                 }
         }
+        .background(TMWindowTint())
         .onAppear { router.setExpanded(false) }
     }
 }
 
 /// iPad: the list stack beside the tag, one watermark behind both.
 struct TMSplitRoot: View {
-    /// The columns can only be made clear (so one watermark shows behind both) from
-    /// iOS 18; before that each screen keeps its own, rather than none showing.
+    /// The list column can only be made clear, to show its glass over the split's
+    /// watermark, from iOS 18. Before that its screens draw their window slice.
     static var columnsCanBeClear: Bool {
         if #available(iOS 18.0, *) { true } else { false }
+    }
+
+    /// Each column's backdrop: `window` is the whole window in global coordinates.
+    static func backdrops(regular: Bool, window: CGRect, columnsCanBeClear: Bool = columnsCanBeClear)
+        -> (list: TMBackdrop, detail: TMBackdrop) {
+        guard regular else { return (.own, .own) }
+        return (columnsCanBeClear ? .glassColumn(window) : .windowSlice(window), .windowSlice(window))
     }
 
     @Bindable var router: TMRouter
     @Environment(\.horizontalSizeClass) private var sizeClass
 
+    /// The whole window in global coordinates: the split's frame plus its safe areas.
+    static func canvas(_ geometry: GeometryProxy) -> CGRect {
+        let frame = geometry.frame(in: .global)
+        let insets = geometry.safeAreaInsets
+        return CGRect(x: frame.minX - insets.leading, y: frame.minY - insets.top,
+                      width: frame.width + insets.leading + insets.trailing,
+                      height: frame.height + insets.top + insets.bottom)
+    }
+
     var body: some View {
         GeometryReader { geometry in
+            let backdrops = TMSplitRoot.backdrops(regular: sizeClass == .regular, window: TMSplitRoot.canvas(geometry))
             NavigationSplitView(columnVisibility: $router.columnVisibility,
                                 preferredCompactColumn: $router.preferredCompactColumn) {
+                // A stack does not hand its environment to the screens pushed onto it,
+                // so each column's root and destinations are given theirs directly.
+                let list = TMColumnTraits(backdrop: backdrops.list,
+                                          // UITableView's margins in the list column were 16 points, not 20.
+                                          tableMargin: sizeClass == .regular ? 16 : 20)
                 NavigationStack(path: $router.path) {
-                    TMHomeRoute(router: router)
+                    TMHomeRoute(router: router, column: list)
                         .navigationDestination(for: TMRoute.self) { route in
-                            TMRouteScreen(route: route, router: router)
+                            TMRouteScreen(route: route, router: router, column: list)
                         }
                 }
                 // A comfortable list on both 11- and 13-inch iPads: 36% of the width, 320–400 points.
@@ -123,10 +274,11 @@ struct TMSplitRoot: View {
                                                 ideal: min(max(geometry.size.width * 0.36, 320), 400),
                                                 max: 400)
             } detail: {
+                let detail = TMColumnTraits(backdrop: backdrops.detail, tableMargin: 20)
                 NavigationStack(path: $router.detailPath) {
-                    TMDetailColumn(router: router)
+                    TMDetailColumn(router: router, column: detail)
                         .navigationDestination(for: TMRoute.self) { route in
-                            TMRouteScreen(route: route, router: router)
+                            TMRouteScreen(route: route, router: router, column: detail)
                         }
                 }
             }
@@ -138,17 +290,41 @@ struct TMSplitRoot: View {
                 }
                 .ignoresSafeArea()
             }
-            .environment(\.tmSharedWatermark, sizeClass == .regular && TMSplitRoot.columnsCanBeClear)
         }
+        .background(TMWindowTint())
         .onChange(of: sizeClass, initial: true) { _, size in
             router.setExpanded(size == .regular)
         }
     }
 }
 
+/// What a column tells the screens in it: their backdrop and table margin.
+struct TMColumnTraits {
+    var backdrop: TMBackdrop = .own
+    var tableMargin: CGFloat = 20
+    /// A phone's single stack.
+    static let stack = TMColumnTraits()
+}
+
+extension View {
+    /// A route's screen in its column: the column's traits, the route's one tint
+    /// follower, and inside the split a clear column background, so the split's
+    /// watermark lies under the glass list column (the detail column's container
+    /// reaches beneath it too; its screens draw their own surface). The clear
+    /// background is outermost: `containerBackground` only takes effect on the
+    /// root of a column's view.
+    func tmRoute(in column: TMColumnTraits) -> some View {
+        environment(\.tmBackdrop, column.backdrop)
+            .environment(\.tmTableMargin, column.tableMargin)
+            .tmFollowsUIKitTint()
+            .tmClearColumnBackground(column.backdrop != .own)
+    }
+}
+
 /// The detail column: the chosen tag, or the placeholder before one is chosen.
 struct TMDetailColumn: View {
     let router: TMRouter
+    var column = TMColumnTraits.stack
 
     var body: some View {
         Group {
@@ -160,7 +336,7 @@ struct TMDetailColumn: View {
                     .tmCharcoalBar()
             }
         }
-        .tmClearColumnBackground()
+        .tmRoute(in: column)
     }
 }
 
@@ -170,6 +346,7 @@ struct TMDetailColumn: View {
 struct TMRouteScreen: View {
     let route: TMRoute
     let router: TMRouter
+    var column = TMColumnTraits.stack
 
     var body: some View {
         Group {
@@ -182,17 +359,18 @@ struct TMRouteScreen: View {
                 TMSheetMusicRoute(document: document, summary: summary, router: router)
             }
         }
-        .tmClearColumnBackground()
+        .tmRoute(in: column)
     }
 }
 
 /// Home, the root of the list stack.
 struct TMHomeRoute: View {
     let router: TMRouter
+    var column = TMColumnTraits.stack
 
     var body: some View {
         TMScreens.home(router.home)
-            .tmClearColumnBackground()
+            .tmRoute(in: column)
     }
 }
 
@@ -268,8 +446,9 @@ struct TMTagRoute: View {
     let model: TagDetailModel
 
     var body: some View {
+        // Each page draws its own backdrop (tmTabPageBackground); a second one here
+        // would show through the clear pages and double the watermark.
         TagDetailScreen(model: model)
-            .background(TMScreenBackground())
             .background {
                 // Beside the floating list the column has a horizontal safe area; the pages keep to it.
                 GeometryReader { proxy in
@@ -338,7 +517,7 @@ enum TMScreens {
                                 Button("Rename list…", systemImage: "pencil", action: model.promptRename)
                                 Button("Delete list…", systemImage: "trash", role: .destructive, action: model.confirmDelete)
                             } label: {
-                                TMBarButton.symbol("ellipsis.circle", scale: .large)
+                                TMBarLabel("ellipsis.circle", scale: .large)
                             }
                             .accessibilityLabel("List options")
                             .accessibilityIdentifier("list.menu")
@@ -423,11 +602,18 @@ struct TMEditButton: View {
         Button {
             withAnimation { isEditing.toggle() }
         } label: {
-            // iOS 26 draws UIKit's done-style item as a checkmark in its own glass.
-            if isEditing {
-                TMBarButton.symbol("checkmark", scale: .large)
-            } else {
-                Text("Edit")
+            TMBarLabel {
+                // iOS 26 draws UIKit's done-style item as a checkmark in its own glass;
+                // earlier systems drew UIKit's bold "Done".
+                if isEditing {
+                    if #available(iOS 26.0, *) {
+                        TMBarButton.symbol("checkmark", scale: .large)
+                    } else {
+                        Text("Done").fontWeight(.semibold)
+                    }
+                } else {
+                    Text("Edit")
+                }
             }
         }
         .accessibilityLabel(isEditing ? "Done" : "Edit")
@@ -437,17 +623,17 @@ struct TMEditButton: View {
 // MARK: - Column backgrounds
 
 extension View {
-    /// Inside the iPad split the columns let the one shared watermark show through.
-    func tmClearColumnBackground() -> some View {
-        modifier(TMClearColumnBackground())
+    /// The glass list column shows through its screens to the split's watermark.
+    func tmClearColumnBackground(_ clear: Bool) -> some View {
+        modifier(TMClearColumnBackground(clear: clear))
     }
 }
 
 private struct TMClearColumnBackground: ViewModifier {
-    @Environment(\.tmSharedWatermark) private var sharedWatermark
+    let clear: Bool
 
     func body(content: Content) -> some View {
-        if #available(iOS 18.0, *), sharedWatermark {
+        if #available(iOS 18.0, *), clear {
             content
                 .containerBackground(.clear, for: .navigation)
                 .containerBackground(.clear, for: .navigationSplitView)
@@ -505,10 +691,6 @@ private struct TMBarHook: UIViewControllerRepresentable {
 
         func apply() {
             guard let screen, let navigation = screen.navigationController else { return }
-            // The window carries the accent, as it did in UIKit; the bar's items stay white.
-            if let window = navigation.view.window, window.tintColor != DPAppDelegate.accentColor() {
-                window.tintColor = DPAppDelegate.accentColor()
-            }
             TMBarAppearance.apply(to: navigation.navigationBar)
             if let backTitle, screen.navigationItem.backButtonTitle != backTitle {
                 screen.navigationItem.backButtonTitle = backTitle
@@ -535,34 +717,59 @@ private struct TMBarHook: UIViewControllerRepresentable {
     func updateUIViewController(_ hook: Hook, context: Context) {
         hook.backTitle = backTitle
         hook.apply()
+        // SwiftUI rewrites the bar's title attributes when it updates the screen's
+        // toolbar (a tint dimming behind an alert does); the hook's turn comes after.
+        DispatchQueue.main.async { [weak hook] in hook?.apply() }
     }
 }
 
 /// The charcoal bar every Tag Master stack wears.
 @MainActor
 enum TMBarAppearance {
-    static func make() -> UINavigationBarAppearance {
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor(white: 55.0 / 255.0, alpha: 1)
-        appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
-        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
-        return appearance
+    static let charcoal = UIColor(white: 55.0 / 255.0, alpha: 1)
+
+    /// Gives `bar` the charcoal appearance, checking and repairing each property it
+    /// owns on its own: SwiftUI rewrites some (the title colours) and not others, so
+    /// one being right says nothing about the rest. Fonts and offsets in the title
+    /// attributes (Home's handwriting) are kept; only their colour is the bar's.
+    static func apply(to bar: UINavigationBar) {
+        let slots: [ReferenceWritableKeyPath<UINavigationBar, UINavigationBarAppearance?>] =
+            [\.scrollEdgeAppearance, \.compactAppearance, \.compactScrollEdgeAppearance]
+        if let repaired = repaired(bar.standardAppearance) { bar.standardAppearance = repaired }
+        for slot in slots {
+            let current = bar[keyPath: slot] ?? bar.standardAppearance
+            if bar[keyPath: slot] == nil || repaired(current) != nil {
+                bar[keyPath: slot] = repaired(current) ?? current.copy()
+            }
+        }
+        if bar.tintColor != .white { bar.tintColor = .white }
+        // UIKit's back button stayed white behind an alert; the icons that did grey
+        // (Home's) grey through TMBarButton.ink, not through the bar's tint.
+        if bar.tintAdjustmentMode != .normal { bar.tintAdjustmentMode = .normal }
+        if bar.overrideUserInterfaceStyle != .dark { bar.overrideUserInterfaceStyle = .dark }
+        if bar.barStyle != .black { bar.barStyle = .black }
+        // With opaque chrome, keep UIKit's large-title host above the bar background.
+        if bar.isTranslucent { bar.isTranslucent = false }
     }
 
-    /// Gives `bar` the charcoal appearance once; Home's title adjusts it afterwards.
-    static func apply(to bar: UINavigationBar) {
-        guard bar.overrideUserInterfaceStyle != .dark || bar.isTranslucent else { return }
-        let appearance = make()
-        bar.standardAppearance = appearance
-        bar.scrollEdgeAppearance = appearance
-        bar.compactAppearance = appearance
-        bar.compactScrollEdgeAppearance = appearance
-        bar.tintColor = .white
-        bar.overrideUserInterfaceStyle = .dark
-        bar.barStyle = .black
-        // With opaque chrome, keep UIKit's large-title host above the bar background.
-        bar.isTranslucent = false
+    /// A corrected copy of `appearance`, or nil when it is already right.
+    static func repaired(_ appearance: UINavigationBarAppearance) -> UINavigationBarAppearance? {
+        let white = UIColor.white
+        let backgroundRight = appearance.backgroundColor == charcoal && appearance.backgroundEffect == nil
+        let titleRight = appearance.titleTextAttributes[.foregroundColor] as? UIColor == white
+        let largeRight = appearance.largeTitleTextAttributes[.foregroundColor] as? UIColor == white
+        guard !(backgroundRight && titleRight && largeRight) else { return nil }
+        let fixed = appearance.copy()
+        if !backgroundRight {
+            fixed.configureWithOpaqueBackground()
+            fixed.backgroundColor = charcoal
+            // configureWithOpaqueBackground resets the titles; keep what they carried.
+            fixed.titleTextAttributes = appearance.titleTextAttributes
+            fixed.largeTitleTextAttributes = appearance.largeTitleTextAttributes
+        }
+        fixed.titleTextAttributes[.foregroundColor] = white
+        fixed.largeTitleTextAttributes[.foregroundColor] = white
+        return fixed
     }
 }
 

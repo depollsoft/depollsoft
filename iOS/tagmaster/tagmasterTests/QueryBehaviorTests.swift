@@ -174,11 +174,15 @@ final class QueryBehaviorTests: TMBehaviorTestCase {
         XCTAssertFalse(driver.exists(label: "Retry"))
     }
 
-    func testPullToRefreshReturnsOnceTheFirstPageHasLanded() async {
+    func testPullToRefreshStartsOverFromTheFirstPage() {
         let model = self.model()
-        await model.refreshAndWait()
-        XCTAssertFalse(model.isLoading)
-        XCTAssertEqual(model.tags.count, 20)
+        load(model)
+        load(model)
+        XCTAssertEqual(model.tags.count, 40)
+        // The pull hands back at once (UIKit ended its spinner and showed the pole).
+        model.refresh()
+        XCTAssertTrue(model.tags.isEmpty)
+        spinUntil("the first page lands again") { !model.isLoading && model.tags.count == 20 }
     }
 
     // MARK: - Title and rows

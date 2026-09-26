@@ -263,8 +263,35 @@ each over an `@Observable` model.
 - **Alerts.** The list-naming alert stays a `UIAlertController`
   (`TMListNamePrompt`, presented by `TMAlertPresenter`) because its message has
   to follow the typing. Every other alert is a SwiftUI `.alert`.
-- **Watermark.** `TMScreenBackground` draws the barber pole on phones and
-  stays clear beside the iPad split's single shared watermark.
+- **Watermark.** Each column tells its screens one backdrop policy
+  (`TMBackdrop`, applied by `TMScreenBackground` alone):
+  - `.own` on a phone or a collapsed split: the screen's colour and a pole
+    fitted to it.
+  - `.windowSlice` beside the list (the detail column, the placeholder, and on
+    iOS 17 the list column too): the colour plus the screen's slice of one
+    window-wide pole (`TMWindowWatermark`), so both columns show a single pole.
+  - `.glassColumn` for the list column from iOS 18: the screen draws nothing;
+    UIKit's glass sidebar is the surface and the split's pole lies beneath it.
+    Grouped screens colour their hosting view there (`TMPageColorHook`), as
+    UIKit did. Browse's pages are the one place something must be cleared: the
+    TabView's container, only in this case, again on every layout.
+  Detail pages draw theirs inside each TabView page (`tmTabPageBackground`), so
+  no UIKit container needs clearing. Columns get their policy through the route
+  wrappers (`tmRoute(in:)`); a stack does not pass its environment to pushed
+  screens. `RealAppAppearanceUITests` checks the pole's grey and diagonal spread
+  in the launched app, in light and dark (`--appearance`, debug builds), on
+  every detail page, landscape, the iPad placeholder, Home, each Browse page, a
+  list and pushed results.
+- **Margins.** Rows read the table margin from the environment: 20 points on
+  iPhone, 16 in the iPad sidebar (`tmTableMargin`). Inset-grouped screens
+  (Settings, Search, the list picker) set `contentMargins` to UIKit's card
+  position and pass the matching row inset down as `tmInsetRowMargin`. Rows apply it with
+  `tmInsetRow()`, read inside the list: a screen's own `@Environment` sees the
+  value from above its list, before the list's modifiers set it.
+- **UIKit controls kept where SwiftUI cannot match.** The filter menu fallback
+  is UIKit's gray menu button (`TMFilterMenuButton`). Its representable answers
+  an unproposed width with its natural width, or `ViewThatFits` never picks the
+  segmented control.
 - Captures: `TagListsScreenCatalogTests` (iPhone `iphone-*`, iPad `ipad-*`).
 
 ## Tag Master tag detail
@@ -294,30 +321,50 @@ each over an `@Observable` model.
   items twice, once off screen, so only the copy in a window presents, once it has its
   final size. `TMPageTabBarBridge` gives the TabView's bar the
   `page-tab-bar`/`page-<Title>` identifiers and keeps it a bottom bar on iPad.
+- **Readable width.** `TMPageScroll` measures UIKit's readable guide in place
+  (`TMReadableProbe`, a view with 16-point margins) rather than assuming
+  672 points; on iOS 26 the guide is 896 points wide.
+- **UIKit-hosted pieces.** Sheet Music is UIKit's filled button
+  (`TMSheetMusicButton`), and Share presents `UIActivityViewController`
+  (`TMShareSheet`) with the title line and the link as two items, as before.
 - **Parity notes.** Bar symbols are the same `UIImage` a bar button item gets, offset
-  by its alignment insets. `TMFollowsUIKitTint` reads the live UIKit tint so accent
-  colours dim behind sheets as UIKit's did. Beside a list on iPad the TabView sits one
+  by its alignment insets. `tmFollowsUIKitTint` reads the live UIKit tint once per
+  route, in `tmRoute(in:)` (accent and dimmed state together), so accent colours
+  dim behind sheets as UIKit's did; screens do not add their own. It sits inside
+  `tmClearColumnBackground`: `containerBackground` only works as the outermost
+  modifier of a column's root. Every bar item's label goes through `TMBarLabel`,
+  which draws it in the bar's white or dimmed ink; the bar keeps
+  `tintAdjustmentMode = .normal` so Back does not dim twice, and the page bar
+  keeps unselected items in `.label`. The bar hook (`TMBarAppearance.apply`)
+  checks each property it owns separately and repairs only the title colours,
+  keeping Home's font. Key and Sheet Music share one height through
+  `TMMatchedHeightStack`, which measures both unconstrained each layout pass. Beside a list on iPad the TabView sits one
   pixel inside the column's safe area; flush, it grows into the unsafe strip under the
   floating list. That pixel is the remaining iPad difference.
 
 ## Tag Master shell
 
 - **Entry.** `TagMasterMain` (`TMShell.swift`) starts the SwiftUI `TagMasterApp`,
-  or a bare `TMTestAppDelegate` host under XCTest. `DPAppDelegate` keeps the
-  launch work (Firebase, consent, the cache serializers, list sync) through
-  `@UIApplicationDelegateAdaptor`. Opened URLs go to the sign-in providers first
-  (`+[DPAppDelegate handleAuthURL:]`) and otherwise to the router; Privacy
-  choices is offered whenever the scene becomes active.
+  or a bare `TMTestAppDelegate` host under XCTest. `DPAppDelegate` (now Swift)
+  keeps the launch work (Firebase, consent, the cache serializers, list sync)
+  through `@UIApplicationDelegateAdaptor`, with the saved-tag helpers beside it.
+  Opened URLs go to the sign-in providers first (`DPAppDelegate.handleAuthURL`,
+  with `authCanHandle` injectable for tests) and otherwise to the router.
+  Privacy choices is offered on every activation, the first included
+  (`TMPrivacyOffer`): from the foreground-active scene's key window root once
+  it is in the window and not mid-transition, never over something already
+  presented, and it counts as shown only once UIKit accepted the presentation;
+  leaving the active phase cancels an attempt in flight.
+  `TMWindowTint` gives the window the accent before any screen appears.
 - **Layout.** iPhone is one `NavigationStack` (`TMStackRoot`) with Home at its
   root. iPad is a `NavigationSplitView` (`TMSplitRoot`): Home's stack in a
   320–400 pt column (36% of the width), the tag or `TMTagPlaceholder` beside it,
-  one watermark behind both columns (screens inside the split leave their own
-  backdrop clear through `tmSharedWatermark` and `tmClearColumnBackground`), and
+  one watermark across both columns (see *Watermark* under Tag Master lists), and
   a chosen tag kept on top when the split collapses. The collapsed column is
   stored (`preferredCompactColumn`), decided at collapse and then following
   Back, as UIKit's top-column choice applied only at the moment of collapse.
-  The columns can only be made clear from iOS 18, so on iOS 17 every screen
-  keeps its own watermark (`TMSplitRoot.columnsCanBeClear`).
+  The list column is glass only from iOS 18; on iOS 17 its screens draw their
+  window slice (`TMSplitRoot.backdrops`).
 - **Routing.** `TMRouter` owns the list stack, the detail column's stack (the
   sheet music reader) and the tag beside the list, which it reuses from tag to
   tag so the open page survives. `show(_:)` makes each screen's model with its
@@ -336,7 +383,14 @@ each over an `@Observable` model.
   `TMEditButton` for Edit/Done. `tmCharcoalBar` reaches the UIKit navigation
   controller SwiftUI draws with to give it the charcoal appearance, set back
   titles and, on Home, the Wickhop title (`TMHomeTitle`); SwiftUI has no
-  modifiers for those.
+  modifiers for those. SwiftUI rewrites the bar's title attributes when it
+  re-renders the toolbar, so the hook applies again on the next turn; its guard
+  compares the background colour. `toolbarBackground`/`toolbarColorScheme`
+  fight the hook and are not used.
+- **Real-app tests.** `RealAppAppearanceUITests` and `RealAppFlowUITests`
+  (tagmasterUITests) launch the app and check the watermark, page switching,
+  favouriting, making a list from a tag and search end to end. They leave the
+  saved lists alone (launch-argument defaults would shadow the app's writes).
 - **Tests.** `TMShellTestSupport.swift` hosts screens on a plain UIKit stack
   (`TMHostedScreen`, a test-only `TagDetailViewController`) and mounts the real
   shell (`mountShell`). `TMRouterTests` covers routing and the deep-link
@@ -372,13 +426,22 @@ each over an `@Observable` model.
     (`onAppear`) to the end of its disappearance (`onDisappear`), not from
     `viewDidAppear` to `viewWillDisappear`: a track keeps playing through a pop
     transition, and a back swipe the user abandons no longer stops it.
-  - "Rated" survives a refresh of the same tag; UIKit reset it to "Rate".
+  - "Rated" survives a refresh that fails; a refresh that loads the tag puts
+    Rate back, as UIKit did.
   - Before iOS 18 a list change arriving mid-scroll applies at once;
     `onScrollPhaseChange` (iOS 18) is what holds it until the scroll ends.
   - Swiping to delete a list closes the swipe before the confirmation, rather
     than holding it half-open under it.
+- **Behaviour that follows UIKit (second and third reviews).** Home and list
+  rows are disabled while editing, as UIKit's tables did not select then; their
+  delete and reorder controls stay. Open Tag takes an edit whole when what was
+  typed or pasted holds a digit and refuses it otherwise, as the UIKit field did,
+  so a pasted "1e3" stays "1e3" and opens nothing instead of becoming tag 13.
+- **Accepted differences.** SwiftUI's edit-mode delete control reads "Remove"
+  to VoiceOver (UIKit's read "Delete"). iOS 17 layouts are not checked on a
+  simulator here (only iOS 26.5 is installed).
 - **Remaining differences from UIKit.** The detail catalog's iPad goldens were
   recaptured with the real Home in the list column (the first ones used an
-  empty stand-in). In the iPad sidebar, tag rows' media marks sit about 1.7 pt
-  higher than UIKit's (about 4% of a Browse capture).
+  empty stand-in). Open: in the iPad sidebar, tag rows' media marks sit about
+  1.7 pt higher than UIKit's (about 4% of a Browse capture).
 

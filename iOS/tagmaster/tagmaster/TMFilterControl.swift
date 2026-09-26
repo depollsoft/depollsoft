@@ -53,7 +53,7 @@ struct TMFilterRow: View {
         // under the separator above; SwiftUI's row starts at the separator.
         .padding(.top, 13)
         .padding(.bottom, 12)
-        .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
+        .tmInsetRow()
     }
 
     /// The width the segments need, as TMFilterControl measured it: each title in
@@ -65,22 +65,56 @@ struct TMFilterRow: View {
     }
 
     private var menu: some View {
-        Menu {
-            Picker(filter.title, selection: $selection) {
-                ForEach(Array(filter.choices.enumerated()), id: \.offset) { index, choice in
-                    Text(choice).tag(index)
-                }
-            }
-        } label: {
-            HStack(spacing: 8) {
-                Text(filter.choices[safe: selection] ?? "").tmFont(.body)
-                Image(systemName: "chevron.up.chevron.down").tmFont(.caption1)
-            }
-            .frame(maxWidth: .infinity, minHeight: 44)
+        TMFilterMenuButton(title: filter.title, choices: filter.choices, selection: $selection)
+    }
+}
+
+/// The menu the filter falls back to, as UIKit drew it: a gray configured button
+/// titled with the choice, a small up/down chevron after it, a menu of the choices
+/// (the current one checked) on tap, at least 44 points tall.
+struct TMFilterMenuButton: UIViewRepresentable {
+    let title: String
+    let choices: [String]
+    @Binding var selection: Int
+
+    func makeUIView(context: Context) -> UIButton {
+        var configuration = UIButton.Configuration.gray()
+        configuration.image = UIImage(systemName: "chevron.up.chevron.down")
+        configuration.imagePlacement = .trailing
+        configuration.imagePadding = 8
+        configuration.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(textStyle: .caption1)
+        configuration.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attributes in
+            var attributes = attributes
+            attributes.font = UIFont.preferredFont(forTextStyle: .body)
+            return attributes
         }
-        .buttonStyle(.bordered)
-        .accessibilityLabel(filter.title)
-        .accessibilityValue(filter.choices[safe: selection] ?? "")
+        let button = UIButton(configuration: configuration)
+        button.titleLabel?.adjustsFontForContentSizeCategory = true
+        button.titleLabel?.numberOfLines = 0
+        button.showsMenuAsPrimaryAction = true
+        button.accessibilityLabel = title
+        return button
+    }
+
+    func updateUIView(_ button: UIButton, context: Context) {
+        let selected = choices[safe: selection] ?? ""
+        if button.title(for: .normal) != selected { button.setTitle(selected, for: .normal) }
+        button.accessibilityValue = selected
+        let binding = $selection
+        button.menu = UIMenu(children: choices.enumerated().map { index, choice in
+            UIAction(title: choice, state: index == selection ? .on : .off) { _ in binding.wrappedValue = index }
+        })
+    }
+
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView button: UIButton, context: Context) -> CGSize? {
+        guard let width = proposal.width, width.isFinite else {
+            let natural = button.intrinsicContentSize
+            return CGSize(width: natural.width, height: max(44, natural.height))
+        }
+        let fitted = button.systemLayoutSizeFitting(CGSize(width: width, height: UIView.layoutFittingCompressedSize.height),
+                                                    withHorizontalFittingPriority: .required,
+                                                    verticalFittingPriority: .fittingSizeLevel)
+        return CGSize(width: width, height: max(44, fitted.height))
     }
 }
 

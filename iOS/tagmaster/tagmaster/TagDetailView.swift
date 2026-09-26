@@ -31,11 +31,7 @@ struct TagDetailScreen: View {
         .navigationTitle(model.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbar }
-
-
         .focusEffectDisabled()
-        .tmFollowsUIKitTint()
-
         .tmRecoveryAlert($model.error)
         .onAppear { model.screenVisible = true }
         .onDisappear { model.screenVisible = false }
@@ -44,18 +40,22 @@ struct TagDetailScreen: View {
     private var pages: some View {
         TabView(selection: $model.selectedPage) {
             TagSummaryPage(model: model.summary)
+                .tmTabPageBackground()
                 .background(TMPageTabBarBridge())
                 .tabItem { Label(TagDetailModel.Page.summary.title, systemImage: TagDetailModel.Page.summary.symbol).accessibilityIdentifier("page-\(TagDetailModel.Page.summary.title)").environment(\.symbolVariants, .none) }
                 .tag(TagDetailModel.Page.summary)
             TagDetailsPage(model: model)
+                .tmTabPageBackground()
                 .background(TMPageTabBarBridge())
                 .tabItem { Label(TagDetailModel.Page.details.title, systemImage: TagDetailModel.Page.details.symbol).accessibilityIdentifier("page-\(TagDetailModel.Page.details.title)").environment(\.symbolVariants, .none) }
                 .tag(TagDetailModel.Page.details)
             TagTracksPage(model: model.tracks)
+                .tmTabPageBackground()
                 .background(TMPageTabBarBridge())
                 .tabItem { Label(TagDetailModel.Page.tracks.title, systemImage: TagDetailModel.Page.tracks.symbol).accessibilityIdentifier("page-\(TagDetailModel.Page.tracks.title)").environment(\.symbolVariants, .none) }
                 .tag(TagDetailModel.Page.tracks)
             TagVideosPage(model: model)
+                .tmTabPageBackground()
                 .background(TMPageTabBarBridge())
                 .tabItem { Label(TagDetailModel.Page.videos.title, systemImage: TagDetailModel.Page.videos.symbol).accessibilityIdentifier("page-\(TagDetailModel.Page.videos.title)").environment(\.symbolVariants, .none) }
                 .tag(TagDetailModel.Page.videos)
@@ -140,11 +140,9 @@ struct TagDetailScreen: View {
 
     @ViewBuilder
     private var shareItem: some View {
-        if let url = model.shareURL, let message = model.shareMessage {
-            ShareLink(item: url, message: Text(message)) {
-                TMBarButton.symbol("square.and.arrow.up")
-            }
-            .accessibilityLabel("Share")
+        if let items = model.shareItems {
+            TMBarButton("square.and.arrow.up", label: "Share") { model.sharePresented = true }
+                .background(TMShareSheet(isPresented: $model.sharePresented, items: items))
         }
     }
 
@@ -176,9 +174,37 @@ struct TMBarButton: View {
             .offset(x: (insets.right - insets.left) / 2, y: (insets.bottom - insets.top) / 2)
     }
 
+    /// The charcoal bar's item colour: white, and UIKit's dimmed grey while an
+    /// alert or sheet is up. Set explicitly, so a light-mode column (the iPad
+    /// list) never draws its items in black on the charcoal bar.
+    static func ink(dimmed: Bool) -> Color {
+        dimmed ? Color(white: 204.0 / 255.0) : .white
+    }
+
     var body: some View {
-        Button(action: action) { TMBarButton.symbol(systemName) }
+        Button(action: action) { TMBarLabel(systemName) }
             .accessibilityLabel(label)
+    }
+}
+
+/// The label of anything on the charcoal bar (a button, a menu, a share link): its
+/// content in the bar's ink, white or UIKit's dimmed grey. Every bar item's label
+/// goes through it, so none can fall back to the column's light-mode black.
+struct TMBarLabel<Content: View>: View {
+    @Environment(\.tmTintDimmed) private var dimmed
+    let content: Content
+
+    init(@ViewBuilder content: () -> Content) { self.content = content() }
+
+    var body: some View {
+        content.foregroundStyle(TMBarButton.ink(dimmed: dimmed))
+    }
+}
+
+extension TMBarLabel where Content == AnyView {
+    /// A bar symbol, as `TMBarButton.symbol` draws it.
+    init(_ systemName: String, scale: UIImage.SymbolScale = .medium) {
+        content = AnyView(TMBarButton.symbol(systemName, scale: scale))
     }
 }
 
@@ -295,6 +321,9 @@ struct TMPageTabBarBridge: UIViewControllerRepresentable {
             guard let tabs = tabBarController else { return }
             let bar = tabs.tabBar
             if bar.accessibilityIdentifier != "page-tab-bar" { bar.accessibilityIdentifier = "page-tab-bar" }
+            // UIKit's page bar kept its unselected items in full ink while a sheet or
+            // popover dimmed the page; SwiftUI's bar greys them with the tint.
+            TMPageTabBarBridge.keepUnselectedInk(bar)
             for (item, title) in zip(bar.items ?? [], titles) where item.accessibilityIdentifier != "page-\(title)" {
                 item.accessibilityIdentifier = "page-\(title)"
             }
@@ -323,6 +352,21 @@ struct TMPageTabBarBridge: UIViewControllerRepresentable {
                 }
             }
         }
+    }
+
+    /// Unselected items drawn in label ink from the bar's appearance, which the tint
+    /// dimming does not reach.
+    static func keepUnselectedInk(_ bar: UITabBar) {
+        let appearance = bar.standardAppearance
+        let normal = appearance.stackedLayoutAppearance.normal
+        guard normal.iconColor != .label else { return }
+        let updated = appearance.copy()
+        for layout in [updated.stackedLayoutAppearance, updated.inlineLayoutAppearance, updated.compactInlineLayoutAppearance] {
+            layout.normal.iconColor = .label
+            layout.normal.titleTextAttributes[.foregroundColor] = UIColor.label
+        }
+        bar.standardAppearance = updated
+        bar.scrollEdgeAppearance = updated
     }
 
     func makeUIViewController(context: Context) -> Controller {

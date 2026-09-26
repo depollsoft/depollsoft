@@ -12,7 +12,7 @@
 import SwiftUI
 
 private struct TMAccentKey: EnvironmentKey {
-    static let defaultValue = Color(DPAppDelegate.accentColor() ?? .tintColor)
+    static let defaultValue = TMTheme.accent
 }
 
 extension EnvironmentValues {
@@ -24,8 +24,9 @@ extension EnvironmentValues {
 }
 
 extension View {
-    /// Resolves `\.tmAccent` from the UIKit tint at this point. Callers apply it as a
-    /// tint where they want one; the navigation bar keeps its own white.
+    /// Resolves `\.tmAccent` and `\.tmTintDimmed` from the UIKit tint at this point.
+    /// Callers apply them where they want a tint; the navigation bar keeps its own
+    /// white. Every route installs it once (TMShell), so any screen can read them.
     func tmFollowsUIKitTint() -> some View {
         modifier(TMTintFollower())
     }
@@ -33,23 +34,27 @@ extension View {
 
 private struct TMTintFollower: ViewModifier {
     @State private var tint: UIColor?
+    @State private var dimmed = false
 
     func body(content: Content) -> some View {
-        let accent = Color(tint ?? DPAppDelegate.accentColor() ?? .tintColor)
+        let accent = Color(tint ?? DPAppDelegate.accentColor)
         content
             .environment(\.tmAccent, accent)
-            .background(TMTintProbe { color in
+            .environment(\.tmTintDimmed, dimmed)
+            .background(TMTintProbe { color, isDimmed in
                 if color != tint { tint = color }
-            })
+                if isDimmed != dimmed { dimmed = isDimmed }
+            }.accessibilityHidden(true))
     }
 }
 
-/// An invisible view that reports its tint whenever UIKit changes it.
+/// An invisible view that reports its tint, and whether UIKit is dimming it,
+/// whenever UIKit changes either.
 private struct TMTintProbe: UIViewRepresentable {
-    let changed: (UIColor) -> Void
+    let changed: (UIColor, Bool) -> Void
 
     final class ProbeView: UIView {
-        var changed: ((UIColor) -> Void)?
+        var changed: ((UIColor, Bool) -> Void)?
 
         override func tintColorDidChange() {
             super.tintColorDidChange()
@@ -64,7 +69,8 @@ private struct TMTintProbe: UIViewRepresentable {
         func report() {
             guard window != nil, let changed else { return }
             let color = tintColor ?? .tintColor
-            DispatchQueue.main.async { changed(color) }
+            let dimmed = tintAdjustmentMode == .dimmed
+            DispatchQueue.main.async { changed(color, dimmed) }
         }
     }
 

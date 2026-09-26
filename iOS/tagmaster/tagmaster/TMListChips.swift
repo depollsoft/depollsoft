@@ -34,6 +34,7 @@ struct TMListChips: View {
 /// elements, so "open" and "remove" are the two distinct things they are.
 struct TMListChip: View {
     @Environment(\.tmAccent) private var accent
+    @Environment(\.tmTintDimmed) private var dimmed
     let model: TagSummaryModel
     /// The list this capsule stands for; nil on the trailing assist capsule.
     let key: String?
@@ -74,7 +75,9 @@ struct TMListChip: View {
                 Text(name)
                     .lineLimit(1)
                     .truncationMode(.tail)
-                    .foregroundStyle(key == nil ? accent : Color(.label))
+                    // The UIKit chip's title followed the tint, so it greyed out too
+                    // while something was presented over the page.
+                    .foregroundStyle(key == nil ? accent : (dimmed ? Color(.systemGray) : Color(.label)))
             }
             .font(.subheadline)
             .padding(.top, 8)

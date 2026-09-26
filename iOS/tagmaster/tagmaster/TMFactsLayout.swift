@@ -17,7 +17,9 @@ enum TMFactValueKind {
     case text
     /// A composite control (the rating): wants all of its natural width.
     case unit
-    /// A link: measured as text, but its touch target fills the whole row.
+    /// A name (linked or not): UIKit showed these as plain buttons whose content
+    /// was padded to the row rhythm, max(4, (44 − line height) / 2) above and below,
+    /// so a wrapped name's row grows by its lines plus that padding.
     case link
 }
 
@@ -71,39 +73,45 @@ struct TMFactsLayout: Layout {
         var result: [Row] = []
         for (index, (caption, value)) in pairs.enumerated() {
             let minimum = value[TMFactMinimumHeightKey.self]
+            let kind = value[TMFactValueKindKey.self]
             let captionSize = stacked ? width : captionWidth
             let valueX = stacked ? 0 : captionWidth + 8
             let valueW = max(1, width - valueX)
             let captionFit = caption.sizeThatFits(ProposedViewSize(width: captionSize, height: nil))
             let valueFit = value.sizeThatFits(ProposedViewSize(width: valueW, height: nil))
             let captionHeight = ceil(captionFit.height)
-            let valueHeight = ceil(valueFit.height)
+            let lineHeight = bodyFont.lineHeight
+            // A name's button padding, and the height UIKit's button then asked for.
+            let padding = kind == .link ? max(4, (44 - ceil(lineHeight)) / 2) : 0
+            let valueHeight = kind == .link ? max(44, ceil(valueFit.height + 2 * padding)) : ceil(valueFit.height)
+            // Where the text sits inside that height (a button centres its content).
+            let textInset = kind == .link ? (valueHeight - valueFit.height) / 2
+                : (kind == .unit ? 0 : (valueHeight - valueFit.height) / 2)
             var captionY: CGFloat = 0
             var valueY: CGFloat = stacked ? captionHeight + 4 : 0
             if !stacked {
                 let captionDimensions = caption.dimensions(in: ProposedViewSize(width: captionSize, height: nil))
                 let valueDimensions = value.dimensions(in: ProposedViewSize(width: valueW, height: nil))
                 let captionBaseline = captionDimensions[.firstTextBaseline]
-                let valueBaseline = valueDimensions[.firstTextBaseline]
+                let valueBaseline = valueDimensions[.firstTextBaseline] + (kind == .link ? textInset : 0)
                 captionY = max(0, valueBaseline - captionBaseline)
                 valueY = max(0, captionBaseline - valueBaseline)
             }
             let natural = max(captionY + captionHeight, valueY + valueHeight)
-            let lineHeight = bodyFont.lineHeight
-            let kind = value[TMFactValueKindKey.self]
-            let multiline = stacked || (kind == .text && valueHeight > lineHeight * 1.5)
+            // UIKit added 8 to a wrapped label's row, never to a button's.
+            let multiline = kind == .text && (stacked || valueHeight > lineHeight * 1.5)
             let fitted = ceil(max(minimum, natural + (multiline ? 8 : 0)))
             let offset = (fitted - natural) / 2
-            // A link's target is the whole row; its text stays centred where it was measured.
-            let linkGrowth = kind == .link && !stacked ? max(0, fitted - valueHeight) : 0
             let gap = index == 0 ? 0 : (value[TMFactGapBeforeKey.self] > 0 ? value[TMFactGapBeforeKey.self] : (stacked ? 4 : 0))
             // UILabel draws its text centred in a frame rounded up to whole points.
             let captionInset = (captionHeight - captionFit.height) / 2
-            let valueInset = kind == .unit ? 0 : (valueHeight - valueFit.height) / 2
+            let valueFrame = kind == .link
+                // The whole padded button, its text centred inside, is the touch target.
+                ? CGRect(x: valueX, y: valueY + offset, width: valueW, height: valueHeight)
+                : CGRect(x: valueX, y: valueY + offset + textInset, width: valueW, height: valueFit.height)
             result.append(Row(captionFrame: CGRect(x: 0, y: captionY + offset + captionInset, width: captionSize,
                                                    height: captionFit.height),
-                              valueFrame: CGRect(x: valueX, y: valueY + offset - linkGrowth / 2 + valueInset, width: valueW,
-                                                 height: valueFit.height + linkGrowth),
+                              valueFrame: valueFrame,
                               height: fitted, gapBefore: gap))
         }
         return result

@@ -175,4 +175,22 @@ final class TMRouterTests: TMBehaviorTestCase {
         router.showTag(42, source: nil)
         XCTAssertTrue(router.detailPath.isEmpty, "A new tag closes the reader")
     }
+
+    // MARK: Sign-in URLs
+
+    /// The app hands every opened URL to the sign-in providers first and routes a tag
+    /// link only when none of them claims it (TagMasterApp's onOpenURL).
+    func testSignInProvidersGetFirstRefusalOfAnOpenedURL() {
+        var accepts = true
+        var asked: [String] = []
+        let original = DPAppDelegate.authCanHandle
+        DPAppDelegate.authCanHandle = { url in asked.append(url.absoluteString); return accepts }
+        defer { DPAppDelegate.authCanHandle = original }
+        XCTAssertTrue(DPAppDelegate.handleAuthURL(URL(string: "review-auth://callback?code=local")!))
+        XCTAssertTrue(DPAppDelegate.handleAuthURL(URL(string: "tagmaster://tag/0")!),
+                      "Sign-in is asked before the tag grammar, even for a tag link")
+        XCTAssertEqual(asked.count, 2)
+        accepts = false
+        XCTAssertFalse(DPAppDelegate.handleAuthURL(URL(string: "tagmaster://tag/12")!))
+    }
 }

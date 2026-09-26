@@ -475,4 +475,34 @@ final class TMTagListsTests: XCTestCase {
         XCTAssertEqual(DPAppDelegate.favorites(), [1, 2, 9])
         XCTAssertEqual(DPAppDelegate.teachable(), [3])
     }
+
+    func testTheSavedTagHelpersAddMoveAndRemoveAndAnnounceEachChange() {
+        var posts = 0
+        let token = NotificationCenter.default.addObserver(forName: .userDataChanged, object: nil, queue: nil) { _ in
+            posts += 1
+        }
+        defer { NotificationCenter.default.removeObserver(token) }
+
+        DPAppDelegate.setFavorites([1, 2])
+        XCTAssertGreaterThan(posts, 0, "a change is announced")
+        XCTAssertTrue(DPAppDelegate.containsFavorite(1))
+        DPAppDelegate.moveFavorite(at: 0, to: 1)
+        XCTAssertEqual(DPAppDelegate.favorites(), [2, 1])
+        DPAppDelegate.removeFavorite(2)
+        XCTAssertFalse(DPAppDelegate.containsFavorite(2))
+        DPAppDelegate.addFavorite(3)
+        DPAppDelegate.addFavorite(3)
+        XCTAssertEqual(DPAppDelegate.favorites(), [1, 3], "adding twice keeps one")
+        DPAppDelegate.moveFavorite(at: 5, to: 0)
+        XCTAssertEqual(DPAppDelegate.favorites(), [1, 3], "an out-of-range move changes nothing")
+
+        DPAppDelegate.setTeachable([11, 22])
+        XCTAssertTrue(DPAppDelegate.containsTeachable(11))
+        DPAppDelegate.moveTeachable(at: 0, to: 1)
+        XCTAssertEqual(DPAppDelegate.teachable(), [22, 11])
+        DPAppDelegate.removeTeachable(22)
+        XCTAssertFalse(DPAppDelegate.containsTeachable(22))
+        DPAppDelegate.addTeachable(7)
+        XCTAssertEqual(DPAppDelegate.teachable(), [11, 7])
+    }
 }

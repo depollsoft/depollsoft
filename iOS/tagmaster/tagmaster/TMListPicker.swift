@@ -74,7 +74,7 @@ final class TMListPickerModel {
 
 struct TMListPicker: View {
     /// The rows set their accent explicitly, as the UIKit cells did.
-    private let accent = Color(DPAppDelegate.accentColor() ?? .tintColor)
+    private let accent = TMTheme.accent
     @State var model: TMListPickerModel
     /// Closes the picker; the presenter owns how.
     var onDone: (() -> Void)?
@@ -99,7 +99,10 @@ struct TMListPicker: View {
             // A hardware keyboard would otherwise light the first row as focused.
             .focusEffectDisabled()
             .modifier(TMClearNavigationContainer())
-            .modifier(TMInsetGroupMargins())
+            // UIKit's cards sat 4 pt further in on iPad's popover than on the phone's
+            // sheet, whichever size class the popover reports.
+            .tmInsetGroupMargins(UIDevice.current.userInterfaceIdiom == .pad ? 21.33 : 25.33,
+                                 always: UIDevice.current.userInterfaceIdiom == .pad)
             .focusEffectDisabled()
             .accessibilityIdentifier("picker.table")
             .navigationTitle("Add to list")
@@ -209,23 +212,35 @@ struct TMListPickerPresenter: UIViewRepresentable {
 /// A picker row laid out as UITableViewCell's value1 style laid it out: the icon
 /// centred in its column, the name 48 pt in, the count at the trailing edge
 /// (or beside the checkmark accessory).
-private struct TMPickerRowLayout: View {
-    private let accent = Color(DPAppDelegate.accentColor() ?? .tintColor)
+struct TMPickerRowLayout: View {
+    private let accent = TMTheme.accent
     let symbol: String
     let iconColor: Color
     let name: String
     let count: String?
     let member: Bool
 
+    /// UITableViewCell's legacy image and text: the image at its own size, centred
+    /// 22.4 pt in, and the text 27.6 pt past that centre or 15 pt clear of a wide
+    /// image, whichever is further (measured from a real cell).
+    static let iconCenter: CGFloat = 22.4
+
+    static func textInset(for image: UIImage) -> CGFloat {
+        max(iconCenter + 27.6, iconCenter + image.size.width / 2 + 15)
+    }
+
     var body: some View {
+        let image = UIImage(systemName: symbol) ?? UIImage()
+        let textPadding = TMPickerRowLayout.textInset(for: image) - TMPickerRowLayout.iconCenter * 2
         HStack(spacing: 0) {
-            Image(systemName: symbol)
+            Image(uiImage: image)
+                .renderingMode(.template)
                 .foregroundStyle(iconColor)
-                .frame(width: 40.8)
+                .frame(width: TMPickerRowLayout.iconCenter * 2)
             Text(name)
                 .foregroundStyle(Color(.label))
-                .padding(.leading, 7.2)
-                .alignmentGuide(.listRowSeparatorLeading) { $0[.leading] + 7.2 }
+                .padding(.leading, textPadding)
+                .alignmentGuide(.listRowSeparatorLeading) { $0[.leading] + textPadding }
             Spacer(minLength: 8)
             if let count {
                 Text(count).foregroundStyle(Color(.secondaryLabel))
@@ -246,7 +261,7 @@ private struct TMPickerRowLayout: View {
 
 /// A navigation bar Done button in UIKit's .done style: the prominent accent glass on iOS 26.
 struct TMDoneButton: View {
-    private let accent = Color(DPAppDelegate.accentColor() ?? .tintColor)
+    private let accent = TMTheme.accent
     let action: () -> Void
 
     var body: some View {
@@ -259,20 +274,6 @@ struct TMDoneButton: View {
         }
     }
 }
-
-/// On iPhone UITableView's inset groups sat 4.67 pt further in than SwiftUI's.
-private struct TMInsetGroupMargins: ViewModifier {
-    @Environment(\.horizontalSizeClass) private var sizeClass
-
-    func body(content: Content) -> some View {
-        if sizeClass == .compact {
-            content.contentMargins(.horizontal, 25.33, for: .scrollContent)
-        } else {
-            content
-        }
-    }
-}
-
 
 /// Lets the popover's or sheet's own glass show through the navigation container.
 private struct TMClearNavigationContainer: ViewModifier {

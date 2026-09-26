@@ -37,7 +37,6 @@ final class TMQueryModel: TMTagListing {
     /// Where the next page starts.
     private var nextStart = 0
     /// Refreshes finish their pull-to-refresh spinner by resuming these.
-    @ObservationIgnored private var refreshWaiters: [CheckedContinuation<Void, Never>] = []
     @ObservationIgnored private var observer: NSObjectProtocol?
 
     init(query: TMTagQuery, catalog: TMCatalog = .live, navigator: TMNavigator? = nil,
@@ -101,9 +100,6 @@ final class TMQueryModel: TMTagListing {
         syncSelection()
         // A detail stepping through this list may have gained a neighbour.
         NotificationCenter.default.post(name: .TMTagListDidChange, object: owner ?? self)
-        let waiters = refreshWaiters
-        refreshWaiters = []
-        waiters.forEach { $0.resume() }
     }
 
     /// Starts over from the first page (pull to refresh, Retry).
@@ -117,12 +113,6 @@ final class TMQueryModel: TMTagListing {
         fetchNextPage()
     }
 
-    /// Refreshes and returns once the first page has landed, for pull to refresh.
-    func refreshAndWait() async {
-        refresh()
-        guard isLoading else { return }
-        await withCheckedContinuation { refreshWaiters.append($0) }
-    }
 
     /// The list asks for more once a row in its last eighth comes into view.
     func rowAppeared(_ index: Int) {
@@ -189,7 +179,9 @@ struct TMQueryScreen: View {
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
-            .refreshable { await model.refreshAndWait() }
+            // UIKit ended the pull spinner at once and let the barber pole below the
+            // rows show the reload; waiting here would show both.
+            .refreshable { model.refresh() }
             .onChange(of: model.scrollTarget) { _, target in
                 guard let target else { return }
                 withAnimation(UIAccessibility.isReduceMotionEnabled ? nil : .default) { proxy.scrollTo(target) }
