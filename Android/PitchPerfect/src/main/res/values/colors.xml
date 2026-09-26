@@ -12,7 +12,5 @@
     <color name="plate_menu">#FFFFFF</color>
 
     <!-- Legacy names kept for external references -->
-    <color name="darker">#373737</color>
     <color name="pano_color">#11333333</color>
-    <color name="accent">@color/plate_accent</color>
 </resources>

@@ -37,7 +37,6 @@ class PitchPerfectApplication : RichApplication() {
         }
         TelemetryConsent.applyChoices(choices.analytics, choices.crashes)
         PerformanceDiagnostics.startMainThreadMonitor()
-        val isDebugSigned = false
         Note.setPlayer(WidgetAwareNotePlayer(Note.DEFAULT_PLAYER) { PitchPipeAppWidget.updateWidgets() })
         registerStorageAliases()
         AppCompatDelegate.setDefaultNightMode(themeMode)
