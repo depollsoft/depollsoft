@@ -66,21 +66,45 @@ def check_entitlements(identifier, signed, profile, needs_group):
                 f"{identifier}: provisioning profile does not grant private App Group")
 
 
+def check_same_devices(profiles):
+    """iOS installs an app only if every bundle's profile lists the device.
+
+    Match regenerates each ad hoc profile independently, so after a device is
+    registered the app's profile can gain it while the widget's still lacks it.
+    Such an IPA installs on older devices and fails on the new one with "its
+    integrity could not be verified".
+    """
+    devices = {identifier: set(profile.get("ProvisionedDevices", []))
+               for identifier, profile in profiles.items()}
+    everyone = set().union(*devices.values()) if devices else set()
+    for identifier, listed in sorted(devices.items()):
+        missing = everyone - listed
+        require(not missing, f"{identifier}: provisioning profile lacks {len(missing)} device(s) "
+                             "another bundle's profile lists; regenerate it")
+
+
+def read_profile(path):
+    return plistlib.loads(subprocess.check_output(
+        ["security", "cms", "-D", "-i", str(path)], stderr=subprocess.DEVNULL))
+
+
 def verify_signed(bundles, app):
     results = []
+    embedded = {}
     for bundle in bundles:
         info = read_plist(bundle / "Info.plist")
         subprocess.run(["codesign", "--verify", "--strict", str(bundle)], check=True,
                        capture_output=True)
         signed = plistlib.loads(subprocess.check_output(
             ["codesign", "-d", "--entitlements", ":-", str(bundle)], stderr=subprocess.DEVNULL))
-        profile = plistlib.loads(subprocess.check_output(
-            ["security", "cms", "-D", "-i", str(bundle / "embedded.mobileprovision")],
-            stderr=subprocess.DEVNULL))
+        profile = read_profile(bundle / "embedded.mobileprovision")
         check_entitlements(info["CFBundleIdentifier"], signed, profile, app == "PitchPerfect")
+        embedded[info["CFBundleIdentifier"]] = profile
         results.append({"bundle": info["CFBundleIdentifier"], "build": info["CFBundleVersion"],
                         "groups": signed.get("com.apple.security.application-groups", []),
-                        "profile": profile["Name"]})
+                        "profile": profile["Name"],
+                        "devices": len(profile.get("ProvisionedDevices", []))})
+    check_same_devices(embedded)
     print(json.dumps(results, indent=2))
 
 
@@ -92,6 +116,7 @@ def prepare_archive(bundles, manifest, app):
     signatures shipped to testers. Keep the app last so it seals the extension.
     """
     profiles = read_plist(manifest)
+    check_same_devices({identifier: read_profile(path) for identifier, path in profiles.items()})
     # Frameworks in an unsigned archive need seals before the containing app.
     nested_code = list(bundles[0].rglob("*.framework")) + list(bundles[0].rglob("*.dylib"))
     for path in sorted(nested_code, key=lambda item: len(item.parts), reverse=True):
@@ -99,8 +124,7 @@ def prepare_archive(bundles, manifest, app):
     for bundle in reversed(bundles):
         identifier = read_plist(bundle / "Info.plist")["CFBundleIdentifier"]
         profile_path = Path(profiles[identifier])
-        profile = plistlib.loads(subprocess.check_output(
-            ["security", "cms", "-D", "-i", str(profile_path)], stderr=subprocess.DEVNULL))
+        profile = read_profile(profile_path)
         entitlements = profile["Entitlements"].copy()
         # Match uses explicit App IDs. Expand the profile's keychain wildcard
         # to the app's own access group rather than requesting a wildcard.
@@ -125,7 +149,18 @@ def main():
     source.add_argument("--archive", type=Path)
     parser.add_argument("--app", required=True, choices=BUNDLES)
     parser.add_argument("--prepare-profiles", type=Path)
+    parser.add_argument("--compare-profiles", type=Path,
+                        help="exit 3 when the manifest's profiles list different devices")
     args = parser.parse_args()
+    if args.compare_profiles:
+        manifest = read_plist(args.compare_profiles)
+        try:
+            check_same_devices({identifier: read_profile(path) for identifier, path in manifest.items()})
+        except ValueError as error:
+            print(error)
+            raise SystemExit(3)
+        print("Profiles list the same devices")
+        return
     if args.archive:
         bundles = inspect_bundles(args.archive / "Products" / "Applications", args.app)
         print("Archive contains: " + ", ".join(path.name for path in bundles))
