@@ -50,6 +50,13 @@ extension XCUIElement {
         exists || waitForExistence(timeout: timeout)
     }
 
+    /// Waits until a tab or segment reports itself selected.
+    func waitUntilSelected(timeout: TimeInterval) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        while !isSelected, Date() < deadline { RunLoop.current.run(until: Date().addingTimeInterval(0.1)) }
+        return isSelected
+    }
+
     /// Waits until the element can take a tap (not mid-animation or covered).
     @discardableResult
     func waitUntilHittable(timeout: TimeInterval) -> Bool {
@@ -429,7 +436,7 @@ final class StoreScreenshotTests: XCTestCase {
             let item = app.buttons["page-\(title)"]
             XCTAssertTrue(item.existsOrWait(timeout: 10))
             item.tap()
-            XCTAssertTrue(item.isSelected)
+            XCTAssertTrue(item.waitUntilSelected(timeout: 5), "\(title) is the page showing")
             if title == "Tracks" {
                 let lead = app.buttons["Lead"].firstMatch
                 XCTAssertTrue(lead.existsOrWait(timeout: 15))

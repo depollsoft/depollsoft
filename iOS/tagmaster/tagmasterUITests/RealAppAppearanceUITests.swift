@@ -208,6 +208,8 @@ final class RealAppAppearanceUITests: TagMasterUITestCase {
     }
 
     func testTheDetailShowsThePoleOnEveryPageInBothAppearances() throws {
+        // Both appearances, each with live catalog loads: well over a minute.
+        executionTimeAllowance = 240
         for appearance in [XCUIDevice.Appearance.light, .dark] {
             let style = appearance == .dark ? "dark" : "light"
             launch(appearance)
@@ -244,6 +246,8 @@ final class RealAppAppearanceUITests: TagMasterUITestCase {
     }
 
     func testListScreensShowThePoleInBothAppearances() throws {
+        // Both appearances, each with live catalog loads: well over a minute.
+        executionTimeAllowance = 240
         for appearance in [XCUIDevice.Appearance.light, .dark] {
             let style = appearance == .dark ? "dark" : "light"
             launch(appearance)
