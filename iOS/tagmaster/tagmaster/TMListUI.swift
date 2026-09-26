@@ -75,12 +75,19 @@ extension View {
 
 // MARK: - Label metrics
 
-/// Sizes text the way UILabel does: as many lines of the font's own line
-/// height as the text wraps to, rounded up to the pixel grid, the glyphs centred
-/// in that box. SwiftUI's line boxes are a fraction of a point shorter, which
-/// drifts a stack of labels off UIKit's grid by a pixel every few rows.
+/// Sizes text the way UILabel does: its lines a line height apart plus the font's
+/// leading between them, the whole rounded up to the pixel grid, the glyphs centred
+/// in that box. SwiftUI sets lines a line height apart with no leading, and its line
+/// boxes are a fraction of a point shorter, which drifts a stack of labels off
+/// UIKit's grid by a pixel every few rows and a wrapped label by points.
 struct TMLabelBox: Layout {
     let font: UIFont
+
+    /// UILabel's height for `lines` lines of `font`.
+    static func height(lines: CGFloat, font: UIFont, scale: CGFloat = UIScreen.main.scale) -> CGFloat {
+        let raw = lines * font.lineHeight + max(0, lines - 1) * font.leading
+        return (raw * scale).rounded(.up) / scale
+    }
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         guard let child = subviews.first else { return .zero }
@@ -89,9 +96,8 @@ struct TMLabelBox: Layout {
         // overflow its box, over its neighbours, once placed.
         let size = child.sizeThatFits(ProposedViewSize(width: proposal.width, height: nil))
         let line = child.sizeThatFits(.unspecified).height
-        let lines = line > 0 ? max(1, (size.height / line).rounded()) : 1
-        let scale = UIScreen.main.scale
-        return CGSize(width: size.width, height: (lines * font.lineHeight * scale).rounded(.up) / scale)
+        let lines = line > 0 ? max(1, ((size.height + font.leading) / (line + font.leading)).rounded()) : 1
+        return CGSize(width: size.width, height: TMLabelBox.height(lines: lines, font: font))
     }
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
@@ -114,7 +120,8 @@ private struct TMLabelMetricsModifier: ViewModifier {
     @Environment(\.dynamicTypeSize) private var size
 
     func body(content: Content) -> some View {
-        TMLabelBox(font: size.tmFont(style)) { content }
+        let font = size.tmFont(style)
+        TMLabelBox(font: font) { content.lineSpacing(font.leading) }
     }
 }
 
@@ -153,9 +160,6 @@ struct TMWatermark: View {
 /// nothing over the glass list column.
 struct TMScreenBackground: View {
     var grouped = false
-    /// For content UIKit hosts in opaque containers (a TabView's pages), which could
-    /// only show the glass through views cleared behind it: draw the window slice there too.
-    var opaqueInGlass = false
     @Environment(\.tmBackdrop) private var backdrop
 
     private var color: Color { Color(uiColor: grouped ? .systemGroupedBackground : .systemBackground) }
@@ -167,18 +171,13 @@ struct TMScreenBackground: View {
                 color.ignoresSafeArea()
                 TMWatermark()
             }
-        case .windowSlice(let window):
+        case .windowSlice:
             ZStack {
                 color.ignoresSafeArea()
-                TMWindowWatermark(canvas: window)
+                TMWindowWatermark().ignoresSafeArea()
             }
-        case .glassColumn(let window):
-            if opaqueInGlass {
-                ZStack {
-                    color.ignoresSafeArea()
-                    TMWindowWatermark(canvas: window)
-                }
-            } else if grouped {
+        case .glassColumn:
+            if grouped {
                 // UIKit set a grouped screen's colour on its own view, beneath the
                 // sidebar's glass; painted in SwiftUI it would sit above the glass.
                 TMPageColorHook(color: .systemGroupedBackground)
@@ -191,28 +190,105 @@ extension View {
     /// A page inside a SwiftUI TabView draws its own backdrop in its own content,
     /// so the watermark never depends on UIKit views behind the page being cleared.
     func tmTabPageBackground() -> some View {
-        background { TMScreenBackground(opaqueInGlass: true) }
+        background { TMScreenBackground() }
     }
 }
 
 /// The shared watermark's slice behind a view: the pole drawn where it lies on the
 /// whole window (60 pt below its top, 44 above its bottom), clipped to this view.
-struct TMWindowWatermark: View {
-    let canvas: CGRect
+///
+/// It is placed from the view's live position in its window, not from SwiftUI's
+/// global frame: UIKit moves a pushed or revealed screen (a push, an interactive
+/// pop, a split resizing) without SwiftUI laying it out again, and a slice placed
+/// from a frame measured before the move would land a column's width away.
+struct TMWindowWatermark: UIViewRepresentable {
+    final class Slice: UIView {
+        private let pole = CAShapeLayer()
+        private var placed: (origin: CGPoint, window: CGSize)?
+        private var link: CADisplayLink?
+        private var lastMove = Date.distantPast
 
-    var body: some View {
-        GeometryReader { proxy in
-            let frame = proxy.frame(in: .global)
-            TMLogoShape()
-                .fill(TMWatermark.color)
-                .frame(width: canvas.width, height: max(0, canvas.height - 104))
-                .offset(x: canvas.minX - frame.minX, y: canvas.minY + 60 - frame.minY)
+        override init(frame: CGRect) {
+            super.init(frame: frame)
+            isUserInteractionEnabled = false
+            isAccessibilityElement = false
+            clipsToBounds = true
+            pole.fillColor = UIColor(white: 128 / 255, alpha: 76 / 255).cgColor
+            layer.addSublayer(pole)
         }
-        .clipped()
-        .ignoresSafeArea()
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
+
+        @available(*, unavailable)
+        required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            place()
+            follow()
+        }
+
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            place()
+            follow()
+        }
+
+        /// Draws the pole at the window's watermark position, in this view's coordinates.
+        func place() {
+            guard let window else { return }
+            if pole.frame != bounds {
+                CATransaction.begin()
+                CATransaction.setDisableActions(true)
+                pole.frame = bounds
+                CATransaction.commit()
+            }
+            let origin = convert(CGPoint.zero, to: window)
+            let size = window.bounds.size
+            if let placed, placed.origin == origin, placed.window == size { return }
+            if placed != nil { lastMove = Date() }
+            placed = (origin, size)
+            let canvas = CGRect(x: -origin.x, y: 60 - origin.y, width: size.width, height: max(0, size.height - 104))
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            pole.path = TMLogoShape().path(in: canvas).cgPath
+            CATransaction.commit()
+        }
+
+        /// Watches the position for a moment after anything that can move the view:
+        /// UIKit animates a pushed or revealed screen by moving an ancestor, which
+        /// tells this view nothing. It stops once the position has held still.
+        private func follow() {
+            guard window != nil else {
+                link?.invalidate()
+                link = nil
+                return
+            }
+            lastMove = Date()
+            guard link == nil else { return }
+            let link = CADisplayLink(target: TMWeakTarget(self), selector: #selector(TMWeakTarget.tick))
+            link.add(to: .main, forMode: .common)
+            self.link = link
+        }
+
+        fileprivate func tick() {
+            place()
+            if window == nil || Date().timeIntervalSince(lastMove) > 1 {
+                link?.invalidate()
+                link = nil
+            }
+        }
+
+        deinit { link?.invalidate() }
     }
+
+    func makeUIView(context: Context) -> Slice { Slice() }
+    func updateUIView(_ slice: Slice, context: Context) { slice.place() }
+}
+
+/// A display link's target that does not keep the slice alive.
+private final class TMWeakTarget: NSObject {
+    weak var slice: TMWindowWatermark.Slice?
+    init(_ slice: TMWindowWatermark.Slice) { self.slice = slice }
+    @objc func tick() { slice?.tick() }
 }
 
 /// Colours the view of the controller a screen is hosted in, the layer UIKit
@@ -452,6 +528,12 @@ struct TMTagRowContent: Equatable {
 /// DPTagCell drew them.
 struct TMTagRow: View {
     @Environment(\.tmTintDimmed) private var dimmed
+    @Environment(\.editMode) private var editMode
+    @Environment(\.dynamicTypeSize) private var textSize
+    /// How many lines the facts took before editing began. UIKit kept a row's height
+    /// when its edit controls came in, so a facts line that no longer fitted was
+    /// truncated there rather than wrapping.
+    @State private var restingFactLines: Int?
     let content: TMTagRowContent
     var loading = false
     var showsChevron = true
@@ -465,6 +547,12 @@ struct TMTagRow: View {
                     Text(aka).tmFont(.footnote).tmLabelMetrics(.footnote)
                 }
                 Text(content.details).tmFont(.footnote).tmLabelMetrics(.footnote)
+                    .lineLimit(editing ? restingFactLines : nil)
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                        guard !editing else { return }
+                        let font = textSize.tmFont(.footnote)
+                        restingFactLines = max(1, Int(((height + font.leading) / (font.lineHeight + font.leading)).rounded()))
+                    }
                 // UIKit settled the first mark's row a point taller than the second; both
                 // grow with their labels at larger text, as the UIKit stacks did.
                 mark(content.hasSheetMusic, "Sheet music").frame(minHeight: 21)
@@ -488,6 +576,8 @@ struct TMTagRow: View {
         }
         .contentShape(Rectangle())
     }
+
+    private var editing: Bool { editMode?.wrappedValue.isEditing == true }
 
     private func mark(_ on: Bool, _ label: String) -> some View {
         HStack(spacing: 8) {

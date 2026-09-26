@@ -392,7 +392,7 @@ final class TagDetailLayoutTests: TMBehaviorTestCase {
         _ = padSplit(tagId: 1809, source: nil)
         // The watermark is the barber-pole shape; each drawn copy is one opaque grey region.
         let shared = TMScreenBackground()
-        let host = UIHostingController(rootView: shared.environment(\.tmBackdrop, .glassColumn(CGRect(x: 0, y: 0, width: 1000, height: 800))))
+        let host = UIHostingController(rootView: shared.environment(\.tmBackdrop, .glassColumn))
         host.view.backgroundColor = .clear
         host.view.frame = CGRect(x: 0, y: 0, width: 400, height: 800)
         host.view.layoutIfNeeded()

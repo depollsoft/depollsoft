@@ -135,9 +135,13 @@ final class TMSettingsModel {
 
     func privacyChoices() { navigator?.presentPrivacyChoices() }
 
+    /// Where Copy Logs puts its text: the system pasteboard. Tests replace it; the
+    /// simulator's pasteboard service can stall a test run indefinitely.
+    var copyToPasteboard: (String) -> Void = { UIPasteboard.general.string = $0 }
+
     func copyLogs() {
         DPAppLog.log("Settings: copied app logs")
-        UIPasteboard.general.string = "\(build.summary)\n\n\(DPAppLog.contents())"
+        copyToPasteboard("\(build.summary)\n\n\(DPAppLog.contents())")
     }
 
     static func tagCount(_ count: Int) -> String { "\(count) \(count == 1 ? "tag" : "tags")" }

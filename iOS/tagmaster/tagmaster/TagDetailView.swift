@@ -174,11 +174,12 @@ struct TMBarButton: View {
             .offset(x: (insets.right - insets.left) / 2, y: (insets.bottom - insets.top) / 2)
     }
 
-    /// The charcoal bar's item colour: white, and UIKit's dimmed grey while an
-    /// alert or sheet is up. Set explicitly, so a light-mode column (the iPad
-    /// list) never draws its items in black on the charcoal bar.
-    static func ink(dimmed: Bool) -> Color {
-        dimmed ? Color(white: 204.0 / 255.0) : .white
+    /// The charcoal bar's item colour: white; UIKit's dimmed grey while an alert or
+    /// sheet is up; UIKit's disabled grey for an item that is off. Set explicitly, so
+    /// a light-mode column (the iPad list) cannot turn the items black.
+    static func ink(dimmed: Bool, enabled: Bool = true) -> Color {
+        if !enabled { return Color(white: 1, opacity: 0.08) }
+        return dimmed ? Color(white: 204.0 / 255.0) : Color(white: 245.0 / 255.0)
     }
 
     var body: some View {
@@ -192,19 +193,36 @@ struct TMBarButton: View {
 /// goes through it, so none can fall back to the column's light-mode black.
 struct TMBarLabel<Content: View>: View {
     @Environment(\.tmTintDimmed) private var dimmed
+    @Environment(\.isEnabled) private var enabled
     let content: Content
 
     init(@ViewBuilder content: () -> Content) { self.content = content() }
 
     var body: some View {
-        content.foregroundStyle(TMBarButton.ink(dimmed: dimmed))
+        content.foregroundStyle(TMBarButton.ink(dimmed: dimmed, enabled: enabled))
     }
 }
 
-extension TMBarLabel where Content == AnyView {
+extension TMBarLabel where Content == TMBarSymbol {
     /// A bar symbol, as `TMBarButton.symbol` draws it.
     init(_ systemName: String, scale: UIImage.SymbolScale = .medium) {
-        content = AnyView(TMBarButton.symbol(systemName, scale: scale))
+        content = TMBarSymbol(systemName: systemName, scale: scale)
+    }
+}
+
+/// A bar image laid out exactly as a UIBarButtonItem's. UIKit draws a disabled
+/// image a little brighter than a disabled title.
+struct TMBarSymbol: View {
+    @Environment(\.isEnabled) private var enabled
+    let systemName: String
+    var scale: UIImage.SymbolScale = .medium
+
+    var body: some View {
+        if enabled {
+            TMBarButton.symbol(systemName, scale: scale)
+        } else {
+            TMBarButton.symbol(systemName, scale: scale).foregroundStyle(Color(white: 1, opacity: 0.23))
+        }
     }
 }
 
@@ -337,12 +355,9 @@ struct TMPageTabBarBridge: UIViewControllerRepresentable {
                 || tabs.traitOverrides.verticalSizeClass != .regular {
                 tabs.traitOverrides.verticalSizeClass = .regular
             }
-            // The pages sit over the detail's own watermark, as the UIKit pages did.
-            if tabs.view.backgroundColor != .clear { tabs.view.backgroundColor = .clear }
             let columnClass = tabs.parent?.traitCollection.horizontalSizeClass ?? .unspecified
             let heightClass = tabs.parent?.traitCollection.verticalSizeClass ?? .unspecified
             for page in tabs.viewControllers ?? [] {
-                if page.viewIfLoaded?.backgroundColor != .clear { page.viewIfLoaded?.backgroundColor = .clear }
                 let overrides = page.traitOverrides
                 if !overrides.contains(UITraitHorizontalSizeClass.self) || overrides.horizontalSizeClass != columnClass {
                     page.traitOverrides.horizontalSizeClass = columnClass

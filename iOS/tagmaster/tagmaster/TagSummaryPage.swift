@@ -24,6 +24,9 @@ struct TMPageScroll<Content: View>: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 4)
         }
+        // UIKit's scroller ended at the safe area's foot (its keyboard guide), above the
+        // page bar, and clipped there; the page never scrolled beneath the bar.
+        .clipped()
         .background(TMReadableProbe(width: $readable).accessibilityHidden(true))
     }
 }
@@ -164,8 +167,7 @@ struct TagSummaryPage: View {
             facts(tag)
             if let key = tag.writtenKey, !key.isEmpty {
                 TMCaption(text: "Key").layoutValue(key: TMGapBefore.self, value: 16)
-                TMKeyNoteButton(model: model, title: key)
-                    .frame(maxHeight: .infinity)
+                TMKeyNoteButton(model: model, title: key, fillsHeight: true)
                     .accessibilityIdentifier("summary.key")
                     .layoutValue(key: TMGapBefore.self, value: 4)
                     .layoutValue(key: TMMatchesHeight.self, value: true)
@@ -326,6 +328,9 @@ struct TMKeyNoteButton: View {
     let model: TagSummaryModel
     let title: String
     var singleLine = false
+    /// Takes any taller height it is offered (Sheet Music's), outline and all, as
+    /// the UIKit key did under its equal-height constraint.
+    var fillsHeight = false
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
@@ -341,7 +346,7 @@ struct TMKeyNoteButton: View {
         .foregroundStyle(foreground)
         .padding(.vertical, 4)
         .padding(.horizontal, 8)
-        .frame(maxWidth: singleLine ? nil : .infinity, minHeight: 44)
+        .frame(maxWidth: singleLine ? nil : .infinity, minHeight: 44, maxHeight: fillsHeight ? .infinity : nil)
         .frame(minWidth: 44)
         .background(RoundedRectangle(cornerRadius: 8).fill(playing ? fill : .clear))
         .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(accent, lineWidth: 1.5))
@@ -456,25 +461,34 @@ struct TMMatchesHeight: LayoutValueKey {
 /// in the same pass that places them, so the shared height shrinks as well as grows
 /// when the text size or width changes.
 struct TMMatchedHeightStack: Layout {
-    struct Cache { var heights: [CGFloat] = [] }
+    /// The heights last measured, and the width they were measured at.
+    struct Cache {
+        var width: CGFloat?
+        var heights: [CGFloat] = []
+    }
 
     func makeCache(subviews: Subviews) -> Cache { Cache() }
 
-    private func heights(_ width: CGFloat?, _ subviews: Subviews) -> [CGFloat] {
+    func updateCache(_ cache: inout Cache, subviews: Subviews) { cache = Cache() }
+
+    private func heights(_ width: CGFloat, _ subviews: Subviews, _ cache: inout Cache) -> [CGFloat] {
+        if cache.width == width, cache.heights.count == subviews.count { return cache.heights }
         let natural = subviews.map { $0.sizeThatFits(ProposedViewSize(width: width, height: nil)).height }
         let shared = zip(subviews, natural).filter { $0.0[TMMatchesHeight.self] }.map(\.1).max() ?? 0
-        return zip(subviews, natural).map { $0.0[TMMatchesHeight.self] ? shared : $0.1 }
+        cache.width = width
+        cache.heights = zip(subviews, natural).map { $0.0[TMMatchesHeight.self] ? shared : $0.1 }
+        return cache.heights
     }
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout Cache) -> CGSize {
         let width = proposal.width ?? subviews.map { $0.sizeThatFits(.unspecified).width }.max() ?? 0
-        cache.heights = heights(width, subviews)
+        let heights = heights(width, subviews, &cache)
         let gaps = subviews.dropFirst().map { $0[TMGapBefore.self] }.reduce(0, +)
-        return CGSize(width: width, height: cache.heights.reduce(0, +) + gaps)
+        return CGSize(width: width, height: heights.reduce(0, +) + gaps)
     }
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout Cache) {
-        let heights = heights(bounds.width, subviews)
+        let heights = heights(bounds.width, subviews, &cache)
         var y = bounds.minY
         for (index, subview) in subviews.enumerated() {
             if index > 0 { y += subview[TMGapBefore.self] }

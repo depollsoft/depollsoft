@@ -19,6 +19,7 @@
 		9C05E9E2C8371BEAD5A1FE46 /* TMRecovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92D726D1D38D4584B30175D1 /* TMRecovery.swift */; };
 		E64EBF2053F028C4A56C30C3 /* TMRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F12B3A878D3B670DAE9AB06 /* TMRouter.swift */; };
 		6FC5C8177A9D482C725660E0 /* TMShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA012B6F987B119001808DBE /* TMShell.swift */; };
+		BE42F0F9BE0897B5045C0E24 /* TMTableMargins.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A6EB7728E31536308B09228 /* TMTableMargins.swift */; };
 		B4A1B0000000000000000001 /* TMTagLists.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1B0000000000000000000 /* TMTagLists.swift */; };
 		B4A1B0000000000000000005 /* TMListNamePrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1B0000000000000000004 /* TMListNamePrompt.swift */; };
 		3BCFBE99983A934374E96904 /* TMObjC.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CDE689E9C210051F00D6DE0 /* TMObjC.m */; };
@@ -189,6 +190,7 @@
 		92D726D1D38D4584B30175D1 /* TMRecovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMRecovery.swift; sourceTree = "<group>"; };
 		4F12B3A878D3B670DAE9AB06 /* TMRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMRouter.swift; sourceTree = "<group>"; };
 		EA012B6F987B119001808DBE /* TMShell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMShell.swift; sourceTree = "<group>"; };
+		9A6EB7728E31536308B09228 /* TMTableMargins.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMTableMargins.swift; sourceTree = "<group>"; };
 		B4A1B0000000000000000000 /* TMTagLists.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMTagLists.swift; sourceTree = "<group>"; };
 		B4A1B0000000000000000004 /* TMListNamePrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMListNamePrompt.swift; sourceTree = "<group>"; };
 		EFE46C0AE763FAE6B2A7F79E /* TMObjC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMObjC.h; sourceTree = "<group>"; };
@@ -504,6 +506,7 @@
 				EFE46C0AE763FAE6B2A7F79E /* TMObjC.h */,
 				B4A1B0000000000000000004 /* TMListNamePrompt.swift */,
 				B4A1B0000000000000000000 /* TMTagLists.swift */,
+				9A6EB7728E31536308B09228 /* TMTableMargins.swift */,
 				EA012B6F987B119001808DBE /* TMShell.swift */,
 				4F12B3A878D3B670DAE9AB06 /* TMRouter.swift */,
 				92D726D1D38D4584B30175D1 /* TMRecovery.swift */,
@@ -893,6 +896,7 @@
 				523346955E2C4736E2847840 /* TMArtworkViews.swift in Sources */,
 				B4A1B0000000000000000005 /* TMListNamePrompt.swift in Sources */,
 				B4A1B0000000000000000001 /* TMTagLists.swift in Sources */,
+				BE42F0F9BE0897B5045C0E24 /* TMTableMargins.swift in Sources */,
 				6FC5C8177A9D482C725660E0 /* TMShell.swift in Sources */,
 				E64EBF2053F028C4A56C30C3 /* TMRouter.swift in Sources */,
 				9C05E9E2C8371BEAD5A1FE46 /* TMRecovery.swift in Sources */,
