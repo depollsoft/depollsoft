@@ -14,14 +14,48 @@ import UIKit
 
 final class RealAppAppearanceUITests: TagMasterUITestCase {
     private var app: XCUIApplication!
+    private var pad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
 
     override func setUpWithError() throws {
         continueAfterFailure = false
         app = XCUIApplication()
         app.launchArguments = ["--uitesting"]
         app.launchArguments += ["-telemetry.chosen", "YES", "-telemetry.analytics", "NO", "-telemetry.crashes", "NO"]
+    }
+
+    override func tearDown() {
+        XCUIDevice.shared.orientation = .portrait
+        XCUIDevice.shared.appearance = .light
+        super.tearDown()
+    }
+
+    private func launch(_ appearance: XCUIDevice.Appearance) {
+        XCUIDevice.shared.appearance = appearance
+        app.launchArguments.removeAll { $0 == "--appearance" || $0 == "dark" || $0 == "light" }
+        app.launchArguments += ["--appearance", appearance == .dark ? "dark" : "light"]
         app.launch()
         XCTAssertTrue(app.buttons["Browse"].existsOrWait(timeout: 15))
+        // The page must really be in the asked-for appearance, or a check for the
+        // pole's grey on that page colour means nothing. The page's foot is plain page.
+        let deadline = Date().addingTimeInterval(10)
+        var level = pageLevel()
+        while (appearance == .dark ? level > 40 : level < 200), Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.3))
+            level = pageLevel()
+        }
+        XCTAssertEqual(appearance == .dark ? level < 40 : level > 200, true,
+                       "The app did not take the \(appearance == .dark ? "dark" : "light") appearance (page \(level))")
+    }
+
+    /// The brightness of the page at the screen's bottom-right corner.
+    private func pageLevel() -> Int {
+        let image = XCUIScreen.main.screenshot().image
+        guard let cg = image.cgImage else { return -1 }
+        var pixel = [UInt8](repeating: 0, count: 4)
+        let context = CGContext(data: &pixel, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 4,
+                                space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        context?.draw(cg, in: CGRect(x: -CGFloat(cg.width - 8), y: -8, width: CGFloat(cg.width), height: CGFloat(cg.height)))
+        return Int(pixel[0])
     }
 
     /// Opens a live catalog tag through the in-app Open Tag prompt.
@@ -43,103 +77,125 @@ final class RealAppAppearanceUITests: TagMasterUITestCase {
         XCTAssertTrue(share.existsOrWait(timeout: 60), "The tag never loaded")
     }
 
-    private func attach(_ image: UIImage, _ name: String) {
-        let attachment = XCTAttachment(image: image)
-        attachment.name = name
-        attachment.lifetime = .keepAlways
-        add(attachment)
+    /// What the pole looks like in a screenshot region: its share of the pixels and
+    /// the box its pixels span (unit coordinates of the region).
+    struct PoleReading: CustomStringConvertible {
+        var share: Double
+        var span: CGSize
+        /// The pole is there: enough of its grey, spread over a diagonal band rather
+        /// than a stray patch, against the page colour around it.
+        var isPole: Bool { share > 0.03 && share < 0.7 && span.width > 0.25 && span.height > 0.4 }
+        var description: String { String(format: "share %.3f, span %.2f×%.2f", share, span.width, span.height) }
     }
 
-    /// The share of pixels in `region` (unit coordinates of the screenshot) that
-    /// carry the watermark's grey: 76/255 of mid grey over the page colour.
-    private func watermarkShare(_ image: UIImage, region: CGRect) -> Double {
-        guard let cg = image.cgImage else { return 0 }
+    /// Reads the region for the watermark grey: 76/255 of mid grey over the plain
+    /// page colour, white (≈217) in light appearance and black (≈38) in dark.
+    private func readPole(_ image: UIImage, region: CGRect, appearance: XCUIDevice.Appearance) -> PoleReading {
+        guard let cg = image.cgImage else { return PoleReading(share: 0, span: .zero) }
         let width = cg.width, height = cg.height
         var pixels = [UInt8](repeating: 0, count: width * height * 4)
         let context = CGContext(data: &pixels, width: width, height: height, bitsPerComponent: 8,
                                 bytesPerRow: width * 4, space: CGColorSpaceCreateDeviceRGB(),
                                 bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
         context.draw(cg, in: CGRect(x: 0, y: 0, width: width, height: height))
-        let dark = app.windows.firstMatch.exists && UITraitCollection.current.userInterfaceStyle == .dark
-        // White page: 255·(1−α) + 128·α ≈ 217; black page ≈ 38.
-        let target = dark ? 38.0 : 217.0
+        let target = appearance == .dark ? 38.0 : 217.0
         let x0 = Int(region.minX * Double(width)), x1 = Int(region.maxX * Double(width))
         let y0 = Int(region.minY * Double(height)), y1 = Int(region.maxY * Double(height))
         var hits = 0, total = 0
+        var minX = Int.max, maxX = Int.min, minY = Int.max, maxY = Int.min
         for y in stride(from: y0, to: y1, by: 3) {
             for x in stride(from: x0, to: x1, by: 3) {
                 let i = (y * width + x) * 4
                 let r = Double(pixels[i]), g = Double(pixels[i + 1]), b = Double(pixels[i + 2])
                 total += 1
-                if abs(r - target) < 10, abs(g - target) < 10, abs(b - target) < 10 { hits += 1 }
+                guard abs(r - target) < 10, abs(g - target) < 10, abs(b - target) < 10 else { continue }
+                hits += 1
+                minX = min(minX, x); maxX = max(maxX, x); minY = min(minY, y); maxY = max(maxY, y)
             }
         }
-        return total == 0 ? 0 : Double(hits) / Double(total)
+        guard hits > 0 else { return PoleReading(share: 0, span: .zero) }
+        return PoleReading(share: Double(hits) / Double(total),
+                           span: CGSize(width: Double(maxX - minX) / Double(max(1, x1 - x0)),
+                                        height: Double(maxY - minY) / Double(max(1, y1 - y0))))
     }
 
-    func testEveryDetailPageShowsTheWatermarkInTheRealApp() throws {
-        openTag("1809")
-        for title in ["Summary", "Details", "Tracks", "Videos"] {
-            let item = app.buttons["page-\(title)"]
-            XCTAssertTrue(item.existsOrWait(timeout: 10))
-            item.tap()
-            Thread.sleep(forTimeInterval: 1.5)
-            let shot = XCUIScreen.main.screenshot().image
-            attach(shot, "detail-\(title)")
-            // The detail column's lower half, where the pole's lower stripes and base
-            // show below short content. On iPad the detail is the right-hand column.
-            let pad = UIDevice.current.userInterfaceIdiom == .pad
-            let region = pad ? CGRect(x: 0.55, y: 0.6, width: 0.4, height: 0.25)
-                             : CGRect(x: 0.05, y: 0.62, width: 0.9, height: 0.22)
-            let share = watermarkShare(shot, region: region)
-            XCTAssertGreaterThan(share, 0.03, "\(title): the barber pole is missing behind the page (\(share))")
+    /// Waits (at most `timeout`) for the pole to show in `region`, then attaches the
+    /// screenshot and fails with the last reading if it never did.
+    private func assertPole(_ name: String, region: CGRect, appearance: XCUIDevice.Appearance,
+                            timeout: TimeInterval = 8, file: StaticString = #filePath, line: UInt = #line) {
+        let deadline = Date().addingTimeInterval(timeout)
+        var shot = XCUIScreen.main.screenshot().image
+        var reading = readPole(shot, region: region, appearance: appearance)
+        while !reading.isPole, Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.3))
+            shot = XCUIScreen.main.screenshot().image
+            reading = readPole(shot, region: region, appearance: appearance)
         }
+        let attachment = XCTAttachment(image: shot)
+        attachment.name = "\(name) (\(reading))"
+        attachment.lifetime = reading.isPole ? .deleteOnSuccess : .keepAlways
+        add(attachment)
+        XCTAssertTrue(reading.isPole, "\(name): no barber pole behind the screen (\(reading))", file: file, line: line)
     }
 
-    /// Opens the tag the way most people do: a tap on a saved row, an animated push.
-    func testDetailOpenedFromAListInEveryAppearance() throws {
-        app.terminate()
-        app.launchArguments += ["-depollsoft.pitchperfect.lists",
-                                "<dict><key>favorite</key><array><integer>1809</integer></array></dict>"]
-        for style in [XCUIDevice.Appearance.light, .dark] {
-            XCUIDevice.shared.appearance = style
-            app.launch()
-            let row = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Tag ID 1809' OR label BEGINSWITH 'Tag 1809'")).firstMatch
-            for _ in 0..<5 where !row.existsOrWait(timeout: 2) || !row.isHittable { app.collectionViews.firstMatch.swipeUp() }
-            row.tap()
-            XCTAssertTrue(app.navigationBars.buttons["Share"].existsOrWait(timeout: 60))
+    /// The lower part of the screen on a phone; on iPad the detail column's, where
+    /// the window's one pole lies beside the list whatever the list column shows.
+    private var detailRegion: CGRect {
+        pad ? CGRect(x: 0.5, y: 0.55, width: 0.45, height: 0.35) : CGRect(x: 0.05, y: 0.55, width: 0.9, height: 0.3)
+    }
+
+    private var landscapeRegion: CGRect {
+        pad ? CGRect(x: 0.45, y: 0.45, width: 0.5, height: 0.45) : CGRect(x: 0.1, y: 0.45, width: 0.8, height: 0.45)
+    }
+
+    func testTheDetailShowsThePoleOnEveryPageInBothAppearances() throws {
+        for appearance in [XCUIDevice.Appearance.light, .dark] {
+            let style = appearance == .dark ? "dark" : "light"
+            launch(appearance)
+            if pad { assertPole("placeholder-\(style)", region: detailRegion, appearance: appearance) }
+            openTag("1809")
             for title in ["Summary", "Details", "Tracks", "Videos"] {
-                app.buttons["page-\(title)"].tap()
-                Thread.sleep(forTimeInterval: 1.5)
-                attach(XCUIScreen.main.screenshot().image, "pushed-\(style == .dark ? "dark" : "light")-\(title)")
+                let item = app.buttons["page-\(title)"]
+                XCTAssertTrue(item.existsOrWait(timeout: 10))
+                item.tap()
+                assertPole("detail-\(style)-\(title)", region: detailRegion, appearance: appearance)
             }
             XCUIDevice.shared.orientation = .landscapeLeft
-            Thread.sleep(forTimeInterval: 1.5)
-            attach(XCUIScreen.main.screenshot().image, "pushed-\(style == .dark ? "dark" : "light")-landscape")
+            app.buttons["page-Details"].tap()
+            assertPole("detail-\(style)-landscape", region: landscapeRegion, appearance: appearance)
             XCUIDevice.shared.orientation = .portrait
             app.terminate()
         }
-        XCUIDevice.shared.appearance = .light
     }
 
-    func testListScreensShowTheWatermarkInTheRealApp() throws {
-        attach(XCUIScreen.main.screenshot().image, "home")
-        app.buttons["Browse"].firstMatch.tap()
-        XCTAssertTrue(app.buttons["page-Latest"].existsOrWait(timeout: 10))
-        Thread.sleep(forTimeInterval: 1.5)
-        attach(XCUIScreen.main.screenshot().image, "browse")
-        app.navigationBars.buttons["Home"].tap()
-        let teachable = app.buttons["home.lists.teachable"]
-        XCTAssertTrue(teachable.existsOrWait(timeout: 5))
-        teachable.tap()
-        Thread.sleep(forTimeInterval: 1.5)
-        let shot = XCUIScreen.main.screenshot().image
-        attach(shot, "teachable")
-        let pad = UIDevice.current.userInterfaceIdiom == .pad
-        let region = pad ? CGRect(x: 0.02, y: 0.6, width: 0.3, height: 0.25)
-                         : CGRect(x: 0.05, y: 0.62, width: 0.9, height: 0.22)
-        XCTAssertGreaterThan(watermarkShare(shot, region: region), 0.03,
-                             "Teachable Tags: the barber pole is missing")
+    func testListScreensShowThePoleInBothAppearances() throws {
+        for appearance in [XCUIDevice.Appearance.light, .dark] {
+            let style = appearance == .dark ? "dark" : "light"
+            launch(appearance)
+            assertPole("home-\(style)", region: detailRegion, appearance: appearance)
+            app.buttons["Browse"].firstMatch.tap()
+            for title in ["Latest", "Rating", "Downloads", "Classic"] {
+                let item = app.buttons["page-\(title)"]
+                XCTAssertTrue(item.existsOrWait(timeout: 10))
+                item.tap()
+                assertPole("browse-\(style)-\(title)", region: detailRegion, appearance: appearance)
+            }
+            app.navigationBars.buttons["Home"].tap()
+            let teachable = app.buttons["home.lists.teachable"]
+            XCTAssertTrue(teachable.existsOrWait(timeout: 5))
+            teachable.tap()
+            assertPole("teachable-\(style)", region: detailRegion, appearance: appearance)
+            app.navigationBars.buttons["Home"].tap()
+            // Results pushed from Search.
+            app.navigationBars.buttons["Search"].tap()
+            let field = app.searchFields.firstMatch
+            XCTAssertTrue(field.existsOrWait(timeout: 5))
+            field.tap()
+            field.typeText("Lost\n")
+            XCTAssertTrue(app.collectionViews.firstMatch.tagRows.firstMatch.existsOrWait(timeout: 60))
+            assertPole("results-\(style)", region: detailRegion, appearance: appearance)
+            app.terminate()
+        }
     }
 }
 
@@ -195,35 +251,50 @@ final class RealAppFlowUITests: TagMasterUITestCase {
         }
     }
 
-    func testFavoritingATagPutsItOnHome() {
+    /// Sets whether the open tag is a favourite, through whichever control the bar shows.
+    private func setFavorite(_ on: Bool) {
+        let direct = app.navigationBars.buttons[on ? "Add Favorite" : "Remove Favorite"]
+        if direct.exists { direct.tap(); return }
+        let options = app.navigationBars.buttons["Favorite and Teachable options"]
+        guard options.existsOrWait(timeout: 3) else { return }
+        options.tap()
+        let choice = app.buttons[on ? "Add Favorite" : "Remove Favorite"]
+        if choice.existsOrWait(timeout: 3) { choice.tap() } else { app.buttons["Cancel"].tap() }
+    }
+
+    private func isFavorite() -> Bool {
+        let options = app.navigationBars.buttons["Favorite and Teachable options"]
+        if app.navigationBars.buttons["Remove Favorite"].exists { return true }
+        if app.navigationBars.buttons["Add Favorite"].exists { return false }
+        guard options.existsOrWait(timeout: 3) else { return false }
+        options.tap()
+        let on = app.buttons["Remove Favorite"].existsOrWait(timeout: 3)
+        app.buttons["Cancel"].tap()
+        return on
+    }
+
+    func testFavoritingATagPutsItOnHomeAndRemovingItTakesItOff() {
         openTag("1809")
-        // Saved lists persist between runs; the tag may already be a favourite.
-        var added = false
-        if app.navigationBars.buttons["Add Favorite"].exists {
-            app.navigationBars.buttons["Add Favorite"].tap()
-            added = true
-        } else if app.navigationBars.buttons["Favorite and Teachable options"].exists {
-            app.navigationBars.buttons["Favorite and Teachable options"].tap()
-            let add = app.buttons["Add Favorite"]
-            if add.existsOrWait(timeout: 3) {
-                add.tap()
-                added = true
-            } else {
-                XCTAssertTrue(app.buttons["Remove Favorite"].exists, "The sheet offers one or the other")
-                app.buttons["Cancel"].tap()
-            }
-        }
+        // Saved lists persist between runs: start from "not a favourite", and put
+        // back whatever was there before.
+        let wasFavorite = isFavorite()
+        if wasFavorite { setFavorite(false) }
+        XCTAssertFalse(isFavorite())
+        setFavorite(true)
+        XCTAssertTrue(isFavorite(), "The tag is a favourite")
         backToHome()
         let favorite = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Tag ID 1809'")).firstMatch
         for _ in 0..<4 where !favorite.existsOrWait(timeout: 2) { app.collectionViews.firstMatch.swipeUp() }
         XCTAssertTrue(favorite.exists, "The favourite is listed on Home")
-        // Leave Home as it was found: later journeys (the store captures) read it.
-        guard added else { return }
         favorite.swipeLeft()
         let delete = app.buttons["Delete"].firstMatch
         XCTAssertTrue(delete.existsOrWait(timeout: 5))
         delete.tap()
         XCTAssertTrue(favorite.waitForNonExistence(timeout: 5), "Swiping removes the favourite")
+        if wasFavorite {
+            openTag("1809")
+            setFavorite(true)
+        }
     }
 
     func testANewListTakesATagFromTheDetail() {

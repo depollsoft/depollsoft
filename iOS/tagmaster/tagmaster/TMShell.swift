@@ -31,6 +31,7 @@ struct TagMasterApp: App {
     var body: some Scene {
         WindowGroup {
             TMRootView(router: router)
+                .preferredColorScheme(TagMasterApp.testAppearance)
                 .onOpenURL { url in
                     if !DPAppDelegate.handleAuthURL(url) { router.open(url) }
                 }
@@ -152,6 +153,20 @@ enum TMBackdrop: Equatable {
 
     var isGlassColumn: Bool {
         if case .glassColumn = self { true } else { false }
+    }
+}
+
+extension TagMasterApp {
+    /// UI tests ask for an appearance with `--appearance dark|light`: the
+    /// simulator does not always take XCUIDevice's. Debug builds only.
+    static var testAppearance: ColorScheme? {
+#if DEBUG
+        let arguments = ProcessInfo.processInfo.arguments
+        if let index = arguments.firstIndex(of: "--appearance"), index + 1 < arguments.count {
+            return arguments[index + 1] == "dark" ? .dark : .light
+        }
+#endif
+        return nil
     }
 }
 
