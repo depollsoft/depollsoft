@@ -140,6 +140,8 @@ public class Preferences {
     if (testMode) {
       if (value != null && !testValues.containsKey(key)) {
         testValues.put(key, value);
+        // As on a device, where initialize stores through set and the preference listener fires.
+        testSignal(key).changed();
       }
       return;
     }
