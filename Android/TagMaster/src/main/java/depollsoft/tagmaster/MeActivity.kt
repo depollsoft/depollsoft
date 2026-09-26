@@ -1,6 +1,5 @@
 package depollsoft.tagmaster
 
-import android.content.Intent
 import android.os.Bundle
 import depollsoft.lib.privacy.PrivacyChoices
 import depollsoft.lib.privacy.TelemetryConsent
@@ -14,16 +13,8 @@ import depollsoft.tagmaster.ui.setTagMasterContent
  * Home: browsing, a random tag and opening a tag by id; the Teachable Tags list and the user's own
  * lists; and the favorites. On a wide window a chosen tag opens beside the list.
  */
-class MeActivity :
-    TagPaneActivity() {
-    val favoriteIds: List<Int>
-        get() = FavoritesModel.favoriteIds
-
+class MeActivity : SavedListActivity() {
     internal lateinit var home: HomeActions
-        private set
-
-    /** Edit mode for the favorites and, sharing its Edit action, the user's own lists. */
-    lateinit var listEditor: SavedListEditor
         private set
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,7 +29,7 @@ class MeActivity :
         home = HomeActions(this, tagPane)
         listEditor =
             SavedListEditor(
-                initiallyEditing = savedInstanceState?.getBoolean(STATE_EDITING) == true,
+                initiallyEditing = wasEditing(savedInstanceState),
                 model = { ListModel(TagLists.FAVORITE) },
                 companion = { TagLists.customKeys.isNotEmpty() },
             )
@@ -53,11 +44,6 @@ class MeActivity :
         }
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        outState.putBoolean(STATE_EDITING, listEditor.isEditing)
-        super.onSaveInstanceState(outState)
-    }
-
     override fun onResume() {
         super.onResume()
         TelemetryConsent.showIfNeeded(this)
@@ -66,14 +52,5 @@ class MeActivity :
     override fun onDestroy() {
         home.release()
         super.onDestroy()
-    }
-
-    override fun onSearchRequested(): Boolean {
-        startActivity(Intent(this, TagSearchActivity::class.java))
-        return true
-    }
-
-    private companion object {
-        const val STATE_EDITING = "savedListEditing"
     }
 }

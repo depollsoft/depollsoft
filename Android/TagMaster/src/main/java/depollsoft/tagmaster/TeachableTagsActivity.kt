@@ -1,6 +1,5 @@
 package depollsoft.tagmaster
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.compose.ui.res.stringResource
 import depollsoft.tagmaster.ui.EmptyState
@@ -10,14 +9,7 @@ import depollsoft.tagmaster.ui.navigateUpOrHome
 import depollsoft.tagmaster.ui.setTagMasterContent
 
 /** The tags the user can teach, in their own order. */
-class TeachableTagsActivity :
-    TagPaneActivity() {
-    val teachableTags: List<Int>
-        get() = TeachableTagsModel.teachableTagIds
-
-    lateinit var listEditor: SavedListEditor
-        private set
-
+class TeachableTagsActivity : SavedListActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val configuration = resources.configuration
@@ -27,7 +19,7 @@ class TeachableTagsActivity :
                 hasTwoPanes(configuration.screenWidthDp, configuration.screenHeightDp),
                 listedIds = { TeachableTagsModel.teachableTagIds.toList() },
             )
-        listEditor = SavedListEditor(savedInstanceState?.getBoolean(STATE_EDITING) == true, { ListModel(TagLists.TEACHABLE) })
+        listEditor = SavedListEditor(wasEditing(savedInstanceState), { ListModel(TagLists.TEACHABLE) })
         setTagMasterContent {
             SavedListScreen(
                 model = ListModel(TagLists.TEACHABLE),
@@ -44,19 +36,5 @@ class TeachableTagsActivity :
             }
         }
         tagPane.restore(savedInstanceState)
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        outState.putBoolean(STATE_EDITING, listEditor.isEditing)
-        super.onSaveInstanceState(outState)
-    }
-
-    override fun onSearchRequested(): Boolean {
-        startActivity(Intent(this, TagSearchActivity::class.java))
-        return true
-    }
-
-    private companion object {
-        const val STATE_EDITING = "savedListEditing"
     }
 }
