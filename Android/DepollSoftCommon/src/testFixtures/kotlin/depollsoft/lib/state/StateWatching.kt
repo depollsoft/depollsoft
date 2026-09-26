@@ -66,7 +66,6 @@ object SnapshotNotifications {
         runCatching { Looper.getMainLooper()?.let(::Handler) }.getOrNull()
     }
     private val installed = AtomicBoolean(false)
-    private val pending = AtomicBoolean(false)
 
     internal val observer: SnapshotStateObserver by lazy {
         SnapshotStateObserver { task -> runOnMain(task) }.also { it.start() }
@@ -74,14 +73,11 @@ object SnapshotNotifications {
 
     fun ensureInstalled() {
         if (!installed.compareAndSet(false, true)) return
+        // One post per write: a post Robolectric drops when it resets the looper between tests
+        // must not stop later writes from being delivered, so there is no "already posted" flag.
+        // The extra posts find nothing left to send.
         Snapshot.registerGlobalWriteObserver {
-            val handler = main ?: return@registerGlobalWriteObserver
-            if (pending.compareAndSet(false, true)) {
-                handler.post {
-                    pending.set(false)
-                    Snapshot.sendApplyNotifications()
-                }
-            }
+            main?.post { Snapshot.sendApplyNotifications() }
         }
     }
 

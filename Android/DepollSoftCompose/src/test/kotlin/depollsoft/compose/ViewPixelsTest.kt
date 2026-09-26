@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
@@ -114,6 +115,61 @@ class ViewPixelsTest {
             left && !right -> "left"
             right && !left -> "right"
             else -> "left=$left right=$right"
+        }
+    }
+
+    private fun configuration(
+        widthDp: Int,
+        heightDp: Int,
+        size: Int,
+        smallestDp: Int = minOf(widthDp, heightDp),
+    ) = android.content.res.Configuration().apply {
+        screenWidthDp = widthDp
+        screenHeightDp = heightDp
+        smallestScreenWidthDp = smallestDp
+        screenLayout = size
+    }
+
+    @Test
+    fun aDialogsLeastWidthFollowsAppCompatForOrientationAndScreenSize() {
+        val normal = android.content.res.Configuration.SCREENLAYOUT_SIZE_NORMAL
+        val large = android.content.res.Configuration.SCREENLAYOUT_SIZE_LARGE
+        val xlarge = android.content.res.Configuration.SCREENLAYOUT_SIZE_XLARGE
+        assertEquals(0.95f, dialogMinWidthFraction(configuration(411, 891, normal)), 0f)
+        assertEquals(0.65f, dialogMinWidthFraction(configuration(891, 411, normal)), 0f)
+        assertEquals(0.80f, dialogMinWidthFraction(configuration(600, 960, large)), 0f)
+        assertEquals(0.55f, dialogMinWidthFraction(configuration(960, 600, large)), 0f)
+        assertEquals(0.72f, dialogMinWidthFraction(configuration(800, 1280, xlarge)), 0f)
+        assertEquals(0.45f, dialogMinWidthFraction(configuration(1280, 800, xlarge)), 0f)
+    }
+
+    @Test
+    fun aDialogsFirstMeasureIsThePreferredWidthForTheScreen() {
+        val normal = android.content.res.Configuration.SCREENLAYOUT_SIZE_NORMAL
+        val large = android.content.res.Configuration.SCREENLAYOUT_SIZE_LARGE
+        assertEquals(320.dp, dialogFirstPassWidth(configuration(411, 891, normal)))
+        assertEquals(440.dp, dialogFirstPassWidth(configuration(560, 900, large)))
+        assertEquals(580.dp, dialogFirstPassWidth(configuration(800, 1280, large, smallestDp = 800)))
+    }
+
+    @Test
+    fun aDrawableLearnsTheLayoutDirectionItIsDrawnIn() {
+        val drawable = android.graphics.drawable.ColorDrawable(android.graphics.Color.BLACK)
+        compose.setContent {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                Box(Modifier.testTag("icon").width(24.dp).height(24.dp).drawBehind { drawFitCenter(drawable) })
+            }
+        }
+        compose.onNodeWithTag("icon").captureToImage()
+        assertEquals(android.view.View.LAYOUT_DIRECTION_RTL, drawable.layoutDirection)
+    }
+
+    @Test
+    fun listMotionEasesInAndOutAsValueAnimatorDid() {
+        val interpolator = android.view.animation.AccelerateDecelerateInterpolator()
+        for (step in 0..10) {
+            val t = step / 10f
+            assertEquals(interpolator.getInterpolation(t), ListMotion.easing.transform(t), 0.0001f)
         }
     }
 }

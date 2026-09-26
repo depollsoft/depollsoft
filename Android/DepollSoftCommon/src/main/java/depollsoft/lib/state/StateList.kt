@@ -18,11 +18,15 @@ class StateList<T> private constructor(
 
     constructor(initial: Collection<T>) : this(SnapshotStateList<T>().apply { addAll(initial) })
 
-    /** Replaces the contents as one change. */
+    /**
+     * Replaces the contents as one change. [newItems] is copied first, so it may be this list or
+     * a view of it.
+     */
     fun replaceWith(newItems: Collection<T>) {
+        val replacement = newItems.toList()
         batchStateChanges {
             items.clear()
-            items.addAll(newItems)
+            items.addAll(replacement)
         }
     }
 

@@ -77,6 +77,15 @@ class ObservableStateTest {
     }
 
     @Test
+    fun replacingAListWithItselfOrAViewOfItKeepsTheItems() {
+        val list = StateList(listOf(1, 2, 3))
+        list.replaceWith(list)
+        assertEquals(listOf(1, 2, 3), list.snapshot())
+        list.replaceWith(list.subList(1, 3))
+        assertEquals(listOf(2, 3), list.snapshot())
+    }
+
+    @Test
     fun changeSignalWakesReaders() {
         val signal = ChangeSignal()
         var external = 0

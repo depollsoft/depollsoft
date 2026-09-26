@@ -10,10 +10,11 @@ import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
@@ -60,7 +61,7 @@ fun <G : InstrumentGeometry> PitchInstrumentFace(
     val view = LocalView.current
 
     val breathing = state.breathing
-    LaunchedEffect(breathing) {
+    LaunchedEffect(state, breathing) {
         if (!breathing) {
             state.breathePhase = 0f
             return@LaunchedEffect
@@ -85,6 +86,9 @@ fun <G : InstrumentGeometry> PitchInstrumentFace(
                     draw(it.nativeCanvas, state.geometry, state.notes, state.model.isFromFToF, state.breathePhase)
                 }
             },
+        // The renderer and the touch geometry work in physical pixels from the left, so the
+        // screen-reader targets over them must too, in a right-to-left layout as well.
+        contentAlignment = AbsoluteAlignment.TopLeft,
     ) {
         AccessibilityTargets(state, rangeLabels)
     }
@@ -164,7 +168,7 @@ private fun Target(
     val density = LocalDensity.current
     Box(
         Modifier
-            .offset { IntOffset(bounds.left, bounds.top) }
+            .absoluteOffset { IntOffset(bounds.left, bounds.top) }
             .size(
                 with(density) { bounds.width().coerceAtLeast(1).toDp() },
                 with(density) { bounds.height().coerceAtLeast(1).toDp() },

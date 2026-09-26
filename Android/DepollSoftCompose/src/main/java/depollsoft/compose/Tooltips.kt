@@ -8,6 +8,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.isSpecified
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.input.pointer.pointerInput
@@ -42,7 +44,13 @@ class LabelTooltipState internal constructor(
         visible = false
     }
 
+    /**
+     * The mouse came to (or moved on to a new spot on) the anchor: the tooltip shows once it has
+     * rested there for [timeout]. Moving on restarts the wait, so sweeping across a toolbar
+     * shows nothing.
+     */
     internal fun mouseEntered(timeout: Long) {
+        if (visible) return
         hover?.cancel()
         hover =
             scope.launch {
@@ -75,18 +83,33 @@ fun rememberLabelTooltipState(): LabelTooltipState {
 
 /**
  * Shows [state]'s tooltip when a mouse rests on this element for the long-press timeout, and
- * hides it when the mouse leaves. Touch and stylus pointers do not hover.
+ * hides it when the mouse leaves. As AppCompat's TooltipCompatHandler did, a move further than the
+ * hover slop (half the touch slop) restarts the wait, so the mouse has to come to rest. Touch and
+ * stylus pointers do not hover.
  */
 fun Modifier.tooltipOnHover(state: LabelTooltipState): Modifier =
     pointerInput(state) {
         val timeout = viewConfiguration.longPressTimeoutMillis
+        val slop = viewConfiguration.touchSlop / 2
+        var anchor = Offset.Unspecified
         awaitPointerEventScope {
             while (true) {
                 val event = awaitPointerEvent()
-                if (event.changes.none { it.type == PointerType.Mouse }) continue
+                val mouse = event.changes.firstOrNull { it.type == PointerType.Mouse } ?: continue
                 when (event.type) {
-                    PointerEventType.Enter -> state.mouseEntered(timeout)
-                    PointerEventType.Exit -> state.dismiss()
+                    PointerEventType.Enter -> {
+                        anchor = mouse.position
+                        state.mouseEntered(timeout)
+                    }
+                    PointerEventType.Move ->
+                        if (!anchor.isSpecified || (mouse.position - anchor).getDistance() > slop) {
+                            anchor = mouse.position
+                            state.mouseEntered(timeout)
+                        }
+                    PointerEventType.Exit -> {
+                        anchor = Offset.Unspecified
+                        state.dismiss()
+                    }
                 }
             }
         }

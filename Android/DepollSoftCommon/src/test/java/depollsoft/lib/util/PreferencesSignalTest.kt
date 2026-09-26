@@ -71,4 +71,11 @@ class PreferencesSignalTest {
         list += 2
         assertEquals(1, changesSeenBy({ Preferences.get<List<Int>>("signal.list") }) { Preferences.set("signal.list", list) })
     }
+
+    @Test
+    fun aReaderOfAMissingKeyHearsItInitialized() {
+        assertEquals(1, changesSeenBy({ Preferences.get<String>("signal.init") }) { Preferences.initialize("signal.init", "default") })
+        // Initializing a key that has a value changes nothing.
+        assertEquals(0, changesSeenBy({ Preferences.get<String>("signal.init") }) { Preferences.initialize("signal.init", "other") })
+    }
 }
