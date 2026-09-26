@@ -255,3 +255,46 @@ final class RowAndSettingsDetailTests: PitchPerfectTestCase {
         XCTAssertEqual(frames[1].width, 1, "hairlines stay one point wide")
     }
 }
+
+@MainActor
+final class CleanupHelperTests: PitchPerfectTestCase {
+    func testOneSelectorMeasuresAgainOnlyWhenItsTitlesOrWidthChange() {
+        let geometry = SelectorGeometry()
+        let titles = ["My Songs", "Saturday show"]
+        let first = geometry.frames(titles: titles, width: 370)
+        XCTAssertEqual(geometry.frames(titles: titles, width: 370), first)
+        let wider = geometry.frames(titles: titles, width: 700)
+        XCTAssertNotEqual(wider, first, "a new width is measured")
+        XCTAssertEqual(wider.last?.maxX ?? 0, 700, accuracy: 0.5)
+        XCTAssertEqual(geometry.frames(titles: titles + ["Afterglow"], width: 700).count, 7,
+                       "three positions, two hairlines between them, a hairline and the +")
+    }
+
+    func testPresentOnTopPresentsOverWhatIsShownOnlyIfStillWanted() throws {
+        let app = try launch()
+        let sheet = UIViewController()
+        app.host.present(sheet, animated: false)
+        settle { app.topPresented === sheet }
+        let wanted = UIViewController()
+        app.host.presentOnTop(wanted, stillWanted: { true })
+        settle { app.topPresented === wanted }
+        XCTAssertTrue(wanted.presentingViewController === sheet, "over the sheet already up")
+        let withdrawn = UIViewController()
+        app.host.presentOnTop(withdrawn, stillWanted: { false })
+        ScreenCatalog.settle(0.2)
+        XCTAssertNil(withdrawn.presentingViewController, "a presentation withdrawn in the meantime never happens")
+        app.host.dismiss(animated: false)
+    }
+
+    func testSongsListMarginsFollowTheTableMargin() {
+        let list = UICollectionView(frame: CGRect(x: 0, y: 0, width: 400, height: 400),
+                                    collectionViewLayout: UICollectionViewFlowLayout())
+        SongListMargins.apply(to: list, tableMargin: 20)
+        XCTAssertFalse(list.preservesSuperviewLayoutMargins)
+        XCTAssertEqual(list.layoutMargins.left, 20)
+        XCTAssertEqual(list.layoutMargins.right, 4)
+        SongListMargins.apply(to: list, tableMargin: 16)
+        XCTAssertEqual(list.layoutMargins.left, 16, "a changed margin is applied again (iPad)")
+        XCTAssertEqual(list.layoutMargins.right, 8)
+    }
+}
