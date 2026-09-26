@@ -259,7 +259,10 @@ final class TagMasterPolishUITests: TagMasterUITestCase {
                 && frame == previousFrame && key.isHittable
                 && frame.width >= 44 && frame.height >= 44
         }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [landscape], timeout: 5), .completed)
+        // A cold iPad simulator can take several seconds to finish rotating.
+        let rotated = XCTWaiter.wait(for: [landscape], timeout: 15)
+        print("TM_LAYOUT_PROBE after rotation exists=\(key.exists) hittable=\(key.isHittable) frame=\(key.frame) viewport=\(app.frame)")
+        XCTAssertEqual(rotated, .completed)
         print("TM_LAYOUT_PROBE native landscape key frame=\(key.frame)")
         XCTAssertGreaterThanOrEqual(key.frame.width, 44)
         XCTAssertGreaterThanOrEqual(key.frame.height, 44)
@@ -336,6 +339,8 @@ final class TagMasterPolishUITests: TagMasterUITestCase {
 final class StoreScreenshotTests: XCTestCase {
     func testCaptureStoreScreenshots() throws {
         try XCTSkipUnless(ProcessInfo.processInfo.environment["STORE_SCREENSHOTS"] == "1")
+        // The whole store tour, live catalog loads included, runs about 90 seconds.
+        executionTimeAllowance = 180
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .portrait
         let app = XCUIApplication()

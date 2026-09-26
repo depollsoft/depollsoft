@@ -173,18 +173,22 @@ final class RealAppAppearanceUITests: TagMasterUITestCase {
                                 file: StaticString = #filePath, line: UInt = #line) {
         let deadline = Date().addingTimeInterval(8)
         var reading = readPole(XCUIScreen.main.screenshot().image, region: region, appearance: appearance)
-        while reading.overlap(with: baseline) < 0.8, Date() < deadline {
+        // A page's own text covers some of the pole (about a quarter at most); a slice
+        // placed from a stale position lands a column away and overlaps almost nothing.
+        while reading.overlap(with: baseline) < 0.5, Date() < deadline {
             RunLoop.current.run(until: Date().addingTimeInterval(0.3))
             reading = readPole(XCUIScreen.main.screenshot().image, region: region, appearance: appearance)
         }
-        XCTAssertGreaterThan(reading.overlap(with: baseline), 0.8,
+        XCTAssertGreaterThan(reading.overlap(with: baseline), 0.5,
                              "\(name): the pole moved (\(reading) vs \(baseline))", file: file, line: line)
     }
 
     /// The lower part of the screen on a phone; on iPad the detail column's, where
     /// the window's one pole lies beside the list whatever the list column shows.
     private var detailRegion: CGRect {
-        pad ? CGRect(x: 0.5, y: 0.55, width: 0.45, height: 0.35) : CGRect(x: 0.05, y: 0.55, width: 0.9, height: 0.3)
+        // On iPad the window's pole runs diagonally through the detail column's upper
+        // two thirds; below that only its tail reaches in.
+        pad ? CGRect(x: 0.42, y: 0.2, width: 0.53, height: 0.55) : CGRect(x: 0.05, y: 0.55, width: 0.9, height: 0.3)
     }
 
     /// The iPad list column below its rows, where only the page shows. Before iOS 26

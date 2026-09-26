@@ -178,7 +178,7 @@ struct TMBarButton: View {
     /// sheet is up; UIKit's disabled grey for an item that is off. Set explicitly, so
     /// a light-mode column (the iPad list) cannot turn the items black.
     static func ink(dimmed: Bool, enabled: Bool = true) -> Color {
-        if !enabled { return Color(white: 1, opacity: 0.12) }
+        if !enabled { return Color(white: 1, opacity: 0.08) }
         return dimmed ? Color(white: 204.0 / 255.0) : Color(white: 245.0 / 255.0)
     }
 

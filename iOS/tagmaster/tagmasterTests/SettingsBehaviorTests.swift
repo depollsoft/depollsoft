@@ -169,9 +169,10 @@ final class SettingsBehaviorTests: TMBehaviorTestCase {
         let (_, model, driver) = settings(build: TMBuildInfo(number: "4321", pullRequest: "83"))
         XCTAssertTrue(model.build.isPrivate)
         XCTAssertTrue(driver.exists(label: "Build 4321 · PR #83"))
-        UIPasteboard.general.string = ""
+        var copied: String?
+        model.copyToPasteboard = { copied = $0 }
         model.copyLogs()
-        XCTAssertEqual(UIPasteboard.general.string?.hasPrefix("Build 4321 · PR #83\n\n"), true)
+        XCTAssertEqual(copied?.hasPrefix("Build 4321 · PR #83\n\n"), true)
     }
 
     func testStoreBuildsHideThePrivateBuildRows() {
