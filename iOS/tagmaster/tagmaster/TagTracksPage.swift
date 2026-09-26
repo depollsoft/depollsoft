@@ -137,9 +137,13 @@ struct TMTrackPlayer: View {
                                in: 0...1) {
                             Text("Balance")
                         } minimumValueLabel: {
-                            Image(systemName: "l.circle")
+                            Image(uiImage: TMBalanceImages.left)
+                                .renderingMode(.template)
+                                .padding(.trailing, TMBalanceImages.extraGap)
                         } maximumValueLabel: {
-                            Image(systemName: "r.circle")
+                            Image(uiImage: TMBalanceImages.right)
+                                .renderingMode(.template)
+                                .padding(.leading, TMBalanceImages.extraGap)
                         }
                         .disabled(!model.isLoaded)
                         .accessibilityLabel("Balance")
@@ -175,6 +179,26 @@ struct TMTrackPlayer: View {
         .accessibilityLabel(label)
         .accessibilityIdentifier(identifier)
     }
+}
+
+/// The balance slider's L and R images as UISlider drew them: the same fixed-size
+/// images (UISlider's value images did not grow with the text), as far from the
+/// track as UISlider put them. SwiftUI leaves 8 points between a value label and
+/// the track; UISlider left more, measured here from a real slider.
+enum TMBalanceImages {
+    static let left = UIImage(systemName: "l.circle") ?? UIImage()
+    static let right = UIImage(systemName: "r.circle") ?? UIImage()
+    static let swiftUIGap: CGFloat = 8
+
+    /// UISlider's distance from its leading edge to its track with these images.
+    static let uikitTrackInset: CGFloat = {
+        let slider = UISlider(frame: CGRect(x: 0, y: 0, width: 200, height: 31))
+        slider.minimumValueImage = left
+        slider.maximumValueImage = right
+        return slider.trackRect(forBounds: slider.bounds).minX
+    }()
+
+    static var extraGap: CGFloat { max(0, uikitTrackInset - left.size.width - swiftUIGap) }
 }
 
 /// The caption column beside both sliders. UIKit held the Balance caption to the
