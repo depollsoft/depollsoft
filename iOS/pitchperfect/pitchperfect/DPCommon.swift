@@ -56,3 +56,10 @@ extension UIViewController {
         }
     }
 }
+
+extension UIView {
+    /// The controller whose screen this view is part of.
+    var owningViewController: UIViewController? {
+        sequence(first: self as UIResponder, next: \.next).lazy.compactMap { $0 as? UIViewController }.first
+    }
+}

@@ -6,7 +6,8 @@
 //  documents `users/{uid}/songLists/{listId}` that `DPSongsModel` writes, and
 //  the changes that come back the other way.
 //
-//  Start the emulators with `scripts/firestore-emulator.sh pitchperfect`.
+//  Start the emulators with `scripts/firestore-emulator.sh pitchperfect` (other
+//  ports: see `firestorePort`).
 //  Without them the whole class skips rather than fails, so an ordinary
 //  `xcodebuild test` run is unaffected.
 //
@@ -26,8 +27,15 @@ import FirebaseFirestore
 final class DPSongListSyncEmulatorTests: XCTestCase {
 
     private static let host = "localhost"
-    private static let firestorePort = 8080
-    private static let authPort = 9099
+    /// The emulators' ports: firebase.json's, unless the run names others
+    /// (TEST_RUNNER_FIRESTORE_EMULATOR_PORT / TEST_RUNNER_AUTH_EMULATOR_PORT),
+    /// for a machine where something else already holds 8080.
+    private static let firestorePort = port("FIRESTORE_EMULATOR_PORT", otherwise: 8080)
+    private static let authPort = port("AUTH_EMULATOR_PORT", otherwise: 9099)
+
+    private static func port(_ variable: String, otherwise port: Int) -> Int {
+        ProcessInfo.processInfo.environment[variable].flatMap(Int.init) ?? port
+    }
     private static let projectID = "demo-pitchperfect"
     private static var configured: (local: FirebaseApp, remote: FirebaseApp)?
 
@@ -118,9 +126,12 @@ final class DPSongListSyncEmulatorTests: XCTestCase {
         return try XCTUnwrap(value, "\(description) failed: \(failure.map(String.init(describing:)) ?? "no result")")
     }
 
+    private static let defaultsKeys = [DPSongsModel.legacySongsKey, DPSongsModel.songListsKey,
+                                       DPSongsModel.currentListKey, wakeLockKey, toggleNoteKey]
+
     private func saveAndClearDefaults() {
         let defaults = UserDefaults.standard
-        for key in [DPSongsModel.legacySongsKey, DPSongsModel.songListsKey, DPSongsModel.currentListKey] {
+        for key in Self.defaultsKeys {
             if let value = defaults.object(forKey: key) { savedDefaults[key] = value }
             defaults.removeObject(forKey: key)
         }
@@ -128,7 +139,7 @@ final class DPSongListSyncEmulatorTests: XCTestCase {
 
     private func restoreDefaults() {
         let defaults = UserDefaults.standard
-        for key in [DPSongsModel.legacySongsKey, DPSongsModel.songListsKey, DPSongsModel.currentListKey] {
+        for key in Self.defaultsKeys {
             if let value = savedDefaults[key] {
                 defaults.set(value, forKey: key)
             } else {
@@ -256,6 +267,39 @@ final class DPSongListSyncEmulatorTests: XCTestCase {
         let stored = UserDefaults.standard.dictionary(forKey: DPSongsModel.songListsKey)
         XCTAssertNil(stored?[local.id], "a remote delete drops the local entry too")
         XCTAssertNotNil(stored?["remote-show-k3f9"], "and never resurrects what it deleted")
+    }
+
+    // MARK: - Settings
+
+    /// Toggle Notes and Wake Lock follow the account both ways, and a value that
+    /// arrives from the account is not written back to it.
+    func testSettingsFollowTheAccountBothWays() {
+        let settings = DPSettingsModel()
+        settings.attachToFirestore(userDoc: localDoc)
+        defer { settings.detachFromFirestore() }
+
+        // The other device turns Toggle Notes on; this one only reads it.
+        awaitError("the other device turns Toggle Notes on") {
+            self.remoteDoc.setData(["toggleNotes": true], merge: true, completion: $0)
+        }
+        spinUntil("Toggle Notes to arrive", timeout: 30) { settings.toggleNotes }
+        // Give any write this device would make time to reach the server.
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 2))
+        let afterRead: DocumentSnapshot? = awaitCallback("read the account") {
+            self.remoteDoc.getDocument(source: .server, completion: $0)
+        }
+        XCTAssertNil(afterRead?.get("wakeLock"), "a value read from the account is not echoed, nor others filled in")
+
+        // This device turns Wake Lock on; the account has it.
+        settings.wakeLock = true
+        var afterWrite: DocumentSnapshot?
+        let deadline = Date(timeIntervalSinceNow: 30)
+        repeat {
+            RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.2))
+            afterWrite = awaitCallback("read the account") { self.remoteDoc.getDocument(source: .server, completion: $0) }
+        } while afterWrite?.get("wakeLock") as? Bool != true && Date() < deadline
+        XCTAssertEqual(afterWrite?.get("wakeLock") as? Bool, true)
+        XCTAssertEqual(afterWrite?.get("toggleNotes") as? Bool, true)
     }
 
     // MARK: - Reading and writing from the second client

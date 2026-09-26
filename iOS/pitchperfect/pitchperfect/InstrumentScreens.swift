@@ -233,14 +233,9 @@ private struct TableMarginProbe: ViewModifier {
                 measure()
             }
 
-            /// The view of the controller the screen belongs to: its size is the container's.
-            private var containerView: UIView? {
-                sequence(first: self as UIResponder, next: \.next).first { $0 is UIViewController }
-                    .flatMap { ($0 as? UIViewController)?.view }
-            }
-
             private func measure() {
-                guard let window, let container = containerView, container.bounds.width > 0 else { return }
+                // The screen's own controller's view: its size is the container's.
+                guard let window, let container = owningViewController?.view, container.bounds.width > 0 else { return }
                 let key = TableMargin.Container(size: container.bounds.size, traits: container.traitCollection, style: style)
                 guard key != measuredFor else { return }
                 measuredFor = key

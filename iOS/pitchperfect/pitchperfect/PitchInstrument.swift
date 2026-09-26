@@ -329,7 +329,7 @@ struct InstrumentRenderer {
             let label: NSAttributedString
             if natural {
                 label = NSAttributedString(string: note.friendlyName ?? "",
-                                           attributes: [.font: condensedFont(size: cellRadius * 0.9), .foregroundColor: textColor])
+                                           attributes: [.font: DPTheme.condensedFont(size: cellRadius * 0.9), .foregroundColor: textColor])
             } else {
                 label = glyphLabel(size: cellRadius * 0.5, color: textColor)
             }
@@ -361,7 +361,7 @@ struct InstrumentRenderer {
         // Nameplate.
         let ringRadius = geometry.ringRadius
         let nameplate = NSAttributedString(string: "DIGITAL PITCH PIPE", attributes: [
-            .font: condensedFont(size: ringRadius * 0.08),
+            .font: DPTheme.condensedFont(size: ringRadius * 0.08),
             .foregroundColor: inkSecondary.withAlphaComponent(0.65),
             .kern: ringRadius * 0.028,
         ])
@@ -369,23 +369,15 @@ struct InstrumentRenderer {
         nameplate.draw(at: CGPoint(x: bounds.midX - nameplateSize.width / 2, y: bounds.height - nameplateSize.height * 2.2))
     }
 
-    private func condensedFont(size: CGFloat) -> UIFont {
-        UIFont(name: "Oswald-Medium", size: size) ?? UIFont.systemFont(ofSize: size, weight: .regular, width: .condensed)
-    }
-
-    private func monoFont(size: CGFloat) -> UIFont {
-        UIFont.monospacedSystemFont(ofSize: size, weight: .regular)
-    }
-
     private func glyphLabel(size: CGFloat, color: UIColor) -> NSAttributedString {
         if let noteHedz = UIFont(name: "NoteHedz", size: size * 1.2) {
             let label = NSMutableAttributedString()
             label.append(NSAttributedString(string: Plate.sharpGlyph, attributes: [.font: noteHedz, .foregroundColor: color]))
-            label.append(NSAttributedString(string: "/", attributes: [.font: condensedFont(size: size * 0.8), .foregroundColor: color, .baselineOffset: size * 0.15]))
+            label.append(NSAttributedString(string: "/", attributes: [.font: DPTheme.condensedFont(size: size * 0.8), .foregroundColor: color, .baselineOffset: size * 0.15]))
             label.append(NSAttributedString(string: Plate.flatGlyph, attributes: [.font: noteHedz, .foregroundColor: color]))
             return label
         }
-        return NSAttributedString(string: "\u{266F}/\u{266D}", attributes: [.font: condensedFont(size: size * 0.9), .foregroundColor: color])
+        return NSAttributedString(string: "\u{266F}/\u{266D}", attributes: [.font: DPTheme.condensedFont(size: size * 0.9), .foregroundColor: color])
     }
 
     private func drawPanel(context: CGContext, bounds: CGRect, ground: UIColor, hairline: UIColor, markColor: UIColor) {
@@ -420,7 +412,7 @@ struct InstrumentRenderer {
         let ringRadius = geometry.ringRadius
         guard let readout else {
             let idle = NSAttributedString(string: "\u{2014} Hz", attributes: [
-                .font: monoFont(size: ringRadius * 0.13),
+                .font: DPTheme.monospacedFont(size: ringRadius * 0.13),
                 .foregroundColor: inkSecondary.withAlphaComponent(0.55),
             ])
             let idleSize = idle.size()
@@ -428,14 +420,14 @@ struct InstrumentRenderer {
             return
         }
         let nameSize2 = playing.count == 1 ? ringRadius * 0.28 : ringRadius * 0.16
-        let nameLabel = NSAttributedString(string: readout.names, attributes: [.font: condensedFont(size: nameSize2), .foregroundColor: ink])
+        let nameLabel = NSAttributedString(string: readout.names, attributes: [.font: DPTheme.condensedFont(size: nameSize2), .foregroundColor: ink])
         let nameSize = nameLabel.size()
         nameLabel.draw(at: CGPoint(x: faceCenter.x - nameSize.width / 2, y: faceCenter.y - ringRadius * 0.46))
         // A chord has a name, not a measurement: engrave it in the display
         // face so the exclamation reads as one word.
         let attributes: [NSAttributedString.Key: Any] = readout.isChord
-            ? [.font: condensedFont(size: ringRadius * 0.19), .foregroundColor: ink, .kern: ringRadius * 0.023]
-            : [.font: monoFont(size: ringRadius * 0.13), .foregroundColor: ink]
+            ? [.font: DPTheme.condensedFont(size: ringRadius * 0.19), .foregroundColor: ink, .kern: ringRadius * 0.023]
+            : [.font: DPTheme.monospacedFont(size: ringRadius * 0.13), .foregroundColor: ink]
         let detail = NSAttributedString(string: readout.detail, attributes: attributes)
         let detailSize = detail.size()
         let top = faceCenter.y - ringRadius * (readout.isChord ? 0.14 : 0.1)
@@ -451,7 +443,7 @@ struct InstrumentRenderer {
                                            width: rect.height * 0.26, height: rect.height * 0.26))
         }
         let text = NSAttributedString(string: label, attributes: [
-            .font: condensedFont(size: rect.height * 0.5),
+            .font: DPTheme.condensedFont(size: rect.height * 0.5),
             .foregroundColor: selected ? ink : inkSecondary.withAlphaComponent(0.75),
             .kern: rect.height * 0.14,
         ])
