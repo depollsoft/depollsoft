@@ -129,8 +129,14 @@ final class HostedApp {
 
     func addSongsFromAnotherList(choose rows: [IndexPath]) {
         songs.addSongsFromAnotherList()
-        ScreenCatalog.settle()
         let groups = DPSongsModel.sharedInstance.addableSongs(for: DPSongsModel.sharedInstance.currentList)
+        let labels = rows.map { row -> String in
+            let song = groups[row.section].songs[row.row]
+            return "\(song.name ?? ""), \(song.key?.friendlyName() ?? "")"
+        }
+        // The picker is presented from UIKit; on a slow CI runner it can take a few
+        // seconds before its rows are on screen, rather than the Songs list beneath it.
+        ui.wait(10) { self.topPresented !== self.host && labels.allSatisfy { self.sheet.exists(label: $0) } }
         for row in rows {
             let song = groups[row.section].songs[row.row]
             sheet.tap(label: "\(song.name ?? ""), \(song.key?.friendlyName() ?? "")")
