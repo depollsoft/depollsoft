@@ -76,6 +76,12 @@ final class SongManagementUITests: XCTestCase {
         XCTAssertTrue(row.waitForExistence(timeout: 10))
         app.navigationBars.buttons["Done"].tap()
 
+        // As a user leaves an app before it is killed: going to the background
+        // gives the preferences the song was written to time to reach disk
+        // (terminate() is a kill, and a kill right after a write can lose it).
+        XCUIDevice.shared.press(.home)
+        XCTAssertTrue(app.wait(for: .runningBackgroundSuspended, timeout: 10)
+                      || app.wait(for: .runningBackground, timeout: 1))
         app.terminate()
         app.launch()
         navigateToSongs()
