@@ -9,6 +9,7 @@ import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.graphics.Rect
 import android.graphics.RectF
+import android.os.Build
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
@@ -70,6 +71,7 @@ internal object HeritageScoreRenderer {
             tileTop += tileHeight
         }
         // A hardware bitmap lives in GPU memory, so no frame re-uploads the full-screen ground.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return bitmap
         return runCatching { bitmap.copy(Bitmap.Config.HARDWARE, false) }
             .getOrNull()
             ?.also { bitmap.recycle() }
