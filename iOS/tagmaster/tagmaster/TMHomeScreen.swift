@@ -433,10 +433,10 @@ extension View {
     }
 
     /// UITableView's inset-grouped spacing above the first section.
-    func tmInsetGroupedMetrics() -> some View {
+    func tmInsetGroupedMetrics(bottom: CGFloat = 30) -> some View {
         contentMargins(.top, 15, for: .scrollContent)
             // UITableView ends an inset-grouped table 30pt below its last section (SwiftUI: 20).
-            .contentMargins(.bottom, 30, for: .scrollContent)
+            .contentMargins(.bottom, bottom, for: .scrollContent)
             .listSectionSpacing(.custom(16.0 / 3))
             .tmInsetGroupMargins(20)
             // The 16-point column margin is the plain lists'; inset groups keep their own.
