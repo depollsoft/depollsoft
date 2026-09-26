@@ -56,6 +56,7 @@ final class HostedApp {
     }
 
     func tearDown() {
+        ScreenCatalog.scene?.traitOverrides.userInterfaceStyle = .unspecified
         host.dismiss(animated: false)
         window.isHidden = true
         window.rootViewController = nil
@@ -216,8 +217,11 @@ class PitchPerfectTestCase: XCTestCase {
 
     /// Mounts the whole app, full screen, in `style`.
     func launch(_ style: UIUserInterfaceStyle = .light) throws -> HostedApp {
-        // The app applies the stored theme to its windows; store the one wanted.
-        UserDefaults.standard.set(style == .dark ? 2 : 0, forKey: "depollsoft.pitchperfect.theme")
+        // Theme Default, as the UIKit captures had it, with the system appearance
+        // set on the host scene, so the window follows it as a device's would and
+        // no capture depends on the simulator's own appearance.
+        UserDefaults.standard.set(0, forKey: "depollsoft.pitchperfect.theme")
+        ScreenCatalog.scene?.traitOverrides.userInterfaceStyle = style
         let app = try HostedApp(style: style)
         self.app = app
         return app
