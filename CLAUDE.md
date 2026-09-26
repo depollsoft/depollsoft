@@ -66,7 +66,7 @@ npm run deploy                     # Deploy to Firebase
 ### Android Architecture
 
 - **UI**: Jetpack Compose in Kotlin for every screen of Pitch Perfect, Pitch Perfect for Wear OS and Tag Master (see `docs/android-compose.md`). Custom-drawn surfaces paint through Canvas renderers; the AdMob banner and video use `AndroidView`; the home-screen widget stays on `RemoteViews`
-- **State**: models keep observable state in Compose snapshot state via `depollsoft.lib.state` (`StateField`, `StateList`, `ChangeSignal`, `watchState`) in DepollSoftCommon; screen composables take a model and callbacks
+- **State**: models keep observable state in Compose snapshot state via `depollsoft.lib.state` (`StateField`, `StateList`, `ChangeSignal`) in DepollSoftCommon, whose test fixtures add `watchState` for tests; screen composables take a model and callbacks
 - **Shared Libraries**:
   - DepollSoftCommon: Shared utilities across Android apps, including the snapshot-state helpers
   - DepollSoftCompose: Compose code both apps share (list motion and drag reordering, scrollbars, snackbar timing, tooltips, the Menu key, the View pixel rules); Compose UI and foundation only, each app brings its Material version

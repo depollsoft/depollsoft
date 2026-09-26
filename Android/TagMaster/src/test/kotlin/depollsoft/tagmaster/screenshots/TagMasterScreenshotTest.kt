@@ -11,6 +11,7 @@ import com.github.takahirom.roborazzi.captureScreenRoboImage
 import bolts.Task
 import bolts.TaskCompletionSource
 import depollsoft.lib.json.JsonSerializer
+import depollsoft.lib.testing.GOLDEN_TOLERANCE
 import depollsoft.tagmaster.AuthState
 import depollsoft.tagmaster.MeActivity
 import depollsoft.tagmaster.QueryModel

@@ -50,6 +50,3 @@ Firebase/**/users.csv
 # This shared development key is intentionally public.
 !/Android/debug.jks
 
-# Roborazzi writes these beside the goldens when a verify fails.
-Android/**/src/test/screenshots/*_compare.png
-Android/**/src/test/screenshots/*_actual.png

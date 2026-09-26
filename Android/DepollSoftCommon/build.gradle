@@ -9,6 +9,8 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.8.0'
     implementation 'androidx.core:core:1.19.0'
     testImplementation 'junit:junit:4.13.2'
+    // GOLDEN_TOLERANCE; the apps' screenshot tests bring Roborazzi themselves.
+    testFixturesCompileOnly "io.github.takahirom.roborazzi:roborazzi:$roborazzi_version"
     testImplementation 'org.robolectric:robolectric:4.16.1'
 }
 
@@ -16,7 +18,8 @@ android {
     namespace = 'depollsoft.lib'
     compileSdk 37
 
-    // watchState and its snapshot notifications, for the apps' tests (see src/testFixtures).
+    // watchState and its snapshot notifications, and the screenshot golden tolerance, for the
+    // apps' tests (see src/testFixtures).
     testFixtures {
         enable = true
     }

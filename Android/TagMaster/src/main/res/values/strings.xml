@@ -109,16 +109,13 @@
     <string name="Favorites">Favorites</string>
     <string name="Copyright">© %1$d</string>
     <string name="HomePage">apps.depoll.com</string>
-    <string name="ContentProvider">Content provided by</string>
     <string name="home_content_attribution">Content provided by BarbershopTags.com</string>
     <string name="query_loading">Loading tags</string>
     <string name="BrowseTags">Browse</string>
-    <string name="RemoveFromFavorites">Remove from favorites</string>
     <string name="MoveUp">Move up</string>
     <string name="MoveDown">Move down</string>
     <string name="ClearFavorites">Clear favorites</string>
     <string name="Donate">Donate</string>
-    <string name="FavoriteMarker">*</string>
     <string name="RemoveFavorite">Remove Favorite</string>
     <string name="Settings">Settings</string>
     <string name="RandomTagSettings">Random Tag Filters</string>
@@ -127,7 +124,6 @@
     <string name="AddTeachableTag">Mark as Teachable</string>
     <string name="RemoveTeachableTag">Unmark as Teachable</string>
     <string name="TeachableTags">Teachable Tags</string>
-    <string name="RemoveTeachableTagMenuText">Remove from teachable tags</string>
     <string name="NoTeachableTags">You have not marked any tags as teachable.</string>
     <string name="ClearTeachableTags">Clear teachable tags</string>
     <string name="SearchBoxHint">Tag title or lyrics</string>

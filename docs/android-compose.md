@@ -15,20 +15,24 @@ Models keep observable state in Compose snapshot state, through the helpers in
 | `TrackableCollection<T>`        | `StateList<T>` (a `SnapshotStateList` with a public no-arg constructor) |
 | `collection.transaction { }`    | `stateList.transaction { }` / `batchStateChanges { }`      |
 | raw `Trackable` + `track()`/`updateTrackers()` | `ChangeSignal.read()` / `ChangeSignal.changed()` |
-| `track({ read }) { onChange }` / `Trackable.track(tracker, fn)` | `watchState(read = { ... }) { value -> ... }` |
+| `track({ read }) { onChange }` / `Trackable.track(tracker, fn)` | an explicit call where the value changes |
 | `UiBinder.bind(...)`, converters, `BoundUi` views | composables reading the model directly |
 
 Composables read model state directly and recompose when it changes. Non-UI code that must react
-to a change (persisting a list, syncing to Firestore) prefers an explicit call at the mutation
-site; `watchState` is for the cases where the writer cannot know who cares.
+to a change (persisting a list, syncing to Firestore) is called explicitly where the value
+changes; production code has no observers of its own. `watchState` and `SnapshotNotifications`
+live in DepollSoftCommon's test fixtures (`src/testFixtures`), for tests that check a model
+reports a change.
 
 Two behaviours differ from Bindroid:
 
 * Bindroid notified trackers synchronously inside `set()`. Snapshot state notifies observers when
-  the global snapshot sends apply notifications, which `SnapshotNotifications` schedules on the
-  next main-looper turn. Tests call `SnapshotNotifications.flush()` and idle the main looper.
+  the global snapshot sends apply notifications; in the apps Compose's global snapshot manager
+  sends them once a screen has composed. Tests that watch a model without composing anything use
+  the fixtures' `SnapshotNotifications.flush()` and idle the main looper.
 * A state object reports writes only after `Snapshot.notifyObjectsInitialized()`; the Recomposer
-  and `watchState` both call it, so this only matters to code observing snapshot state by hand.
+  and the fixtures' `watchState` both call it, so this only matters to code observing snapshot
+  state by hand.
 
 ### Stored data
 
@@ -122,14 +126,21 @@ new screens and changes need to keep doing:
 
 ## Tests
 
-* Behaviour: Robolectric with the Compose test APIs (the v2 rules in
-  `androidx.compose.ui.test.junit4.v2`) in each app's `src/test`.
+* Behaviour: Robolectric with the Compose test APIs in each app's `src/test`, mostly through the
+  v2 rules in `androidx.compose.ui.test.junit4.v2`. `NotePressTest`, `TagMasterScreenshotTest`
+  and the device-only `PrivacyConsentTest` still use the v1 rules.
+* Minimum SDK: every class runs on SDK 35 except each app's `MinSdkSmokeTest`, which opens the
+  main screens at the app's `minSdk` (and 26 for Pitch Perfect), where a call newer than that
+  throws. CI also runs `lintDebug -PlintNewApiOnly`, which fails on such a call; guard it with
+  a `Build.VERSION.SDK_INT` check lint can see, or `@RequiresApi` on the helper that makes it.
 * Pixels: Roborazzi screenshot tests (`*ScreenshotTest`) under `src/test`, goldens in
   `src/test/screenshots`, most at xxhdpi and xhdpi and a few (`dpi420_*`) at 420dpi.
   `./gradlew :<App>:recordRoborazziDebug` rewrites goldens, `:<App>:verifyRoborazziDebug` fails on
-  a difference and `:<App>:compareRoborazziDebug` writes `*_compare.png` diff images next to them.
-  Roborazzi's comparison tolerates small differences by default, so judge an intended pixel-exact
-  change by comparing the PNGs themselves. The goldens were first recorded from the View
+  a difference and `:<App>:compareRoborazziDebug` writes `*_compare.png` and `*_actual.png` images
+  to `build/outputs/roborazzi`. Every capture compares with `GOLDEN_TOLERANCE` (DepollSoftCommon's
+  test fixtures), which absorbs the Linux CI runner's slightly different resampling: a colour
+  distance of 0.02 and 0.0001% of the pixels. Judge an intended pixel-exact change by comparing the
+  PNGs themselves. The goldens were first recorded from the View
   implementation, and each Compose screen was diffed against them during the port. CI runs
   `verifyRoborazziDebug` for every selected app and uploads the actual and comparison images when a
   golden no longer matches. The screenshot setups pin the version name the about footers show, so

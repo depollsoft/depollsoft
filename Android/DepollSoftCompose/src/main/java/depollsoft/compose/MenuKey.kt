@@ -1,9 +1,11 @@
 package depollsoft.compose
 
+import android.os.Build
 import android.view.KeyEvent
 import android.view.KeyboardShortcutGroup
 import android.view.Menu
 import android.view.Window
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.rememberUpdatedState
@@ -41,12 +43,14 @@ class MenuKey {
                 }
 
                 // Java default methods, which delegation by `by` leaves out.
+                @RequiresApi(Build.VERSION_CODES.N)
                 override fun onProvideKeyboardShortcuts(
                     data: MutableList<KeyboardShortcutGroup>?,
                     menu: Menu?,
                     deviceId: Int,
                 ) = original.onProvideKeyboardShortcuts(data, menu, deviceId)
 
+                @RequiresApi(Build.VERSION_CODES.O)
                 override fun onPointerCaptureChanged(hasCapture: Boolean) = original.onPointerCaptureChanged(hasCapture)
             }
     }

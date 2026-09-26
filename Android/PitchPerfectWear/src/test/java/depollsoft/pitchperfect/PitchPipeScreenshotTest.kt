@@ -5,6 +5,7 @@ import android.os.Looper
 import android.provider.Settings
 import androidx.test.core.app.ApplicationProvider
 import com.github.takahirom.roborazzi.captureRoboImage
+import depollsoft.lib.testing.GOLDEN_TOLERANCE
 import depollsoft.lib.util.Preferences
 import depollsoft.pitchperfect.lib.Accidental
 import depollsoft.pitchperfect.lib.Note

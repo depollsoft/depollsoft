@@ -198,6 +198,7 @@ subprojects {
                     ))
                     executionData.setFrom(fileTree(dir: buildDir, includes: [
                         'jacoco/testDebugUnitTest.exec',
+                        'outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec',
                         'outputs/unit_test_code_coverage/debugUnitTest/*.ec',
                         'outputs/code-coverage/connected/*/coverage.ec',
                         'outputs/code_coverage/debugAndroidTest/connected/*/*.ec',
@@ -211,6 +212,22 @@ subprojects {
     pluginManager.withPlugin("org.jetbrains.kotlin.android") {
         kotlin {
             jvmToolchain(17)
+        }
+    }
+
+    // CI's API-level gate: `-PlintNewApiOnly` narrows lint to calls newer than a module's minSdk
+    // and fails on them. The unit tests run on SDK 35, where such a call can't fail.
+    if (project.hasProperty('lintNewApiOnly')) {
+        ['com.android.application', 'com.android.library'].each { id ->
+            pluginManager.withPlugin(id) {
+                android {
+                    lint {
+                        checkOnly.add('NewApi')
+                        abortOnError = true
+                        checkDependencies = false
+                    }
+                }
+            }
         }
     }
 }

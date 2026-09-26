@@ -1,8 +1,9 @@
 package depollsoft.pitchperfect
 
+import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.os.Looper
-import android.os.SystemClock
+import android.view.View
 import androidx.test.core.app.ApplicationProvider
 import depollsoft.lib.activity.RichApplication
 import depollsoft.lib.util.Preferences
@@ -64,19 +65,44 @@ class PitchPipeAppWidgetTest {
             .apply { if (accidental != null) putExtra(PitchPipeAppWidget.EXTRA_ACCIDENTAL, accidental) },
     )
 
-    /** The model's default hook is the widget's coalesced redraw, 40ms after the last change. */
+    /**
+     * The model's default hook redraws a placed widget: 40ms after the last change, on the render
+     * thread, through the real renderer. The range toggle's spoken name says which range it
+     * switches to, so it tells an old render from a new one.
+     */
     @Test
     fun theAppRedrawsTheWidgetWhenTheRangeChanges() {
         val looper = shadowOf(Looper.getMainLooper())
+        val manager = AppWidgetManager.getInstance(context)
+        val id = shadowOf(manager).createWidget(PitchPipeAppWidget::class.java, R.layout.pitchpipewidgetview)
+        fun toggleSays() = shadowOf(manager).getViewFor(id).findViewById<View>(R.id.rangeToggle).contentDescription?.toString()
+
+        val switchToF = context.getString(R.string.widget_switch_to_f)
+        val switchToC = context.getString(R.string.widget_switch_to_c)
+        awaitWidget("the placed widget's first render") { toggleSays() == switchToF }
+
         val model = PitchPipeModel()
-        looper.idle()
         model.isFromFToF = true
         looper.idle()
-        assertEquals(
-            Duration.ofMillis(40),
-            looper.nextScheduledTaskTime.minus(Duration.ofMillis(SystemClock.uptimeMillis())),
-        )
+        assertEquals("nothing redraws before the coalescing delay", switchToF, toggleSays())
         looper.idleFor(Duration.ofMillis(40))
+        awaitWidget("the redraw after the range change") { toggleSays() == switchToC }
+        model.isFromFToF = false
+        looper.idleFor(Duration.ofMillis(40))
+    }
+
+    /** Waits for the widget's render thread, which applies its views off the main thread. */
+    private fun awaitWidget(
+        description: String,
+        condition: () -> Boolean,
+    ) {
+        // Wall-clock time: Robolectric's SystemClock only moves when the looper is idled with time.
+        val deadline = System.currentTimeMillis() + 10_000
+        while (!condition()) {
+            shadowOf(Looper.getMainLooper()).idle()
+            assertTrue("timed out waiting for $description", System.currentTimeMillis() < deadline)
+            Thread.sleep(10)
+        }
     }
 
     @Test

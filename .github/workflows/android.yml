@@ -166,6 +166,11 @@ jobs:
       # unit tests once with the screenshot goldens compared (without it the
       # captures are skipped), and compileDebugAndroidTestKotlin compiles the
       # device-only tests and the store screenshot capture, which no job runs.
+      #
+      # Every unit test runs on SDK 35, where a call newer than a module's
+      # minSdk can't fail, so lintDebug with -PlintNewApiOnly checks just that
+      # (NewApi) for the selected apps, and for the libraries when shared code
+      # changed.
       - name: Run unit tests and compile production variants
         env:
           # Increase Gradle memory for containerized runners
@@ -181,6 +186,9 @@ jobs:
           tasks=()
           if [[ "$SHARED" == true ]]; then
             tasks+=(testDebugUnitTest)
+            for library in DepollSoftCommon DepollSoftCompose PitchPerfectLib depollsoft.lib.kotlin; do
+              tasks+=(":$library:lintDebug")
+            done
           else
             for module in "${modules[@]}"; do
               tasks+=(":$module:testDebugUnitTest")
@@ -196,9 +204,9 @@ jobs:
             esac
             case "$module" in
               PitchPerfect|TagMaster)
-                tasks+=(":$module:verifyRoborazziDebug" ":$module:compileDebugAndroidTestKotlin") ;;
+                tasks+=(":$module:verifyRoborazziDebug" ":$module:compileDebugAndroidTestKotlin" ":$module:lintDebug") ;;
               PitchPerfectWear)
-                tasks+=(":$module:verifyRoborazziDebug") ;;
+                tasks+=(":$module:verifyRoborazziDebug" ":$module:lintDebug") ;;
             esac
           done
           echo "Gradle tasks: ${tasks[*]}"
@@ -206,7 +214,7 @@ jobs:
           if [[ "$EVENT_NAME" == "schedule" || "$EVENT_NAME" == "workflow_dispatch" ]]; then
             tasks+=(jacocoTestReport)
           fi
-          ./gradlew "${tasks[@]}" \
+          ./gradlew "${tasks[@]}" -PlintNewApiOnly \
             --stacktrace --build-cache --console=plain --no-daemon --no-parallel
 
       - name: Collect coverage + test metrics

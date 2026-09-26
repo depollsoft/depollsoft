@@ -40,6 +40,9 @@ class LegacyStorageTest {
     fun setUp() {
         TagMasterApplication.registerStorageAliases()
         RichApplication.setAppContextForTesting(app)
+        // These read what the View-era app wrote to SharedPreferences, so they need the real store
+        // even when an earlier class in this JVM left the in-memory test store on.
+        Preferences.setTestMode(false)
         rebindPreferences()
     }
 
