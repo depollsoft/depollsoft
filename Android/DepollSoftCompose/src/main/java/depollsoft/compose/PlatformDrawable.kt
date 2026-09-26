@@ -1,6 +1,7 @@
 package depollsoft.compose
 
 import android.graphics.drawable.Drawable
+import android.view.View
 import androidx.annotation.DrawableRes
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.layout.Box
@@ -17,6 +18,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 
@@ -41,6 +43,14 @@ fun rememberDrawable(
     }
 }
 
+/**
+ * Tells [drawable] which way this scope lays out, as a View tells the drawables it draws; an
+ * auto-mirrored one (the Up arrow, "open externally") flips in a right-to-left layout.
+ */
+private fun DrawScope.orient(drawable: Drawable) {
+    drawable.setLayoutDirection(if (layoutDirection == LayoutDirection.Rtl) View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR)
+}
+
 /** Draws [drawable] into [left]..[left]+[width] (pixels), as a View's background or image. */
 fun DrawScope.drawPlatform(
     drawable: Drawable,
@@ -50,6 +60,7 @@ fun DrawScope.drawPlatform(
     height: Int,
     alpha: Float = 1f,
 ) {
+    orient(drawable)
     drawable.setBounds(left, top, left + width, top + height)
     drawable.alpha = (alpha * 255).roundToInt()
     drawIntoCanvas { drawable.draw(it.nativeCanvas) }
@@ -95,6 +106,7 @@ fun DrawScope.drawFitCenter(
         android.graphics.RectF(0f, 0f, width.toFloat(), height.toFloat()),
         android.graphics.Matrix.ScaleToFit.CENTER,
     )
+    orient(drawable)
     drawable.setBounds(0, 0, intrinsicWidth, intrinsicHeight)
     drawable.alpha = (alpha * 255).roundToInt()
     drawIntoCanvas {
@@ -123,6 +135,7 @@ fun DrawScope.drawCenterInside(drawable: Drawable) {
         }
     val dx = ((viewWidth - width * scale) * 0.5f).roundToInt()
     val dy = ((viewHeight - height * scale) * 0.5f).roundToInt()
+    orient(drawable)
     drawIntoCanvas { canvas ->
         val native = canvas.nativeCanvas
         val save = native.save()
