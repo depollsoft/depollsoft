@@ -30,8 +30,11 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(application = Application::class)
 class TagListsTest {
+    private var preferencesWereInTestMode = false
+
     @Before
     fun setUp() {
+        preferencesWereInTestMode = Preferences.isTestMode()
         RichApplication.setAppContextForTesting(RuntimeEnvironment.getApplication())
         ListModel.setTestMode(true)
         Preferences.setTestMode(true)
@@ -45,6 +48,7 @@ class TagListsTest {
         clearStoredLists()
         TagLists.resetForTest()
         Preferences.clearTestValues()
+        Preferences.setTestMode(preferencesWereInTestMode)
     }
 
     @Test
