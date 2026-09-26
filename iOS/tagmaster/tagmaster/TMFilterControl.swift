@@ -22,7 +22,6 @@ struct TMFilterRow: View {
     let filter: TMFilter
     @Binding var selection: Int
     @Environment(\.dynamicTypeSize) private var typeSize
-    @Environment(\.tmInsetRowMargin) private var rowMargin
     /// The row's width, measured; segments until it proves too narrow.
     @State private var available: CGFloat = .infinity
 
@@ -54,7 +53,7 @@ struct TMFilterRow: View {
         // under the separator above; SwiftUI's row starts at the separator.
         .padding(.top, 13)
         .padding(.bottom, 12)
-        .listRowInsets(EdgeInsets(top: 0, leading: rowMargin, bottom: 0, trailing: rowMargin))
+        .tmInsetRow()
     }
 
     /// The width the segments need, as TMFilterControl measured it: each title in

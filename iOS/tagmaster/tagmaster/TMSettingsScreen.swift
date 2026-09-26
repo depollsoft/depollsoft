@@ -145,7 +145,6 @@ final class TMSettingsModel {
 
 struct TMSettingsScreen: View {
     @Bindable var model: TMSettingsModel
-    @Environment(\.tmInsetRowMargin) private var rowMargin
 
     var body: some View {
         List {
@@ -208,7 +207,7 @@ struct TMSettingsScreen: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
         }
-        .listRowInsets(EdgeInsets(top: 0, leading: rowMargin, bottom: 0, trailing: rowMargin))
+        .tmInsetRow()
     }
 
     private func clearRow(_ title: String, _ list: TMSettingsModel.Clearing) -> some View {
@@ -224,7 +223,7 @@ struct TMSettingsScreen: View {
             .contentShape(Rectangle())
         }
         .disabled(count == 0)
-        .listRowInsets(EdgeInsets(top: 0, leading: rowMargin, bottom: 0, trailing: rowMargin))
+        .tmInsetRow()
     }
 }
 

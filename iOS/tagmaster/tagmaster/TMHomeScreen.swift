@@ -425,6 +425,13 @@ extension View {
         modifier(TMInsetGroupMargins(margin: margin))
     }
 
+    /// A row inside an inset-grouped card, on the card's own margin. The margin is
+    /// read where the row is built, inside the list: a screen's own `@Environment`
+    /// sees the value from above the list, before the list's modifiers set it.
+    func tmInsetRow() -> some View {
+        modifier(TMInsetRowInsets())
+    }
+
     /// UITableView's inset-grouped spacing above the first section.
     func tmInsetGroupedMetrics() -> some View {
         contentMargins(.top, 15, for: .scrollContent)
@@ -434,6 +441,14 @@ extension View {
             .tmInsetGroupMargins(20)
             // The 16-point column margin is the plain lists'; inset groups keep their own.
             .environment(\.tmTableMargin, 20)
+    }
+}
+
+private struct TMInsetRowInsets: ViewModifier {
+    @Environment(\.tmInsetRowMargin) private var margin
+
+    func body(content: Content) -> some View {
+        content.listRowInsets(EdgeInsets(top: 0, leading: margin, bottom: 0, trailing: margin))
     }
 }
 
