@@ -182,6 +182,16 @@ object BriefNotes {
         }
         return true
     }
+
+    /**
+     * Drops every pending stop. A screen that silences its notes calls this too: a stop still
+     * pending from here would otherwise cut short the same note sounded later somewhere else
+     * (every screen shares one [Note] per pitch).
+     */
+    fun cancelAll() {
+        pending.values.forEach { main.removeCallbacks(it) }
+        pending.clear()
+    }
 }
 
 /**

@@ -58,6 +58,7 @@ fun KeySignatureScreen(
     model: KeySignatureModel = remember { KeySignatureModel() },
 ) {
     val stopPlaying = {
+        BriefNotes.cancelAll()
         model.majorKeys.forEach { it.note.stop() }
         model.minorKeys.forEach { it.note.stop() }
     }
@@ -65,6 +66,7 @@ fun KeySignatureScreen(
     // it is the tab on screen.
     var resumed by remember { mutableStateOf(false) }
     LifecycleResumeEffect(model) {
+        stopPlaying()
         resumed = true
         onPauseOrDispose {
             resumed = false

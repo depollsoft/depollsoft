@@ -165,12 +165,24 @@ class SongList constructor() {
     }
 
     fun removeSong(song: PitchedSong) {
+        if (song.isPlaying) song.stop()
         if (songs.remove(song)) changed()
     }
 
     fun resetSongs() {
+        stopPlaying()
         songs.clear()
         changed()
+    }
+
+    /**
+     * Silences this list's sounding songs. A song that leaves the screen (removed, or its whole
+     * list deleted or dropped) has no row left to stop it, and in toggle mode it would sound on.
+     * Only songs that are playing are stopped: an idle song's note may be sounding for another
+     * screen.
+     */
+    fun stopPlaying() {
+        songs.forEach { if (it.isPlaying) it.stop() }
     }
 
     /** Stores the list after a change made to one of its songs. */
@@ -191,6 +203,7 @@ class SongList constructor() {
     /** Removes this list's document and refuses every later write. The local map is the caller's business. */
     fun deleteRemote() {
         isDeleted = true
+        stopPlaying()
         reference?.delete()
     }
 
@@ -202,6 +215,7 @@ class SongList constructor() {
     /** Drops the list from this device without touching the server: it was never there. */
     fun discardLocally() {
         isDeleted = true
+        stopPlaying()
     }
 
     fun storeValue() {

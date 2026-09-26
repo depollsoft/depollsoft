@@ -155,6 +155,7 @@ class SongListState(
     }
 
     fun stopPlaying() {
+        BriefNotes.cancelAll()
         model.currentList.songs.forEach { it.stop() }
     }
 }

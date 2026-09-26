@@ -3,6 +3,7 @@ package depollsoft.pitchperfect
 import depollsoft.lib.activity.RichApplication
 import depollsoft.lib.util.Preferences
 import depollsoft.pitchperfect.lib.Key
+import depollsoft.pitchperfect.lib.Note
 import depollsoft.pitchperfect.lib.PitchedSong
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -53,6 +54,60 @@ class SongsModelSetListsTest {
             name = title
             key = Key.getMajorKeys()[keyIndex]
         }
+
+    // ==================== Songs that leave the screen stop sounding ====================
+
+    /** In toggle mode a song sounds until its row is pressed again; these take the row away. */
+    private fun playing(
+        listId: String,
+        title: String,
+        keyIndex: Int,
+    ): PitchedSong {
+        Note.setPlayer(ScreenTestSupport.silentPlayer)
+        val song = song(title, keyIndex)
+        model.songLists.getValue(listId).addSong(song)
+        song.play()
+        assertTrue(song.isPlaying)
+        return song
+    }
+
+    @Test
+    fun removingASoundingSongSilencesIt() {
+        val song = playing(SongsModel.DEFAULT_ID, "Heart", 2)
+        try {
+            model.defaultSongList.removeSong(song)
+            assertFalse(song.isPlaying)
+        } finally {
+            song.stop()
+            Note.setPlayer(Note.DEFAULT_PLAYER)
+        }
+    }
+
+    @Test
+    fun deletingAListSilencesItsSongs() {
+        val id = model.createList("Saturday show")
+        val song = playing(id, "Heart", 3)
+        try {
+            model.deleteList(id)
+            assertFalse(song.isPlaying)
+        } finally {
+            song.stop()
+            Note.setPlayer(Note.DEFAULT_PLAYER)
+        }
+    }
+
+    @Test
+    fun aListDroppedBecauseTheAccountLacksItSilencesItsSongs() {
+        val id = model.createList("Saturday show")
+        val song = playing(id, "Heart", 4)
+        try {
+            model.localListsAfterRemoteWins(model.songLists, remoteIds = emptySet())
+            assertFalse(song.isPlaying)
+        } finally {
+            song.stop()
+            Note.setPlayer(Note.DEFAULT_PLAYER)
+        }
+    }
 
     // ==================== Display names ====================
 
