@@ -41,6 +41,17 @@ class FormFeedbackScreenTest : ComposeScreenTest() {
     }
 
     @Test
+    @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun aDialogInLandscapeStopsAtAppCompatsMinimumWidth() {
+        launch(MeActivity::class.java)
+        click("newListButton")
+        val density = app.resources.displayMetrics.density
+        val width = compose.onNode(androidx.compose.ui.test.hasTestTag("dialog")).fetchSemanticsNode().size.width / density
+        // AppCompat's landscape minimum on a phone is 65% of the screen; the dialog no longer fills it.
+        assertTrue("dialog ${width}dp wide", width <= 891 * 0.65f - 48 + 1)
+    }
+
+    @Test
     fun anOpenDropdownMarksTheCurrentChoiceAcrossTheFieldsWidth() {
         launch(TagSearchActivity::class.java)
         val fieldWidth = node("sortBySpinner").fetchSemanticsNode().size.width

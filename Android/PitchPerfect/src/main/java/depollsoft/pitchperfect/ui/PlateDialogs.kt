@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
+import depollsoft.compose.dialogFirstPassWidth
 import depollsoft.compose.dialogTitleFits
 import depollsoft.compose.dialogWindowWidth
 
@@ -220,10 +221,11 @@ private fun AppCompatDialogTitle(
     val wrapped = plateText(18.sp, colors.ink, weight = FontWeight.Medium)
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
+    val firstPass = dialogFirstPassWidth()
     val fits =
-        remember(title, single, density, iconWidth) {
+        remember(title, single, density, iconWidth, firstPass) {
             // The helper pads both sides equally; the icon's width is split between them.
-            measurer.dialogTitleFits(title, single, density, cardInset = 16.dp, titlePadding = 24.dp + iconWidth / 2)
+            measurer.dialogTitleFits(title, single, density, cardInset = 16.dp, titlePadding = 24.dp + iconWidth / 2, firstPassWidth = firstPass)
         }
     if (fits) {
         PlateText(title, style = single, maxLines = 1)
@@ -354,7 +356,8 @@ private fun DialogTitle(
     val single = plateText(16.sp, colors.ink, letterSpacing = 0.009375f)
     val wrapped = plateText(18.sp, colors.ink, letterSpacing = 0.009375f)
     val density = LocalDensity.current
-    val fits = remember(title, single, density) { measurer.dialogTitleFits(title, single, density, CARD_INSET) }
+    val firstPass = dialogFirstPassWidth()
+    val fits = remember(title, single, density, firstPass) { measurer.dialogTitleFits(title, single, density, CARD_INSET, firstPassWidth = firstPass) }
     if (fits) {
         PlateText(title, style = single, maxLines = 1, modifier = modifier)
     } else {

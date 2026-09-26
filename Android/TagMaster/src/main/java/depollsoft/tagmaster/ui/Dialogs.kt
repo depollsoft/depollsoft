@@ -40,6 +40,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import depollsoft.compose.DIALOG_MIN_WIDTH_FRACTION
+import depollsoft.compose.dialogFirstPassWidth
+import depollsoft.compose.dialogMinWidthFraction
 import depollsoft.compose.dialogTitleFits
 import depollsoft.tagmaster.ui.TagMasterType.withoutLineHeight
 
@@ -74,16 +76,24 @@ fun TagMasterDialog(
 ) {
     val colors = TagMasterTheme.colors
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+    // AppCompat's minimum dialog width for this orientation and screen size: 95% of a portrait
+    // phone, 65% in landscape, less on large and extra-large screens.
+    val minimumFraction = dialogMinWidthFraction()
     Dialog(onDismissRequest = onDismissRequest, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         MaterialDialogMotion()
         Column(
             modifier
                 .then(
                     if (wrapWidth) {
-                        Modifier.width(screenWidth * DIALOG_MIN_WIDTH_FRACTION - 48.dp)
+                        Modifier.width(screenWidth * minimumFraction - 48.dp)
                     } else {
+                        // A portrait phone's dialog spans the screen less its inset, as the old
+                        // full-width content made it; in landscape and on larger screens it stops
+                        // at AppCompat's minimum width instead of filling the screen. (The
+                        // content's own width can't be asked for: some dialogs hold subcomposed
+                        // content, which has no intrinsic size.)
                         Modifier
-                            .widthIn(max = screenWidth - 48.dp)
+                            .widthIn(max = if (minimumFraction >= DIALOG_MIN_WIDTH_FRACTION) screenWidth - 48.dp else screenWidth * minimumFraction - 48.dp)
                             .fillMaxWidth()
                     },
                 )
@@ -151,6 +161,7 @@ private fun DialogTitle(
     val colors = TagMasterTheme.colors
     val measurer = rememberTextMeasurer()
     val large = TagMasterType.headlineSmall.withoutLineHeight()
+    val firstPass = dialogFirstPassWidth()
     val small = TagMasterType.titleLarge.withoutLineHeight().copy(fontSize = 18.sp, letterSpacing = 0.sp).inWholePixels()
     Layout(
         modifier = modifier.fillMaxWidth(),
@@ -159,7 +170,7 @@ private fun DialogTitle(
             Text(title, style = small, color = colors.onSurface, maxLines = 2, overflow = TextOverflow.Ellipsis)
         },
     ) { measurables, constraints ->
-        val fits = measurer.dialogTitleFits(title, large, this, cardInset = 24.dp, finalWidth = constraints.maxWidth)
+        val fits = measurer.dialogTitleFits(title, large, this, cardInset = 24.dp, finalWidth = constraints.maxWidth, firstPassWidth = firstPass)
         val chosen = if (fits) measurables[0] else measurables[1]
         val placeable = chosen.measure(constraints.copy(minWidth = 0))
         layout(constraints.maxWidth, placeable.height) { placeable.placeRelative(0, 0) }
