@@ -32,7 +32,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
@@ -58,7 +57,6 @@ import depollsoft.pitchperfect.ui.PlateFonts
 import depollsoft.pitchperfect.ui.PlateModeToggle
 import depollsoft.pitchperfect.ui.PlatePrimaryButton
 import depollsoft.pitchperfect.ui.PlateSectionHeader
-import depollsoft.pitchperfect.ui.PlateText
 import depollsoft.pitchperfect.ui.plateColors
 import depollsoft.pitchperfect.ui.plateText
 import kotlinx.coroutines.flow.first

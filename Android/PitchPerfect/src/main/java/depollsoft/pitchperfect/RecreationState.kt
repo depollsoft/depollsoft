@@ -2,7 +2,6 @@ package depollsoft.pitchperfect
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.core.os.bundleOf
 
 /**
  * Keeps state an activity holds across recreation (rotation, or the process being reclaimed),
@@ -24,7 +23,7 @@ inline fun <reified E : Enum<E>> ComponentActivity.keepDialogOpen(
     crossinline set: (E?) -> Unit,
 ) = keepAcrossRecreation(
     key,
-    save = { bundleOf(OPEN_DIALOG to get()?.name) },
+    save = { Bundle().apply { putString(OPEN_DIALOG, get()?.name) } },
     restore = { saved -> set(saved.getString(OPEN_DIALOG)?.let { enumValueOf<E>(it) }) },
 )
 
@@ -42,11 +41,11 @@ fun ComponentActivity.keepSetListPromptsOpen(prompts: SetListPrompts) =
     keepAcrossRecreation(
         PROMPTS_KEY,
         save = {
-            bundleOf(
-                NAMING to (prompts.nameRequest != null),
-                NAMING_LIST to prompts.nameRequest?.listId,
-                DELETING to prompts.pendingDelete,
-            )
+            Bundle().apply {
+                putBoolean(NAMING, prompts.nameRequest != null)
+                putString(NAMING_LIST, prompts.nameRequest?.listId)
+                putString(DELETING, prompts.pendingDelete)
+            }
         },
         restore = { saved ->
             if (saved.getBoolean(NAMING)) prompts.nameRequest = NameRequest(saved.getString(NAMING_LIST))

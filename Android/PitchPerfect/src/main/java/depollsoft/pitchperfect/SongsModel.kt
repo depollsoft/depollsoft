@@ -80,10 +80,6 @@ class SongsModel private constructor() {
         }
     }
 
-    fun notifyListsChanged() {
-        listsChanged.changed()
-    }
-
     // MARK: - Reading
 
     /** `default` first, then custom lists by `order`, then unordered ones by display name. */
@@ -466,10 +462,6 @@ class SongsModel private constructor() {
         userDoc = null
         pruneOnServerSnapshot = false
         attachment.clear()
-    }
-
-    fun removeSongList(key: String) {
-        songLists = songLists - key
     }
 
     fun storeAll() {

@@ -1,7 +1,6 @@
 package depollsoft.tagmaster.barbershop
 
 import android.net.Uri
-import android.util.Log
 import kotlin.jvm.JvmOverloads
 import depollsoft.lib.activity.RichApplication
 import org.json.JSONObject
@@ -107,9 +106,7 @@ class Tag {
         }
     }
 
-    override fun equals(obj: Any?): Boolean {
-        return if (obj == null || obj !is Tag) false else (obj as Tag).id == id
-    }
+    override fun equals(other: Any?): Boolean = other is Tag && other.id == id
 
     val keyNote: Note?
         get() {
@@ -121,8 +118,6 @@ class Tag {
             return Note.findNote("" + noteName[0], acc, 4)
         }
 
-    val sheetMusicSupportedFormat: Boolean
-        get() = true
     val tagUri: String
         get() = getTagUri(id)
 

@@ -35,7 +35,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,7 +55,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.PlatformTextStyle
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
@@ -78,7 +76,6 @@ import depollsoft.tagmaster.TagListActivity
 import depollsoft.tagmaster.TagLists
 import depollsoft.tagmaster.TeachableTagsActivity
 import depollsoft.tagmaster.barbershop.Tag
-import depollsoft.tagmaster.ui.ButtonStyle
 import depollsoft.tagmaster.ui.CompactBarberPole
 import depollsoft.tagmaster.ui.DialogButton
 import depollsoft.tagmaster.ui.ListDialogs

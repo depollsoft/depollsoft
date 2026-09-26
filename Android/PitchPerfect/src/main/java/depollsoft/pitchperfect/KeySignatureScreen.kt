@@ -13,7 +13,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,10 +42,8 @@ import depollsoft.pitchperfect.lib.Key
 import depollsoft.pitchperfect.ui.LegacyText
 import depollsoft.pitchperfect.ui.PlateExtendedFab
 import depollsoft.pitchperfect.ui.PlateFonts
-import depollsoft.pitchperfect.ui.PlateText
 import depollsoft.pitchperfect.ui.hairlineWidth
 import depollsoft.pitchperfect.ui.plateColors
-import depollsoft.pitchperfect.ui.plateText
 import kotlinx.coroutines.launch
 
 /**

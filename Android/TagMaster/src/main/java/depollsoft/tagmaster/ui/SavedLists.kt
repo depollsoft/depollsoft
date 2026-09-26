@@ -23,7 +23,6 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -45,7 +44,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
-import androidx.compose.ui.semantics.invisibleToUser
+import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -268,7 +267,7 @@ fun SavedTagRow(
                                 .drawBehind { if (highlight.alpha > 0f) drawRect(highlight) }
                                 .then(
                                     if (editing) {
-                                        Modifier.clearAndSetSemantics { invisibleToUser() }
+                                        Modifier.clearAndSetSemantics { hideFromAccessibility() }
                                     } else {
                                         Modifier
                                             .clickable { onOpen(id) }

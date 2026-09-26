@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="Copyright">© 2022</string>
-    <string name="app_store">google</string>
     <string name="app_version">5.1.1</string>
     <string name="Changelog"><![CDATA[Thank you for using Pitch Perfect!  Here\'s what has changed since you last used the app:
             <p>
