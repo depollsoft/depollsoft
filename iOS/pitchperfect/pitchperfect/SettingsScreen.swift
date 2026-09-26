@@ -8,6 +8,7 @@
 
 import FirebaseAuth
 import FirebaseFunctions
+import ObjectiveC
 import SwiftUI
 import UIKit
 
@@ -169,6 +170,7 @@ final class SettingsModel {
 struct SettingsScreen: View {
     @StateObject private var box = ModelBox(SettingsModel())
     @Environment(\.dismiss) private var dismiss
+    @State private var cellHeights = SettingsCellHeights.lastMeasured
 
     var body: some View {
         @Bindable var model = box.model
@@ -193,7 +195,7 @@ struct SettingsScreen: View {
                         .accessibilityIdentifier("settings.theme")
                     }
                     // UIKit's accessory control sat ⅔ pt higher in its cell.
-                    .settingsRow(height: 52)
+                    .settingsRow(height: cellHeights?.theme ?? 52)
                 } header: {
                     PlateHeader("Pitch Pipe").settingsHeader()
                 }
@@ -223,7 +225,7 @@ struct SettingsScreen: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(UnhighlightedRowStyle())
-                    .settingsRow(height: 51)
+                    .settingsRow(height: cellHeights?.plain ?? 51)
                 } header: {
                     PlateHeader("Privacy").settingsHeader().padding(.bottom, 1.0 / 3.0)
                 }
@@ -245,6 +247,8 @@ struct SettingsScreen: View {
             }
             .listStyle(.grouped)
             .scrollContentBackground(.hidden)
+            .environment(\.settingsCellHeights, cellHeights)
+            .background(SettingsCellHeights.Probe { if $0 != cellHeights { cellHeights = $0 } })
             .background(StaffBackground())
         }
         .navigationTitle("Settings")
@@ -302,6 +306,8 @@ private struct SwitchRow: View {
     let detail: String
     @Binding var isOn: Bool
 
+    @Environment(\.settingsCellHeights) private var heights
+
     var body: some View {
         Toggle(isOn: $isOn) {
             VStack(alignment: .leading, spacing: SettingsMetrics.subtitleSpacing) {
@@ -316,6 +322,9 @@ private struct SwitchRow: View {
         .tint(nil)
         // A cell's accessory view sits a little further in than its content.
         .padding(.trailing, 4.0 / 3.0)
+        // UIKit's own row height for this cell on this screen: the insets above
+        // add up to it at 3x but round a pixel taller at 2x.
+        .frame(height: heights?.subtitle)
         .settingsRow()
     }
 }
@@ -324,6 +333,7 @@ private struct ActionRow: View {
     let title: String
     let busy: Bool
     let action: () -> Void
+    @Environment(\.settingsCellHeights) private var heights
 
     var body: some View {
         Button(action: action) {
@@ -335,7 +345,7 @@ private struct ActionRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(UnhighlightedRowStyle())
-        .settingsRow(height: 51)
+        .settingsRow(height: heights?.plain ?? 51)
     }
 }
 
@@ -401,21 +411,20 @@ extension View {
 /// presented from whichever tab asks, so reopening it (from any tab) finds it
 /// as it was left, scroll position and all.
 final class SettingsHost: UIHostingController<SettingsSheet> {
-    private struct Entry {
-        weak var window: UIWindow?
-        let host: SettingsHost
+    /// Address-only key for the window's association.
+    nonisolated(unsafe) private static var windowKey: UInt8 = 0
+
+    /// The Settings `window` already made, if any.
+    static func existing(for window: UIWindow) -> SettingsHost? {
+        objc_getAssociatedObject(window, &windowKey) as? SettingsHost
     }
 
-    private static var hosts: [ObjectIdentifier: Entry] = [:]
-
-    static func existing(for window: UIWindow) -> SettingsHost? { hosts[ObjectIdentifier(window)]?.host }
-
-    /// The Settings for `window`'s app: one per window, kept as long as it is.
+    /// The Settings for `window`: one per window, owned by the window, so it goes
+    /// when the window does.
     static func shared(for window: UIWindow) -> SettingsHost {
-        hosts = hosts.filter { $0.value.window != nil }
-        if let entry = hosts[ObjectIdentifier(window)] { return entry.host }
+        if let host = existing(for: window) { return host }
         let host = SettingsHost()
-        hosts[ObjectIdentifier(window)] = Entry(window: window, host: host)
+        objc_setAssociatedObject(window, &windowKey, host, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         return host
     }
 
@@ -453,31 +462,65 @@ private struct SettingsPresenter: UIViewControllerRepresentable {
     final class Presenter: UIViewController {
         /// Whether this tab's Settings is the one up: only its own tab closes it.
         private var presenting = false
+        /// The live request, read when the presentation actually happens rather
+        /// than when it was asked for.
+        private var wanted: () -> Bool = { false }
+        private var close: () -> Void = {}
+        private var scheduled = false
 
-        func sync(isPresented: Bool, close: @escaping () -> Void) {
-            guard isPresented != presenting else { return }
+        func sync(wanted: @escaping () -> Bool, close: @escaping () -> Void) {
+            self.wanted = wanted
+            self.close = close
+            guard wanted() != presenting, !scheduled else { return }
             // Not during SwiftUI's update: a hosting controller made there never
             // builds its NavigationStack's navigation controller.
+            scheduled = true
             DispatchQueue.main.async { [weak self] in
-                guard let self, let window = self.view.window else { return }
-                if isPresented {
-                    let host = SettingsHost.shared(for: window)
-                    guard !self.presenting, host.presentingViewController == nil else { return }
-                    self.presenting = true
-                    host.onClose = { [weak self] in
-                        self?.presenting = false
-                        close()
+                self?.scheduled = false
+                self?.reconcile(attempt: 0)
+            }
+        }
+
+        /// Brings the sheet in line with the request: waits out any presentation
+        /// or dismissal in flight, and hands the request back if UIKit refuses it.
+        func reconcile(attempt: Int) {
+            guard let window = view.window else { return }
+            if wanted() {
+                guard !presenting else { return }
+                let host = SettingsHost.shared(for: window)
+                // Already up (asked for by another tab): nothing to do.
+                guard host.presentingViewController == nil else { return }
+                // From the window's root, not from this controller: a NavigationStack
+                // presented from a controller inside another NavigationStack hands
+                // its title and toolbar to the presenting screen's bar.
+                var presenter = window.rootViewController ?? self
+                while let next = presenter.presentedViewController { presenter = next }
+                if presenter.isBeingPresented || presenter.isBeingDismissed,
+                   let coordinator = presenter.transitionCoordinator, attempt < 20 {
+                    coordinator.animate(alongsideTransition: nil) { [weak self] _ in
+                        DispatchQueue.main.async { self?.reconcile(attempt: attempt + 1) }
                     }
-                    // From the window's root, not from this controller: a NavigationStack
-                    // presented from a controller inside another NavigationStack hands
-                    // its title and toolbar to the presenting screen's bar.
-                    var presenter = window.rootViewController ?? self
-                    while let next = presenter.presentedViewController { presenter = next }
-                    presenter.present(host, animated: true)
-                } else if self.presenting, let host = SettingsHost.existing(for: window),
-                          host.presentingViewController != nil, !host.isBeingDismissed {
-                    host.dismiss(animated: true)
+                    return
                 }
+                if presenter.isBeingDismissed, let below = presenter.presentingViewController {
+                    presenter = below
+                }
+                presenting = true
+                host.onClose = { [weak self] in
+                    self?.presenting = false
+                    self?.close()
+                }
+                presenter.present(host, animated: true)
+                if host.presentingViewController == nil {
+                    // Refused (UIKit logs and drops a presentation it cannot make
+                    // now): hand the request back so the next tap tries again.
+                    presenting = false
+                    host.onClose = {}
+                    close()
+                }
+            } else if presenting, let host = SettingsHost.existing(for: window),
+                      host.presentingViewController != nil, !host.isBeingDismissed {
+                host.dismiss(animated: true)
             }
         }
     }
@@ -490,7 +533,7 @@ private struct SettingsPresenter: UIViewControllerRepresentable {
 
     func updateUIViewController(_ presenter: Presenter, context: Context) {
         let binding = $isPresented
-        presenter.sync(isPresented: isPresented) { binding.wrappedValue = false }
+        presenter.sync(wanted: { binding.wrappedValue }, close: { binding.wrappedValue = false })
     }
 }
 
@@ -512,6 +555,136 @@ private struct SettingsHeaderInset: ViewModifier {
 
     func body(content: Content) -> some View {
         content.padding(.horizontal, max(0, margin - 16))
+    }
+}
+
+extension EnvironmentValues {
+    /// UIKit's Settings row heights on this device, once measured.
+    @Entry var settingsCellHeights: SettingsCellHeights.Heights?
+}
+
+/// The heights UIKit's grouped table gives the Settings screen's own cells (a
+/// subtitle cell with a switch, a cell with the theme control, a plain cell) in
+/// a screen of this width, text size and size classes. Rows take these rather
+/// than adding up insets, which round differently at 2x and 3x.
+@MainActor
+enum SettingsCellHeights {
+    struct Heights: Equatable {
+        var subtitle: CGFloat
+        var theme: CGFloat
+        var plain: CGFloat
+    }
+
+    struct Key: Hashable {
+        var width: CGFloat
+        var category: UIContentSizeCategory
+        var horizontal: UIUserInterfaceSizeClass
+        var vertical: UIUserInterfaceSizeClass
+    }
+
+    private static var measured: [Key: Heights] = [:]
+    static var lastMeasured: Heights?
+
+    private final class Cells: NSObject, UITableViewDataSource {
+        func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int { 3 }
+
+        func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+            // Built as DPSettingsViewController built them.
+            switch indexPath.row {
+            case 0:
+                let cell = UITableViewCell(style: .subtitle, reuseIdentifier: nil)
+                cell.textLabel?.text = "Toggle Notes"
+                cell.detailTextLabel?.text = "Notes play until pressed again"
+                cell.accessoryView = UISwitch()
+                return cell
+            case 1:
+                let cell = UITableViewCell(style: .default, reuseIdentifier: nil)
+                cell.textLabel?.text = "Theme"
+                cell.accessoryView = UISegmentedControl(items: ["Default", "Light", "Dark"])
+                return cell
+            default:
+                let cell = UITableViewCell(style: .default, reuseIdentifier: nil)
+                cell.textLabel?.text = "Log in"
+                cell.accessoryView = UIActivityIndicatorView(style: .medium)
+                return cell
+            }
+        }
+    }
+
+    static func measure(_ key: Key, traits: UITraitCollection, in window: UIWindow) -> Heights {
+        if let heights = measured[key] {
+            lastMeasured = heights
+            return heights
+        }
+        let screen = UIViewController()
+        let navigation = UINavigationController(rootViewController: screen)
+        navigation.traitOverrides.horizontalSizeClass = key.horizontal
+        navigation.traitOverrides.verticalSizeClass = key.vertical
+        navigation.traitOverrides.preferredContentSizeCategory = key.category
+        navigation.view.frame = CGRect(x: 0, y: 0, width: key.width, height: 800)
+        navigation.view.isHidden = true
+        window.addSubview(navigation.view)
+        defer { navigation.view.removeFromSuperview() }
+        let cells = Cells()
+        let table = UITableView(frame: CGRect(x: 0, y: 0, width: key.width, height: 800), style: .grouped)
+        table.dataSource = cells
+        screen.view.addSubview(table)
+        navigation.view.layoutIfNeeded()
+        table.reloadData()
+        table.layoutIfNeeded()
+        let heights = Heights(subtitle: table.rectForRow(at: IndexPath(row: 0, section: 0)).height,
+                              theme: table.rectForRow(at: IndexPath(row: 1, section: 0)).height,
+                              plain: table.rectForRow(at: IndexPath(row: 2, section: 0)).height)
+        measured[key] = heights
+        lastMeasured = heights
+        return heights
+    }
+
+    /// Measures for the screen's own container, again when its width, text size
+    /// or size classes change.
+    struct Probe: UIViewRepresentable {
+        let measured: (Heights) -> Void
+
+        final class View: UIView {
+            var measured: (Heights) -> Void = { _ in }
+            private var measuredFor: Key?
+
+            override func didMoveToWindow() {
+                super.didMoveToWindow()
+                measure()
+            }
+
+            override func layoutSubviews() {
+                super.layoutSubviews()
+                measure()
+            }
+
+            override func traitCollectionDidChange(_ previous: UITraitCollection?) {
+                super.traitCollectionDidChange(previous)
+                measure()
+            }
+
+            private func measure() {
+                guard let window, let container = owningViewController?.view, container.bounds.width > 0 else { return }
+                let traits = container.traitCollection
+                let key = Key(width: container.bounds.width, category: traits.preferredContentSizeCategory,
+                              horizontal: traits.horizontalSizeClass, vertical: traits.verticalSizeClass)
+                guard key != measuredFor else { return }
+                measuredFor = key
+                let heights = SettingsCellHeights.measure(key, traits: traits, in: window)
+                let report = measured
+                DispatchQueue.main.async { report(heights) }
+            }
+        }
+
+        func makeUIView(context: Context) -> View {
+            let view = View()
+            view.isUserInteractionEnabled = false
+            view.isAccessibilityElement = false
+            return view
+        }
+
+        func updateUIView(_ view: View, context: Context) { view.measured = measured }
     }
 }
 

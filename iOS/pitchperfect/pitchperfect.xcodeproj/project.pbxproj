@@ -132,6 +132,8 @@
 		3E96EB53A597815ADF403A0A /* PitchPerfectSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499260AA39BC26906364161C /* PitchPerfectSettingsTests.swift */; };
 		C18B4F0CE52A1F33743F1A54 /* PitchPerfectAuditTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F3D14BD6CCE8D6334A7ACEA /* PitchPerfectAuditTests.swift */; };
 		4833DD5905A555F0F65EFA77 /* PitchPerfectRound2Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AFEF38D07E60E290D1530BF /* PitchPerfectRound2Tests.swift */; };
+		67EB40D10F8194725DEF4997 /* UIKitSetListSelectorReference.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0349F38E16D7E5FC08B30A3D /* UIKitSetListSelectorReference.swift */; };
+		3FA984DCB4689A7F95CD5B73 /* PitchPerfectFinalReviewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD05A18482DA75F31160AFC7 /* PitchPerfectFinalReviewTests.swift */; };
 		1F162A3E6D015D56AB99FD87 /* PitchPerfectSongManagementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5965ABAE6CDE569D817AF0A5 /* PitchPerfectSongManagementTests.swift */; };
 		319BAFA3CDBA97E6CCDAEBAD /* FirebaseAnalyticsCore in Frameworks */ = {isa = PBXBuildFile; productRef = 02C2927DF115B8E67AFA6F59 /* FirebaseAnalyticsCore */; };
 		3590F25955BA13F49EF7DED7 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 6D805B3F00E05D86234DC2BF /* FirebaseCrashlytics */; };
@@ -340,6 +342,8 @@
 		499260AA39BC26906364161C /* PitchPerfectSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectSettingsTests.swift; sourceTree = "<group>"; };
 		7F3D14BD6CCE8D6334A7ACEA /* PitchPerfectAuditTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectAuditTests.swift; sourceTree = "<group>"; };
 		3AFEF38D07E60E290D1530BF /* PitchPerfectRound2Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectRound2Tests.swift; sourceTree = "<group>"; };
+		0349F38E16D7E5FC08B30A3D /* UIKitSetListSelectorReference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIKitSetListSelectorReference.swift; sourceTree = "<group>"; };
+		CD05A18482DA75F31160AFC7 /* PitchPerfectFinalReviewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectFinalReviewTests.swift; sourceTree = "<group>"; };
 		5965ABAE6CDE569D817AF0A5 /* PitchPerfectSongManagementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectSongManagementTests.swift; sourceTree = "<group>"; };
 		BD8765116ED3097D4A35113F /* AdConsent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AdConsent.swift; path = pitchperfect/AdConsent.swift; sourceTree = "<group>"; };
 		FA302DC4CFB02B16EA9E5DD8 /* ConsentUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConsentUITests.swift; path = ../shared/ConsentUITests.swift; sourceTree = "<group>"; };
@@ -621,6 +625,8 @@
 				C0NEWF0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift */,
 				C0NEWF0050000000000000F5 /* PitchChordTests.swift */,
 				5965ABAE6CDE569D817AF0A5 /* PitchPerfectSongManagementTests.swift */,
+				CD05A18482DA75F31160AFC7 /* PitchPerfectFinalReviewTests.swift */,
+				0349F38E16D7E5FC08B30A3D /* UIKitSetListSelectorReference.swift */,
 				3AFEF38D07E60E290D1530BF /* PitchPerfectRound2Tests.swift */,
 				7F3D14BD6CCE8D6334A7ACEA /* PitchPerfectAuditTests.swift */,
 				499260AA39BC26906364161C /* PitchPerfectSettingsTests.swift */,
@@ -976,6 +982,8 @@
 				C0NEWT0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift in Sources */,
 				C0NEWT0050000000000000F5 /* PitchChordTests.swift in Sources */,
 				1F162A3E6D015D56AB99FD87 /* PitchPerfectSongManagementTests.swift in Sources */,
+				3FA984DCB4689A7F95CD5B73 /* PitchPerfectFinalReviewTests.swift in Sources */,
+				67EB40D10F8194725DEF4997 /* UIKitSetListSelectorReference.swift in Sources */,
 				4833DD5905A555F0F65EFA77 /* PitchPerfectRound2Tests.swift in Sources */,
 				C18B4F0CE52A1F33743F1A54 /* PitchPerfectAuditTests.swift in Sources */,
 				3E96EB53A597815ADF403A0A /* PitchPerfectSettingsTests.swift in Sources */,

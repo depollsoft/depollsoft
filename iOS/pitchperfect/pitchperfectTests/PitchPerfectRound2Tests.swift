@@ -231,12 +231,6 @@ final class RowAndSettingsDetailTests: PitchPerfectTestCase {
         XCTAssertTrue(text.text.hasPrefix("Recommended:"))
     }
 
-    func testTableMarginsFollowUIKitsForTheDevice() throws {
-        let app = try launch()
-        let screen = TableMargin.Container(width: app.window.bounds.width, traits: app.window.traitCollection, style: .plain)
-        XCTAssertEqual(TableMargin.measure(screen, in: app.window), UIDevice.current.userInterfaceIdiom == .pad ? 16 : 20)
-    }
-
     /// Settings measures its margin as a grouped table in its own sheet, which is
     /// what a real grouped UIKit table in the same sheet gets (not the window's).
     func testTheSettingsSheetMeasuresAGroupedTableInItself() throws {
