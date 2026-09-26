@@ -3,6 +3,8 @@ package depollsoft.tagmaster
 import android.app.Application
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -68,6 +70,41 @@ class FormFeedbackScreenTest : ComposeScreenTest() {
         compose.onNode(hasContentDescription(clear), useUnmergedTree = true).performKeyInput { pressKey(Key.Tab) }
         idle()
         assertFalse("text but no focus", shown())
+    }
+
+    @Test
+    fun clearingTheSearchFromTheKeyboardPutsFocusBackInTheField() {
+        launch(TagSearchActivity::class.java)
+        val clear = app.getString(com.google.android.material.R.string.clear_text_end_icon_content_description)
+        node("searchTextBox").performTextInput("heart")
+        node("searchTextBox").performKeyInput { pressKey(Key.Tab) }
+        idle()
+        compose.onNode(hasContentDescription(clear), useUnmergedTree = true).performKeyInput { pressKey(Key.Enter) }
+        idle()
+        node("searchTextBox").assertIsFocused()
+        assertEquals("", node("searchTextBox").fetchSemanticsNode().config.getOrNull(SemanticsProperties.EditableText)?.text)
+    }
+
+    @Test
+    fun eachSearchDropdownIsNamedByItsLabelWithItsChoiceAsState() {
+        launch(TagSearchActivity::class.java)
+        val sheet = node("sheetMusicSpinner").fetchSemanticsNode().config
+        assertEquals(listOf(app.getString(R.string.SheetMusicSentence)), sheet.getOrNull(SemanticsProperties.ContentDescription))
+        assertEquals(app.resources.getStringArray(R.array.SheetMusicChoices)[0], sheet.getOrNull(SemanticsProperties.StateDescription))
+        val sort = node("sortBySpinner").fetchSemanticsNode().config
+        assertEquals(listOf(app.getString(R.string.SortBy)), sort.getOrNull(SemanticsProperties.ContentDescription))
+    }
+
+    @Test
+    fun aFieldsErrorIsExposedAndAnnounced() {
+        launch(MeActivity::class.java)
+        click("openByIdButton")
+        node("openTagIdInput").performTextInput("abc")
+        click("openTagConfirm")
+        val message = app.getString(R.string.home_invalid_tag_id)
+        assertEquals(message, node("openTagIdInput").fetchSemanticsNode().config.getOrNull(SemanticsProperties.Error))
+        val shown = compose.onNode(hasText(message), useUnmergedTree = true).fetchSemanticsNode().config
+        assertEquals(LiveRegionMode.Polite, shown.getOrNull(SemanticsProperties.LiveRegion))
     }
 
     @Test

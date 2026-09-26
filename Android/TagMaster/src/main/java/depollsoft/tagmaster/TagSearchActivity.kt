@@ -24,6 +24,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -126,6 +128,7 @@ private fun SearchScreen(
                         val searchFocused by searchInteractions.collectIsFocusedAsState()
                         val clearInteractions = remember { MutableInteractionSource() }
                         val clearFocused by clearInteractions.collectIsFocusedAsState()
+                        val fieldFocus = remember { FocusRequester() }
                         OutlinedField(
                             label = stringResource(R.string.SearchBoxHint),
                             value = text,
@@ -142,6 +145,9 @@ private fun SearchScreen(
                                     stringResource(com.google.android.material.R.string.clear_text_end_icon_content_description),
                                     interactionSource = clearInteractions,
                                 ) {
+                                    // Clearing hides the icon; a keyboard user who pressed it goes
+                                    // back to the field, as MDC's clear icon returned focus there.
+                                    if (clearFocused) fieldFocus.requestFocus()
                                     text = TextFieldValue("")
                                     model.query = ""
                                 },
@@ -151,6 +157,7 @@ private fun SearchScreen(
                             keyboardActions = KeyboardActions(onSearch = { onSearch() }),
                             fieldModifier =
                                 Modifier
+                                    .focusRequester(fieldFocus)
                                     .onPreviewKeyEvent {
                                         if (it.type == KeyEventType.KeyDown && it.key == Key.Enter) {
                                             onSearch()

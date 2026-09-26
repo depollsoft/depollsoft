@@ -55,6 +55,10 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.error
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
@@ -62,6 +66,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import depollsoft.tagmaster.ui.TagMasterType.withoutLineHeight
@@ -159,10 +164,10 @@ fun OutlinedField(
                                 )
                             }
                             if (progress > 0f && label.isNotEmpty()) {
-                                val gap = (notchEnd - notchStart) * progress
-                                clipRect(right = notchStart) { drawOutline() }
-                                clipRect(left = notchStart + gap) { drawOutline() }
-                                clipRect(left = notchStart, right = notchStart + gap, top = strokeWidth.toPx() * 2) { drawOutline() }
+                                val notch = outlineNotch(size.width, notchStart, (notchEnd - notchStart) * progress, layoutDirection)
+                                clipRect(right = notch.start) { drawOutline() }
+                                clipRect(left = notch.endInclusive) { drawOutline() }
+                                clipRect(left = notch.start, right = notch.endInclusive, top = strokeWidth.toPx() * 2) { drawOutline() }
                             } else {
                                 drawOutline()
                             }
@@ -186,11 +191,15 @@ fun OutlinedField(
                                 BasicTextField(
                                     value = value,
                                     onValueChange = onValueChange,
-                                    // The field is named by its label, as TextInputLayout named its EditText.
+                                    // The field is named by its label and carries its error, as
+                                    // TextInputLayout's accessibility delegate set hint and error.
                                     modifier =
                                         fieldModifier
                                             .fillMaxWidth()
-                                            .semantics { if (label.isNotEmpty()) contentDescription = label },
+                                            .semantics {
+                                                if (label.isNotEmpty()) contentDescription = label
+                                                if (error != null) error(error)
+                                            },
                                     textStyle = hintStyle.copy(color = textColor),
                                     maxLines = maxLines,
                                     singleLine = maxLines == 1,
@@ -251,7 +260,9 @@ fun OutlinedField(
             ) {
                 Text(
                     error ?: helper ?: "",
-                    Modifier.weight(1f),
+                    // An error appearing is announced, as TextInputLayout's error view was a polite
+                    // live region.
+                    Modifier.weight(1f).semantics { if (error != null) liveRegion = LiveRegionMode.Polite },
                     style = TagMasterType.bodySmall.withoutLineHeight(),
                     color = if (error != null) colors.error else colors.onSurfaceVariant,
                 )
@@ -338,7 +349,13 @@ fun DropdownField(
                 Modifier
                     .onSizeChanged { fieldWidth = it.width }
                     .clickable(role = Role.DropdownList) { expanded = true }
-                    .semantics { role = Role.DropdownList }
+                    // Named by its label, with the choice as its state: the floating label is
+                    // drawn only, so without this two dropdowns sharing a choice read the same.
+                    .semantics {
+                        role = Role.DropdownList
+                        contentDescription = label
+                        stateDescription = choices.getOrElse(selected.coerceAtLeast(0)) { "" }
+                    }
                     .testTag(tag),
         )
         // The list is as wide as the field and marks the current choice.
@@ -372,3 +389,17 @@ fun DropdownField(
         }
     }
 }
+
+/**
+ * The span cut from an outlined field's top edge for its floating label: [gap] wide, opening from
+ * [notchStart] after the start edge. The label is placed from the start, so in a right-to-left
+ * layout the notch is mirrored across the field's [width], as TextInputLayout's cutout followed
+ * its label.
+ */
+internal fun outlineNotch(
+    width: Float,
+    notchStart: Float,
+    gap: Float,
+    layoutDirection: LayoutDirection,
+): ClosedFloatingPointRange<Float> =
+    if (layoutDirection == LayoutDirection.Rtl) (width - notchStart - gap)..(width - notchStart) else notchStart..(notchStart + gap)
