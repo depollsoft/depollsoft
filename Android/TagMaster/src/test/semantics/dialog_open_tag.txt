@@ -1,0 +1,31 @@
+window
+  pane="Tag Master"
+    text="Tag Master"
+    Button desc="Settings" [click, longClick]
+    Button text="EDIT" disabled [click]
+  collection=3x1 group [scroll]
+    Button text="Browse" [click]
+    Button text="Random Tag" [click]
+    Button text="Open Tag" [click]
+    heading text="Lists"
+    Button text="Teachable Tags" | "0 tags" [click]
+    Button text="New list…" [click]
+    heading text="Favorites"
+    text="No favorites yet. Open a tag and tap the heart to keep it here."
+    text="Tag Master"
+    text=" - "
+    text="Version 6.1.0"
+    Button text="Content provided by BarbershopTags.com" [click]
+    Button text="DepollSoft" [click]
+    text="© 2026"
+    Button text="Terms of Use" [click]
+    Button text="Donate" [click]
+  Button desc="Search" [click]
+
+window
+  pane="Enter Tag ID"
+    text="Enter Tag ID"
+    text="Enter Tag ID"
+    desc="Tag ID" editable="" [click, longClick, setText]
+    Button text="Cancel" [click]
+    Button text="Open" [click]

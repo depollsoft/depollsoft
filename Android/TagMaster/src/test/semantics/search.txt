@@ -1,0 +1,13 @@
+window
+  pane="Tag Master"
+    Button desc="Navigate up" [click, longClick]
+    text="Tag Master"
+  group [scroll]
+    desc="Tag title or lyrics" editable="" [click, longClick, setText]
+    heading text="Search Options"
+    DropdownList desc="Sort by" text="Title" state="Title" [click]
+    DropdownList desc="Sheet music" text="Not important" state="Not important" [click]
+    DropdownList desc="Learning tracks" text="Not important" state="Not important" [click]
+    DropdownList desc="Parts" text="Any" state="Any" [click]
+    DropdownList desc="Tag collection" text="Any" state="Any" [click]
+  Button desc="Search" [click]
