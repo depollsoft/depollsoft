@@ -206,7 +206,9 @@ each over an `@Observable` model.
 - **Margins.** Rows read the table margin from the environment: 20 points on
   iPhone, 16 in the iPad sidebar (`tmTableMargin`). Inset-grouped screens
   (Settings, Search, the list picker) set `contentMargins` to UIKit's card
-  position and pass the matching row inset down as `tmInsetRowMargin`.
+  position and pass the matching row inset down as `tmInsetRowMargin`. Rows apply it with
+  `tmInsetRow()`, read inside the list: a screen's own `@Environment` sees the
+  value from above its list, before the list's modifiers set it.
 - **UIKit controls kept where SwiftUI cannot match.** The filter menu fallback
   is UIKit's gray menu button (`TMFilterMenuButton`). Its representable answers
   an unproposed width with its natural width, or `ViewThatFits` never picks the
