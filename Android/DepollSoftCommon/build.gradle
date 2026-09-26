@@ -11,6 +11,9 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     // GOLDEN_TOLERANCE; the apps' screenshot tests bring Roborazzi themselves.
     testFixturesCompileOnly "io.github.takahirom.roborazzi:roborazzi:$roborazzi_version"
+    // SemanticsSnapshot reads a Compose semantics tree; the apps' tests bring Compose's test APIs.
+    testFixturesCompileOnly platform(compose_bom)
+    testFixturesCompileOnly 'androidx.compose.ui:ui-test'
     testImplementation 'org.robolectric:robolectric:4.16.1'
 }
 

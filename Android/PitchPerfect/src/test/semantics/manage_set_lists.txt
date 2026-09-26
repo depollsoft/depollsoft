@@ -1,0 +1,11 @@
+window
+  Button desc="Navigate up" [click, longClick]
+  text="Set Lists"
+  collection=3x1 group [scroll]
+    desc="My Songs, current set list" text="My Songs" | "8 songs" [click]
+      Button desc="More actions for My Songs" [click]
+    desc="Drag to reorder" text="Contest Set" | "2 songs" [click, "Move Down"]
+      Button desc="More actions for Contest Set" [click]
+    desc="Drag to reorder" text="Chapter Show" | "No songs" [click, "Move Up"]
+      Button desc="More actions for Chapter Show" [click]
+  Button desc="New set list" [click]

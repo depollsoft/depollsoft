@@ -1,0 +1,23 @@
+window
+  text="Edit Song"
+  Button desc="Remove Song" [click, longClick]
+  Button desc="Cancel" [click, longClick]
+  Button desc="OK" [click, longClick]
+  text="SONG TITLE"
+  desc="Song Title" editable="Shenandoah" [click, longClick, setText]
+  text=""
+  text="SONG KEY"
+  RadioButton desc="Major keys" text="MAJOR" unselected [click]
+  RadioButton desc="Minor keys" text="MINOR" selected [click]
+  collection=13x1 group [scroll]
+    RadioButton desc="E flat minor, 6 flats" text="&€" | "eí" unselected [click]
+    RadioButton desc="B flat minor, 5 flats" text="&¬" | "bí" unselected [click]
+    RadioButton desc="F minor, 4 flats" text="&«" | "f" unselected [click]
+    RadioButton desc="C minor, 3 flats" text="&ª" | "c" selected [click]
+    RadioButton desc="G minor, 2 flats" text="&©" | "g" unselected [click]
+    RadioButton desc="D minor, 1 flat" text="&¨" | "d" unselected [click]
+    RadioButton desc="A minor, no sharps or flats" text="&" | "a" unselected [click]
+    RadioButton desc="E minor, 1 sharp" text="&¡" | "e" unselected [click]
+    RadioButton desc="B minor, 2 sharps" text="&¢" | "b" unselected [click]
+    RadioButton desc="F sharp minor, 3 sharps" text="&£" | "fì" unselected [click]
+  Button text="SAVE SONG" [click]

@@ -1,0 +1,25 @@
+window
+  text="Settings"
+  group [scroll]
+    text="PITCH PIPE"
+    Switch text="Notes play until pressed again" toggle=Off [click]
+    Switch text="Prevent screen from turning off or locking while Pitch Perfect is in use" toggle=Off [click]
+    Button text="CLEAR ALL SONGS" [click]
+    text="ACCOUNT"
+    text="Log in to back up and synchronize your song list and settings."
+    Button text="LOG IN" [click]
+    text="APPEARANCE"
+    RadioButton text="Default" selected [click]
+    RadioButton text="Light" unselected [click]
+    RadioButton text="Dark" unselected [click]
+    Button text="MANAGE SUBSCRIPTION" [click]
+    text="ABOUT"
+    Button text="VIEW CHANGELOG" [click]
+    text="Pitch Perfect"
+    text=" · "
+    text="Version 5.1.1"
+    Button text="DepollSoft" [click]
+    text="© 2022"
+    Button text="apps.depoll.com" [click]
+    Button text="Terms of Use" [click]
+    Button text="Privacy choices" [click]
