@@ -412,17 +412,9 @@ private struct SongRows: View {
                         .moveDisabled(!model.isEditing)
                         .onAppear { model.rowAppeared(song, at: index) }
                         .onDisappear { model.rowDisappeared(song) }
-                        .background(ListScrollViewReporter { list in
+                        .background(EnclosingScrollView { list in
                             model.listScrollView = list
-                            // UIKit put the edit controls at the table's margin;
-                            // SwiftUI's list uses its own. (The reorder control
-                            // on the other side already sat where UIKit's did.)
-                            list.preservesSuperviewLayoutMargins = false
-                            let shift = max(0, tableMargin - 16)
-                            list.layoutMargins.left = 16 + shift
-                            // The cells narrow by what the leading margin grew;
-                            // the trailing margin gives it back to the reorder control.
-                            list.layoutMargins.right = max(0, 8 - shift)
+                            SongListMargins.apply(to: list, tableMargin: tableMargin)
                         }.frame(width: 0, height: 0))
                 }
                 .onDelete(perform: model.deleteSongs)
@@ -443,6 +435,21 @@ private struct SongRows: View {
             }
             .modifier(ScrollMemory(model: model, songs: songs, proxy: proxy))
         }
+    }
+}
+
+/// UIKit put the edit controls at the table's margin; SwiftUI's list uses its
+/// own. (The reorder control on the other side already sat where UIKit's did.)
+enum SongListMargins {
+    static func apply(to list: UIScrollView, tableMargin: CGFloat) {
+        let shift = max(0, tableMargin - 16)
+        // The cells narrow by what the leading margin grew; the trailing margin
+        // gives it back to the reorder control.
+        let margins = UIEdgeInsets(top: list.layoutMargins.top, left: 16 + shift,
+                                   bottom: list.layoutMargins.bottom, right: max(0, 8 - shift))
+        guard list.preservesSuperviewLayoutMargins || list.layoutMargins != margins else { return }
+        list.preservesSuperviewLayoutMargins = false
+        list.layoutMargins = margins
     }
 }
 
@@ -467,31 +474,6 @@ private struct ScrollMemory: ViewModifier {
             }
         }
     }
-}
-
-/// Finds the collection view a List row lives in and hands it to `found`.
-struct ListScrollViewReporter: UIViewRepresentable {
-    let found: (UIScrollView) -> Void
-
-    final class Reporter: UIView {
-        var found: (UIScrollView) -> Void = { _ in }
-        override func didMoveToWindow() {
-            super.didMoveToWindow()
-            guard window != nil else { return }
-            var view = superview
-            while let current = view, !(current is UICollectionView) { view = current.superview }
-            if let list = view as? UIScrollView { found(list) }
-        }
-    }
-
-    func makeUIView(context: Context) -> Reporter {
-        let reporter = Reporter()
-        reporter.isUserInteractionEnabled = false
-        reporter.isAccessibilityElement = false
-        return reporter
-    }
-
-    func updateUIView(_ reporter: Reporter, context: Context) { reporter.found = found }
 }
 
 /// A row as the List sees it. The song is one object across edits, so the row
@@ -635,16 +617,16 @@ struct KeyReadout: View {
 
     var body: some View {
         if let key {
-            var text = Text(key.friendlyName() ?? "")
+            let name = Text(key.friendlyName() ?? "")
                 .font(Plate.mono(Self.size))
                 .kerning(Self.size * 0.06)
                 .foregroundColor(color)
             if let glyph = Plate.glyph(for: SongEditorSpeech.accidental(of: key)) {
-                text = text + Text(glyph).font(Plate.noteHedz(Self.size * 1.2)).foregroundColor(color)
+                name + Text(glyph).font(Plate.noteHedz(Self.size * 1.2)).foregroundColor(color)
+            } else {
+                name
             }
-            return AnyView(text)
         }
-        return AnyView(EmptyView())
     }
 }
 
@@ -683,12 +665,7 @@ struct SongEditorPresenter: UIViewControllerRepresentable {
             navigation.modalTransitionStyle = request.isNew ? .coverVertical : .flipHorizontal
             navigation.modalPresentationStyle = .automatic
             presentedEditor = navigation
-            // Present once this controller is in a window; SwiftUI may update it first.
-            DispatchQueue.main.async { [weak self] in
-                guard let self, self.presentedEditor === navigation else { return }
-                var presenter: UIViewController = self
-                while let next = presenter.presentedViewController { presenter = next }
-                presenter.present(navigation, animated: true)
+            presentOnTop(navigation, stillWanted: { [weak self] in self?.presentedEditor === navigation }) { [weak self] in
                 navigation.presentationController?.delegate = self
             }
         }

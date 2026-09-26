@@ -98,6 +98,7 @@
 		44E7D9830E8096A5A299F8A0 /* SetListsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99D5B492DCC792ECA65B576A /* SetListsScreen.swift */; };
 		E65EDFC2976D88A001EA44A8 /* AddSongsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1737B3746383017103376669 /* AddSongsScreen.swift */; };
 		F4894DA333155429B1C25ED3 /* LoginScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38A9F2873253B92DF9F3EC95 /* LoginScreen.swift */; };
+		A4E5ADA8D05A8CE05F741E93 /* ScrollViewFinders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AC397F0D61D3C7FD50858BC /* ScrollViewFinders.swift */; };
 		ABBB000A000000000000000A /* SongEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBB00090000000000000009 /* SongEditorView.swift */; };
 		ABBB00030000000000000003 /* PitchChord.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBB00010000000000000001 /* PitchChord.swift */; };
 		C0AUTH001000000000000001 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C0AUTH001000000000000002 /* Localizable.strings */; };
@@ -249,6 +250,7 @@
 		99D5B492DCC792ECA65B576A /* SetListsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetListsScreen.swift; sourceTree = "<group>"; };
 		1737B3746383017103376669 /* AddSongsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddSongsScreen.swift; sourceTree = "<group>"; };
 		38A9F2873253B92DF9F3EC95 /* LoginScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginScreen.swift; sourceTree = "<group>"; };
+		3AC397F0D61D3C7FD50858BC /* ScrollViewFinders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollViewFinders.swift; sourceTree = "<group>"; };
 		ABBB00090000000000000009 /* SongEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SongEditorView.swift; sourceTree = "<group>"; };
 		631C911515906D2B004733F1 /* notes.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = notes.png; sourceTree = "<group>"; };
 		631C911615906D2B004733F1 /* notes@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "notes@2x.png"; sourceTree = "<group>"; };
@@ -572,6 +574,7 @@
 				ABBB00010000000000000001 /* PitchChord.swift */,
 				ABBB00060000000000000006 /* PitchRadialLayout.swift */,
 				ABBB00090000000000000009 /* SongEditorView.swift */,
+				3AC397F0D61D3C7FD50858BC /* ScrollViewFinders.swift */,
 				38A9F2873253B92DF9F3EC95 /* LoginScreen.swift */,
 				1737B3746383017103376669 /* AddSongsScreen.swift */,
 				99D5B492DCC792ECA65B576A /* SetListsScreen.swift */,
@@ -930,6 +933,7 @@
 				1E989A3122F5063000EA9F2E /* DPAppDelegate.swift in Sources */,
 				ABBB00070000000000000007 /* PitchRadialLayout.swift in Sources */,
 				ABBB000A000000000000000A /* SongEditorView.swift in Sources */,
+				A4E5ADA8D05A8CE05F741E93 /* ScrollViewFinders.swift in Sources */,
 				F4894DA333155429B1C25ED3 /* LoginScreen.swift in Sources */,
 				E65EDFC2976D88A001EA44A8 /* AddSongsScreen.swift in Sources */,
 				44E7D9830E8096A5A299F8A0 /* SetListsScreen.swift in Sources */,

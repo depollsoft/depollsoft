@@ -8,6 +8,7 @@
 
 import Combine
 import Foundation
+import UIKit
 
 enum DPCommon {
     private static let barButtonLabels = [
@@ -37,4 +38,21 @@ enum DPCommon {
 final class ModelBox<Model: AnyObject>: ObservableObject {
     let model: Model
     init(_ model: Model) { self.model = model }
+}
+
+extension UIViewController {
+    /// Presents `controller` over whatever is already presented here, on the next
+    /// turn of the run loop: SwiftUI may hand a representable its update before
+    /// the controller is in a window. `stillWanted` is asked again then, and
+    /// `presented` runs right after presenting.
+    func presentOnTop(_ controller: UIViewController, stillWanted: @escaping () -> Bool,
+                      presented: @escaping () -> Void = {}) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self, stillWanted() else { return }
+            var presenter: UIViewController = self
+            while let next = presenter.presentedViewController { presenter = next }
+            presenter.present(controller, animated: true)
+            presented()
+        }
+    }
 }

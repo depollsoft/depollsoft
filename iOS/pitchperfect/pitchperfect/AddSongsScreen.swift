@@ -215,11 +215,7 @@ struct AddSongsPresenter: UIViewControllerRepresentable {
                 controller.onFinish = { [weak self] in self?.close() }
                 let navigation = controller.embeddedInNavigation()
                 shown = navigation
-                DispatchQueue.main.async { [weak self] in
-                    guard let self, self.shown === navigation else { return }
-                    var presenter: UIViewController = self
-                    while let next = presenter.presentedViewController { presenter = next }
-                    presenter.present(navigation, animated: true)
+                presentOnTop(navigation, stillWanted: { [weak self] in self?.shown === navigation }) { [weak self] in
                     navigation.presentationController?.delegate = self
                 }
             } else if !isPresented, let navigation = shown {

@@ -63,13 +63,18 @@ enum SetListSelectorMetrics {
 struct SetListSelector: View {
     let model: SongListModel
     @State private var scroller = ScrollViewHandle()
+    @State private var geometry = SelectorGeometry()
 
     var body: some View {
         let lists = model.lists
         let currentId = model.currentListId
+        let titles = lists.map(model.displayName)
         GeometryReader { frame in
+            // Measured here, on the main actor, where UIKit may be asked; the row's
+            // Layout only places what it is given (SwiftUI may lay out off the main thread).
+            let frames = geometry.frames(titles: titles, width: frame.size.width)
             ScrollView(.horizontal, showsIndicators: false) {
-                ProportionalRow(minimumWidth: frame.size.width) {
+                ProportionalRow(frames: frames, minimumWidth: frame.size.width) {
                     ForEach(Array(lists.enumerated()), id: \.element.id) { index, list in
                         if index > 0 { Hairline() }
                         position(list, selected: list.id == currentId)
@@ -77,15 +82,15 @@ struct SetListSelector: View {
                     Hairline()
                     newPosition
                 }
-                .background(ScrollViewFinder { scroller.view = $0 }.frame(width: 0, height: 0))
+                .background(EnclosingScrollView(UIScrollView.self) { scroller.view = $0 }.frame(width: 0, height: 0))
             }
             .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
             // Keeps the chosen position in view whenever the positions change
             // size or place, as the UIKit selector did on every layout.
-            .onAppear { reveal(lists: lists, currentId: currentId, width: frame.size.width) }
+            .onAppear { reveal(lists: lists, currentId: currentId, frames: frames) }
             .onChange(of: SelectorLayout(currentId: currentId, width: frame.size.width,
                                          positions: lists.map { "\($0.id)\u{0}\(model.displayName($0))" })) { _, layout in
-                reveal(lists: lists, currentId: layout.currentId, width: layout.width)
+                reveal(lists: lists, currentId: layout.currentId, frames: frames)
             }
         }
         .frame(height: SetListSelectorMetrics.height)
@@ -98,17 +103,14 @@ struct SetListSelector: View {
 
     /// Scrolls the chosen position into view (with its frame's stroke) once the
     /// row has been laid out with the change, as scrollRectToVisible in the UIKit
-    /// selector's layoutSubviews did. (ScrollViewReader cannot reach views placed
-    /// by a custom Layout, so the rect comes from the same arithmetic.)
-    private func reveal(lists: [DPSongList], currentId: String, width: CGFloat) {
-        guard let index = lists.firstIndex(where: { $0.id == currentId }) else { return }
-        let spans = SetListSelectorMetrics.positionSpans(titles: lists.map(model.displayName), width: width)
-        let span = spans[index]
+    /// selector's layoutSubviews did.
+    private func reveal(lists: [DPSongList], currentId: String, frames: [CGRect]) {
+        guard let index = lists.firstIndex(where: { $0.id == currentId }), frames.indices.contains(index * 2) else { return }
+        let position = frames[index * 2]
         DispatchQueue.main.async {
             guard let scrollView = scroller.view, scrollView.bounds.width > 0,
                   scrollView.contentSize.width > scrollView.bounds.width else { return }
-            let rect = CGRect(x: span.lowerBound, y: 0, width: span.upperBound - span.lowerBound,
-                              height: SetListSelectorMetrics.height)
+            let rect = CGRect(x: position.minX, y: 0, width: position.width, height: SetListSelectorMetrics.height)
                 .insetBy(dx: -SetListSelectorMetrics.frameStroke, dy: 0)
             scrollView.scrollRectToVisible(rect, animated: false)
         }
@@ -129,7 +131,6 @@ struct SetListSelector: View {
         .accessibilityLabel("\(title), \(SetListSelectorMetrics.songCountPhrase(list.songs.count))")
         .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
         .accessibilityIdentifier("setlist.\(list.id)")
-        .layoutValue(key: NaturalWidth.self, value: SetListSelectorMetrics.naturalWidth(for: title))
     }
 
     private var newPosition: some View {
@@ -149,30 +150,6 @@ struct SetListSelector: View {
 /// The selector's scroll view, once found.
 private final class ScrollViewHandle {
     weak var view: UIScrollView?
-}
-
-/// Hands over the scroll view this sits in.
-private struct ScrollViewFinder: UIViewRepresentable {
-    let found: (UIScrollView) -> Void
-
-    final class Finder: UIView {
-        var found: (UIScrollView) -> Void = { _ in }
-        override func didMoveToWindow() {
-            super.didMoveToWindow()
-            var view = superview
-            while let current = view, !(current is UIScrollView) { view = current.superview }
-            if let scrollView = view as? UIScrollView { found(scrollView) }
-        }
-    }
-
-    func makeUIView(context: Context) -> Finder {
-        let finder = Finder()
-        finder.isUserInteractionEnabled = false
-        finder.isAccessibilityElement = false
-        return finder
-    }
-
-    func updateUIView(_ finder: Finder, context: Context) { finder.found = found }
 }
 
 /// What the selector's scroll position depends on.
@@ -219,10 +196,6 @@ private struct Hairline: View {
     }
 }
 
-private struct NaturalWidth: LayoutValueKey {
-    static let defaultValue: CGFloat? = nil
-}
-
 /// The UIKit selector's own stack, laid out off screen, so the SwiftUI row puts
 /// every piece exactly where `.fillProportionally` did. (Its division of spare
 /// width is not a plain proportional share: the fixed hairlines and "+" take
@@ -234,14 +207,10 @@ enum StackGeometry {
         override var intrinsicContentSize: CGSize { natural }
     }
 
-    private static var cache: [[CGFloat]: [CGRect]] = [:]
-
     /// Frames of the arranged views in order: position, hairline, position, …,
     /// hairline, "+". `naturals` are the positions' natural widths; `width` is
     /// the frame the row scrolls within.
     static func frames(naturals: [CGFloat], width: CGFloat) -> [CGRect] {
-        let key = naturals + [width]
-        if let frames = cache[key] { return frames }
         let height = SetListSelectorMetrics.height
         let scrollView = UIScrollView(frame: CGRect(x: 0, y: 0, width: width, height: height))
         let stack = UIStackView()
@@ -279,34 +248,45 @@ enum StackGeometry {
         plus.widthAnchor.constraint(equalToConstant: SetListSelectorMetrics.newPositionWidth).isActive = true
         stack.addArrangedSubview(plus)
         scrollView.layoutIfNeeded()
-        let frames = stack.arrangedSubviews.map(\.frame)
-        cache[key] = frames
-        return frames
+        return stack.arrangedSubviews.map(\.frame)
     }
 }
 
-/// Places the selector's pieces at the frames UIKit's stack gave them. When the
-/// positions do not fit, every position keeps its natural width and the row scrolls.
+/// One selector's frames for its current titles and width: measured again only
+/// when either changes, and never kept for layouts it no longer has.
+@MainActor
+final class SelectorGeometry {
+    private var key: [CGFloat] = []
+    private var cached: [CGRect] = []
+
+    func frames(titles: [String], width: CGFloat) -> [CGRect] {
+        let naturals = titles.map(SetListSelectorMetrics.naturalWidth(for:))
+        let key = naturals + [width]
+        if key != self.key {
+            self.key = key
+            cached = StackGeometry.frames(naturals: naturals, width: width)
+        }
+        return cached
+    }
+}
+
+/// Places the selector's pieces at the frames UIKit's stack gave them (measured
+/// by the selector). When the positions do not fit, every position keeps its
+/// natural width and the row scrolls.
 private struct ProportionalRow: Layout {
+    let frames: [CGRect]
     /// The frame the row scrolls within; the positions never leave it part-empty.
     var minimumWidth: CGFloat
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let frames = Self.frames(subviews, width: minimumWidth)
         let height = proposal.height ?? SetListSelectorMetrics.height
         return CGSize(width: max(frames.last?.maxX ?? 0, minimumWidth), height: height)
     }
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let frames = Self.frames(subviews, width: minimumWidth)
         for (subview, frame) in zip(subviews, frames) {
             subview.place(at: CGPoint(x: bounds.minX + frame.minX, y: bounds.minY), anchor: .topLeading,
                           proposal: ProposedViewSize(width: frame.width, height: bounds.height))
         }
-    }
-
-    private static func frames(_ subviews: Subviews, width: CGFloat) -> [CGRect] {
-        let naturals = subviews.compactMap { $0[NaturalWidth.self] }
-        return MainActor.assumeIsolated { StackGeometry.frames(naturals: naturals, width: width) }
     }
 }

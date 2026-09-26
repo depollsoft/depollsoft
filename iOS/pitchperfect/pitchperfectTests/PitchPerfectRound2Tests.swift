@@ -15,40 +15,39 @@ import XCTest
 
 @MainActor
 final class SongStoreLaunchOrderTests: XCTestCase {
-    /// The SwiftUI app builds its song store while creating the App, before
-    /// didFinishLaunching. The store must decode saved songs on its own.
-    func testAFreshStoreDecodesSavedLegacySongsBeforeLaunchRegistersAnything() throws {
+    /// The storage the pre-set-list app wrote, literally (class names are aliases).
+    /// A process that has registered nothing is covered by the UI test
+    /// `testSongsSavedByTheOldAppDecodeInAFreshProcess`; this pins the format.
+    private static let legacyFixture = #"""
+    {"*type":"List","*items":[{"*type":"PitchedSong","Id":"0B8E7C1A-5D2F-4C3B-9E61-7A4D2F8C1B30",
+     "Name":"Saved Before Launch","Key":{"*type":"Key","KeyType":{"*name":"Major","*type":"KeyType"},
+     "NumAccidentals":{"*type":"Primitive","Type":"Integer","Value":-3},
+     "Note":{"*type":"Note","Accidental":{"*name":"Flat","*type":"Accidental"},
+     "Frequency":{"*type":"Primitive","Type":"Double","Value":311.12698372208092},"FriendlyName":"E",
+     "IsPlaying":{"*type":"Primitive","Type":"c","Value":false},
+     "Octave":{"*type":"Primitive","Type":"Integer","Value":4}}}}]}
+    """#
+
+    func testTheStoreMigratesTheOldAppsSavedSongs() throws {
         let defaults = UserDefaults.standard
-        let legacyKey = "depollsoft.pitchperfect.Songs"
-        let listsKey = "depollsoft.pitchperfect.SongLists"
-        let savedLists = defaults.object(forKey: listsKey)
+        let keys = [DPSongsModel.legacySongsKey, DPSongsModel.songListsKey]
+        let saved = keys.map { defaults.object(forKey: $0) }
         defer {
-            defaults.removeObject(forKey: legacyKey)
-            if let savedLists { defaults.set(savedLists, forKey: listsKey) } else { defaults.removeObject(forKey: listsKey) }
+            for (key, value) in zip(keys, saved) {
+                if let value { defaults.set(value, forKey: key) } else { defaults.removeObject(forKey: key) }
+            }
         }
-        let song = DPPitchedSong()
-        song.name = "Saved Before Launch"
-        song.key = (DPKey.majorKeys() as! [DPKey])[3]
-        SongSerialization.registerAliases()
-        let serialized = try XCTUnwrap(DPJsonSerializer.serialize(NSMutableArray(array: [song])) as? [String: Any])
-        XCTAssertEqual(serialized["*type"] as? String, "List", "saved under the aliases the store must know")
-        defaults.set(serialized, forKey: legacyKey)
-        defaults.removeObject(forKey: listsKey)
+        let fixture = try JSONSerialization.jsonObject(with: Data(Self.legacyFixture.utf8))
+        defaults.set(fixture, forKey: DPSongsModel.legacySongsKey)
+        defaults.removeObject(forKey: DPSongsModel.songListsKey)
 
         let store = DPSongsModel()
         XCTAssertEqual(store.defaultSongList.songs.map(\.name), ["Saved Before Launch"])
-        XCTAssertEqual(store.defaultSongList.songs.first?.key?.isEqual(song.key), true)
-    }
-
-    func testTheTestHostNoLongerRegistersForTheStore() throws {
-        // The unit-test host mirrors the app: the store alone is responsible.
-        let source = try String(contentsOfFile: #filePath.replacingOccurrences(
-            of: "pitchperfectTests/PitchPerfectRound2Tests.swift", with: "pitchperfect/DPAppDelegate.swift"), encoding: .utf8)
-        XCTAssertFalse(source.contains("registerSerializationAliases"))
-        let store = try String(contentsOfFile: #filePath.replacingOccurrences(
-            of: "pitchperfectTests/PitchPerfectRound2Tests.swift", with: "pitchperfect/DPSongsModel.swift"), encoding: .utf8)
-        let initBody = try XCTUnwrap(store.range(of: "public override init() {").map { store[$0.upperBound...].prefix(400) })
-        XCTAssertTrue(initBody.contains("SongSerialization.registerAliases()"))
+        let key = try XCTUnwrap(store.defaultSongList.songs.first?.key)
+        XCTAssertEqual(key.friendlyName(), "E")
+        XCTAssertEqual(key.numAccidentals, -3)
+        XCTAssertNil(defaults.object(forKey: DPSongsModel.legacySongsKey), "migrated once, then removed")
+        XCTAssertNotNil(defaults.dictionary(forKey: DPSongsModel.songListsKey), "written in the set-list format")
     }
 }
 
@@ -71,22 +70,38 @@ final class UIKitChromeTests: PitchPerfectTestCase {
         XCTAssertEqual(control.selectedSegmentIndex, 0, "the control follows the model")
     }
 
-    func testTheTabBarIsTintedWithTheLabelColourWhereUIKitDrewIt() throws {
+    func testTheTabBarCarriesUIKitsOwnLabelTintOnEveryDevice() throws {
         let app = try launch()
         app.show(tab: 3)
         app.manageSetLists()
         ScreenCatalog.settle(0.3)
-        if TabTint.usesTopTabBar {
-            XCTAssertNil(TabTint.color, "iPadOS 18's top tab bar kept the system accent")
-        } else {
-            let tabBar = try XCTUnwrap(app.descendants(of: UITabBar.self, in: app.window).first)
-            func rgba(_ color: UIColor) -> [CGFloat] {
-                var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
-                color.resolvedColor(with: tabBar.traitCollection).getRed(&r, green: &g, blue: &b, alpha: &a)
-                return [r, g, b, a]
-            }
-            XCTAssertEqual(rgba(tabBar.tintColor), rgba(.label), "a pushed screen keeps the bar's label tint")
+        let tabBar = try XCTUnwrap(app.descendants(of: UITabBar.self, in: app.window).first)
+        func rgba(_ color: UIColor) -> [CGFloat] {
+            var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+            color.resolvedColor(with: tabBar.traitCollection).getRed(&r, green: &g, blue: &b, alpha: &a)
+            return [r, g, b, a]
         }
+        XCTAssertEqual(rgba(tabBar.tintColor), rgba(.label), "a pushed screen keeps the bar's label tint")
+    }
+
+    /// Under an alert UIKit greys the selected tab (its tint dims) and leaves the
+    /// others at full ink. A SwiftUI tint on the TabView inverted that.
+    func testAnAlertDimsOnlyTheTabBarsTint() throws {
+        let app = try launch()
+        app.show(tab: 3)
+        let tabBar = try XCTUnwrap(app.descendants(of: UITabBar.self, in: app.window).first)
+        XCTAssertEqual(tabBar.tintAdjustmentMode, .normal)
+        let alert = UIAlertController(title: "Test", message: nil, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .cancel))
+        app.topPresented.present(alert, animated: false)
+        settle { tabBar.tintAdjustmentMode == .dimmed }
+        // Every item, selected or not, dims from the label colour to the same grey.
+        let tints = Set(app.descendants(of: UIImageView.self, in: tabBar).map {
+            $0.tintColor.resolvedColor(with: tabBar.traitCollection).description
+        })
+        XCTAssertEqual(tints.count, 1, "selected and unselected items dim alike: \(tints)")
+        alert.dismiss(animated: false)
+        settle { tabBar.tintAdjustmentMode == .normal }
     }
 
     func testTheEditorKeepsItsBannerPinnedBelowTheFormAsUIKitLaidItOut() throws {
@@ -159,19 +174,41 @@ final class RowAndSettingsDetailTests: PitchPerfectTestCase {
         model.release(songs[0])
     }
 
-    func testSettingsComesBackWhereItWasLeft() {
+    /// Reopening Settings (a new List each time) finds it where it was left, even
+    /// at a large text size where the rows below the first screen are not built yet.
+    func testSettingsComesBackWhereItWasLeftAtALargeTextSize() throws {
         SettingsScrollMemory.forget()
-        let first = UIScrollView(frame: CGRect(x: 0, y: 0, width: 320, height: 200))
-        first.contentSize = CGSize(width: 320, height: 800)
-        SettingsScrollMemory.attach(first)
-        first.contentOffset = CGPoint(x: 0, y: 240)
-        SettingsScrollMemory.save()
-        let second = UIScrollView(frame: first.frame)
-        second.contentSize = first.contentSize
-        SettingsScrollMemory.attach(second)
-        ScreenCatalog.settle(0.05)
-        XCTAssertEqual(second.contentOffset.y, 240, "a new presentation restores the old place")
-        SettingsScrollMemory.forget()
+        defer { SettingsScrollMemory.forget() }
+        let app = try launch()
+        // On the scene, so the presented sheet takes it too.
+        let scene = try XCTUnwrap(ScreenCatalog.scene)
+        scene.traitOverrides.preferredContentSizeCategory = .accessibilityExtraExtraExtraLarge
+        defer { scene.traitOverrides.preferredContentSizeCategory = .unspecified }
+        func openList() throws -> UIScrollView {
+            app.openSettings()
+            var list: UIScrollView?
+            settle { list = self.settingsList(in: app); return list != nil && list!.contentSize.height > list!.bounds.height }
+            // As a user would: a moment after the sheet has come up.
+            ScreenCatalog.settle(0.3)
+            return try XCTUnwrap(list)
+        }
+        let first = try openList()
+        let bottom = first.contentSize.height - first.bounds.height + first.adjustedContentInset.bottom
+        let place = min(bottom, 400)
+        XCTAssertGreaterThan(place, 100, "large text makes Settings taller than its sheet")
+        first.setContentOffset(CGPoint(x: 0, y: place), animated: false)
+        app.sheet.tap(id: "checkmark")
+        settle { app.topPresented === app.host }
+        let second = try openList()
+        XCTAssertFalse(first === second, "each presentation builds a new List")
+        settle { abs(second.contentOffset.y - place) < 0.5 }
+        app.sheet.tap(id: "checkmark")
+        settle { app.topPresented === app.host }
+    }
+
+    private func settingsList(in app: HostedApp) -> UIScrollView? {
+        guard app.topPresented !== app.host else { return nil }
+        return app.descendants(of: UICollectionView.self, in: app.topPresented.view).first { $0.window != nil }
     }
 
     func testTheLoginExplanationIsTheSelectableUIKitText() throws {
@@ -186,8 +223,24 @@ final class RowAndSettingsDetailTests: PitchPerfectTestCase {
 
     func testTableMarginsFollowUIKitsForTheDevice() throws {
         let app = try launch()
-        let margin = TableMargin.measure(in: app.window)
-        XCTAssertEqual(margin, UIDevice.current.userInterfaceIdiom == .pad ? 16 : 20)
+        let screen = TableMargin.Container(size: app.window.bounds.size, traits: app.window.traitCollection, style: .plain)
+        XCTAssertEqual(TableMargin.measure(screen, in: app.window), UIDevice.current.userInterfaceIdiom == .pad ? 16 : 20)
+    }
+
+    /// Settings measures its margin as a grouped table in its own sheet, which is
+    /// what a real grouped UIKit table in the same sheet gets (not the window's).
+    func testTheSettingsSheetMeasuresAGroupedTableInItself() throws {
+        let app = try launch()
+        let reference = UITableViewController(style: .grouped)
+        let sheet = UINavigationController(rootViewController: reference)
+        app.host.present(sheet, animated: false)
+        settle { reference.view.window != nil && reference.tableView.bounds.width > 0 }
+        reference.tableView.layoutIfNeeded()
+        let uikitMargin = reference.tableView.layoutMargins.left
+        let container = TableMargin.Container(size: sheet.view.bounds.size, traits: sheet.traitCollection, style: .grouped)
+        XCTAssertEqual(TableMargin.measure(container, in: app.window), uikitMargin)
+        sheet.dismiss(animated: false)
+        settle { app.topPresented === app.host }
     }
 
     func testTheSelectorPositionsAreWhereUIKitsStackPutThem() {

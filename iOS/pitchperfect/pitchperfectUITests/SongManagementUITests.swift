@@ -89,4 +89,63 @@ final class SongManagementUITests: XCTestCase {
         delete.tap()
         XCTAssertTrue(restored.waitForNonExistence(timeout: 5))
     }
+
+    /// A song list saved by the pre-set-list app, exactly as it stored it: the
+    /// class names are the serializer's aliases, so nothing decodes unless the
+    /// store registers them before it reads (the SwiftUI app builds the store
+    /// while creating the App, before didFinishLaunching).
+    static func legacySongs(named title: String) -> [String: Any] {
+        func primitive(_ type: String, _ value: Any) -> [String: Any] {
+            ["*type": "Primitive", "Type": type, "Value": value]
+        }
+        let note: [String: Any] = [
+            "*type": "Note",
+            "Accidental": ["*name": "Flat", "*type": "Accidental"],
+            "Frequency": primitive("Double", 311.12698372208092),
+            "FriendlyName": "E",
+            "IsPlaying": primitive("c", false),
+            "Octave": primitive("Integer", 4),
+        ]
+        let song: [String: Any] = [
+            "*type": "PitchedSong",
+            "Id": "0B8E7C1A-5D2F-4C3B-9E61-7A4D2F8C1B30",
+            "Key": [
+                "*type": "Key",
+                "KeyType": ["*name": "Major", "*type": "KeyType"],
+                "Note": note,
+                "NumAccidentals": primitive("Integer", -3),
+            ] as [String: Any],
+            "Name": title,
+        ]
+        return ["*type": "List", "*items": [song]]
+    }
+
+    /// A fresh app process given only the old storage (no earlier test code has
+    /// registered anything) shows the song. This replaces the simulator's saved
+    /// songs, as the one-time migration always did, and removes the song after.
+    func testSongsSavedByTheOldAppDecodeInAFreshProcess() throws {
+        let title = "Legacy \(Int(Date().timeIntervalSince1970) % 100_000)"
+        let plist = try PropertyListSerialization.data(fromPropertyList: Self.legacySongs(named: title),
+                                                       format: .xml, options: 0)
+        app.terminate()
+        app.launchArguments += ["-depollsoft.pitchperfect.Songs", String(decoding: plist, as: UTF8.self)]
+        app.launch()
+        navigateToSongs()
+        // The row reads "<title>, <key name>": the key came back too (E flat major).
+        let row = app.buttons.matching(NSPredicate(format: "label == %@", "\(title), E")).firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 10), "the legacy song decoded with its key")
+
+        // Without the legacy argument, the migrated song is in the new storage.
+        app.terminate()
+        app.launchArguments = Array(app.launchArguments.dropLast(2))
+        app.launch()
+        navigateToSongs()
+        let migrated = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(title), ")).firstMatch
+        XCTAssertTrue(migrated.waitForExistence(timeout: 10))
+        migrated.swipeLeft()
+        let delete = app.buttons["Delete"].firstMatch
+        XCTAssertTrue(delete.waitForExistence(timeout: 5))
+        delete.tap()
+        XCTAssertTrue(migrated.waitForNonExistence(timeout: 5))
+    }
 }

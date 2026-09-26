@@ -10,7 +10,6 @@
 //  sound.
 //
 
-import Combine
 import SwiftUI
 import UIKit
 
@@ -85,19 +84,6 @@ final class SongEditorModel {
 
 // MARK: - Views
 
-/// Engraved plate label: tracked monospaced capitals in secondary ink.
-private struct PlateLabel: View {
-    let text: String
-
-    var body: some View {
-        Text(text)
-            .font(Plate.mono(12))
-            .tracking(12 * 0.14)
-            .foregroundStyle(Plate.inkSecondary)
-            .accessibilityAddTraits(.isHeader)
-    }
-}
-
 struct SongEditorView: View {
     @Bindable var model: SongEditorModel
     @FocusState private var titleFocused: Bool
@@ -105,7 +91,7 @@ struct SongEditorView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 0) {
-                PlateLabel(text: "SONG TITLE")
+                PlateHeader("Song title")
                 TextField("", text: $model.title, prompt: Text("Untitled").foregroundStyle(Plate.inkSecondary.opacity(0.6)))
                     .font(Plate.text(26))
                     .foregroundStyle(Plate.ink)
@@ -131,7 +117,7 @@ struct SongEditorView: View {
                         .accessibilityIdentifier("songTitleError")
                 }
                 HStack(alignment: .center) {
-                    PlateLabel(text: "KEY")
+                    PlateHeader("Key")
                     Spacer()
                     Picker("Key mode", selection: $model.isMinor) {
                         Text("Major").tag(false)
@@ -323,7 +309,7 @@ final class SongEditorSession {
 /// to the presenting screen's bar instead.)
 final class SongEditorController: UIViewController {
     let session: SongEditorSession
-    private let form: UIHostingController<SongEditorFormHost>
+    private let form: UIHostingController<SongEditorView>
     private let banner = BannerHostView()
     private var bannerHeight: NSLayoutConstraint?
 
@@ -331,7 +317,7 @@ final class SongEditorController: UIViewController {
 
     init(request: SongEditorRequest) {
         session = SongEditorSession(request: request)
-        form = UIHostingController(rootView: SongEditorFormHost(model: session.model))
+        form = UIHostingController(rootView: SongEditorView(model: session.model))
         super.init(nibName: nil, bundle: nil)
         navigationItem.title = session.title
         navigationItem.leftBarButtonItem = BarSymbol.item(systemName: "xmark", target: self, action: #selector(close))
@@ -397,13 +383,4 @@ final class SongEditorController: UIViewController {
 
     @objc private func close() { session.cancel() }
     @objc private func done() { session.complete() }
-}
-
-/// The form as the editor controller hosts it: clear, so the staff shows through.
-struct SongEditorFormHost: View {
-    let model: SongEditorModel
-
-    var body: some View {
-        SongEditorView(model: model)
-    }
 }

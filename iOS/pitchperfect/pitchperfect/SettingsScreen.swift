@@ -172,7 +172,7 @@ struct SettingsScreen: View {
 
     var body: some View {
         @Bindable var model = box.model
-        InstrumentPage(showsBanner: UIDevice.current.userInterfaceIdiom == .phone) {
+        InstrumentPage(showsBanner: UIDevice.current.userInterfaceIdiom == .phone, tableStyle: .grouped) {
             List {
                 Section {
                     SwitchRow(title: "Toggle Notes", detail: "Notes play until pressed again",
@@ -192,7 +192,6 @@ struct SettingsScreen: View {
                         .accessibilityIdentifier("settings.theme")
                     }
                     .settingsRow(height: 52)
-                    .background(ListScrollViewReporter { SettingsScrollMemory.attach($0) }.frame(width: 0, height: 0))
                 } header: {
                     PlateHeader("Pitch Pipe").settingsHeader()
                 }
@@ -243,6 +242,8 @@ struct SettingsScreen: View {
             .listStyle(.grouped)
             .scrollContentBackground(.hidden)
             .background(StaffBackground())
+            // The List's own scroll view, whichever rows happen to be built.
+            .background(EnclosedListFinder { SettingsScrollMemory.attach($0) }.frame(width: 0, height: 0))
         }
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
@@ -253,7 +254,6 @@ struct SettingsScreen: View {
             }
         }
         .onAppear { model.reload() }
-        .onDisappear { SettingsScrollMemory.save() }
         .alert(model.deleteTitle, isPresented: $model.confirmingDelete) {
             Button("Cancel", role: .cancel) { model.cancelDelete() }
             Button("Yes", role: .destructive) { model.confirmDelete() }
@@ -339,33 +339,70 @@ private struct ActionRow: View {
 
 /// Where Settings was scrolled to. UIKit presented one Settings controller for
 /// the app's lifetime, so reopening it (from any tab) found the table where it
-/// was left; each SwiftUI presentation builds a new List.
+/// was left; each SwiftUI presentation builds a new List. The offset is filed as
+/// it changes and put back as the new List's content grows tall enough for it,
+/// unless the user scrolls first.
 @MainActor
 enum SettingsScrollMemory {
     private static weak var list: UIScrollView?
     private(set) static var offset: CGFloat?
+    /// The offset to hold the new list at while it settles.
+    private static var pending: CGFloat?
+    private static var attachedAt = Date.distantPast
+    /// How long a new List may still be laying out (and scrolling itself back to
+    /// the top) after it appears.
+    static let settlingTime: TimeInterval = 1
+    private static var restoring = false
+    private static var observations: [NSKeyValueObservation] = []
 
     static func attach(_ scrollView: UIScrollView) {
         guard list !== scrollView else { return }
         list = scrollView
-        guard let offset else { return }
-        DispatchQueue.main.async {
-            scrollView.layoutIfNeeded()
-            let top = -scrollView.adjustedContentInset.top
-            let bottom = max(top, scrollView.contentSize.height - scrollView.bounds.height
-                                  + scrollView.adjustedContentInset.bottom)
-            scrollView.setContentOffset(CGPoint(x: 0, y: min(max(offset, top), bottom)), animated: false)
-        }
+        pending = offset
+        attachedAt = Date()
+        observations = [
+            scrollView.observe(\.contentSize) { view, _ in MainActor.assumeIsolated { restore(view) } },
+            scrollView.observe(\.contentOffset) { view, _ in MainActor.assumeIsolated { changed(view) } },
+        ]
+        restore(scrollView)
     }
 
-    static func save() {
-        guard let list else { return }
-        offset = list.contentOffset.y
+    /// While settling, the list is held at the old place against its own layout;
+    /// the user's first drag (or the end of settling) hands it over.
+    private static var settling: Bool {
+        pending != nil && Date().timeIntervalSince(attachedAt) < settlingTime
+    }
+
+    private static func restore(_ view: UIScrollView) {
+        guard view === list, let target = pending, view.window != nil, view.bounds.height > 0 else { return }
+        guard settling, !view.isTracking, !view.isDragging else {
+            pending = nil
+            return
+        }
+        let top = -view.adjustedContentInset.top
+        let bottom = max(top, view.contentSize.height - view.bounds.height + view.adjustedContentInset.bottom)
+        let y = min(max(target, top), bottom)
+        guard view.contentOffset.y != y else { return }
+        restoring = true
+        view.contentOffset.y = y
+        restoring = false
+    }
+
+    /// A scroll: the user's, filed; the list's own while settling, undone.
+    private static func changed(_ view: UIScrollView) {
+        guard view === list, !restoring, view.window != nil else { return }
+        if pending != nil {
+            restore(view)
+            if pending != nil { return }
+        }
+        offset = view.contentOffset.y
     }
 
     static func forget() {
         list = nil
         offset = nil
+        pending = nil
+        observations = []
     }
 }
 

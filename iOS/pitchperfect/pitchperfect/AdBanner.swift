@@ -113,6 +113,8 @@ struct BannerAdSlot: UIViewRepresentable {
 /// A screen on the instrument: content over the staff, docked banner below.
 struct InstrumentPage<Content: View>: View {
     var showsBanner = true
+    /// The style of the UIKit table this screen's list stands in for.
+    var tableStyle = UITableView.Style.plain
     @ViewBuilder let content: () -> Content
 
     var body: some View {
@@ -128,6 +130,6 @@ struct InstrumentPage<Content: View>: View {
         // room for the keyboard: it covered the banner and the rows beneath it.
         .ignoresSafeArea(.keyboard, edges: .bottom)
         .staffScreenBackground()
-        .tableMargins()
+        .tableMargins(style: tableStyle)
     }
 }

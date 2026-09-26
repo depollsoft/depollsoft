@@ -166,8 +166,9 @@ extension View {
                           trailingOverhang: trailingOverhang, fixedMargin: margin))
     }
 
-    /// Gives the screen's rows the margin a UITableView would have had here.
-    func tableMargins() -> some View { modifier(TableMarginProbe()) }
+    /// Gives the screen's rows the margin a UITableView of `style` would have had
+    /// in this screen's container (a sheet is narrower than the window).
+    func tableMargins(style: UITableView.Style = .plain) -> some View { modifier(TableMarginProbe(style: style)) }
 }
 
 private struct PlateRow: ViewModifier {
@@ -190,27 +191,32 @@ private struct PlateRow: ViewModifier {
 }
 
 extension EnvironmentValues {
-    /// The layout margin a UITableView gets on this device (its separators and
+    /// The layout margin a UITableView gets in this container (its separators and
     /// value labels sit this far in).
     @Entry var tableMargin: CGFloat = 20
 }
 
-/// Measures the margin UIKit gives a plain table in this window, once per width.
+/// Measures the margin UIKit gives a table of the screen's style in the screen's
+/// own container, again whenever that container's size or size classes change.
 private struct TableMarginProbe: ViewModifier {
+    let style: UITableView.Style
     @State private var margin: CGFloat = 20
 
     func body(content: Content) -> some View {
         content
             .environment(\.tableMargin, margin)
-            .background(Probe { if $0 != margin { margin = $0 } }.frame(width: 0, height: 0))
+            // Fills the page so a resize (a sheet's detent, a rotation) lays it out again.
+            .background(Probe(style: style) { if $0 != margin { margin = $0 } })
     }
 
     private struct Probe: UIViewRepresentable {
+        let style: UITableView.Style
         let measured: (CGFloat) -> Void
 
         final class View: UIView {
+            var style = UITableView.Style.plain { didSet { if style != oldValue { measure() } } }
             var measured: (CGFloat) -> Void = { _ in }
-            private var measuredWidth: CGFloat = 0
+            private var measuredFor: TableMargin.Container?
 
             override func didMoveToWindow() {
                 super.didMoveToWindow()
@@ -222,10 +228,23 @@ private struct TableMarginProbe: ViewModifier {
                 measure()
             }
 
+            override func traitCollectionDidChange(_ previous: UITraitCollection?) {
+                super.traitCollectionDidChange(previous)
+                measure()
+            }
+
+            /// The view of the controller the screen belongs to: its size is the container's.
+            private var containerView: UIView? {
+                sequence(first: self as UIResponder, next: \.next).first { $0 is UIViewController }
+                    .flatMap { ($0 as? UIViewController)?.view }
+            }
+
             private func measure() {
-                guard let window, window.bounds.width != measuredWidth else { return }
-                measuredWidth = window.bounds.width
-                let margin = TableMargin.measure(in: window)
+                guard let window, let container = containerView, container.bounds.width > 0 else { return }
+                let key = TableMargin.Container(size: container.bounds.size, traits: container.traitCollection, style: style)
+                guard key != measuredFor else { return }
+                measuredFor = key
+                let margin = TableMargin.measure(key, in: window)
                 let report = measured
                 DispatchQueue.main.async { report(margin) }
             }
@@ -235,32 +254,54 @@ private struct TableMarginProbe: ViewModifier {
             let view = View()
             view.isUserInteractionEnabled = false
             view.isAccessibilityElement = false
+            view.style = style
             return view
         }
 
-        func updateUIView(_ view: View, context: Context) { view.measured = measured }
+        func updateUIView(_ view: View, context: Context) {
+            view.measured = measured
+            view.style = style
+        }
     }
 }
 
 enum TableMargin {
-    /// A plain UITableView's leading layout margin at this window's size and traits,
-    /// safe area aside (the List handles that itself).
-    static func measure(in window: UIWindow) -> CGFloat {
-        // A plain screen in a navigation controller, where the UIKit tables sat;
-        // a hosting controller has other system margins.
+    /// What a table's margins depend on: the size of the screen it fills, that
+    /// screen's size classes and the table's style.
+    struct Container: Equatable {
+        var size: CGSize
+        var horizontal: UIUserInterfaceSizeClass
+        var vertical: UIUserInterfaceSizeClass
+        var style: UITableView.Style
+
+        init(size: CGSize, traits: UITraitCollection, style: UITableView.Style) {
+            self.size = size
+            horizontal = traits.horizontalSizeClass
+            vertical = traits.verticalSizeClass
+            self.style = style
+        }
+    }
+
+    /// A table's leading layout margin when it fills a plain screen of `container`'s
+    /// size in a navigation controller, as the UIKit screens' tables did (a hosting
+    /// controller has other system margins), safe area aside (the List handles that).
+    static func measure(_ container: Container, in window: UIWindow) -> CGFloat {
         let screen = UIViewController()
         let navigation = UINavigationController(rootViewController: screen)
-        navigation.view.frame = window.bounds
+        navigation.traitOverrides.horizontalSizeClass = container.horizontal
+        navigation.traitOverrides.verticalSizeClass = container.vertical
+        navigation.view.frame = CGRect(origin: .zero, size: container.size)
         navigation.view.isHidden = true
         window.addSubview(navigation.view)
-        let table = UITableView(frame: screen.view.bounds, style: .plain)
+        defer { navigation.view.removeFromSuperview() }
+        navigation.view.layoutIfNeeded()
+        let table = UITableView(frame: screen.view.bounds, style: container.style)
+        table.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         table.insetsLayoutMarginsFromSafeArea = false
         screen.view.addSubview(table)
         navigation.view.layoutIfNeeded()
         table.layoutIfNeeded()
-        let margin = table.layoutMargins.left
-        navigation.view.removeFromSuperview()
-        return margin
+        return table.layoutMargins.left
     }
 }
 

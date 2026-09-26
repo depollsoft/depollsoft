@@ -110,8 +110,16 @@ private struct NavigationTitleFace: UIViewControllerRepresentable {
         }
         func apply() {
             // The app delegate tinted the tab bar itself with the label colour on
-            // every device; UIKit decides what that means for each bar style.
-            tabBarController?.tabBar.tintColor = .label
+            // every device; UIKit decides what that means for each bar style. It
+            // must be UIKit's tint, not a SwiftUI one on the TabView: UIKit's greys
+            // the selected item out under an alert and leaves the others be.
+            if let tabBar = tabBarController?.tabBar {
+                tabBar.tintColor = .label
+                // SwiftUI's tab items leave unselected buttons in the secondary
+                // label colour, which an alert greys well past UIKit's items (they
+                // took the label colour, dimmed with everything else).
+                TabBarInk.apply(to: tabBar)
+            }
             guard let bar = navigationController?.navigationBar else { return }
             bar.tintColor = .label
             guard oswald else { return }
@@ -132,6 +140,21 @@ private struct NavigationTitleFace: UIViewControllerRepresentable {
     func updateUIViewController(_ controller: Controller, context: Context) {
         controller.oswald = oswald
         controller.apply()
+    }
+}
+
+/// Unselected tab items in the label colour, as UIKit's own items drew them.
+enum TabBarInk {
+    static func apply(to tabBar: UITabBar) {
+        for appearance in [tabBar.standardAppearance, tabBar.scrollEdgeAppearance].compactMap({ $0 }) {
+            guard appearance.stackedLayoutAppearance.normal.iconColor != .label else { continue }
+            for layout in [appearance.stackedLayoutAppearance, appearance.inlineLayoutAppearance,
+                           appearance.compactInlineLayoutAppearance] {
+                layout.normal.iconColor = .label
+            }
+        }
+        tabBar.standardAppearance = tabBar.standardAppearance
+        if let edge = tabBar.scrollEdgeAppearance { tabBar.scrollEdgeAppearance = edge }
     }
 }
 

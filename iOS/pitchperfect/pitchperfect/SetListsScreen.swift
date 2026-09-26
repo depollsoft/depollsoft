@@ -146,23 +146,18 @@ struct SetListsScreen: View {
         let current = list.id == model.currentListId
         let name = model.displayName(list)
         return SetListRow(name: name, songCount: list.songs.count, isCurrent: current, movable: !home,
-                          menuIdentifier: "setlist.row.menu.\(list.id)") {
+                          menuIdentifier: "setlist.row.menu.\(list.id)",
+                          rowLabel: model.accessibilityLabel(list),
+                          rowIdentifier: current ? "setlist.row.\(list.id).current" : "setlist.row.\(list.id)",
+                          // The reorder control is a drag; VoiceOver and Switch Control reorder
+                          // through named actions instead, one row at a time.
+                          moveActions: model.moveActionNames(list).map { name in
+                              (name, { model.move(list, by: name == "Move up" ? -1 : 1) })
+                          }) {
             rowMenu(list)
         } select: {
             model.select(list)
             dismiss()
-        } rowAccessibility: { content in
-            AnyView(content
-                .accessibilityLabel(model.accessibilityLabel(list))
-                .accessibilityAddTraits(current ? [.isButton, .isSelected] : .isButton)
-                .accessibilityIdentifier(current ? "setlist.row.\(list.id).current" : "setlist.row.\(list.id)")
-                .accessibilityActions {
-                    // The reorder control is a drag; VoiceOver and Switch Control reorder
-                    // through named actions instead, one row at a time.
-                    ForEach(model.moveActionNames(list), id: \.self) { name in
-                        Button(name) { model.move(list, by: name == "Move up" ? -1 : 1) }
-                    }
-                })
         }
         .plateRow(trailingOverhang: home ? 0 : 40, margin: 20)
         // The UIKit table's own separator colour, not the system default.
@@ -197,19 +192,14 @@ struct SetListsScreen: View {
     }
 }
 
-/// One manage row: the list's display name, how many songs it holds, the
-/// selector's lit indicator when it is the current list, and a "…" menu.
-private struct RowAccessibility: ViewModifier {
-    let apply: (AnyView) -> AnyView
-    func body(content: Content) -> some View { apply(AnyView(content)) }
-}
-
+/// The row menu's glyph at the size a system UIButton drew it there (18.5 pt).
 private enum SetListRowGlyph {
-    /// The glyph at the size a system UIButton drew it in this row (18.5 pt).
     static let ellipsis = UIImage(systemName: "ellipsis.circle",
                                   withConfiguration: UIImage.SymbolConfiguration(pointSize: 18.5)) ?? UIImage()
 }
 
+/// One manage row: the list's display name, how many songs it holds, the
+/// selector's lit indicator when it is the current list, and a "…" menu.
 private struct SetListRow<MenuContent: View>: View {
     private static var ellipsis: UIImage { SetListRowGlyph.ellipsis }
 
@@ -219,10 +209,12 @@ private struct SetListRow<MenuContent: View>: View {
     /// Carries a reorder control, which takes the trailing edge.
     let movable: Bool
     let menuIdentifier: String
+    /// What VoiceOver says about the row (the tappable part), apart from its menu.
+    let rowLabel: String
+    let rowIdentifier: String
+    let moveActions: [(name: String, perform: () -> Void)]
     @ViewBuilder let menu: () -> MenuContent
     let select: () -> Void
-    /// What VoiceOver says about the row (the tappable part), apart from its menu.
-    let rowAccessibility: (AnyView) -> AnyView
 
     var body: some View {
         HStack(alignment: .center, spacing: 0) {
@@ -254,7 +246,14 @@ private struct SetListRow<MenuContent: View>: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .modifier(RowAccessibility(apply: rowAccessibility))
+            .accessibilityLabel(rowLabel)
+            .accessibilityAddTraits(isCurrent ? [.isButton, .isSelected] : .isButton)
+            .accessibilityIdentifier(rowIdentifier)
+            .accessibilityActions {
+                ForEach(moveActions, id: \.name) { action in
+                    Button(action.name, action: action.perform)
+                }
+            }
             Menu(content: menu) {
                 // Sized explicitly: a menu label would otherwise scale the glyph to its font.
                 Image(uiImage: Self.ellipsis)

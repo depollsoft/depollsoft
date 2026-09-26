@@ -88,14 +88,6 @@ final class DPAppDelegate: UIResponder, UIApplicationDelegate {
 
     // MARK: - Presentation from outside SwiftUI
 
-    static var frontmostController: UIViewController? {
-        let root = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
-            .flatMap(\.windows).first(where: \.isKeyWindow)?.rootViewController
-        var top = root
-        while let next = top?.presentedViewController { top = next }
-        return top
-    }
-
     static var rootController: UIViewController? {
         UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
             .flatMap(\.windows).first(where: \.isKeyWindow)?.rootViewController
