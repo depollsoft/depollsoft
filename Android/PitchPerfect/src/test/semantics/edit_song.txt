@@ -20,4 +20,7 @@ window
     RadioButton desc="E minor, 1 sharp" text="&¡" | "e" unselected [click]
     RadioButton desc="B minor, 2 sharps" text="&¢" | "b" unselected [click]
     RadioButton desc="F sharp minor, 3 sharps" text="&£" | "fì" unselected [click]
+    RadioButton desc="C sharp minor, 4 sharps" text="&¤" | "cì" unselected [click]
+    RadioButton desc="G sharp minor, 5 sharps" text="&¥" | "gì" unselected [click]
+    RadioButton desc="D sharp minor, 6 sharps" text="&¦" | "dì" unselected [click]
   Button text="SAVE SONG" [click]

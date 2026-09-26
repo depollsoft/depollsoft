@@ -15,6 +15,15 @@ window
     heading text="Favorites"
     desc="Sheet music available" | "Learning tracks available" text="Heart of My Heart" | "a.k.a. The Story of the Rose" | "ID:" | "2147483101" | "Rating: " | "4.26" | "Posted: " | " 12/07/08" | "DLs:" | "48213" state="Showing" [click]
     desc="Sheet music available" | "Learning tracks available" text="Sweet Adeline, the one I dream of when the harmonies ring all night long" | "a.k.a. You're the Flower of My Heart" | "ID:" | "2147483103" | "Rating: " | "3.50" | "Posted: " | " 02/14/11" | "DLs:" | "2290" [click]
+    desc="No Sheet music" | "No Learning tracks" text="You Are My Sunshine" | "ID:" | "2147483102" | "Posted: " | " 06/30/14" | "DLs:" | "912" [click]
+    text="Tag Master"
+    text=" - "
+    text="Version 6.1.0"
+    Button text="Content provided by BarbershopTags.com" [click]
+    Button text="DepollSoft" [click]
+    text="© 2026"
+    Button text="Terms of Use" [click]
+    Button text="Donate" [click]
   Button desc="Search" [click]
   pane="Tag"
     heading text="Heart of My Heart"

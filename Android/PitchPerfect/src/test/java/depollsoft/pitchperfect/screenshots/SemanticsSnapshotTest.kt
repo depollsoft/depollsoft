@@ -35,7 +35,10 @@ import org.robolectric.annotation.Config
  * when the pixels are unchanged.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = RichApplication::class, qualifiers = ScreenshotSupport.PHONE)
+// Semantics are snapshotted on a very tall screen: a lazy list composes only the rows that fit, and
+// Linux measures text a little taller than macOS, so on a phone-sized screen the last row (the
+// footer) could fall out of the snapshot on CI but not locally.
+@Config(application = RichApplication::class, qualifiers = "w411dp-h4000dp-xxhdpi")
 class SemanticsSnapshotTest {
     @get:Rule
     val compose = createEmptyComposeRule()

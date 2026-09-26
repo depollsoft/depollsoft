@@ -38,7 +38,10 @@ import java.util.TimeZone
  * region fails here even when the pixels are unchanged.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, qualifiers = "w411dp-h891dp-xxhdpi")
+// Semantics are snapshotted on a very tall screen: a lazy list composes only the rows that fit, and
+// Linux measures text a little taller than macOS, so on a phone-sized screen the last row (the
+// footer) could fall out of the snapshot on CI but not locally.
+@Config(application = Application::class, qualifiers = "w411dp-h4000dp-xxhdpi")
 class SemanticsSnapshotTest {
     @get:Rule
     val compose = createEmptyComposeRule()
@@ -206,7 +209,7 @@ class SemanticsSnapshotTest {
     fun settings() = screen("settings") { launch(SettingsActivity::class.java) }
 
     @Test
-    @Config(qualifiers = "w1280dp-h800dp-land-xhdpi")
+    @Config(qualifiers = "w1280dp-h4000dp-xhdpi")
     fun tabletHomeWithTag() =
         screen("tablet_home_tag") {
             ScreenshotFixtures.populateLists()
