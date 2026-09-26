@@ -209,7 +209,6 @@ jobs:
         with:
           persist-credentials: false
           ref: ${{ github.event.pull_request.head.sha }}
-          submodules: recursive
 
       - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c
         with:
@@ -297,7 +296,6 @@ jobs:
         with:
           persist-credentials: false
           ref: ${{ github.event.pull_request.head.sha }}
-          submodules: recursive
 
       - name: Select Xcode
         run: |

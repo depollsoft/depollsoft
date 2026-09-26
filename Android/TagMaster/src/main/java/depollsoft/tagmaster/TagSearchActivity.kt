@@ -2,130 +2,231 @@ package depollsoft.tagmaster
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.KeyEvent
-import android.view.View
-import android.view.inputmethod.EditorInfo
-import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
-import com.bindroid.BindingMode
-import com.bindroid.trackable.trackable
-import com.bindroid.ui.EditTextTextProperty
-import com.bindroid.ui.UiBinder
-import com.google.android.material.textfield.MaterialAutoCompleteTextView
-import com.google.android.material.textfield.TextInputLayout
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.dp
+import com.google.android.material.R as MaterialR
+import depollsoft.compose.scrollViewScrollbar
 import depollsoft.lib.json.JsonSerializer
 import depollsoft.tagmaster.barbershop.TagCollection
 import depollsoft.tagmaster.barbershop.TagSortOptions
+import depollsoft.tagmaster.ui.BarberPoleWatermark
+import depollsoft.tagmaster.ui.DropdownField
+import depollsoft.tagmaster.ui.FieldIcon
+import depollsoft.tagmaster.ui.OutlinedField
+import depollsoft.tagmaster.ui.ReadingWidth
+import depollsoft.tagmaster.ui.SearchFab
+import depollsoft.tagmaster.ui.TagMasterTheme
+import depollsoft.tagmaster.ui.TagMasterTopBar
+import depollsoft.tagmaster.ui.TagMasterType
+import depollsoft.tagmaster.ui.navigateUpOrHome
+import depollsoft.tagmaster.ui.setTagMasterContent
 
+/** The search form: text, sort order and the catalog filters, which open [TagSearchResultsActivity]. */
 class TagSearchActivity : AppCompatActivity() {
-    var model: QueryModel by trackable(QueryModel())
+    var model: QueryModel =
+        QueryModel().apply {
+            maxResults = Integer.MAX_VALUE
+            sortBy = TagSortOptions.Title
+        }
         private set
-
-    init {
-        model.maxResults = Integer.MAX_VALUE
-        model.sortBy = TagSortOptions.Title
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        savedInstanceState?.getString(TagQueryFragment.QUERY_MODEL)?.let { saved ->
+        savedInstanceState?.getString(TagSearchResultsActivity.QUERY_MODEL)?.let { saved ->
             model = JsonSerializer.deserialize(org.json.JSONObject(saved)) as QueryModel
         }
-        setContentView(R.layout.tagsearchview)
-        setUpToolbar(true)
-        // Both the scrolling form and the FAB are children of this inset-aware container.
-        findViewById<View>(R.id.linearLayout2).applyImeAndBarInsetsAsPadding()
-        findViewById<View>(R.id.searchButton).applyBottomInsetsAsMargin()
-        findViewById<View>(R.id.scrollView1).applyContentInsets(bottom = false)
-        // The leading search glyph is decoration; without this it is exposed as an unnamed button.
-        findViewById<TextInputLayout>(R.id.searchInputLayout).setStartIconOnClickListener(null)
-
-        UiBinder.bind(
-            this,
-            EditTextTextProperty(findViewById<EditText>(R.id.searchTextBox)),
-            "Model.Query",
-            BindingMode.TWO_WAY,
-        )
-
-        findViewById<View>(R.id.searchTextBox).setOnKeyListener { _, _, event ->
-            if (event.action == KeyEvent.ACTION_DOWN && event.keyCode == KeyEvent.KEYCODE_ENTER) {
-                search()
-                true
-            } else {
-                false
-            }
-        }
-        findViewById<EditText>(R.id.searchTextBox).setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                search()
-                true
-            } else {
-                false
-            }
-        }
-        findViewById<View>(R.id.searchButton).setOnClickListener { search() }
-
-        val booleanChoices = listOf(null, true, false)
-        bindChoice(
-            R.id.sheetMusicSpinner,
-            R.array.SheetMusicChoices,
-            booleanChoices.indexOf(model.hasSheetMusic),
-        ) { model.hasSheetMusic = booleanChoices[it] }
-        bindChoice(
-            R.id.learningTracksSpinner,
-            R.array.LearningTracksChoices,
-            booleanChoices.indexOf(model.hasLearningTracks),
-        ) { model.hasLearningTracks = booleanChoices[it] }
-        val parts = listOf(null, 3, 4, 5, 6, 7, 8)
-        bindChoice(R.id.partsSpinner, R.array.PartsChoices, parts.indexOf(model.parts)) {
-            model.parts = parts[it]
-        }
-        val collections = listOf(null, TagCollection.ClassicTags, TagCollection.EasyTags)
-        bindChoice(
-            R.id.tagCollectionSpinner,
-            R.array.TagCollectionChoices,
-            collections.indexOf(model.collection),
-        ) { model.collection = collections[it] }
-        val sorts =
-            listOf(
-                TagSortOptions.Title,
-                TagSortOptions.Downloaded,
-                TagSortOptions.Posted,
-                TagSortOptions.Rating,
-                TagSortOptions.Classic,
-            )
-        bindChoice(R.id.sortBySpinner, R.array.SortByChoices, sorts.indexOf(model.sortBy)) {
-            model.sortBy = sorts[it]
-        }
-
-        supportActionBar?.title = getString(R.string.app_name).makeTitleString(this)
-    }
-
-    private fun bindChoice(
-        viewId: Int,
-        choicesId: Int,
-        index: Int,
-        onSelected: (Int) -> Unit,
-    ) {
-        val dropdown = findViewById<MaterialAutoCompleteTextView>(viewId)
-        val choices = resources.getStringArray(choicesId)
-        dropdown.setText(choices[index.coerceAtLeast(0)], false)
-        dropdown.setOnItemClickListener { _, _, position, _ -> onSelected(position) }
+        setTagMasterContent { SearchScreen(model, onSearch = ::search, onNavigateUp = { navigateUpOrHome() }) }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        outState.putString(TagQueryFragment.QUERY_MODEL, JsonSerializer.serialize(model).toString())
+        outState.putString(TagSearchResultsActivity.QUERY_MODEL, JsonSerializer.serialize(model).toString())
         super.onSaveInstanceState(outState)
     }
 
-    override fun onSupportNavigateUp() = navigateUpOrHome()
-
-    private fun search() {
-        val searchResultsIntent = Intent(this@TagSearchActivity, TagSearchResultsActivity::class.java)
-        searchResultsIntent.putExtra(
-            TagQueryFragment.QUERY_MODEL,
-            JsonSerializer.serialize(this@TagSearchActivity.model).toString(),
+    fun search() {
+        startActivity(
+            Intent(this, TagSearchResultsActivity::class.java)
+                .putExtra(TagSearchResultsActivity.QUERY_MODEL, JsonSerializer.serialize(model).toString()),
         )
-        this@TagSearchActivity.startActivity(searchResultsIntent)
     }
+}
+
+private val booleanChoices = listOf(null, true, false)
+private val partChoices = listOf(null, 3, 4, 5, 6, 7, 8)
+private val collectionChoices = listOf(null, TagCollection.ClassicTags, TagCollection.EasyTags)
+private val sortChoices =
+    listOf(TagSortOptions.Title, TagSortOptions.Downloaded, TagSortOptions.Posted, TagSortOptions.Rating, TagSortOptions.Classic)
+
+@Composable
+private fun SearchScreen(
+    model: QueryModel,
+    onSearch: () -> Unit,
+    onNavigateUp: () -> Unit,
+) {
+    val colors = TagMasterTheme.colors
+    var text by rememberSaveable(stateSaver = TextFieldValue.Saver) {
+        val query = model.query.orEmpty()
+        mutableStateOf(TextFieldValue(query, TextRange(query.length)))
+    }
+    Column(Modifier.fillMaxSize()) {
+        TagMasterTopBar(title = stringResource(R.string.app_name), brandTitle = true, onNavigateUp = onNavigateUp)
+        Box(
+            Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+        ) {
+            BarberPoleWatermark()
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .imePadding(),
+            ) {
+                val formScroll = rememberScrollState()
+                ReadingWidth(Modifier.weight(1f).fillMaxWidth()) { inset ->
+                    Column(
+                        Modifier
+                            .fillMaxSize()
+                            .scrollViewScrollbar(formScroll, top = 16.dp, bottom = 16.dp, end = 16.dp)
+                            .verticalScroll(formScroll)
+                            .padding(horizontal = 16.dp + inset, vertical = 16.dp),
+                    ) {
+                        val searchInteractions = remember { MutableInteractionSource() }
+                        val searchFocused by searchInteractions.collectIsFocusedAsState()
+                        val clearInteractions = remember { MutableInteractionSource() }
+                        val clearFocused by clearInteractions.collectIsFocusedAsState()
+                        val fieldFocus = remember { FocusRequester() }
+                        OutlinedField(
+                            label = stringResource(R.string.SearchBoxHint),
+                            value = text,
+                            onValueChange = {
+                                text = it
+                                model.query = it.text
+                            },
+                            startIcon = FieldIcon(R.drawable.ic_search),
+                            // The clear icon shows while the field has text and it, or the icon itself
+                            // (reached by keyboard), has focus.
+                            endIcon =
+                                FieldIcon(
+                                    MaterialR.drawable.mtrl_ic_cancel,
+                                    stringResource(MaterialR.string.clear_text_end_icon_content_description),
+                                    interactionSource = clearInteractions,
+                                ) {
+                                    // Clearing hides the icon; a keyboard user who pressed it goes
+                                    // back to the field, as MDC's clear icon returned focus there.
+                                    if (clearFocused) fieldFocus.requestFocus()
+                                    text = TextFieldValue("")
+                                    model.query = ""
+                                },
+                            endIconVisible = (searchFocused || clearFocused) && text.text.isNotEmpty(),
+                            interactionSource = searchInteractions,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                            keyboardActions = KeyboardActions(onSearch = { onSearch() }),
+                            fieldModifier =
+                                Modifier
+                                    .focusRequester(fieldFocus)
+                                    .onPreviewKeyEvent {
+                                        if (it.type == KeyEventType.KeyDown && it.key == Key.Enter) {
+                                            onSearch()
+                                            true
+                                        } else {
+                                            false
+                                        }
+                                    }.testTag("searchTextBox"),
+                        )
+                        Text(
+                            stringResource(R.string.SearchOptions),
+                            Modifier
+                                .padding(top = 24.dp)
+                                .semantics { heading() },
+                            style = TagMasterType.titleLarge,
+                            color = colors.text,
+                        )
+                        Choice(R.string.SortBy, R.array.SortByChoices, sortChoices.indexOf(model.sortBy), "sortBySpinner") {
+                            model.sortBy = sortChoices[it]
+                        }
+                        Choice(R.string.SheetMusicSentence, R.array.SheetMusicChoices, booleanChoices.indexOf(model.hasSheetMusic), "sheetMusicSpinner") {
+                            model.hasSheetMusic = booleanChoices[it]
+                        }
+                        Choice(
+                            R.string.LearningTracks,
+                            R.array.LearningTracksChoices,
+                            booleanChoices.indexOf(model.hasLearningTracks),
+                            "learningTracksSpinner",
+                        ) { model.hasLearningTracks = booleanChoices[it] }
+                        Choice(R.string.Parts, R.array.PartsChoices, partChoices.indexOf(model.parts), "partsSpinner") {
+                            model.parts = partChoices[it]
+                        }
+                        Choice(
+                            R.string.TagCollectionSentence,
+                            R.array.TagCollectionChoices,
+                            collectionChoices.indexOf(model.collection),
+                            "tagCollectionSpinner",
+                        ) { model.collection = collectionChoices[it] }
+                    }
+                }
+                // The button sits under the form, 8dp below it; SearchFab keeps its own end and
+                // bottom margins.
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                ) {
+                    SearchFab(onSearch)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun Choice(
+    label: Int,
+    choices: Int,
+    selected: Int,
+    tag: String,
+    onSelect: (Int) -> Unit,
+) {
+    DropdownField(
+        label = stringResource(label),
+        choices = stringArrayResource(choices).toList(),
+        selected = selected,
+        onSelect = onSelect,
+        modifier = Modifier.padding(top = 8.dp),
+        tag = tag,
+    )
 }

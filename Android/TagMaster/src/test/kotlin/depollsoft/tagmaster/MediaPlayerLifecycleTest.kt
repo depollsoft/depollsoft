@@ -1,155 +1,177 @@
 package depollsoft.tagmaster
 
-import android.app.Activity
 import android.app.Application
 import android.media.MediaPlayer
 import android.os.Looper
-import android.view.View
-import android.view.ViewGroup
 import bolts.TaskCompletionSource
 import depollsoft.lib.util.ContentCache
 import depollsoft.tagmaster.barbershop.RemoteLocation
-import org.junit.Assert.*
+import depollsoft.tagmaster.ui.detail.TrackPlayer
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
-import org.mockito.Mockito.*
-import org.robolectric.Robolectric
+import org.mockito.Mockito.anyBoolean
+import org.mockito.Mockito.anyString
+import org.mockito.Mockito.clearInvocations
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.mockConstruction
+import org.mockito.Mockito.never
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import java.io.File
 
+/**
+ * The learning-track player: downloads before it prepares, prepares off the UI thread, and never
+ * lets a download or a prepare that belongs to a stopped, replaced or released track start playing.
+ */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [28])
+@Config(application = Application::class)
 class MediaPlayerLifecycleTest {
-    private fun withPlayer(check: (MediaPlayerView, MediaPlayer, TaskCompletionSource<File>) -> Unit) {
+    private var failures = 0
+
+    private fun withPlayer(check: (TrackPlayer, () -> MediaPlayer, TaskCompletionSource<File>) -> Unit) {
         mockConstruction(MediaPlayer::class.java).use { players ->
-            val controller = Robolectric.buildActivity(Activity::class.java)
-            controller.get().setTheme(R.style.AppTheme)
-            controller.setup()
-            val activity = controller.get()
-            val view = MediaPlayerView(activity)
-            activity.setContentView(view)
-            val player = players.constructed().single()
-            `when`(player.duration).thenReturn(10000)
+            val player = TrackPlayer(RuntimeEnvironment.getApplication()) { failures++ }
             val pending = TaskCompletionSource<File>()
             val cache = mock(ContentCache::class.java)
             `when`(cache.loadContentPublic(anyString(), anyString(), anyBoolean())).thenReturn(pending.task)
-            MediaPlayerView::class.java
+            TrackPlayer::class.java
                 .getDeclaredField("cache")
                 .apply { isAccessible = true }
-                .set(view, cache)
-            view.remoteLocation =
-                RemoteLocation().apply {
-                    uri = "https://example.com/lead.mp3"
-                    type = "mp3"
-                }
-            val prepared = ArgumentCaptor.forClass(MediaPlayer.OnPreparedListener::class.java)
-            verify(player).setOnPreparedListener(prepared.capture())
-            listeners[player] = prepared.value
-            clearInvocations(player)
+                .set(player, cache)
+            player.select(location("lead"))
             try {
-                check(view, player, pending)
+                check(player, {
+                    players.constructed().single().also {
+                        `when`(it.duration).thenReturn(10000)
+                    }
+                }, pending)
             } finally {
-                controller.pause().stop().destroy()
+                player.release()
             }
         }
     }
 
-    private fun start(view: MediaPlayerView): Boolean {
-        val result = view.findViewById<View>(R.id.playPauseButton).performClick()
-        shadowOf(Looper.getMainLooper()).idle()
-        assertEquals(view.isLoading, view.findViewById<BarberPoleLoadingView>(R.id.trackLoadingIndicator).loading)
-        return result
-    }
+    private fun location(part: String) =
+        RemoteLocation().apply {
+            uri = "https://example.com/$part.mp3"
+            type = "mp3"
+        }
+
+    private fun idle() = shadowOf(Looper.getMainLooper()).idle()
 
     private fun complete(pending: TaskCompletionSource<File>) {
         val file = File.createTempFile("track", ".mp3")
         try {
             pending.setResult(file)
-            shadowOf(Looper.getMainLooper()).idle()
+            idle()
         } finally {
             file.delete()
         }
     }
 
-    private fun preparedListener(player: MediaPlayer): MediaPlayer.OnPreparedListener = listeners.getValue(player)
+    private fun prepared(player: MediaPlayer): MediaPlayer.OnPreparedListener {
+        val captor = ArgumentCaptor.forClass(MediaPlayer.OnPreparedListener::class.java)
+        verify(player).setOnPreparedListener(captor.capture())
+        return captor.value
+    }
 
-    private val listeners = mutableMapOf<MediaPlayer, MediaPlayer.OnPreparedListener>()
-
-    @Test fun prepared_track_can_pause_resume_and_stop_from_the_controls() =
-        withPlayer { view, player, pending ->
-            start(view)
+    @Test
+    fun aPreparedTrackPausesResumesAndStops() =
+        withPlayer { track, media, pending ->
+            track.togglePlay()
             complete(pending)
-            preparedListener(player).onPrepared(player)
-            assertTrue(view.isPlaying)
+            val player = media()
+            prepared(player).onPrepared(player)
+            assertTrue(track.isPlaying)
             verify(player).start()
-            start(view)
+            track.togglePlay()
             verify(player).pause()
-            assertFalse(view.isPlaying)
-            assertTrue(view.findViewById<View>(R.id.stopButton).isEnabled)
-            start(view)
+            assertFalse(track.isPlaying)
+            assertTrue("Stop stays available while paused", track.isPrepared)
+            track.togglePlay()
             verify(player, times(2)).start()
-            view.findViewById<View>(R.id.stopButton).performClick()
-            assertFalse(view.isPlaying)
-            assertEquals(0, view.audioPosition)
+            track.stop()
+            assertFalse(track.isPlaying)
+            assertEquals(0, track.position)
         }
 
-    @Test fun stopped_player_ignores_late_prepared_callback() =
-        withPlayer { view, player, pending ->
-            start(view)
+    @Test
+    fun aStoppedPlayerIgnoresALatePreparedCallback() =
+        withPlayer { track, media, pending ->
+            track.play()
             complete(pending)
-            view.stop()
-            preparedListener(player).onPrepared(player)
+            val player = media()
+            val listener = prepared(player)
+            track.stop()
+            listener.onPrepared(player)
             verify(player, never()).start()
-            assertFalse(view.isPlaying)
+            assertFalse(track.isPlaying)
         }
 
-    @Test fun stop_during_download_prevents_late_prepare() =
-        withPlayer { view, player, pending ->
-            start(view)
-            assertTrue(view.isLoading)
-            assertTrue(view.findViewById<View>(R.id.stopButton).isEnabled)
-            view.findViewById<View>(R.id.stopButton).performClick()
+    @Test
+    fun stoppingDuringTheDownloadPreventsALatePrepare() =
+        withPlayer { track, media, pending ->
+            track.play()
+            assertTrue(track.isLoading)
+            track.stop()
             complete(pending)
-            assertFalse(view.isLoading)
-            shadowOf(Looper.getMainLooper()).idle()
-            assertFalse(view.findViewById<BarberPoleLoadingView>(R.id.trackLoadingIndicator).loading)
-            assertFalse(view.isPlaying)
-            verify(player, never()).prepareAsync()
+            assertFalse(track.isLoading)
+            assertFalse(track.isPlaying)
+            verify(media(), never()).prepareAsync()
         }
 
-    @Test fun replacing_part_invalidates_old_download() =
-        withPlayer { view, player, pending ->
-            start(view)
-            view.remoteLocation =
-                RemoteLocation().apply {
-                    uri = "https://example.com/bass.mp3"
-                    type = "mp3"
-                }
+    @Test
+    fun choosingAnotherPartInvalidatesTheOldDownload() =
+        withPlayer { track, media, pending ->
+            track.play()
+            track.select(location("bass"))
             complete(pending)
-            verify(player, never()).prepareAsync()
-            assertEquals(0, view.audioPosition)
+            verify(media(), never()).prepareAsync()
+            assertEquals(0, track.position)
         }
 
-    @Test fun detach_releases_player_and_ignores_late_download() =
-        withPlayer { view, player, pending ->
-            start(view)
-            (view.parent as ViewGroup).removeView(view)
+    @Test
+    fun releasingThePlayerIgnoresALateDownload() =
+        withPlayer { track, media, pending ->
+            track.play()
+            val player = media()
+            clearInvocations(player)
+            track.release()
             complete(pending)
             verify(player).release()
             verify(player, never()).prepareAsync()
-            assertFalse(view.isPlaying)
+            assertFalse(track.isPlaying)
         }
 
-    @Test fun downloaded_track_prepares_asynchronously() =
-        withPlayer { view, player, pending ->
-            start(view)
+    @Test
+    fun aDownloadedTrackPreparesAsynchronously() =
+        withPlayer { track, media, pending ->
+            track.play()
             complete(pending)
+            val player = media()
             verify(player).prepareAsync()
             verify(player, never()).prepare()
             verify(player, never()).start()
-            assertTrue(view.isLoading)
+            assertTrue(track.isLoading)
+        }
+
+    @Test
+    fun aFailedDownloadReportsOnceAndStops() =
+        withPlayer { track, _, pending ->
+            track.play()
+            pending.setError(java.io.IOException("offline"))
+            idle()
+            assertEquals(1, failures)
+            assertFalse(track.isLoading)
+            assertFalse(track.isPlaying)
         }
 }

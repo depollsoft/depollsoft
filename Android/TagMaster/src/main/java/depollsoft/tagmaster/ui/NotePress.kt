@@ -1,0 +1,204 @@
+package depollsoft.tagmaster.ui
+
+import android.os.Handler
+import android.os.Looper
+import android.view.SoundEffectConstants
+import android.view.View
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.pointer.PointerEvent
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.SuspendingPointerInputModifierNode
+import androidx.compose.ui.input.pointer.changedToDownIgnoreConsumed
+import androidx.compose.ui.input.pointer.isOutOfBounds
+import androidx.compose.ui.node.DelegatingNode
+import androidx.compose.ui.node.ModifierNodeElement
+import androidx.compose.ui.node.PointerInputModifierNode
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.IntSize
+import androidx.lifecycle.compose.LifecycleStartEffect
+import depollsoft.pitchperfect.lib.Accidental
+import depollsoft.pitchperfect.lib.Note
+
+/**
+ * Plays a note the way the pitch-pipe key buttons did: it sounds while a finger is down and stops
+ * when it lifts; a click that is not a touch (keyboard, screen reader) plays it for 1.5 seconds.
+ * Only a note this control started is ever stopped by it.
+ */
+@Stable
+class NotePlayer {
+    private val main = Handler(Looper.getMainLooper())
+    private var active: Note? = null
+    private val stopTimed = Runnable { stop() }
+
+    fun press(note: Note?) {
+        stop()
+        active = note?.also { it.play() }
+    }
+
+    fun release() = stop()
+
+    fun click(note: Note?) {
+        stop()
+        val playing = note ?: return
+        active = playing
+        playing.play()
+        main.postDelayed(stopTimed, 1500)
+    }
+
+    fun stop() {
+        main.removeCallbacks(stopTimed)
+        active?.stop()
+        active = null
+    }
+}
+
+/** A [NotePlayer] that falls silent when its screen stops or it leaves the composition. */
+@Composable
+fun rememberNotePlayer(): NotePlayer {
+    val player = remember { NotePlayer() }
+    LifecycleStartEffect(player) { onStopOrDispose { player.stop() } }
+    return player
+}
+
+/**
+ * Wires [player] to presses, keyboard Enter/Space and accessibility clicks of this element.
+ *
+ * A finger sounds the note until it lifts, even if it drifts off the button, or until a scroll
+ * takes the gesture. A tap that lifts on the button plays the system click sound through [view].
+ * Presses, hover and focus are reported to [interactionSource] for the caller's indication.
+ */
+fun Modifier.notePress(
+    player: NotePlayer,
+    note: () -> Note?,
+    enabled: Boolean = true,
+    description: String? = null,
+    view: View? = null,
+    interactionSource: MutableInteractionSource? = null,
+): Modifier {
+    if (!enabled) return this
+    return this
+        .then(NotePressElement(player, note, view, interactionSource))
+        .onKeyEvent { event ->
+            if (event.type == KeyEventType.KeyUp && (event.key == Key.Enter || event.key == Key.Spacebar || event.key == Key.DirectionCenter)) {
+                player.click(note())
+                true
+            } else {
+                false
+            }
+        }.then(if (interactionSource != null) Modifier.hoverable(interactionSource) else Modifier)
+        .focusable(interactionSource = interactionSource)
+        .semantics {
+            role = Role.Button
+            if (description != null) contentDescription = description
+            onClick {
+                player.click(note())
+                true
+            }
+        }
+}
+
+/**
+ * The finger half of [notePress]. A node, so a recomposition hands it the latest [note] without
+ * restarting a press in progress: the button can outlive the tag it was composed for (the tablet
+ * pane showing the next tag), and a new press must play the note it shows now.
+ */
+private data class NotePressElement(
+    val player: NotePlayer,
+    val note: () -> Note?,
+    val view: View?,
+    val interactionSource: MutableInteractionSource?,
+) : ModifierNodeElement<NotePressNode>() {
+    override fun create() = NotePressNode(this)
+
+    override fun update(node: NotePressNode) = node.update(this)
+}
+
+private class NotePressNode(
+    private var element: NotePressElement,
+) : DelegatingNode(),
+    PointerInputModifierNode {
+    private val input =
+        delegate(
+            SuspendingPointerInputModifierNode {
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    down.consume()
+                    // This press belongs to the player and note current as the finger lands.
+                    val (player, note, view, interactionSource) = element
+                    player.press(note())
+                    val press = PressInteraction.Press(down.position)
+                    interactionSource?.tryEmit(press)
+                    var tapped = false
+                    // The finally also covers the button leaving the screen mid-press.
+                    try {
+                        while (true) {
+                            // Final pass: a scroll above that took the gesture has consumed it by now.
+                            val change = awaitPointerEvent(PointerEventPass.Final).changes.firstOrNull { it.id == down.id } ?: break
+                            // The down itself arrives here too, consumed by this handler.
+                            if (change.changedToDownIgnoreConsumed()) continue
+                            if (change.isConsumed) break
+                            if (!change.pressed) {
+                                change.consume()
+                                tapped = !change.isOutOfBounds(size, extendedTouchPadding)
+                                break
+                            }
+                        }
+                    } finally {
+                        player.release()
+                        interactionSource?.tryEmit(if (tapped) PressInteraction.Release(press) else PressInteraction.Cancel(press))
+                        if (tapped) view?.playSoundEffect(SoundEffectConstants.CLICK)
+                    }
+                }
+            },
+        )
+
+    fun update(next: NotePressElement) {
+        if (next.player !== element.player) input.resetPointerInputHandler()
+        element = next
+    }
+
+    override fun onPointerEvent(
+        pointerEvent: PointerEvent,
+        pass: PointerEventPass,
+        bounds: IntSize,
+    ) = input.onPointerEvent(pointerEvent, pass, bounds)
+
+    override fun onCancelPointerInput() = input.onCancelPointerInput()
+}
+
+/** How a screen reader names a note: "B flat, A sharp, octave 4". */
+fun noteDescription(note: Note?): String? {
+    note ?: return null
+    val description = StringBuilder()
+    when (note.accidental) {
+        Accidental.Natural -> description.append(note.friendlyName)
+        Accidental.Sharp -> {
+            description.append(note.friendlyName).append(" sharp")
+            note.alternate?.let { description.append(", ").append(it.friendlyName).append(" flat") }
+        }
+        else -> {
+            description.append(note.friendlyName).append(" flat")
+            note.alternate?.let { description.append(", ").append(it.friendlyName).append(" sharp") }
+        }
+    }
+    description.append(", octave ").append(note.octave)
+    return description.toString()
+}

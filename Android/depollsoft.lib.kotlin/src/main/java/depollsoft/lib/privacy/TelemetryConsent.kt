@@ -8,6 +8,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -89,7 +90,7 @@ class PrivacyDialog : DialogFragment() {
         crashes = choice(R.string.privacy_crashes, R.string.privacy_crashes_detail,
             savedInstanceState?.getBoolean("crashes") ?: choices.crashes)
         fun link(title: Int, action: () -> Unit) {
-            val button = android.widget.Button(context).apply {
+            val button = Button(context).apply {
                 setText(title)
                 isAllCaps = false
                 setOnClickListener { action() }

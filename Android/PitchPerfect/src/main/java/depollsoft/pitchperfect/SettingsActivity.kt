@@ -1,186 +1,131 @@
 package depollsoft.pitchperfect
 
-import android.app.Dialog
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.os.SystemClock
-import android.view.KeyEvent
-import android.view.View
-import android.widget.CompoundButton
-import android.widget.LinearLayout
-import android.widget.RadioButton
-import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
+import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import androidx.wear.remote.interactions.RemoteActivityHelper
-import com.bindroid.BindingMode
-import com.bindroid.converters.BoolConverter
-import com.bindroid.trackable.Trackable
-import com.bindroid.trackable.track
-import com.bindroid.ui.CompoundButtonCheckedProperty
-import com.bindroid.ui.UiBinder
-import com.bindroid.utils.uibind
 import com.facebook.login.LoginManager
 import com.google.android.gms.wearable.CapabilityClient
 import com.google.android.gms.wearable.Wearable
-import com.google.android.material.button.MaterialButton
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.auth.auth
 import com.google.firebase.functions.functions
-import depollsoft.lib.ui.ChangelogViewer
+import depollsoft.lib.privacy.TelemetryConsent
 import depollsoft.lib.util.AppLog
+import depollsoft.pitchperfect.ui.AppCompatAlertDialog
+import depollsoft.pitchperfect.ui.DialogButton
+import depollsoft.pitchperfect.ui.PlateText
+import depollsoft.pitchperfect.ui.PlateTheme
+import depollsoft.pitchperfect.ui.PlateTopBar
+import depollsoft.pitchperfect.ui.plateColors
+import depollsoft.pitchperfect.ui.plateText
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-class SettingsActivity(private val watchNodeSource: WatchNodeSource? = null) : AppCompatActivity() {
+class SettingsActivity(
+    private val watchNodeSource: WatchNodeSource? = null,
+) : AppCompatActivity() {
     private val watchSource by lazy { watchNodeSource ?: WearableWatchNodeSource(this) }
     private var watchRefresh: Job? = null
     private var watchResumed = false
     private var watchCapabilityClient: CapabilityClient? = null
     private var watchCapabilityListener: CapabilityClient.OnCapabilityChangedListener? = null
-    private val loggingIn = false
-    private val loginTrackable: Trackable = Trackable()
-    private lateinit var logInDialog: Dialog
-    val licensed: Boolean
-        get() = SettingsModel.licensed
 
-    override fun onKeyDown(
-        keyCode: Int,
-        event: KeyEvent,
-    ): Boolean =
-        if (keyCode == KeyEvent.KEYCODE_BACK && loggingIn) {
-            true
-        } else {
-            super.onKeyDown(keyCode, event)
-        }
+    internal val state = SettingsState()
 
-    val loggedIn: Boolean
-        get() {
-            loginTrackable.track()
-            return Firebase.auth.currentUser != null
-        }
-    var toggleNotes: Boolean
-        get() = SettingsModel.toggleNotes
-        set(value) {
-            SettingsModel.toggleNotes = value
-        }
-    var wakeLock: Boolean
-        get() = SettingsModel.wakeLock
-        set(value) {
-            SettingsModel.wakeLock = value
-        }
+    /** Which dialog is up, if any. */
+    internal var dialog by mutableStateOf<SettingsDialog?>(null)
 
-    private fun signOutImmediately() {
-        val startedAt = SystemClock.elapsedRealtime()
-        SongsModel.get().detachFromFirestore()
-        SettingsModel.detachFromFirestore()
-        LoginManager.getInstance().logOut()
-        Firebase.auth.signOut()
-        loginTrackable.updateTrackers()
-        PerformanceDiagnostics.logDuration("Logout completed", startedAt)
-    }
-
-    var areAdsRemoved: Boolean
-        get() = SettingsModel.areAdsRemoved
-        set(value) {
-            SettingsModel.areAdsRemoved = value
-        }
-
+    @OptIn(ExperimentalComposeUiApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        logInDialog =
-            LoginPrompt.buildDialog(this, false) {
-                loginTrackable.updateTrackers()
+        title = getString(R.string.Settings)
+        // An open sign-in prompt must come back to receive FirebaseUI's result.
+        keepDialogOpen("depollsoft.pitchperfect.SettingsDialog", { dialog }) { dialog = it }
+        setupPrivateBuildDiagnostics()
+        val actions =
+            SettingsActions(
+                clearSongs = { dialog = SettingsDialog.CLEAR_SONGS },
+                installOnWatch = ::installOnWatch,
+                logIn = { dialog = SettingsDialog.LOG_IN },
+                logOut = ::signOutImmediately,
+                deleteAccount = { dialog = SettingsDialog.DELETE_ACCOUNT },
+                manageSubscription = {
+                    startActivity(
+                        Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse(
+                                "https://play.google.com/store/account/subscriptions?sku=${PurchaseService.REMOVE_ADS_SKU}&package=${applicationContext.packageName}",
+                            ),
+                        ),
+                    )
+                },
+                showChangelog = { dialog = SettingsDialog.CHANGELOG },
+                openLink = { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(it))) },
+                privacyChoices = { TelemetryConsent.show(this) },
+                copyLogs = ::copyLogs,
+            )
+        setContent {
+            PlateTheme {
+                Column(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
+                    PlateTopBar(stringResource(R.string.Settings))
+                    SettingsScreen(state, actions)
+                }
+                SettingsDialogs()
             }
-        this.title = getString(R.string.Settings)
-        this.setContentView(R.layout.settingsview)
-        findViewById<View>(R.id.privacyChoicesButton).setOnClickListener {
-            depollsoft.lib.privacy.TelemetryConsent.show(this)
         }
-        UiBinder.bind(
-            this,
-            CompoundButtonCheckedProperty(findViewById<View>(R.id.toggleNoteCheckBox) as CompoundButton),
-            "ToggleNotes",
-            BindingMode.TWO_WAY,
-        )
-        UiBinder.bind(
-            this,
-            CompoundButtonCheckedProperty(findViewById<View>(R.id.wakeLockCheckBox) as CompoundButton),
-            "WakeLock",
-            BindingMode.TWO_WAY,
-        )
-        UiBinder.bind(
-            this,
-            R.id.rateReviewHyperlink,
-            "Visibility",
-            "ShowBuyLink",
-            BoolConverter.get(),
-        )
-        uibind(
-            R.id.aboutPurchased,
-            "Visibility",
-            { (this::licensed) },
-            converter = BoolConverter.get(),
-        )
-        uibind(
-            R.id.loginButton,
-            "Visibility",
-            { (this::loggedIn) },
-            converter = BoolConverter.get(true),
-        )
-        uibind(
-            R.id.logoutButton,
-            "Visibility",
-            { (this::loggedIn) },
-            converter = BoolConverter.get(),
-        )
-        uibind(
-            R.id.deleteAccountButton,
-            "Visibility",
-            { (this::loggedIn) },
-            converter = BoolConverter.get(),
-        )
-        uibind(
-            R.id.manageSubscriptionButton,
-            "Visibility",
-            { (this::areAdsRemoved) },
-            converter = BoolConverter.get(),
-        )
-        findViewById<View>(R.id.manageSubscriptionButton).setOnClickListener {
-            val manageIntent =
-                Intent(
-                    Intent.ACTION_VIEW,
-                    Uri.parse(
-                        "https://play.google.com/store/account/subscriptions?sku=${PurchaseService.REMOVE_ADS_SKU}&package=${applicationContext.packageName}",
-                    ),
-                )
-            startActivity(manageIntent)
-        }
-        findViewById<View>(R.id.loginButton).setOnClickListener {
-            logInDialog.show()
-        }
-        findViewById<View>(R.id.logoutButton).setOnClickListener {
-            signOutImmediately()
-        }
-        findViewById<View>(R.id.deleteAccountButton).setOnClickListener {
-            AlertDialog
-                .Builder(this)
-                .setMessage(R.string.DeleteAccountConfirmation)
-                .setTitle("Delete account ($userString)")
-                .setPositiveButton(R.string.Yes) { dlg, which ->
+    }
+
+    @androidx.compose.runtime.Composable
+    private fun SettingsDialogs() {
+        val close = { dialog = null }
+        when (dialog) {
+            SettingsDialog.LOG_IN -> LoginPromptDialog(onDismiss = close, onAuthenticated = state::changed)
+            SettingsDialog.CHANGELOG -> ChangelogDialog(onDismiss = close)
+            SettingsDialog.CLEAR_SONGS ->
+                ConfirmDialog(
+                    title = stringResource(R.string.ClearAllSongs),
+                    message = stringResource(R.string.ClearAllSongsConfirmation),
+                    onDismiss = close,
+                ) {
+                    close()
+                    SongsModel.get().clearAll()
+                    Toast.makeText(this, R.string.ClearAllSongsDone, Toast.LENGTH_SHORT).show()
+                }
+            SettingsDialog.DELETE_ACCOUNT ->
+                ConfirmDialog(
+                    title = "Delete account ($userString)",
+                    message = stringResource(R.string.DeleteAccountConfirmation),
+                    onDismiss = close,
+                ) {
+                    close()
                     lifecycleScope.launch {
                         SongsModel.get().detachFromFirestore()
                         SettingsModel.detachFromFirestore()
@@ -190,70 +135,24 @@ class SettingsActivity(private val watchNodeSource: WatchNodeSource? = null) : A
                             .await()
                         signOutImmediately()
                     }
-                }.setNegativeButton(R.string.No) { dlg, which ->
-                    // Do nothing
-                }.create()
-                .show()
-        }
-        val clearSongListButton = findViewById<View>(R.id.clearSongListButton)
-        clearSongListButton.setOnClickListener {
-            val builder = AlertDialog.Builder(this@SettingsActivity)
-            builder
-                .setTitle(R.string.ClearAllSongs)
-                .setMessage(R.string.ClearAllSongsConfirmation)
-                .setPositiveButton(R.string.Yes) { dialog, which ->
-                    SongsModel.get().clearAll()
-                    Toast
-                        .makeText(this@SettingsActivity, R.string.ClearAllSongsDone, Toast.LENGTH_SHORT)
-                        .show()
-                }.setNegativeButton(R.string.No) { dialog, which -> }
-                .show()
-        }
-        findViewById<View>(R.id.changelogButton).setOnClickListener {
-            val viewer =
-                ChangelogViewer(
-                    this@SettingsActivity,
-                    this@SettingsActivity
-                        .getString(R.string.Changelog),
-                )
-            viewer.setTitle("Pitch Perfect Changelog")
-            viewer.setIcon(R.mipmap.ic_launcher)
-            viewer.show()
-        }
-
-        this.findViewById<RadioButton>(R.id.radio_system).setOnClickListener {
-            PitchPerfectApplication.themeMode = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-        }
-        this.findViewById<RadioButton>(R.id.radio_dark).setOnClickListener {
-            PitchPerfectApplication.themeMode = AppCompatDelegate.MODE_NIGHT_YES
-        }
-        this.findViewById<RadioButton>(R.id.radio_light).setOnClickListener {
-            PitchPerfectApplication.themeMode = AppCompatDelegate.MODE_NIGHT_NO
-        }
-        track({ PitchPerfectApplication.themeMode }) {
-            when (it()) {
-                AppCompatDelegate.MODE_NIGHT_YES -> {
-                    findViewById<RadioButton>(R.id.radio_dark).isChecked = true
                 }
-
-                AppCompatDelegate.MODE_NIGHT_NO -> {
-                    findViewById<RadioButton>(R.id.radio_light).isChecked = true
-                }
-
-                AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM -> {
-                    findViewById<RadioButton>(R.id.radio_system).isChecked = true
-                }
-            }
-            if (!this@SettingsActivity.isDestroyed) {
-                keepTracking
-            }
+            null -> Unit
         }
-        setupPrivateBuildDiagnostics()
+    }
+
+    private fun signOutImmediately() {
+        val startedAt = SystemClock.elapsedRealtime()
+        SongsModel.get().detachFromFirestore()
+        SettingsModel.detachFromFirestore()
+        LoginManager.getInstance().logOut()
+        Firebase.auth.signOut()
+        state.changed()
+        PerformanceDiagnostics.logDuration("Logout completed", startedAt)
     }
 
     override fun onResume() {
         super.onResume()
-        loginTrackable.updateTrackers()
+        state.changed()
         watchResumed = true
         registerWatchCapabilityListener()
         refreshWatches()
@@ -275,45 +174,29 @@ class SettingsActivity(private val watchNodeSource: WatchNodeSource? = null) : A
     private fun refreshWatches() {
         if (!watchResumed) return
         watchRefresh?.cancel()
-        watchRefresh = lifecycleScope.launch {
-            val nodes = watchSource.connectedNodes()
-            // The source returns an empty list even for cancellation; discard stale results.
-            coroutineContext.ensureActive()
-            findViewById<View>(R.id.watchSection).visibility =
-                if (nodes.isEmpty()) View.GONE else View.VISIBLE
-            findViewById<TextView>(R.id.watchStatus).text = nodes.joinToString("\n") { node ->
-                getString(
-                    if (node.installed) R.string.WatchInstalledOn else R.string.WatchNotInstalledOn,
-                    node.name,
-                )
+        watchRefresh =
+            lifecycleScope.launch {
+                val nodes = watchSource.connectedNodes()
+                // The source returns an empty list even for cancellation; discard stale results.
+                coroutineContext.ensureActive()
+                state.watches = nodes
             }
-            val buttons = findViewById<LinearLayout>(R.id.watchButtons)
-            buttons.removeAllViews()
-            nodes.filterNot { it.installed }.forEach { node ->
-                val button = layoutInflater.inflate(R.layout.settings_watch_button, buttons, false) as MaterialButton
-                button.text = getString(R.string.WatchInstallOn, node.name)
-                button.setOnClickListener { installOnWatch(node) }
-                buttons.addView(button)
-            }
-        }
     }
 
     private fun registerWatchCapabilityListener() {
         try {
             val client = Wearable.getCapabilityClient(applicationContext)
-            val listener = CapabilityClient.OnCapabilityChangedListener {
-                runOnUiThread { refreshWatches() }
-            }
+            val listener = CapabilityClient.OnCapabilityChangedListener { runOnUiThread { refreshWatches() } }
             watchCapabilityClient = client
             watchCapabilityListener = listener
-            client.addListener(listener, WatchCompanion.CAPABILITY)
+            client
+                .addListener(listener, WatchCompanion.CAPABILITY)
                 .addOnSuccessListener {
                     // Registration may complete after onPause or a subsequent onResume.
                     if (watchCapabilityListener !== listener) {
                         removeWatchCapabilityListener(client, listener)
                     }
-                }
-                .addOnFailureListener { error ->
+                }.addOnFailureListener { error ->
                     AppLog.info("Settings", "Watch capability listener unavailable: ${error.javaClass.simpleName}")
                 }
         } catch (error: Exception) {
@@ -326,7 +209,8 @@ class SettingsActivity(private val watchNodeSource: WatchNodeSource? = null) : A
         listener: CapabilityClient.OnCapabilityChangedListener,
     ) {
         try {
-            client.removeListener(listener, WatchCompanion.CAPABILITY)
+            client
+                .removeListener(listener, WatchCompanion.CAPABILITY)
                 .addOnFailureListener { error ->
                     AppLog.info("Settings", "Watch capability listener removal failed: ${error.javaClass.simpleName}")
                 }
@@ -337,10 +221,11 @@ class SettingsActivity(private val watchNodeSource: WatchNodeSource? = null) : A
 
     private fun installOnWatch(node: WatchNode) {
         try {
-            val result = RemoteActivityHelper(this).startRemoteActivity(
-                WatchCompanion.installIntent(applicationContext.packageName),
-                node.id,
-            )
+            val result =
+                RemoteActivityHelper(this).startRemoteActivity(
+                    WatchCompanion.installIntent(applicationContext.packageName),
+                    node.id,
+                )
             result.addListener(
                 {
                     try {
@@ -358,7 +243,10 @@ class SettingsActivity(private val watchNodeSource: WatchNodeSource? = null) : A
         }
     }
 
-    private fun showWatchInstallFailure(node: WatchNode, error: Exception) {
+    private fun showWatchInstallFailure(
+        node: WatchNode,
+        error: Exception,
+    ) {
         AppLog.info("Settings", "Watch Play Store launch failed: ${error.javaClass.simpleName}")
         Toast.makeText(this, getString(R.string.WatchOpenStoreFailed, node.name), Toast.LENGTH_SHORT).show()
     }
@@ -367,53 +255,53 @@ class SettingsActivity(private val watchNodeSource: WatchNodeSource? = null) : A
         val build = BuildConfig.PRIVATE_BUILD_NUMBER
         if (build.isBlank()) return
         val pr = BuildConfig.PRIVATE_PR_NUMBER.ifBlank { "?" }
-        val metadata = "Build $build · PR #$pr"
-        findViewById<View>(R.id.privateBuildDiagnostics).visibility = View.VISIBLE
-        findViewById<android.widget.TextView>(R.id.privateBuildMetadata).text = metadata
+        state.privateBuild = "Build $build · PR #$pr"
         AppLog.info("Settings", "Private build diagnostics opened")
-        findViewById<View>(R.id.copyLogsButton).setOnClickListener {
-            val clipboard = getSystemService(ClipboardManager::class.java)
-            clipboard.setPrimaryClip(
-                ClipData.newPlainText("App logs", "$metadata\n\n${AppLog.contents()}"),
-            )
-            Toast.makeText(this, "Logs copied", Toast.LENGTH_SHORT).show()
-        }
+    }
+
+    private fun copyLogs() {
+        val clipboard = getSystemService(ClipboardManager::class.java)
+        clipboard.setPrimaryClip(ClipData.newPlainText("App logs", "${state.privateBuild}\n\n${AppLog.contents()}"))
+        Toast.makeText(this, "Logs copied", Toast.LENGTH_SHORT).show()
     }
 
     val userString: String
         get() {
-            val curUser = Firebase.auth.currentUser
-            if (curUser == null) {
-                return "Logged out"
+            val curUser = Firebase.auth.currentUser ?: return "Logged out"
+            val providerData = curUser.providerData.firstOrNull() ?: return "Current User: (${curUser.uid})"
+            return when (providerData.providerId) {
+                FacebookAuthProvider.PROVIDER_ID -> providerData.email?.let { "Facebook: $it" } ?: "Facebook account"
+                GoogleAuthProvider.PROVIDER_ID -> providerData.email?.let { "Google: $it" } ?: "Google account"
+                PhoneAuthProvider.PROVIDER_ID -> providerData.phoneNumber!!
+                else -> providerData.email ?: "Current User: (${curUser.uid})"
             }
-            if (curUser.providerData.size > 0) {
-                val providerData = curUser.providerData.first()
-                return when (providerData.providerId) {
-                    FacebookAuthProvider.PROVIDER_ID -> {
-                        providerData.email?.let { "Facebook: $it" } ?: "Facebook account"
-                    }
-
-                    GoogleAuthProvider.PROVIDER_ID -> {
-                        providerData.email?.let { "Google: $it" } ?: "Google account"
-                    }
-
-                    PhoneAuthProvider.PROVIDER_ID -> {
-                        providerData.phoneNumber!!
-                    }
-
-                    else -> {
-                        providerData.email ?: "Current User: (${curUser.uid})"
-                    }
-                }
-            }
-            return "Current User: (${curUser.uid})"
         }
+}
 
-    override fun onDestroy() {
-        super.onDestroy()
-    }
+/** The settings screen's dialogs. */
+enum class SettingsDialog { LOG_IN, CHANGELOG, CLEAR_SONGS, DELETE_ACCOUNT }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
+/** A yes/no question in AppCompat's alert dialog. */
+@androidx.compose.runtime.Composable
+fun ConfirmDialog(
+    title: String,
+    message: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    AppCompatAlertDialog(
+        onDismissRequest = onDismiss,
+        title = title,
+        buttons =
+            listOf(
+                DialogButton(stringResource(R.string.No), onDismiss),
+                DialogButton(stringResource(R.string.Yes), onConfirm),
+            ),
+    ) {
+        PlateText(
+            message,
+            style = plateText(16.sp, plateColors.inkSecondary),
+            modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 16.dp),
+        )
     }
 }

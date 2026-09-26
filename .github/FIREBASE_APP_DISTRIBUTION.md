@@ -4,7 +4,7 @@ PR updates run the secretless `PR Preview` workflow. It builds private Android
 APKs and unsigned iOS archives with the shared epoch-based preview build number,
 but only for the apps and platforms the PR changes: `scripts/ci/changed_apps.py`
 maps a file under one app's own module to that app and any other file under
-`Android/` or `iOS/` (shared libraries, Bindroid, depolllib, the workspace,
+`Android/` or `iOS/` (shared libraries, depolllib, the workspace,
 Fastlane) to both apps on that platform. The selection is uploaded as a
 `preview-manifest-<pr>-<build>` artifact. After that workflow succeeds,
 `.github/workflows/firebase-app-distribution.yml` runs from the trusted default

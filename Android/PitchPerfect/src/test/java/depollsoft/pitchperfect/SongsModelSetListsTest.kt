@@ -3,6 +3,7 @@ package depollsoft.pitchperfect
 import depollsoft.lib.activity.RichApplication
 import depollsoft.lib.util.Preferences
 import depollsoft.pitchperfect.lib.Key
+import depollsoft.pitchperfect.lib.Note
 import depollsoft.pitchperfect.lib.PitchedSong
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -23,7 +24,7 @@ import org.robolectric.annotation.Config
  * `default` list rather than trying to make a second instance.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35], application = RichApplication::class)
+@Config(application = RichApplication::class)
 class SongsModelSetListsTest {
     private val model get() = SongsModel.get()
 
@@ -53,6 +54,60 @@ class SongsModelSetListsTest {
             name = title
             key = Key.getMajorKeys()[keyIndex]
         }
+
+    // ==================== Songs that leave the screen stop sounding ====================
+
+    /** In toggle mode a song sounds until its row is pressed again; these take the row away. */
+    private fun playing(
+        listId: String,
+        title: String,
+        keyIndex: Int,
+    ): PitchedSong {
+        Note.setPlayer(ScreenTestSupport.silentPlayer)
+        val song = song(title, keyIndex)
+        model.songLists.getValue(listId).addSong(song)
+        song.play()
+        assertTrue(song.isPlaying)
+        return song
+    }
+
+    @Test
+    fun removingASoundingSongSilencesIt() {
+        val song = playing(SongsModel.DEFAULT_ID, "Heart", 2)
+        try {
+            model.defaultSongList.removeSong(song)
+            assertFalse(song.isPlaying)
+        } finally {
+            song.stop()
+            Note.setPlayer(Note.DEFAULT_PLAYER)
+        }
+    }
+
+    @Test
+    fun deletingAListSilencesItsSongs() {
+        val id = model.createList("Saturday show")
+        val song = playing(id, "Heart", 3)
+        try {
+            model.deleteList(id)
+            assertFalse(song.isPlaying)
+        } finally {
+            song.stop()
+            Note.setPlayer(Note.DEFAULT_PLAYER)
+        }
+    }
+
+    @Test
+    fun aListDroppedBecauseTheAccountLacksItSilencesItsSongs() {
+        val id = model.createList("Saturday show")
+        val song = playing(id, "Heart", 4)
+        try {
+            model.localListsAfterRemoteWins(model.songLists, remoteIds = emptySet())
+            assertFalse(song.isPlaying)
+        } finally {
+            song.stop()
+            Note.setPlayer(Note.DEFAULT_PLAYER)
+        }
+    }
 
     // ==================== Display names ====================
 
@@ -391,16 +446,21 @@ class SongsModelSetListsTest {
     @Test
     fun creatingAListNotifiesListTrackers() {
         var updates = 0
-        com.bindroid.trackable.track({ model.trackLists() }) {
-            updates++
-            keepTracking
+        val watch = depollsoft.lib.state.watchState(read = { model.trackLists() }) { updates++ }
+        fun settle() {
+            depollsoft.lib.state.SnapshotNotifications.flush()
+            org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
         }
+        settle()
         val before = updates
         model.createList("Saturday show")
+        settle()
         assertTrue("creating a list re-renders the list UI", updates > before)
 
         val after = updates
         model.renameList(model.orderedLists.last().id, "Sunday show")
+        settle()
         assertTrue("renaming a list re-renders the list UI", updates > after)
+        watch.stop()
     }
 }

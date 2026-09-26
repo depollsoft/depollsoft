@@ -32,7 +32,12 @@ internal fun setPref(key: String, value: Any?) {
 inline fun <reified T> preference(key: String, initialValue: T, crossinline afterSet: (T) -> Unit = {}): ReadWriteProperty<Any?, T> {
     initializePreference(key, initialValue, T::class.java)
     return object : ReadWriteProperty<Any?, T> {
-        override fun getValue(thisRef: Any?, property: KProperty<*>): T = getPref(key)
+        override fun getValue(thisRef: Any?, property: KProperty<*>): T {
+            val value: T = getPref(key)
+            // A non-null preference that reads back null (an unreadable entry) keeps its default
+            // rather than crashing its reader; a nullable one can legitimately hold null.
+            return if (value == null && null !is T) initialValue else value
+        }
 
         override fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {
             setPref(key, value)

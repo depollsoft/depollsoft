@@ -10,7 +10,6 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 
-import java.lang.reflect.Field;
 
 import depollsoft.lib.activity.RichApplication;
 
@@ -21,9 +20,7 @@ public class VersioningTest {
     public void setUp() throws Exception {
         // Ensure RichApplication has a non-null Context before Versioning static init
         Application app = RuntimeEnvironment.getApplication();
-        Field f = RichApplication.class.getDeclaredField("context");
-        f.setAccessible(true);
-        f.set(null, app.getApplicationContext());
+        RichApplication.setAppContextForTesting(app.getApplicationContext());
     }
 
     @Test

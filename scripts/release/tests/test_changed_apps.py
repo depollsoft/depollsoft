@@ -25,8 +25,8 @@ class SelectionTests(unittest.TestCase):
                          apps(android=['pitchperfect']))
 
     def test_shared_code_selects_every_app_on_its_platform_and_marks_it_shared(self):
-        for path in ['Android/PitchPerfectLib/src/main/java/A.java', 'Android/Bindroid',
-                     'Android/DepollSoftCommon.Compat/build.gradle', 'Android/build.gradle',
+        for path in ['Android/PitchPerfectLib/src/main/java/A.java',
+                     'Android/DepollSoftCommon/build.gradle', 'Android/build.gradle',
                      'Android/gradle/wrapper/gradle-wrapper.properties', 'Android/buildSrc/build.gradle.kts',
                      'Android/depollsoft.lib.kotlin/src/main/A.kt', 'Android/fastlane/Fastfile',
                      '.github/workflows/android.yml', 'scripts/ci/android_sdk.py']:

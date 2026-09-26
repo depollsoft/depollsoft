@@ -1,0 +1,37 @@
+apply plugin: 'com.android.library'
+apply plugin: 'org.jetbrains.kotlin.plugin.compose'
+
+// Compose building blocks both apps share: list motion and drag reordering, View-style
+// scrollbars, the snackbar's timing and slide, tooltips, the Menu key, and the rules that put
+// Compose on the pixels the View screens used. Compose UI and foundation only: each app brings
+// its own Material version and passes its visuals in.
+dependencies {
+    api platform(compose_bom)
+    api 'androidx.compose.runtime:runtime'
+    api 'androidx.compose.ui:ui'
+    api 'androidx.compose.foundation:foundation'
+    api 'androidx.compose.animation:animation'
+    implementation 'androidx.appcompat:appcompat-resources:1.8.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime-compose:2.11.0'
+
+    testImplementation platform(compose_bom)
+    testImplementation 'androidx.compose.ui:ui-test-junit4'
+    testImplementation 'androidx.compose.ui:ui-test-manifest'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.robolectric:robolectric:4.16.1'
+}
+
+android {
+    namespace = 'depollsoft.compose'
+    compileSdk 37
+
+    defaultConfig {
+        minSdk 23
+    }
+    buildFeatures {
+        compose = true
+    }
+    testOptions {
+        unitTests.includeAndroidResources = true
+    }
+}

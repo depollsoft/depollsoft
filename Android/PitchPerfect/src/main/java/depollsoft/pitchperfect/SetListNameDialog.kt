@@ -1,152 +1,109 @@
 package depollsoft.pitchperfect
 
-import android.app.Dialog
-import android.os.Bundle
-import android.view.KeyEvent
-import android.view.WindowManager
-import android.view.inputmethod.EditorInfo
-import androidx.appcompat.app.AlertDialog
-import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.FragmentManager
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.textfield.TextInputEditText
-import com.google.android.material.textfield.TextInputLayout
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import depollsoft.pitchperfect.ui.DialogButton
+import depollsoft.pitchperfect.ui.PlateAlertDialog
+import depollsoft.pitchperfect.ui.PlateFonts
+import depollsoft.pitchperfect.ui.PlateOutlinedField
+import depollsoft.pitchperfect.ui.plateColors
+import depollsoft.pitchperfect.ui.plateText
 
 /**
- * Names a set list: New set list when [ARG_ID] is absent, Rename set list when it names one.
+ * Names a set list: "New set list" when [listId] is null, "Rename set list" when it names one.
  *
- * A DialogFragment so the prompt and its half-typed name survive a rotation, and so the created or
- * renamed id reaches whoever asked — the Songs tab or the manage screen — through a fragment
- * result rather than a callback that recreation would drop. Validation is
- * [SongsModel.validateName]'s; a rejected name keeps the dialog open with the reason under the
- * field.
+ * Validation is [SongsModel.validateName]'s; a rejected name keeps the dialog open with the
+ * reason under the field. The half-typed name survives a rotation. [onDone] gets the created or
+ * renamed id.
  */
-class SetListNameDialog : DialogFragment() {
-    private val listId: String?
-        get() = arguments?.getString(ARG_ID)
+@Composable
+fun SetListNameDialog(
+    listId: String?,
+    onDismiss: () -> Unit,
+    onDone: (listId: String, created: Boolean) -> Unit,
+    model: SongsModel = SongsModel.get(),
+) {
+    val context = LocalContext.current
+    val renaming = listId != null
+    val initial = remember(listId) { listId?.let { model.displayName(it) }.orEmpty() }
+    var value by rememberSaveable(listId, stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(TextFieldValue(initial, TextRange(initial.length)))
+    }
+    var error by rememberSaveable(listId) { mutableStateOf<String?>(null) }
+    val focus = remember { FocusRequester() }
 
-    private val request: String
-        get() = arguments?.getString(ARG_REQUEST) ?: REQUEST_DEFAULT
-
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val model = SongsModel.get()
-        val id = listId
-        val renaming = id != null
-        val content = layoutInflater.inflate(R.layout.dialog_set_list_name, null)
-        val field = content.findViewById<TextInputLayout>(R.id.setListNameLayout)
-        val input = content.findViewById<TextInputEditText>(R.id.setListNameInput)
-        if (renaming) {
-            input.setText(model.displayName(id!!))
-            field.hint = getString(R.string.SetListNameLabel)
-        } else {
-            field.helperText = getString(R.string.SetListNameHint)
+    fun submit() {
+        // A list deleted on another device while this prompt was open has nothing to rename.
+        if (listId != null && !model.songLists.containsKey(listId)) {
+            onDismiss()
+            return
         }
-        input.setSelection(input.text?.length ?: 0)
-
-        // Material's 80dp vertical insets leave too little room for a wrapped error above the
-        // keyboard on a small screen; keep a 24dp margin instead.
-        val verticalInset = (24 * resources.displayMetrics.density).toInt()
-        val dialog =
-            MaterialAlertDialogBuilder(requireContext())
-                .setBackgroundInsetTop(verticalInset)
-                .setBackgroundInsetBottom(verticalInset)
-                .setTitle(if (renaming) R.string.SetListRenameTitle else R.string.SetListNewTitle)
-                .setView(content)
-                .setPositiveButton(if (renaming) R.string.SetListRename else R.string.SetListCreate, null)
-                .setNegativeButton(R.string.Cancel, null)
-                .create()
-
-        fun submit(): Boolean {
-            val name = input.text?.toString().orEmpty()
-            // A list deleted on another device while this prompt was open has nothing to rename.
-            if (renaming && !model.songLists.containsKey(id)) {
-                dismissAllowingStateLoss()
-                return true
-            }
-            val error = model.validateName(name, excludingId = id)
-            if (error != null) {
-                field.helperText = null
-                field.error = getString(messageFor(error))
-                return false
-            }
-            field.error = null
-            val result =
-                if (renaming) {
-                    model.renameList(id!!, name)
-                    id
-                } else {
-                    model.createList(name)
-                }
-            parentFragmentManager.setFragmentResult(
-                request,
-                Bundle().apply {
-                    putString(RESULT_LIST_ID, result)
-                    putBoolean(RESULT_CREATED, !renaming)
-                },
-            )
-            dismissAllowingStateLoss()
-            return true
+        val rejection = model.validateName(value.text, excludingId = listId)
+        if (rejection != null) {
+            error = context.getString(messageFor(rejection))
+            return
         }
-
-        input.setOnEditorActionListener { _, actionId, event ->
-            if (actionId == EditorInfo.IME_ACTION_DONE ||
-                (event?.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP)
-            ) {
-                submit()
+        val result =
+            if (listId != null) {
+                model.renameList(listId, value.text)
+                listId
             } else {
-                false
+                model.createList(value.text)
             }
-        }
-        dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener { submit() }
-            input.requestFocus()
-            dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
-        }
-        return dialog
+        onDone(result, !renaming)
     }
 
-    companion object {
-        const val REQUEST_DEFAULT = "depollsoft.pitchperfect.setListName"
-        const val RESULT_LIST_ID = "listId"
-        const val RESULT_CREATED = "created"
-        const val FRAGMENT_TAG = "depollsoft.pitchperfect.setListNameDialog"
-        private const val ARG_ID = "depollsoft.pitchperfect.setListName.id"
-        private const val ARG_REQUEST = "depollsoft.pitchperfect.setListName.request"
-
-        /** The reason a name was rejected, in the words the field shows under it. */
-        fun messageFor(error: SongsModel.NameError): Int =
-            when (error) {
-                SongsModel.NameError.EMPTY -> R.string.SetListNameErrorEmpty
-                SongsModel.NameError.TOO_LONG -> R.string.SetListNameErrorTooLong
-                SongsModel.NameError.RESERVED -> R.string.SetListNameErrorReserved
-                SongsModel.NameError.DUPLICATE -> R.string.SetListNameErrorDuplicate
-            }
-
-        private fun show(
-            manager: FragmentManager,
-            arguments: Bundle,
-        ) {
-            if (manager.isStateSaved || manager.findFragmentByTag(FRAGMENT_TAG) != null) return
-            SetListNameDialog().apply { setArguments(arguments) }.show(manager, FRAGMENT_TAG)
-        }
-
-        /** Asks for a new set list's name; the result carries the created id. */
-        fun create(
-            manager: FragmentManager,
-            request: String = REQUEST_DEFAULT,
-        ) = show(manager, Bundle().apply { putString(ARG_REQUEST, request) })
-
-        /** Asks for a new name for [id], prefilled with its display name. */
-        fun rename(
-            manager: FragmentManager,
-            id: String,
-            request: String = REQUEST_DEFAULT,
-        ) = show(
-            manager,
-            Bundle().apply {
-                putString(ARG_ID, id)
-                putString(ARG_REQUEST, request)
-            },
+    PlateAlertDialog(
+        onDismissRequest = onDismiss,
+        title = stringResource(if (renaming) R.string.SetListRenameTitle else R.string.SetListNewTitle),
+        verticalInset = 24.dp,
+        buttons =
+            listOf(
+                DialogButton(stringResource(R.string.Cancel), onDismiss),
+                DialogButton(
+                    stringResource(if (renaming) R.string.SetListRename else R.string.SetListCreate),
+                    ::submit,
+                    testTag = TestTags.NAME_DIALOG_CONFIRM,
+                ),
+            ),
+    ) {
+        PlateOutlinedField(
+            value = value,
+            onValueChange = { value = it },
+            label = stringResource(R.string.SetListNameLabel),
+            textStyle = plateText(20.sp, plateColors.ink, PlateFonts.condensed),
+            helper = if (renaming || error != null) null else stringResource(R.string.SetListNameHint),
+            error = error,
+            onDone = ::submit,
+            modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 8.dp).fillMaxWidth(),
+            fieldModifier = Modifier.focusRequester(focus).testTag(TestTags.NAME_DIALOG_FIELD),
         )
     }
+    LaunchedEffect(Unit) { focus.requestFocus() }
 }
+
+/** The reason a name was rejected, in the words the field shows under it. */
+fun messageFor(error: SongsModel.NameError): Int =
+    when (error) {
+        SongsModel.NameError.EMPTY -> R.string.SetListNameErrorEmpty
+        SongsModel.NameError.TOO_LONG -> R.string.SetListNameErrorTooLong
+        SongsModel.NameError.RESERVED -> R.string.SetListNameErrorReserved
+        SongsModel.NameError.DUPLICATE -> R.string.SetListNameErrorDuplicate
+    }

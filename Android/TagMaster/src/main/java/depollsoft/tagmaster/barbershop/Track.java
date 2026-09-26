@@ -1,13 +1,12 @@
 package depollsoft.tagmaster.barbershop;
 
-import com.bindroid.trackable.TrackableField;
-import com.bindroid.utils.ObjectUtilities;
+import java.util.Objects;
 
 public class Track {
 
-  private TrackableField<String> title = new TrackableField<String>();
+  private String title;
 
-  private TrackableField<RemoteLocation> source = new TrackableField<RemoteLocation>();
+  private RemoteLocation source;
 
   public Track() {
   }
@@ -21,24 +20,24 @@ public class Track {
     if (obj == null)
       return false;
     Track track = (Track) obj;
-    return ObjectUtilities.equals(this.getTitle(), track.getTitle())
-        && ObjectUtilities.equals(this.getSource(), track.getSource());
+    return Objects.equals(this.getTitle(), track.getTitle())
+        && Objects.equals(this.getSource(), track.getSource());
   }
 
   public RemoteLocation getSource() {
-    return this.source.get();
+    return this.source;
   }
 
   public String getTitle() {
-    return this.title.get();
+    return this.title;
   }
 
   public void setSource(RemoteLocation value) {
-    this.source.set(value);
+    this.source = value;
   }
 
   public void setTitle(String value) {
-    this.title.set(value);
+    this.title = value;
   }
 
   @Override

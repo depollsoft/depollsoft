@@ -409,7 +409,6 @@ jobs:
         with:
           persist-credentials: false
           ref: ${{ needs.validate-pr.outputs.deploy-sha }}
-          submodules: recursive
 
       - name: Capture source SHA
         id: capture-source
@@ -554,7 +553,6 @@ jobs:
         with:
           persist-credentials: false
           ref: ${{ needs.validate-pr.outputs.deploy-sha }}
-          submodules: recursive
 
       - name: Capture source SHA
         id: capture-source

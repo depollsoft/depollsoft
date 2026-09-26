@@ -5,7 +5,7 @@ import static org.junit.Assert.*;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import com.bindroid.trackable.TrackableCollection;
+import depollsoft.lib.state.StateList;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -54,7 +54,7 @@ public class PitchPipeModelTest {
     public void constructor_initializesCToCNotes_whenIsFromFToFIsFalse() {
         PitchPipeModel model = new PitchPipeModel();
 
-        TrackableCollection<Note> notes = model.getNotes();
+        StateList<Note> notes = model.getNotes();
         assertNotNull("Notes collection should not be null", notes);
         assertEquals("C-to-C scale should have 13 notes", 13, notes.size());
 
@@ -75,7 +75,7 @@ public class PitchPipeModelTest {
     public void getNotes_returnsCToCScale_byDefault() {
         PitchPipeModel model = new PitchPipeModel();
 
-        TrackableCollection<Note> notes = model.getNotes();
+        StateList<Note> notes = model.getNotes();
 
         // Verify chromatic C-to-C scale: C, C#, D, D#, E, F, F#, G, G#, A, A#, B, C
         String[] expectedNames = {"C", "C", "D", "D", "E", "F", "F", "G", "G", "A", "A", "B", "C"};
@@ -99,9 +99,9 @@ public class PitchPipeModelTest {
     public void setIsFromFToF_true_switchesToFToFScale() {
         PitchPipeModel model = new PitchPipeModel();
 
-        model.setIsFromFToF(true);
+        model.setFromFToF(true);
 
-        TrackableCollection<Note> notes = model.getNotes();
+        StateList<Note> notes = model.getNotes();
         assertEquals("F-to-F scale should have 13 notes", 13, notes.size());
 
         // Verify first note is F4
@@ -120,11 +120,11 @@ public class PitchPipeModelTest {
     @Test
     public void setIsFromFToF_false_switchesToCToCScale() {
         PitchPipeModel model = new PitchPipeModel();
-        model.setIsFromFToF(true); // First switch to F-to-F
+        model.setFromFToF(true); // First switch to F-to-F
 
-        model.setIsFromFToF(false); // Then switch back to C-to-C
+        model.setFromFToF(false); // Then switch back to C-to-C
 
-        TrackableCollection<Note> notes = model.getNotes();
+        StateList<Note> notes = model.getNotes();
 
         // Verify first note is C4
         Note firstNote = notes.get(0);
@@ -136,35 +136,35 @@ public class PitchPipeModelTest {
     public void getIsFromFToF_returnsFalse_byDefault() {
         PitchPipeModel model = new PitchPipeModel();
 
-        assertFalse("isFromFToF should be false by default", model.getIsFromFToF());
+        assertFalse("isFromFToF should be false by default", model.isFromFToF());
     }
 
     @Test
     public void getIsFromFToF_returnsTrue_afterSetToTrue() {
         PitchPipeModel model = new PitchPipeModel();
 
-        model.setIsFromFToF(true);
+        model.setFromFToF(true);
 
-        assertTrue("isFromFToF should be true after setting", model.getIsFromFToF());
+        assertTrue("isFromFToF should be true after setting", model.isFromFToF());
     }
 
     @Test
     public void isFromFToF_persistsAcrossInstances() {
         PitchPipeModel model1 = new PitchPipeModel();
-        model1.setIsFromFToF(true);
+        model1.setFromFToF(true);
 
         // Create a new instance - it should read the persisted preference
         PitchPipeModel model2 = new PitchPipeModel();
 
-        assertTrue("New instance should have persisted isFromFToF value", model2.getIsFromFToF());
+        assertTrue("New instance should have persisted isFromFToF value", model2.isFromFToF());
     }
 
     @Test
     public void fToFScale_containsCorrectNotes() {
         PitchPipeModel model = new PitchPipeModel();
-        model.setIsFromFToF(true);
+        model.setFromFToF(true);
 
-        TrackableCollection<Note> notes = model.getNotes();
+        StateList<Note> notes = model.getNotes();
 
         // F-to-F scale: F, F#, G, G#, A, A#, B, C, C#, D, D#, E, F
         String[] expectedNames = {"F", "F", "G", "G", "A", "A", "B", "C", "C", "D", "D", "E", "F"};
@@ -189,7 +189,7 @@ public class PitchPipeModelTest {
     @Test
     public void setNotes_updatesNotesCollection() {
         PitchPipeModel model = new PitchPipeModel();
-        TrackableCollection<Note> customNotes = new TrackableCollection<>();
+        StateList<Note> customNotes = new StateList<>();
         customNotes.add(Note.findNote("A", Accidental.Natural, 4));
 
         model.setNotes(customNotes);
@@ -202,7 +202,7 @@ public class PitchPipeModelTest {
     public void cToC_includesOctave5Root() {
         PitchPipeModel model = new PitchPipeModel();
 
-        TrackableCollection<Note> notes = model.getNotes();
+        StateList<Note> notes = model.getNotes();
 
         for (int i = 0; i < notes.size(); i++) {
             assertEquals("C-to-C includes the upper C5", i == 12 ? 5 : 4, notes.get(i).getOctave());
@@ -217,15 +217,15 @@ public class PitchPipeModelTest {
         assertEquals("C", model.getNotes().get(0).getFriendlyName());
 
         // Switch to F-to-F
-        model.setIsFromFToF(true);
+        model.setFromFToF(true);
         assertEquals("F", model.getNotes().get(0).getFriendlyName());
 
         // Switch back to C-to-C
-        model.setIsFromFToF(false);
+        model.setFromFToF(false);
         assertEquals("C", model.getNotes().get(0).getFriendlyName());
 
         // Switch to F-to-F again
-        model.setIsFromFToF(true);
+        model.setFromFToF(true);
         assertEquals("F", model.getNotes().get(0).getFriendlyName());
     }
 }

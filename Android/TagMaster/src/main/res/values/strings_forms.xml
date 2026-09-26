@@ -16,7 +16,6 @@
     <string name="forms_changelog_title">Tag Master Changelog</string>
     <string name="forms_cache_size_pending">…</string>
     <string name="forms_cache_size">%1$.2f MB</string>
-    <string name="forms_clearing_cache">Clearing cache</string>
     <string name="forms_clear_cache_failed">Could not clear the cache. Try again.</string>
     <string name="forms_cache_size_failed">Could not calculate the cache size.</string>
     <string name="forms_signed_in">Logged in. Your tag lists will sync.</string>

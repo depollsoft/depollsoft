@@ -3,16 +3,15 @@ package depollsoft.lib.xml;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.bindroid.trackable.TrackableField;
 
 public class XmlElement {
-  private TrackableField<String> name = new TrackableField<String>();
+  private String name;
 
-  private TrackableField<List<XmlElement>> elements = new TrackableField<List<XmlElement>>();
+  private List<XmlElement> elements;
 
-  private TrackableField<List<XmlAttribute>> attributes = new TrackableField<List<XmlAttribute>>();
+  private List<XmlAttribute> attributes;
 
-  private TrackableField<String> value = new TrackableField<String>();
+  private String value;
 
   public XmlElement() {
     this.setElements(new ArrayList<XmlElement>());
@@ -35,35 +34,35 @@ public class XmlElement {
   }
 
   public List<XmlAttribute> getAttributes() {
-    return this.attributes.get();
+    return this.attributes;
   }
 
   public List<XmlElement> getElements() {
-    return this.elements.get();
+    return this.elements;
   }
 
   public String getName() {
-    return this.name.get();
+    return this.name;
   }
 
   public String getValue() {
-    return this.value.get();
+    return this.value;
   }
 
   private void setAttributes(List<XmlAttribute> value) {
-    this.attributes.set(value);
+    this.attributes = value;
   }
 
   private void setElements(List<XmlElement> value) {
-    this.elements.set(value);
+    this.elements = value;
   }
 
   public void setName(String value) {
-    this.name.set(value);
+    this.name = value;
   }
 
   public void setValue(String value) {
-    this.value.set(value);
+    this.value = value;
   }
 
   @Override

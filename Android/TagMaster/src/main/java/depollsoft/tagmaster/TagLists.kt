@@ -1,15 +1,13 @@
 package depollsoft.tagmaster
 
 import android.content.Context
-import com.bindroid.trackable.Trackable
-import com.bindroid.trackable.TrackableCollection
-import com.bindroid.trackable.transaction
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.firestore
+import depollsoft.lib.state.ChangeSignal
 import depollsoft.lib.util.Preferences
 import java.util.Locale
 
@@ -25,7 +23,7 @@ import java.util.Locale
  *
  * Keys are stable slugs, so renaming a list never moves its tags and an edit made offline on
  * another device still lands in the right list. All mutation goes through this object so the
- * local copy (in [Preferences]) and the cloud copy stay aligned; observers track [version].
+ * local copy (in [Preferences]) and the cloud copy stay aligned; readers of [version] recompose.
  */
 object TagLists {
     const val FAVORITE = "favorite"
@@ -41,21 +39,22 @@ object TagLists {
     enum class NameError { EMPTY, TOO_LONG, DUPLICATE, RESERVED }
 
     /** Bumps on every registry change (create, rename, delete, reorder, remote sync). */
-    private val versionTrackable = Trackable()
+    private val versionSignal = ChangeSignal()
     private var versionValue = 0L
     val version: Long
         get() {
             ensureLoaded()
-            versionTrackable.track()
+            versionSignal.read()
             return versionValue
         }
 
-    private val customKeyList: TrackableCollection<String> = TrackableCollection()
+    private var customKeyList: List<String> = emptyList()
 
     /** Ordered keys of the user-created lists. Read-only; mutate through this object. */
-    val customKeys: TrackableCollection<String>
+    val customKeys: List<String>
         get() {
             ensureLoaded()
+            versionSignal.read()
             return customKeyList
         }
 
@@ -79,7 +78,11 @@ object TagLists {
         }
         order.clear()
         Preferences.get<Collection<*>>(ORDER_KEY)?.filterIsInstance<String>()?.let(order::addAll)
-        rebuild()
+        // The first read may come inside a read-only snapshot (a snapshotFlow, say), where writing
+        // state throws. Nothing can have read the keys or the version yet, so the load signals
+        // nothing; later changes go through [rebuild].
+        customKeyList = orderedKeys()
+        versionValue++
     }
 
     fun isCustom(key: String): Boolean = key !in RESERVED
@@ -87,7 +90,7 @@ object TagLists {
     /** The stored name of a custom list, or the key itself for a list without metadata. */
     fun name(key: String): String {
         ensureLoaded()
-        versionTrackable.track()
+        versionSignal.read()
         return names[key] ?: key
     }
 
@@ -206,6 +209,16 @@ object TagLists {
         return true
     }
 
+    /**
+     * Applies [order], a drag's result, only while the lists still stand in [baseline], the order
+     * the drag began from. A sync can reorder the lists mid-drag, and a drop landing before the
+     * screen notices must not write the stale order over it.
+     */
+    fun reorder(
+        baseline: List<String>,
+        order: List<String>,
+    ): Boolean = baseline == customKeys.toList() && reorder(order)
+
     /** Replaces the registry with the cloud copy. [info] is the raw `listInfo` map; [listKeys] the keys of `lists`. */
     internal fun applyRemote(
         info: Map<*, *>?,
@@ -289,6 +302,12 @@ object TagLists {
      * cloud snapshot) that may not have been seen by this object yet.
      */
     private fun rebuild(extraKeys: Collection<String> = emptyList()) {
+        customKeyList = orderedKeys(extraKeys)
+        versionValue++
+        versionSignal.changed()
+    }
+
+    private fun orderedKeys(extraKeys: Collection<String> = emptyList()): List<String> {
         val known = LinkedHashSet<String>()
         order.forEach { if (isCustom(it)) known.add(it) }
         val unordered =
@@ -297,15 +316,7 @@ object TagLists {
                 .distinct()
                 .sortedBy { (names[it] ?: it).lowercase(Locale.ROOT) }
         known.addAll(unordered)
-        val next = known.toList()
-        if (next != customKeyList.toList()) {
-            customKeyList.transaction {
-                clear()
-                addAll(next)
-            }
-        }
-        versionValue++
-        versionTrackable.updateTrackers()
+        return known.toList()
     }
 
     private fun newKey(name: String): String {
@@ -330,6 +341,6 @@ object TagLists {
         names.clear()
         order.clear()
         loaded = false
-        customKeyList.transaction { clear() }
+        customKeyList = emptyList()
     }
 }

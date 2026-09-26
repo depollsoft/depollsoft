@@ -1,10 +1,9 @@
 package depollsoft.tagmaster.barbershop
 
-import com.bindroid.trackable.*
 
 class RemoteLocation {
-    var uri by TrackableField<String>()
-    var type by TrackableField<String>()
+    var uri: String? = null
+    var type: String? = null
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

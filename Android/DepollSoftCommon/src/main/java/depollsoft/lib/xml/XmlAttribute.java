@@ -1,27 +1,26 @@
 package depollsoft.lib.xml;
 
-import com.bindroid.trackable.TrackableField;
 
 public class XmlAttribute {
 
-  private TrackableField<String> name = new TrackableField<String>();
+  private String name;
 
-  private TrackableField<String> value = new TrackableField<String>();
+  private String value;
 
   public String getName() {
-    return this.name.get();
+    return this.name;
   }
 
   public String getValue() {
-    return this.value.get();
+    return this.value;
   }
 
   public void setName(String value) {
-    this.name.set(value);
+    this.name = value;
   }
 
   public void setValue(String value) {
-    this.value.set(value);
+    this.value = value;
   }
 
   @Override

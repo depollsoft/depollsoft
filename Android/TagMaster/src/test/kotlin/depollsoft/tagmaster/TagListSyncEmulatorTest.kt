@@ -2,7 +2,7 @@ package depollsoft.tagmaster
 
 import android.app.Application
 import android.os.Looper
-import com.bindroid.trackable.TrackableCollection
+import depollsoft.lib.state.StateList
 import com.google.android.gms.tasks.Task
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
@@ -47,7 +47,7 @@ import java.net.URL
  * production Crashlytics project that way (see `ScreenTestSupport.startClean`).
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [28])
+@Config(application = Application::class, sdk = [35])
 class TagListSyncEmulatorTest {
     private lateinit var uid: String
     private lateinit var remoteDoc: DocumentReference
@@ -67,10 +67,7 @@ class TagListSyncEmulatorTest {
             urlsReachTheNetwork(),
         )
 
-        RichApplication::class.java
-            .getDeclaredField("context")
-            .apply { isAccessible = true }
-            .set(null, RuntimeEnvironment.getApplication())
+        RichApplication.setAppContextForTesting(RuntimeEnvironment.getApplication())
         Preferences.setTestMode(true)
         Preferences.clearTestValues()
         clearStoredLists()
@@ -326,7 +323,7 @@ class TagListSyncEmulatorTest {
             ListModel::class.java
                 .getDeclaredField("preferences\$delegate")
                 .apply { isAccessible = true }
-                .get(null) as Lazy<MutableMap<String, TrackableCollection<Int>>>
+                .get(null) as Lazy<MutableMap<String, StateList<Int>>>
         // Emptying a collection notifies its ListModel, which removes the key: snapshot first.
         val stored = delegate.value
         val collections = stored.values.toList()
@@ -343,8 +340,15 @@ class TagListSyncEmulatorTest {
     private companion object {
         const val PROJECT = "demo-tagmaster"
         const val HOST = "localhost"
-        const val FIRESTORE_PORT = 8080
-        const val AUTH_PORT = 9099
+        // The Firebase SDKs' own variables, so the emulators can run on free ports:
+        // FIRESTORE_EMULATOR_HOST=localhost:8180 FIREBASE_AUTH_EMULATOR_HOST=localhost:9199
+        val FIRESTORE_PORT = emulatorPort("FIRESTORE_EMULATOR_HOST", 8080)
+        val AUTH_PORT = emulatorPort("FIREBASE_AUTH_EMULATOR_HOST", 9099)
+
+        fun emulatorPort(
+            variable: String,
+            default: Int,
+        ): Int = System.getenv(variable)?.substringAfterLast(':')?.toIntOrNull() ?: default
         const val SECOND_DEVICE_APP_NAME = "tagmaster-emulator-second-device"
         const val TIMEOUT_MS = 30_000L
     }

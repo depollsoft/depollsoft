@@ -47,9 +47,6 @@
             android:name=".TagDetailActivity"
             android:configChanges="keyboardHidden|orientation" />
         <activity
-            android:name=".TagQueryActivity"
-            android:configChanges="keyboardHidden|orientation" />
-        <activity
             android:name=".TagSearchActivity"
             android:configChanges="keyboardHidden|orientation"
             android:windowSoftInputMode="adjustResize" />

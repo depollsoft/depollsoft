@@ -1,9 +1,6 @@
 package depollsoft.pitchperfect
 
 import android.os.SystemClock
-import com.bindroid.trackable.Trackable
-import com.bindroid.trackable.TrackableCollection
-import com.bindroid.trackable.transaction
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.DocumentChange
@@ -12,27 +9,31 @@ import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.MetadataChanges
 import com.google.firebase.firestore.firestore
 import depollsoft.lib.activity.RichApplication
+import depollsoft.lib.state.ChangeSignal
+import depollsoft.lib.state.StateList
 import depollsoft.lib.util.Preferences
 import depollsoft.lib.util.preference
 import depollsoft.lib.util.writeThroughPreference
 import depollsoft.pitchperfect.lib.PitchedSong
+import kotlin.math.abs
 import kotlin.random.Random
 
 class SongsModel private constructor() {
     /**
      * Fires whenever the *set* of lists or the current list changes.
      *
-     * The map itself is a plain preference, not a trackable, so the selector and the manage screen
-     * would otherwise never hear about a list being created, deleted or switched to. Names and
-     * orders are trackable on [SongList] and are read through [trackLists], so one tracking block
-     * over [trackLists] covers every change the list-level UI cares about — local or remote.
+     * The map itself is a plain preference, not snapshot state, so the selector and the manage
+     * screen would otherwise never hear about a list being created, deleted or switched to. Names
+     * and orders are snapshot state on [SongList] and are read through [trackLists], so anything
+     * reading [trackLists] (a composable, say) sees every change
+     * the list-level UI cares about — local or remote.
      */
-    private val listsTrackable = Trackable()
+    private val listsChanged = ChangeSignal()
 
     var songLists: Map<String, SongList> by writeThroughPreference(
         SONG_LISTS_KEY,
         mapOf(),
-    ) { listsTrackable.updateTrackers() }
+    ) { listsChanged.changed() }
 
     /**
      * The current list id, as stored on this device.
@@ -45,7 +46,7 @@ class SongsModel private constructor() {
     /** A per-device choice, never synced; falls back to [DEFAULT_ID] when it names no list. */
     var currentListId: String
         get() {
-            listsTrackable.track()
+            listsChanged.read()
             val stored = storedCurrentListId ?: DEFAULT_ID
             return if (songLists.containsKey(stored)) stored else DEFAULT_ID
         }
@@ -53,7 +54,7 @@ class SongsModel private constructor() {
             val target = if (songLists.containsKey(value)) value else DEFAULT_ID
             if (storedCurrentListId == target) return
             storedCurrentListId = target
-            listsTrackable.updateTrackers()
+            listsChanged.changed()
         }
 
     val defaultSongList: SongList
@@ -70,17 +71,13 @@ class SongsModel private constructor() {
 
     // MARK: - Tracking
 
-    /** Subscribes the calling tracker to the set of lists, their names, orders and the current one. */
+    /** Reads the set of lists, their names, orders and the current one, so a reader sees them change. */
     fun trackLists() {
-        listsTrackable.track()
+        listsChanged.read()
         songLists.values.forEach {
             it.name
             it.order
         }
-    }
-
-    fun notifyListsChanged() {
-        listsTrackable.updateTrackers()
     }
 
     // MARK: - Reading
@@ -193,7 +190,7 @@ class SongsModel private constructor() {
         val list = songLists[id] ?: return
         list.name = normalizeName(name)
         list.storeValue()
-        listsTrackable.updateTrackers()
+        listsChanged.changed()
     }
 
     /**
@@ -210,9 +207,7 @@ class SongsModel private constructor() {
         copy.order = nextOrder()
         userDoc?.let { copy.setParent(it) }
         copy.name = name
-        copy.songs.transaction {
-            source.songs.forEach { add(copyOf(it)) }
-        }
+        copy.songs.addAll(source.songs.map { copyOf(it) })
         copy.storeValue()
         songLists = songLists + (newId to copy)
         return newId
@@ -224,7 +219,7 @@ class SongsModel private constructor() {
         list.deleteRemote()
         songLists = songLists - id
         if (storedCurrentListId == id) storedCurrentListId = DEFAULT_ID
-        listsTrackable.updateTrackers()
+        listsChanged.changed()
     }
 
     /** Puts a deleted list back, songs, order and id intact, here and on the server. */
@@ -234,7 +229,7 @@ class SongsModel private constructor() {
         userDoc?.let { list.setParent(it) }
         songLists = songLists + (list.id to list)
         list.storeValue()
-        listsTrackable.updateTrackers()
+        listsChanged.changed()
     }
 
     /** Rewrites `order` densely over every custom list, [ids] first, and stores each one once. */
@@ -247,7 +242,7 @@ class SongsModel private constructor() {
             list.order = index.toLong()
             list.storeValue()
         }
-        listsTrackable.updateTrackers()
+        listsChanged.changed()
     }
 
     /**
@@ -275,10 +270,7 @@ class SongsModel private constructor() {
         toId: String,
     ) {
         val target = songLists[toId] ?: return
-        if (songs.isEmpty()) return
-        target.songs.transaction {
-            songs.forEach { add(copyOf(it)) }
-        }
+        target.addSongs(songs.map { copyOf(it) })
     }
 
     /** Empties My Songs and deletes every other list, here and on the server. */
@@ -287,7 +279,7 @@ class SongsModel private constructor() {
         songLists = songLists.filterKeys { it == DEFAULT_ID }
         storedCurrentListId = DEFAULT_ID
         defaultSongList.resetSongs()
-        listsTrackable.updateTrackers()
+        listsChanged.changed()
     }
 
     /**
@@ -342,7 +334,7 @@ class SongsModel private constructor() {
         lastSignInAt: Long?,
     ): Boolean {
         if (createdAt == null || lastSignInAt == null) return false
-        return kotlin.math.abs(lastSignInAt - createdAt) < NEW_ACCOUNT_WINDOW_MS
+        return abs(lastSignInAt - createdAt) < NEW_ACCOUNT_WINDOW_MS
     }
 
     /** Set while a sign-in is waiting for its first server snapshot to decide which lists stay. */
@@ -454,7 +446,7 @@ class SongsModel private constructor() {
                 if (mapChanged) songLists = updatedLists
                 // A rename or a reorder from another device changes no key, so the map assignment
                 // above does not fire; the selector and the manage screen still have to re-render.
-                listsTrackable.updateTrackers()
+                listsChanged.changed()
                 PerformanceDiagnostics.logDuration(
                     "Firestore song snapshot applied",
                     startedAt,
@@ -470,10 +462,6 @@ class SongsModel private constructor() {
         userDoc = null
         pruneOnServerSnapshot = false
         attachment.clear()
-    }
-
-    fun removeSongList(key: String) {
-        songLists = songLists - key
     }
 
     fun storeAll() {
@@ -506,7 +494,7 @@ class SongsModel private constructor() {
     }
 
     init {
-        val serializedSongs = Preferences.get<TrackableCollection<PitchedSong>>(OLD_SONGS_KEY)
+        val serializedSongs = Preferences.get<StateList<PitchedSong>>(OLD_SONGS_KEY)
         if (serializedSongs != null) {
             val list = SongList(DEFAULT_ID)
             list.name = LEGACY_DEFAULT_NAME

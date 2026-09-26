@@ -1,0 +1,339 @@
+package depollsoft.pitchperfect
+
+import android.graphics.Typeface
+import android.os.Build
+import android.os.Bundle
+import android.view.HapticFeedbackConstants
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import depollsoft.compose.ListMotion
+import depollsoft.compose.ViewAlign
+import depollsoft.pitchperfect.lib.Key
+import depollsoft.pitchperfect.lib.KeyType
+import depollsoft.pitchperfect.lib.PitchedSong
+import depollsoft.pitchperfect.ui.LegacyText
+import depollsoft.pitchperfect.ui.PlateBackground
+import depollsoft.pitchperfect.ui.PlateFilledField
+import depollsoft.pitchperfect.ui.PlateFonts
+import depollsoft.pitchperfect.ui.PlateModeToggle
+import depollsoft.pitchperfect.ui.PlatePrimaryButton
+import depollsoft.pitchperfect.ui.PlateSectionHeader
+import depollsoft.pitchperfect.ui.plateColors
+import depollsoft.pitchperfect.ui.plateText
+import kotlinx.coroutines.flow.first
+
+/**
+ * The song editor's state: a song being added to [list], or a copy of one being edited, so
+ * nothing changes in the list until it is saved.
+ */
+@Stable
+class SongEditorState(
+    val list: SongList,
+    songId: String?,
+) {
+    private val original: PitchedSong? = songId?.let { id -> list.songs.firstOrNull { it.id == id } }
+
+    /** Whether an existing song is being edited, rather than a new one added. */
+    val editing: Boolean get() = original != null
+
+    var title by mutableStateOf(TextFieldValue(original?.name.orEmpty()))
+
+    var key: Key by mutableStateOf(original?.key ?: Key.getMajorKeys()[Key.getMajorKeys().size / 2])
+        private set
+
+    /** Shown under the title after a save without one. */
+    var titleMissing by mutableStateOf(false)
+        private set
+
+    val minor: Boolean get() = key.keyType == KeyType.Minor
+
+    /** Choosing a key is silent; the pitch pipe and Keys tab are where notes sound. */
+    fun choose(key: Key) {
+        this.key = key
+    }
+
+    /** Keeps the same signature when the mode flips: a relative key shares it. */
+    fun setMinor(minor: Boolean) {
+        key = SongKeys.relative(key, minor)
+    }
+
+    fun titleChanged(value: TextFieldValue) {
+        title = value
+        if (titleMissing && value.text.isNotBlank()) titleMissing = false
+    }
+
+    /** What the editor holds so far, for [restore] after the activity is recreated. */
+    fun save(into: Bundle) {
+        into.putString(SAVED_TITLE, title.text)
+        into.putInt(SAVED_SELECTION_START, title.selection.start)
+        into.putInt(SAVED_SELECTION_END, title.selection.end)
+        into.putBoolean(SAVED_MINOR, minor)
+        into.putInt(SAVED_KEY, (if (minor) Key.getMinorKeys() else Key.getMajorKeys()).indexOf(key))
+        into.putBoolean(SAVED_TITLE_MISSING, titleMissing)
+    }
+
+    fun restore(saved: Bundle) {
+        val text = saved.getString(SAVED_TITLE) ?: return
+        title =
+            TextFieldValue(
+                text,
+                TextRange(saved.getInt(SAVED_SELECTION_START), saved.getInt(SAVED_SELECTION_END)),
+            )
+        (if (saved.getBoolean(SAVED_MINOR)) Key.getMinorKeys() else Key.getMajorKeys())
+            .getOrNull(saved.getInt(SAVED_KEY))
+            ?.let { key = it }
+        titleMissing = saved.getBoolean(SAVED_TITLE_MISSING)
+    }
+
+    /** Saves the song. Returns false, and flags the title, when there is no title. */
+    fun save(): Boolean {
+        val name = title.text.trim()
+        if (name.isEmpty()) {
+            titleMissing = true
+            return false
+        }
+        val editing = original
+        // A sync can swap the list's copy of the song while the editor is open; edit the copy
+        // the list holds now, or the change would land on a detached song and never be stored.
+        val current = editing?.let { song -> list.songs.firstOrNull { it.id == song.id } }
+        if (current != null) {
+            current.name = name
+            current.key = key
+            list.notifyOfChange()
+        } else {
+            list.addSong(
+                PitchedSong().also {
+                    // Deleted on another device while being edited: saving puts it back.
+                    if (editing != null) it.id = editing.id
+                    it.name = name
+                    it.key = key
+                },
+            )
+        }
+        return true
+    }
+
+    /** Removes the song being edited; adding one has nothing to remove. */
+    fun remove() {
+        original?.let { list.removeSong(it) }
+    }
+}
+
+/**
+ * Saving the editor, from the Save button or the toolbar's check: a confirming buzz and [onSaved]
+ * when the song is stored, or a rejecting buzz and the title field focused when it has no title.
+ */
+@Composable
+fun rememberSongSave(
+    state: SongEditorState,
+    onSaved: () -> Unit,
+    titleFocus: FocusRequester,
+): () -> Unit {
+    val view = LocalView.current
+    val saved by rememberUpdatedState(onSaved)
+    return remember(state, view, titleFocus) {
+        {
+            if (state.save()) {
+                view.performHapticFeedback(
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) HapticFeedbackConstants.CONFIRM else HapticFeedbackConstants.CONTEXT_CLICK,
+                )
+                saved()
+            } else {
+                titleFocus.requestFocus()
+                view.performHapticFeedback(HapticFeedbackConstants.REJECT)
+            }
+        }
+    }
+}
+
+/** The song editor: its title, its key's mode and signature, and Save Song. */
+@Composable
+fun AddSongScreen(
+    state: SongEditorState,
+    onSaved: () -> Unit,
+    titleFocus: FocusRequester = remember { FocusRequester() },
+    save: () -> Unit = rememberSongSave(state, onSaved, titleFocus),
+) {
+    val colors = plateColors
+    val keyboard = LocalSoftwareKeyboardController.current
+    PlateBackground {
+        Column(Modifier.fillMaxSize()) {
+            Column(Modifier.padding(start = 20.dp, top = 20.dp, end = 20.dp)) {
+                PlateSectionHeader(stringResource(R.string.SongTitle))
+                PlateFilledField(
+                    state.title,
+                    state::titleChanged,
+                    hint = stringResource(R.string.SongTitleHint),
+                    description = stringResource(R.string.SongTitle),
+                    textStyle = plateText(24.sp, colors.ink, PlateFonts.condensed, letterSpacing = 0.009375f),
+                    error = if (state.titleMissing) stringResource(R.string.SongTitleRequired) else null,
+                    // Done only puts the keyboard away and the field keeps focus, as TextView's
+                    // default IME_ACTION_DONE does; saving is the Save button's and the toolbar's.
+                    onDone = { keyboard?.hide() },
+                    focusRequester = titleFocus,
+                    modifier = Modifier.padding(top = 2.dp).fillMaxWidth(),
+                    fieldModifier = Modifier.testTag(TestTags.SONG_TITLE),
+                )
+                Row(
+                    Modifier.padding(vertical = 8.dp).fillMaxWidth(),
+                    verticalAlignment = ViewAlign.CenterVertically,
+                ) {
+                    PlateSectionHeader(stringResource(R.string.SongKey), Modifier.weight(1f))
+                    PlateModeToggle(
+                        options =
+                            listOf(
+                                stringResource(R.string.major) to stringResource(R.string.KeyModeMajor),
+                                stringResource(R.string.minor) to stringResource(R.string.KeyModeMinor),
+                            ),
+                        selected = if (state.minor) 1 else 0,
+                        onSelect = { state.setMinor(it == 1) },
+                        modifier = Modifier.testTag(TestTags.KEY_MODE),
+                    )
+                }
+            }
+            KeyPicker(state, Modifier.weight(1f))
+            PlatePrimaryButton(
+                stringResource(R.string.SaveSong),
+                Modifier.padding(start = 20.dp, top = 8.dp, end = 20.dp, bottom = 16.dp).fillMaxWidth().testTag(TestTags.SAVE_SONG),
+                onClick = save,
+            )
+        }
+    }
+}
+
+/** The Keys tab's signature list for the chosen mode, the chosen key lit. */
+@Composable
+private fun KeyPicker(
+    state: SongEditorState,
+    modifier: Modifier,
+) {
+    val keys = SongKeys.keysOf(state.minor)
+    val listState = rememberLazyListState()
+    CenterChosenKey(listState, keys, state)
+    LazyColumn(
+        modifier.fillMaxWidth().testTag(TestTags.SONG_KEY_LIST),
+        state = listState,
+        contentPadding = PaddingValues(bottom = 8.dp),
+    ) {
+        itemsIndexed(keys) { _, key ->
+            KeyChoice(key, chosen = key == state.key) { state.choose(key) }
+            Hairline()
+        }
+    }
+}
+
+/**
+ * Brings the chosen key to the middle of the list when it first shows and after a mode switch:
+ * half the list's height less half a 64dp row from the top.
+ */
+@Composable
+private fun CenterChosenKey(
+    listState: LazyListState,
+    keys: List<Key>,
+    state: SongEditorState,
+) {
+    val rowHeight = with(LocalDensity.current) { 64.dp.roundToPx() }
+    LaunchedEffect(state.minor) {
+        val height = snapshotFlow { listState.layoutInfo.viewportSize.height }.first { it > 0 }
+        val index = keys.indexOfFirst { it == state.key }
+        if (index < 0) return@LaunchedEffect
+        withFrameNanos { }
+        listState.scrollToItem(index, -maxOf(0, height / 2 - rowHeight / 2))
+    }
+}
+
+@Composable
+private fun KeyChoice(
+    key: Key,
+    chosen: Boolean,
+    onChoose: () -> Unit,
+) {
+    val colors = plateColors
+    val view = LocalView.current
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    // The row stays lit while it is the chosen key, and lights at once on press. Choosing a key
+    // cross-fades the old row out and the new one in.
+    val chosenFill by animateColorAsState(if (chosen) colors.accent else colors.accent.copy(alpha = 0f), ListMotion.change(), label = "keyFill")
+    val chosenInk by animateColorAsState(if (chosen) colors.onAccent else colors.ink, ListMotion.change(), label = "keyInk")
+    val ink = if (pressed) colors.onAccent else chosenInk
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 64.dp)
+            .background(if (pressed) colors.accent else chosenFill)
+            .clickable(interaction, indication = null, role = Role.RadioButton) {
+                // A second tap on the chosen row leaves it chosen.
+                if (!chosen) {
+                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                    onChoose()
+                }
+            }.semantics(mergeDescendants = true) {
+                contentDescription = SongKeys.spokenName(key)
+                selected = chosen
+            },
+        verticalAlignment = ViewAlign.CenterVertically,
+    ) {
+        // The staff is left-to-right text, which a Layout keeps at its left; in a right-to-left row it
+        // belongs at the row's start, clear of the key name.
+        LegacyText(
+            NoteText.keySignature(key),
+            24.sp,
+            ink,
+            Typeface.DEFAULT,
+            Modifier.weight(1f).padding(start = 20.dp),
+            align = if (LocalLayoutDirection.current == LayoutDirection.Rtl) TextAlign.End else TextAlign.Start,
+            wrapWidth = true,
+        )
+        LegacyText(NoteText.keyName(key), 22.sp, ink, PlateFonts.condensedTypeface, Modifier.padding(end = 20.dp), wrapWidth = true)
+    }
+}
+
+private const val SAVED_TITLE = "title"
+private const val SAVED_SELECTION_START = "selectionStart"
+private const val SAVED_SELECTION_END = "selectionEnd"
+private const val SAVED_MINOR = "minor"
+private const val SAVED_KEY = "key"
+private const val SAVED_TITLE_MISSING = "titleMissing"

@@ -6,13 +6,13 @@ import android.graphics.Canvas
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
+import depollsoft.tagmaster.ui.QuartetRenderer
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [28])
+@Config(application = Application::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class QuartetArtworkTest {
     @Test fun sampled_motion_is_linear_periodic_and_settled() {
@@ -48,15 +48,14 @@ class QuartetArtworkTest {
     }
 
     @Test fun artwork_fits_uniformly_and_still_matches_endpoints() {
-        val view = TagLoadingView(RuntimeEnvironment.getApplication())
-
         fun render(
             width: Int,
             phase: Float,
             moving: Boolean,
         ): Bitmap {
-            view.layout(0, 0, width, 96)
-            return Bitmap.createBitmap(width, 96, Bitmap.Config.ARGB_8888).also { view.drawQuartet(Canvas(it), phase, moving) }
+            return Bitmap.createBitmap(width, 96, Bitmap.Config.ARGB_8888).also {
+                QuartetRenderer.draw(Canvas(it), width, 96, phase, moving, dark = false)
+            }
         }
         val start = render(216, 0f, true)
         val end = render(216, 1f, true)

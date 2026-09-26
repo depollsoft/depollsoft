@@ -2,331 +2,235 @@ package depollsoft.tagmaster
 
 import android.app.Application
 import android.content.Intent
-import android.view.View
-import android.widget.ListView
-import android.widget.TextView
-import androidx.viewpager2.widget.ViewPager2
-import bolts.Task
-import depollsoft.tagmaster.ScreenTestSupport.idle
-import depollsoft.tagmaster.barbershop.RemoteLocation
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.performScrollToIndex
+import androidx.compose.ui.test.performTouchInput
 import depollsoft.tagmaster.barbershop.Tag
 import depollsoft.tagmaster.barbershop.Video
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
-import org.robolectric.android.controller.ActivityController
 import org.robolectric.annotation.Config
-import org.robolectric.annotation.GraphicsMode
 
-/**
- * The tracks page's transport and part list, and the videos page's optional metadata, migrated from
- * the instrumented `LayoutRegressionTest`.
- *
- * The media player's own pending/failure/stop/detach state machine is already covered on the JVM by
- * `MediaPlayerLifecycleTest`; what is added here is how the tracks page reacts to the tag it is
- * given, including a replacement carrying the same id.
- */
+/** The Tracks and Videos pages: what a tag without tracks or videos shows, and what a full one lists. */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [28], qualifiers = "w411dp-h891dp")
-@GraphicsMode(GraphicsMode.Mode.NATIVE)
-class DetailTracksAndVideosScreenTest {
-    private var controller: ActivityController<TagDetailActivity>? = null
-
-    /** A distinct id per test: `Tag` keeps a process-wide in-memory cache keyed by id. */
-    @get:org.junit.Rule
-    val testName = org.junit.rules.TestName()
-
-    private val tagId get() = 2147470000 + (testName.methodName.hashCode().and(0x7fffffff) % 1000)
-
-    @Before
-    fun setUp() {
-        ScreenTestSupport.startClean()
-        ScreenTestSupport.clearTagCaches()
+@Config(application = Application::class, qualifiers = "w411dp-h891dp-xxhdpi")
+class DetailTracksAndVideosScreenTest : ComposeScreenTest() {
+    private fun open(
+        tag: Tag,
+        page: Int,
+    ): TagDetailActivity {
+        ScreenTestSupport.cacheOnDisk(tag)
+        val activity =
+            launch(TagDetailActivity::class.java, Intent(app, TagDetailActivity::class.java).putExtra(TagDetailActivity.TAG_ID_EXTRA, tag.id))
+        ScreenTestSupport.awaitTagLoaded(activity)
+        idle()
+        click("detailTab:$page")
+        return activity
     }
 
-    @After
-    fun tearDown() {
-        ScreenTestSupport.finish(controller)
-        ScreenTestSupport.clearTagCaches()
-    }
+    private fun shows(value: String) = compose.onAllNodes(hasText(value, substring = true), useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
 
     private fun bare() =
-        Tag().apply {
-            id = tagId
-            title = "When the quartet gathers for one more song"
-            parts = 4
-            writtenKey = "C"
+        ScreenTestSupport.fixtureTag().apply {
+            allPartsTrackUri = null
+            tenorTrackUri = null
+            leadTrackUri = null
+            baritoneTrackUri = null
+            bassTrackUri = null
+            videos = mutableListOf()
         }
-
-    private fun populated() =
-        bare().apply {
-            recordingMethod = "Recorded separately so each singer can follow the phrase. ".repeat(8)
-            allPartsTrackUri = location("all")
-            tenorTrackUri = location("tenor")
-            leadTrackUri = location("lead")
-            baritoneTrackUri = location("baritone")
-            bassTrackUri = location("bass")
-            other1TrackUri = location("other1")
-            other2TrackUri = location("other2")
-            other3TrackUri = location("other3")
-            other4TrackUri = location("other4")
-        }
-
-    private fun location(part: String) =
-        RemoteLocation().apply {
-            uri = "https://layout.example.invalid/$part.wav"
-            type = "wav"
-        }
-
-    /** Resolve the tag through the production disk-cache path, with no network. */
-    private fun launch(first: Tag): TagDetailActivity {
-        ScreenTestSupport.cacheOnDisk(first)
-        val created =
-            ScreenTestSupport.build(
-                TagDetailActivity::class.java,
-                Intent(RuntimeEnvironment.getApplication(), TagDetailActivity::class.java)
-                    .putExtra(TagDetailActivity.TAG_ID_EXTRA, tagId),
-            )
-        controller = created
-        created.setup()
-        // The disk-cache read runs on Bolts' background executor; wait for it rather than assume
-        // one `idle()` was enough.
-        assertEquals("the cached tag should load", first.title, ScreenTestSupport.awaitTagLoaded(created.get()).title)
-        return created.get()
-    }
-
-    private fun TagDetailActivity.tracksPage(): TagTracksFragment {
-        findViewById<ViewPager2>(R.id.viewPager).setCurrentItem(2, false)
-        idle()
-        return detailFragment!!.childFragmentManager.fragments
-            .filterIsInstance<TagTracksFragment>()
-            .first { it.view != null }
-    }
-
-    /** The transport is either an apology or a player, never both. */
-    private fun assertTransport(
-        root: View,
-        empty: Boolean,
-    ) {
-        assertEquals(
-            "the apology shows only when there is nothing to play",
-            if (empty) View.VISIBLE else View.GONE,
-            root.findViewById<View>(R.id.sorryTextView).visibility,
-        )
-        for (id in listOf(R.id.mediaPlayer, R.id.partsRadioGroup)) {
-            assertEquals(
-                "view $id shows only when there is something to play",
-                if (empty) View.GONE else View.VISIBLE,
-                root.findViewById<View>(id).visibility,
-            )
-        }
-        for (id in listOf(R.id.playPauseButton, R.id.stopButton, R.id.counterSeekBar, R.id.balanceSeekBar)) {
-            val control = root.findViewById<View>(id)
-            if (empty) {
-                assertFalse("a hidden player must not keep control $id on screen", control.isShown)
-            } else {
-                assertEquals(View.VISIBLE, control.visibility)
-            }
-        }
-    }
 
     @Test
-    fun aTagWithNoTracksHidesThePlayerAndDropsItFromTheFocusOrder() {
-        val activity = launch(bare())
-        val fragment = activity.tracksPage()
-        val root = fragment.requireView()
-
-        assertTransport(root, empty = true)
-        assertEquals(
-            "with no recording note there is nothing to explain",
-            View.GONE,
-            root.findViewById<View>(R.id.trackNotesLayout).visibility,
-        )
-        val focusables = ArrayList<View>()
-        root.addFocusables(focusables, View.FOCUS_FORWARD)
-        assertFalse(
-            "a hidden player must not be reachable by keyboard",
-            focusables.any { it.id == R.id.balanceSeekBar || it.id == R.id.playPauseButton },
-        )
-    }
-
-    @Test
-    fun aRecordingNoteIsExplainedBelowTheApology() {
-        val activity = launch(bare())
-        val fragment = activity.tracksPage()
-        val root = fragment.requireView()
-
-        activity.tag = bare().apply { recordingMethod = "No separate parts were supplied. ".repeat(10) }
-        idle()
-
-        assertTransport(root, empty = true)
-        val apology = root.findViewById<TextView>(R.id.sorryTextView)
-        val notes = root.findViewById<TextView>(R.id.trackNotesTextView)
-        // The two live in different parents, so compare where they actually land on screen.
-        fun top(view: View) = IntArray(2).also { view.getLocationOnScreen(it) }[1]
-        assertTrue(
-            "the note sits below the apology",
-            top(apology) + apology.height <= top(notes),
-        )
-        assertTrue(
-            "and all of it is laid out",
-            notes.layout.height <= notes.height - notes.compoundPaddingTop - notes.compoundPaddingBottom,
-        )
+    fun aTagWithNoTracksHidesThePlayerAndExplainsTheRecordingNote() {
+        open(bare(), 2)
+        assertTrue(shows(string(R.string.SorryNoTracks)))
+        assertTrue(shows(ScreenTestSupport.fixtureTag().recordingMethod!!))
+        assertFalse(exists("playPause"))
+        assertFalse(exists("balance"))
+        assertFalse(exists("part:0"))
     }
 
     @Test
     fun replacingTheTagWithTheSameIdReDerivesItsParts() {
-        val activity = launch(bare())
-        val fragment = activity.tracksPage()
-        val root = fragment.requireView()
-
-        // Only the tenor part survives: the buttons must follow the data, not the id.
-        activity.tag =
-            populated().apply {
-                allPartsTrackUri = null
-                leadTrackUri = null
-                baritoneTrackUri = null
-                bassTrackUri = null
-                other1TrackUri = null
-                other2TrackUri = null
-                other3TrackUri = null
-                other4TrackUri = null
-            }
+        val activity = open(ScreenTestSupport.fixtureTag(), 2)
+        assertTrue(exists("part:4"))
+        activity.detail.showLoaded(ScreenTestSupport.fixtureTag().apply { bassTrackUri = null })
         idle()
+        assertFalse(exists("part:4"))
+        assertTrue(exists("part:0"))
+    }
 
-        assertTransport(root, empty = false)
-        assertNull("a replacement selects nothing by default", fragment.selectedTrack)
-        assertEquals(View.VISIBLE, root.findViewById<View>(R.id.tenorButton).visibility)
-        assertEquals(View.GONE, root.findViewById<View>(R.id.allPartsButton).visibility)
-
-        activity.tag = populated()
+    @Test
+    fun aRefreshThatDropsTheChosenPartLetsGoOfItsTrack() {
+        val activity = open(ScreenTestSupport.fixtureTag(), 2)
+        click("part:4")
+        node("playPause").assertIsEnabled()
+        // The same tag, refreshed without its bass track: a new Tag equal to the old by id.
+        activity.detail.showLoaded(ScreenTestSupport.fixtureTag().apply { bassTrackUri = null })
         idle()
-
-        assertTransport(root, empty = false)
-        for (id in listOf(
-            R.id.allPartsButton,
-            R.id.tenorButton,
-            R.id.leadButton,
-            R.id.bariButton,
-            R.id.bassButton,
-            R.id.other1Button,
-            R.id.other2Button,
-            R.id.other3Button,
-            R.id.other4Button,
-        )) {
-            assertEquals("part $id returns with the full tag", View.VISIBLE, root.findViewById<View>(id).visibility)
-        }
-
-        val last = root.findViewById<View>(R.id.other4Button)
-        ScreenTestSupport.scrollTo(last)
-        ScreenTestSupport.assertFullyVisible("the last extra part", last)
-        last.performClick()
-        idle()
-        assertEquals(
-            "the last extra part selects its own track",
-            activity.tag!!.other4TrackUri,
-            fragment.selectedTrack,
-        )
-
-        // Going back to a tag with no tracks empties the transport and the selection with it.
-        activity.tag = bare()
-        idle()
-        assertTransport(root, empty = true)
-        assertNull(fragment.selectedTrack)
+        node("playPause").assertIsNotEnabled()
     }
 
     /**
-     * Every part and player control can be scrolled to and is then *wholly* reachable.
-     *
-     * A visible intersection is not enough: the instrumented original required the whole control
-     * inside its scrolling viewport, and required each part button to keep a 48dp touch target
-     * with its label inside it. Both are restored here.
+     * Runs [block] with the first part's track started and its download held open, so the player
+     * stays on until something stops it. The download is let go and wound up before returning, so
+     * its background load doesn't finish inside the next test.
+     */
+    private fun withTrackPlaying(block: () -> Unit) {
+        val download = java.util.concurrent.CountDownLatch(1)
+        val answered = java.util.concurrent.atomic.AtomicBoolean(false)
+        ScreenTestSupport.withTransport({
+            download.await(10, java.util.concurrent.TimeUnit.SECONDS)
+            answered.set(true)
+            java.io.ByteArrayInputStream(ByteArray(0))
+        }) {
+            try {
+                open(ScreenTestSupport.fixtureTag(), 2)
+                click("part:0")
+                click("playPause")
+                node("playPause").assertIsNotEnabled()
+                node("stop").assertIsEnabled()
+                block()
+            } finally {
+                download.countDown()
+                ScreenTestSupport.await("the held track download to wind up") {
+                    answered.get() && Thread.getAllStackTraces().keys.none { it.name.startsWith("pool-") && it.state == Thread.State.RUNNABLE }
+                }
+            }
+        }
+    }
+
+    /** Leaving the app stops a learning track, even one still downloading. */
+    @Test
+    fun pausingStopsATrack() =
+        withTrackPlaying {
+            // The rule only sees resumed activities; coming back does not restart the track.
+            controller!!.pause().resume()
+            idle()
+            node("playPause").assertIsEnabled()
+            node("stop").assertIsNotEnabled()
+        }
+
+    /**
+     * The track stops only once the pager settles on another page, as ViewPager2 paused the
+     * fragment: a swipe held past halfway and brought back leaves it playing.
      */
     @Test
-    fun everyPartAndPlayerControlCanBeScrolledTo() {
-        val activity = launch(populated())
-        val root = activity.tracksPage().requireView()
-        for (id in listOf(
-            R.id.allPartsButton,
-            R.id.tenorButton,
-            R.id.leadButton,
-            R.id.bariButton,
-            R.id.bassButton,
-            R.id.other1Button,
-            R.id.other2Button,
-            R.id.other3Button,
-            R.id.other4Button,
-            R.id.playPauseButton,
-            R.id.stopButton,
-            R.id.counterSeekBar,
-            R.id.balanceSeekBar,
-        )) {
-            val name = activity.resources.getResourceEntryName(id)
-            val control = ScreenTestSupport.scrollTo(root.findViewById(id))
-            ScreenTestSupport.assertFullyVisible("control $name", control)
-            if (control is android.widget.RadioButton) ScreenTestSupport.assertTouchTarget(control)
+    fun aSwipeBroughtBackBeforeSettlingKeepsTheTrackPlaying() =
+        withTrackPlaying {
+            node("detailPager").performTouchInput {
+                down(center)
+                moveBy(Offset(-width * 0.7f, 0f))
+            }
+            idle()
+            node("stop").assertIsEnabled()
+            node("detailPager").performTouchInput {
+                repeat(7) { moveBy(Offset(width * 0.1f, 0f), delayMillis = 50) }
+                // Still before lifting, so no fling carries it on.
+                repeat(4) { moveBy(Offset.Zero, delayMillis = 100) }
+                up()
+            }
+            idle()
+            node("stop").assertIsEnabled()
+            click("detailTab:3")
+            node("stop").assertIsNotEnabled()
+        }
+
+    @Test
+    fun everyPartAndPlayerControlIsPresent() {
+        open(ScreenTestSupport.fixtureTag(), 2)
+        for (tag in listOf("playPause", "stop", "position", "balance", "part:0", "part:1", "part:2", "part:3", "part:4")) {
+            assertTrue(tag, exists(tag))
         }
     }
 
     @Test
-    fun videosShowLongMetadataWholeAndCollapseWhatIsMissing() {
-        val loaded =
-            bare().apply {
+    fun videosShowTheirMetadataAndCollapseWhatIsMissing() {
+        val tag =
+            ScreenTestSupport.fixtureTag().apply {
                 videos =
                     mutableListOf(
                         Video().apply {
                             id = 1
-                            sungBy = "The singers from our combined evening rehearsal quartet"
-                            sungKey = "B flat"
-                            youTubeCode = "layout-fixture"
+                            sungBy = "A quartet with a very long name that has to wrap onto another line"
+                            sungKey = "Bb"
+                            youTubeCode = "long"
                         },
                         Video().apply {
                             id = 2
-                            sungBy = "Another quartet"
-                            youTubeCode = "layout-fixture"
+                            youTubeCode = "bare"
                         },
                     )
             }
-        val activity = launch(loaded)
-        activity.findViewById<ViewPager2>(R.id.viewPager).setCurrentItem(3, false)
-        idle()
-        val list = activity.findViewById<ListView>(R.id.videoList)
-        assertEquals(2, list.count)
-        assertTrue("the video list stays usable", list.height > 0)
+        open(tag, 3)
+        assertTrue("first video", exists("video:1"))
+        assertTrue("second video", exists("video:2"))
+        assertTrue("sung by: " + text("video:1"), shows("A quartet with a very long name"))
+        assertFalse(text("video:2").contains("null"))
+    }
 
-        list.setSelection(0)
-        idle()
-        val first = list.getChildAt(0)
-        for (id in listOf(R.id.sungByTextView, R.id.keyTextView)) {
-            val text = first.findViewById<TextView>(id)
-            assertTrue(
-                "video field $id is laid out whole",
-                text.layout.height <= text.height - text.compoundPaddingTop - text.compoundPaddingBottom,
-            )
-            for (line in 0 until text.layout.lineCount) {
-                assertEquals("video field $id never ellipsizes", 0, text.layout.getEllipsisCount(line))
+    @Test
+    fun aVideoListedTwiceShowsTwiceInsteadOfCrashing() {
+        val tag =
+            ScreenTestSupport.fixtureTag().apply {
+                videos = MutableList(2) { Video().apply { id = 7; sungBy = "The Same Quartet"; youTubeCode = "twice" } }
             }
-        }
+        open(tag, 3)
+        assertEquals(2, compose.onAllNodes(hasTestTag("video:7"), useUnmergedTree = true).fetchSemanticsNodes().size)
+    }
 
-        list.setSelection(1)
+    @Test
+    fun aTagWithNoVideosSaysSo() {
+        open(bare(), 3)
+        assertFalse(exists("video:1"))
+    }
+
+    @Test
+    fun theTeachingVideoStaysWhileThePerformancesScroll() {
+        val tag =
+            ScreenTestSupport.fixtureTag().apply {
+                teachingVideo = "teach"
+                videos = (1..20).map { index -> Video().apply { id = index; sungBy = "Quartet $index"; youTubeCode = "v$index" } }.toMutableList()
+            }
+        open(tag, 3)
+        val before = node("teachingVideo").fetchSemanticsNode().boundsInRoot
+        node("videoList").performScrollToIndex(19)
         idle()
-        val second = list.getChildAt(list.childCount - 1)
-        assertEquals(
-            "a video with no key hides its key row",
-            View.GONE,
-            second.findViewById<View>(R.id.keyRow).visibility,
-        )
-        assertEquals(
-            "a video with no posted date hides its posted row",
-            View.GONE,
-            second.findViewById<View>(R.id.postedRow).visibility,
-        )
+        assertTrue(exists("video:20"))
+        assertEquals(before, node("teachingVideo").fetchSemanticsNode().boundsInRoot)
+    }
+
+    @Test
+    @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun theVideosKeepTheReadingWidthOnAWideScreen() {
+        val tag =
+            ScreenTestSupport.fixtureTag().apply {
+                teachingVideo = "teach"
+                videos = (1..3).map { index -> Video().apply { id = index; sungBy = "Quartet $index"; youTubeCode = "v$index" } }.toMutableList()
+            }
+        open(tag, 3)
+        val density = app.resources.displayMetrics.density
+        val screen = app.resources.configuration.screenWidthDp * density
+        for (id in listOf("teachingVideo", "video:1")) {
+            val bounds = node(id).fetchSemanticsNode().boundsInRoot
+            assertTrue("$id within a centred 640dp column: $bounds", bounds.width <= 640 * density + 1f)
+            assertEquals("$id centred", screen / 2f, bounds.center.x, density * 2f)
+        }
+    }
+
+    @Test
+    fun theWindowIsTitledWithTheTag() {
+        val tag = ScreenTestSupport.fixtureTag()
+        val activity = open(tag, 0)
+        assertEquals(tag.title, activity.title.toString())
+        assertEquals(tag.title, node("toolbarTitle").fetchSemanticsNode().let { text("toolbarTitle") })
     }
 }

@@ -25,10 +25,9 @@
     <string name="Settings">Settings</string>
     <string name="HomePage">apps.depoll.com</string>
     <string name="NotesToggle">Notes play until pressed again</string>
-    <string name="Purchase">Purchase to remove ads</string>
     <string name="Purchased">(Licensed)</string>
+    <string name="version_label">Version %1$s</string>
     <string name="DepollSoft">DepollSoft</string>
-    <string name="RateReview">Rate &amp; Review</string>
     <string name="TermsOfUse">Terms of Use</string>
     <string name="SortAll">Sort all songs by title</string>
     <string name="WakeLock">Prevent screen from turning off or locking while Pitch Perfect is in use</string>
@@ -44,7 +43,6 @@
     <string name="widget_description">The thirteen-note pitch pipe on your home screen. Tap a cell to sound it, tap again to stop.</string>
     <string name="widget_switch_to_c">Switch to C to C</string>
     <string name="widget_switch_to_f">Switch to F to F</string>
-    <string name="MoreLogins"><u>More login options</u></string>
     <string name="SkipLogin">Not now</string>
     <string name="LoginTitle">Log in to Pitch Perfect</string>
     <string name="LoginExplanation"><![CDATA[<b>Back up and sync</b><br/>Choose a sign-in method to keep your song list and settings available across your devices. You can keep using Pitch Perfect without an account.]]></string>
@@ -63,7 +61,6 @@
     <string name="theme_dark">Dark</string>
     <string name="theme_light">Light</string>
     <string name="theme_system">Default</string>
-    <string name="themeTitle">Theme</string>
     <string name="manage_subscription">Manage Subscription</string>
     <string name="SaveSong">Save Song</string>
     <string name="SongTitleRequired">Song title is required</string>

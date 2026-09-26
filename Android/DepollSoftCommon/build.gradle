@@ -2,19 +2,30 @@ apply plugin: 'com.android.library'
 
 dependencies {
     api fileTree(include: '*.jar', dir: 'libs')
-    api project(':bindroid')
-    api 'androidx.legacy:legacy-support-v4:1.0.0'
+    // Models keep observable state in Compose snapshot state; see depollsoft.lib.state.
+    api platform(compose_bom)
+    api 'androidx.compose.runtime:runtime'
     api 'com.parse.bolts:bolts-tasks:1.4.0'
     implementation 'androidx.appcompat:appcompat:1.8.0'
     implementation 'androidx.core:core:1.19.0'
-    implementation 'com.google.android.material:material:1.14.0'
     testImplementation 'junit:junit:4.13.2'
+    // GOLDEN_TOLERANCE; the apps' screenshot tests bring Roborazzi themselves.
+    testFixturesCompileOnly "io.github.takahirom.roborazzi:roborazzi:$roborazzi_version"
+    // SemanticsSnapshot reads a Compose semantics tree; the apps' tests bring Compose's test APIs.
+    testFixturesCompileOnly platform(compose_bom)
+    testFixturesCompileOnly 'androidx.compose.ui:ui-test'
     testImplementation 'org.robolectric:robolectric:4.16.1'
 }
 
 android {
     namespace = 'depollsoft.lib'
     compileSdk 37
+
+    // watchState and its snapshot notifications, and the screenshot golden tolerance, for the
+    // apps' tests (see src/testFixtures).
+    testFixtures {
+        enable = true
+    }
 
     defaultConfig {
         minSdk 23

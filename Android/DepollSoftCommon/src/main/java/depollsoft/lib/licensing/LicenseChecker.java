@@ -3,19 +3,19 @@ package depollsoft.lib.licensing;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 
-import com.bindroid.trackable.Trackable;
+import depollsoft.lib.state.ChangeSignal;
 
 import depollsoft.lib.activity.RichApplication;
 
 public class LicenseChecker {
-  private static Trackable licenseCheckNotifier = new Trackable();
+  private static final ChangeSignal licenseCheckNotifier = new ChangeSignal();
 
   static {
     LicenseChangeListener.initialize();
   }
 
   public static boolean isLicensed() {
-    LicenseChecker.licenseCheckNotifier.track();
+    LicenseChecker.licenseCheckNotifier.read();
     PackageManager pm = RichApplication.getAppContext().getPackageManager();
     String packageName = RichApplication.getAppContext().getPackageName();
     PackageInfo pkg = null;
@@ -28,6 +28,6 @@ public class LicenseChecker {
   }
 
   static void notifyLicenseChange() {
-    LicenseChecker.licenseCheckNotifier.updateTrackers();
+    LicenseChecker.licenseCheckNotifier.changed();
   }
 }
