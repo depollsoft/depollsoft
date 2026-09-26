@@ -49,6 +49,31 @@ extension XCUIElement {
     func existsOrWait(timeout: TimeInterval) -> Bool {
         exists || waitForExistence(timeout: timeout)
     }
+
+    /// Waits until the element can take a tap (not mid-animation or covered).
+    @discardableResult
+    func waitUntilHittable(timeout: TimeInterval) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        while !(exists && isHittable), Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        }
+        return exists && isHittable
+    }
+
+    /// Taps a text field until it holds keyboard focus: a tap that lands while the
+    /// screen is still being pushed is dropped, and typing then has nowhere to go.
+    func focusForTyping(timeout: TimeInterval = 5) {
+        let deadline = Date().addingTimeInterval(timeout)
+        repeat {
+            waitUntilHittable(timeout: 2)
+            tap()
+            let focused = Date().addingTimeInterval(1)
+            while Date() < focused {
+                if (value(forKey: "hasKeyboardFocus") as? Bool) == true { return }
+                RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+            }
+        } while Date() < deadline
+    }
 }
 
 // Strict regressions: no conditional passes when the requested screen is missing.
@@ -247,7 +272,20 @@ final class TagMasterPolishUITests: TagMasterUITestCase {
         layoutCapture("sheet-defect-portrait")
         XCTAssertGreaterThanOrEqual(key.frame.width, 44)
         XCTAssertGreaterThanOrEqual(key.frame.height, 44)
-        XCUIDevice.shared.orientation = .landscapeLeft
+        // The simulator sometimes ignores a single orientation request; ask again,
+        // from the other side, until the window is landscape.
+        for orientation in [UIDeviceOrientation.landscapeLeft, .landscapeRight, .landscapeLeft] {
+            XCUIDevice.shared.orientation = orientation
+            let deadline = Date().addingTimeInterval(4)
+            while app.frame.width <= app.frame.height, Date() < deadline {
+                RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+            }
+            if app.frame.width > app.frame.height { break }
+        }
+        // A simulator that has run for hours can stop honouring orientation requests
+        // for every app; rebooting it restores them. Say so rather than fail obscurely.
+        XCTAssertGreaterThan(app.frame.width, app.frame.height,
+                             "The simulator ignored every orientation request (even Home stays portrait); reboot it")
         var previousFrame = CGRect.null
         let landscape = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
             let frame = key.frame
@@ -261,7 +299,6 @@ final class TagMasterPolishUITests: TagMasterUITestCase {
         }, object: nil)
         // A cold iPad simulator can take several seconds to finish rotating.
         let rotated = XCTWaiter.wait(for: [landscape], timeout: 15)
-        print("TM_LAYOUT_PROBE after rotation exists=\(key.exists) hittable=\(key.isHittable) frame=\(key.frame) viewport=\(app.frame)")
         XCTAssertEqual(rotated, .completed)
         print("TM_LAYOUT_PROBE native landscape key frame=\(key.frame)")
         XCTAssertGreaterThanOrEqual(key.frame.width, 44)
