@@ -52,4 +52,37 @@ final class SongManagementUITests: XCTestCase {
         
         XCTAssertEqual(app.state, .runningForeground, "App should handle swipe gestures")
     }
+
+    /// The real app builds its song store when SwiftUI creates the App, before
+    /// didFinishLaunching; the saved songs must still decode on the next launch.
+    func testASavedSongSurvivesARelaunch() throws {
+        let title = "Relaunch Check \(Int(Date().timeIntervalSince1970) % 100_000)"
+        let edit = app.navigationBars.buttons["Edit"]
+        XCTAssertTrue(edit.waitForExistence(timeout: 10))
+        edit.tap()
+        app.navigationBars.buttons["Add"].tap()
+        let field = app.textFields.firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        field.tap()
+        field.typeText(title)
+        let entered = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", title), object: field)
+        XCTAssertEqual(XCTWaiter.wait(for: [entered], timeout: 30), .completed)
+        app.navigationBars["Add Song"].buttons["Done"].tap()
+        let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(title), ")).firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 10))
+        app.navigationBars.buttons["Done"].tap()
+
+        app.terminate()
+        app.launch()
+        navigateToSongs()
+        let restored = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(title), ")).firstMatch
+        XCTAssertTrue(restored.waitForExistence(timeout: 10), "The saved song came back after a relaunch")
+
+        // Leave the simulator's songs as they were for the store screenshot tour.
+        restored.swipeLeft()
+        let delete = app.buttons["Delete"].firstMatch
+        XCTAssertTrue(delete.waitForExistence(timeout: 5))
+        delete.tap()
+        XCTAssertTrue(restored.waitForNonExistence(timeout: 5))
+    }
 }

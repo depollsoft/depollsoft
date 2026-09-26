@@ -65,6 +65,8 @@ public struct DPAddableSongs {
 
     public override init() {
         super.init()
+        // The saved songs name their classes by alias; without them nothing decodes.
+        SongSerialization.registerAliases()
 
         if let serializedSongs = UserDefaults.standard.dictionary(forKey: DPSongsModel.legacySongsKey),
            let songs = DPJsonSerializer.deserializeDictionary(serializedSongs) as? [DPPitchedSong] {
@@ -637,4 +639,28 @@ public struct DPAddableSongs {
         guard remote else { return }
         self.reference?.setData(value, merge: true)
     }
+}
+
+/// The type names the stored songs and lists were serialized under.
+///
+/// The store registers them itself, before its first read: the SwiftUI app builds
+/// its models when it creates the `App`, which is before `didFinishLaunching`, and
+/// an unregistered alias makes the serializer look up a class named
+/// "PitchedSong", find none and fail (or drop every saved song).
+enum SongSerialization {
+    private static let registered: Void = {
+        DPJsonSerializer.registerAlias("List", for: NSClassFromString("__NSArrayM"))
+        DPJsonSerializer.registerAlias("Key", for: DPKey.self)
+        DPJsonSerializer.registerAlias("KeyType", for: DPKeyType.self)
+        DPJsonSerializer.registerAlias("Accidental", for: DPAccidental.self)
+        DPJsonSerializer.registerAlias("Note", for: DPNote.self)
+        DPJsonSerializer.registerAlias("PitchedSong", for: DPPitchedSong.self)
+        DPJsonSerializer.registerAlias("String", for: NSString.self)
+        DPJsonSerializer.registerAlias("Primitive", for: DPJsonPrimitive.self)
+        DPJsonSerializer.registerAlias("Integer", forObjCType: String(cString: "i"))
+        DPJsonSerializer.registerAlias("Boolean", forObjCType: String(cString: "B"))
+        DPJsonSerializer.registerAlias("Double", forObjCType: String(cString: "d"))
+    }()
+
+    static func registerAliases() { _ = registered }
 }

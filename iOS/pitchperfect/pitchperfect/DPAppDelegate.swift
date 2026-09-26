@@ -50,24 +50,8 @@ final class DPAppDelegate: UIResponder, UIApplicationDelegate {
         application.registerForRemoteNotifications()
 
         try? AVAudioSession.sharedInstance().setCategory(.playback)
-        Self.registerSerializationAliases()
         attachSyncToSignIn()
         return true
-    }
-
-    /// The type names the stored songs and lists were serialized under.
-    static func registerSerializationAliases() {
-        DPJsonSerializer.registerAlias("List", for: NSClassFromString("__NSArrayM"))
-        DPJsonSerializer.registerAlias("Key", for: DPKey.self)
-        DPJsonSerializer.registerAlias("KeyType", for: DPKeyType.self)
-        DPJsonSerializer.registerAlias("Accidental", for: DPAccidental.self)
-        DPJsonSerializer.registerAlias("Note", for: DPNote.self)
-        DPJsonSerializer.registerAlias("PitchedSong", for: DPPitchedSong.self)
-        DPJsonSerializer.registerAlias("String", for: NSString.self)
-        DPJsonSerializer.registerAlias("Primitive", for: DPJsonPrimitive.self)
-        DPJsonSerializer.registerAlias("Integer", forObjCType: String(cString: "i"))
-        DPJsonSerializer.registerAlias("Boolean", forObjCType: String(cString: "B"))
-        DPJsonSerializer.registerAlias("Double", forObjCType: String(cString: "d"))
     }
 
     /// Lit cells mirror tones owned by this process. A new process owns no
@@ -162,9 +146,6 @@ final class DPTestAppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
-        // The stores read whatever this simulator last saved (a UI test run of the
-        // real app, say), which needs the same aliases the app registers.
-        DPAppDelegate.registerSerializationAliases()
         let window = UIWindow(frame: UIScreen.main.bounds)
         window.rootViewController = UIViewController()
         window.isHidden = true
@@ -186,6 +167,8 @@ enum PitchPerfectMain {
 
 struct PitchPerfectApp: App {
     @UIApplicationDelegateAdaptor(DPAppDelegate.self) private var delegate
+    // Built when SwiftUI creates the app, before didFinishLaunching: the song
+    // store registers its own serialization aliases before it reads.
     @State private var models = PitchPerfectModels()
 
     var body: some Scene {
