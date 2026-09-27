@@ -1,6 +1,5 @@
 package depollsoft.tagmaster
 
-import com.bindroid.trackable.TrackableCollection
 import depollsoft.lib.activity.RichApplication
 import org.junit.Assert.*
 import org.junit.After
@@ -32,9 +31,7 @@ class FavoritesModelTest {
         ListModel.setTestMode(true)
         // Initialize RichApplication context for Preferences
         val app = RuntimeEnvironment.getApplication()
-        val contextField = RichApplication::class.java.getDeclaredField("context")
-        contextField.isAccessible = true
-        contextField.set(null, app)
+        RichApplication.setAppContextForTesting(app)
         
         // Reset the ListModel backing the FavoritesModel
         resetFavoritesModelState()
@@ -42,7 +39,7 @@ class FavoritesModelTest {
 
     @Test
     fun addFavorite_newId_addsFavoriteToList() {
-        setFavoriteIds(TrackableCollection())
+        setFavoriteIds(listOf())
         
         FavoritesModel.addFavorite(42)
         
@@ -51,7 +48,7 @@ class FavoritesModelTest {
 
     @Test
     fun addFavorite_duplicateId_doesNotAddDuplicate() {
-        setFavoriteIds(TrackableCollection(mutableListOf(42)))
+        setFavoriteIds(listOf(42))
         
         FavoritesModel.addFavorite(42)
         
@@ -60,7 +57,7 @@ class FavoritesModelTest {
 
     @Test
     fun addFavorite_multipleIds_addsAllFavorites() {
-        setFavoriteIds(TrackableCollection())
+        setFavoriteIds(listOf())
         
         FavoritesModel.addFavorite(1)
         FavoritesModel.addFavorite(2)
@@ -74,7 +71,7 @@ class FavoritesModelTest {
 
     @Test
     fun removeFavorite_existingId_removesFavoriteFromList() {
-        setFavoriteIds(TrackableCollection(mutableListOf(42, 100)))
+        setFavoriteIds(listOf(42, 100))
         
         FavoritesModel.removeFavorite(42)
         
@@ -84,7 +81,7 @@ class FavoritesModelTest {
 
     @Test
     fun removeFavorite_nonExistingId_noEffect() {
-        setFavoriteIds(TrackableCollection(mutableListOf(42)))
+        setFavoriteIds(listOf(42))
         
         FavoritesModel.removeFavorite(999)
         
@@ -94,21 +91,21 @@ class FavoritesModelTest {
 
     @Test
     fun getIsFavorite_existingId_returnsTrue() {
-        setFavoriteIds(TrackableCollection(mutableListOf(42)))
+        setFavoriteIds(listOf(42))
         
         assertTrue(FavoritesModel.getIsFavorite(42))
     }
 
     @Test
     fun getIsFavorite_nonExistingId_returnsFalse() {
-        setFavoriteIds(TrackableCollection())
+        setFavoriteIds(listOf())
         
         assertFalse(FavoritesModel.getIsFavorite(999))
     }
 
     @Test
     fun getIsFavorite_afterAddFavorite_returnsTrue() {
-        setFavoriteIds(TrackableCollection())
+        setFavoriteIds(listOf())
         
         assertFalse(FavoritesModel.getIsFavorite(42))
         FavoritesModel.addFavorite(42)
@@ -117,7 +114,7 @@ class FavoritesModelTest {
 
     @Test
     fun getIsFavorite_afterRemoveFavorite_returnsFalse() {
-        setFavoriteIds(TrackableCollection(mutableListOf(42)))
+        setFavoriteIds(listOf(42))
         
         assertTrue(FavoritesModel.getIsFavorite(42))
         FavoritesModel.removeFavorite(42)
@@ -126,63 +123,63 @@ class FavoritesModelTest {
 
     @Test
     fun canMoveUp_firstElement_returnsFalse() {
-        setFavoriteIds(TrackableCollection(mutableListOf(1, 2, 3)))
+        setFavoriteIds(listOf(1, 2, 3))
         
         assertFalse(FavoritesModel.canMoveUp(1))
     }
 
     @Test
     fun canMoveUp_middleElement_returnsTrue() {
-        setFavoriteIds(TrackableCollection(mutableListOf(1, 2, 3)))
+        setFavoriteIds(listOf(1, 2, 3))
         
         assertTrue(FavoritesModel.canMoveUp(2))
     }
 
     @Test
     fun canMoveUp_lastElement_returnsTrue() {
-        setFavoriteIds(TrackableCollection(mutableListOf(1, 2, 3)))
+        setFavoriteIds(listOf(1, 2, 3))
         
         assertTrue(FavoritesModel.canMoveUp(3))
     }
 
     @Test
     fun canMoveDown_firstElement_returnsTrue() {
-        setFavoriteIds(TrackableCollection(mutableListOf(1, 2, 3)))
+        setFavoriteIds(listOf(1, 2, 3))
         
         assertTrue(FavoritesModel.canMoveDown(1))
     }
 
     @Test
     fun canMoveDown_middleElement_returnsTrue() {
-        setFavoriteIds(TrackableCollection(mutableListOf(1, 2, 3)))
+        setFavoriteIds(listOf(1, 2, 3))
         
         assertTrue(FavoritesModel.canMoveDown(2))
     }
 
     @Test
     fun canMoveDown_lastElement_returnsFalse() {
-        setFavoriteIds(TrackableCollection(mutableListOf(1, 2, 3)))
+        setFavoriteIds(listOf(1, 2, 3))
         
         assertFalse(FavoritesModel.canMoveDown(3))
     }
 
     @Test
     fun canMoveUp_singleElement_returnsFalse() {
-        setFavoriteIds(TrackableCollection(mutableListOf(1)))
+        setFavoriteIds(listOf(1))
         
         assertFalse(FavoritesModel.canMoveUp(1))
     }
 
     @Test
     fun canMoveDown_singleElement_returnsFalse() {
-        setFavoriteIds(TrackableCollection(mutableListOf(1)))
+        setFavoriteIds(listOf(1))
         
         assertFalse(FavoritesModel.canMoveDown(1))
     }
 
     @Test
     fun resetFavorites_clearsAllFavorites() {
-        setFavoriteIds(TrackableCollection(mutableListOf(1, 2, 3)))
+        setFavoriteIds(listOf(1, 2, 3))
         
         FavoritesModel.resetFavorites()
         
@@ -191,7 +188,7 @@ class FavoritesModelTest {
 
     @Test
     fun resetFavorites_emptyList_noError() {
-        setFavoriteIds(TrackableCollection())
+        setFavoriteIds(listOf())
         
         FavoritesModel.resetFavorites()
         
@@ -200,7 +197,7 @@ class FavoritesModelTest {
 
     @Test
     fun moveUp_middleElement_movesElementUp() {
-        setFavoriteIds(TrackableCollection(mutableListOf(1, 2, 3)))
+        setFavoriteIds(listOf(1, 2, 3))
         
         FavoritesModel.moveUp(2)
         
@@ -211,7 +208,7 @@ class FavoritesModelTest {
 
     @Test
     fun moveDown_middleElement_movesElementDown() {
-        setFavoriteIds(TrackableCollection(mutableListOf(1, 2, 3)))
+        setFavoriteIds(listOf(1, 2, 3))
         
         FavoritesModel.moveDown(2)
         
@@ -222,7 +219,7 @@ class FavoritesModelTest {
 
     @Test
     fun addFavorite_zeroId_addsFavorite() {
-        setFavoriteIds(TrackableCollection())
+        setFavoriteIds(listOf())
         
         FavoritesModel.addFavorite(0)
         
@@ -231,7 +228,7 @@ class FavoritesModelTest {
 
     @Test
     fun addFavorite_negativeId_addsFavorite() {
-        setFavoriteIds(TrackableCollection())
+        setFavoriteIds(listOf())
         
         FavoritesModel.addFavorite(-1)
         
@@ -240,9 +237,9 @@ class FavoritesModelTest {
 
     @Test
     fun favoriteIds_setNewCollection_replacesOldCollection() {
-        setFavoriteIds(TrackableCollection(mutableListOf(1, 2, 3)))
+        setFavoriteIds(listOf(1, 2, 3))
         
-        val newCollection = TrackableCollection(mutableListOf(100, 200))
+        val newCollection = listOf(100, 200)
         FavoritesModel.favoriteIds = newCollection
         
         assertEquals(2, FavoritesModel.favoriteIds.size)
@@ -251,26 +248,14 @@ class FavoritesModelTest {
         assertFalse(FavoritesModel.favoriteIds.contains(1))
     }
 
-    /**
-     * Helper method to reset and set favorite ids.
-     */
-    private fun setFavoriteIds(ids: TrackableCollection<Int>) {
-        try {
-            // Get the backing ListModel
-            val modelField = FavoritesModel::class.java.getDeclaredField("model")
-            modelField.isAccessible = true
-            val listModel = modelField.get(FavoritesModel) as ListModel
-            listModel.ids = ids
-        } catch (e: Exception) {
-            // Fallback: direct assignment
-            FavoritesModel.favoriteIds = ids
-        }
+    private fun setFavoriteIds(ids: List<Int>) {
+        FavoritesModel.favoriteIds = ids
     }
 
     /**
      * Resets the FavoritesModel state.
      */
     private fun resetFavoritesModelState() {
-        setFavoriteIds(TrackableCollection())
+        setFavoriteIds(listOf())
     }
 }

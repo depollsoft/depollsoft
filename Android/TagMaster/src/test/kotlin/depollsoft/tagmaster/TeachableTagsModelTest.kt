@@ -1,6 +1,5 @@
 package depollsoft.tagmaster
 
-import com.bindroid.trackable.TrackableCollection
 import depollsoft.lib.activity.RichApplication
 import org.junit.Assert.*
 import org.junit.After
@@ -31,9 +30,7 @@ class TeachableTagsModelTest {
         ListModel.setTestMode(true)
         // Initialize RichApplication context for Preferences
         val app = RuntimeEnvironment.getApplication()
-        val contextField = RichApplication::class.java.getDeclaredField("context")
-        contextField.isAccessible = true
-        contextField.set(null, app)
+        RichApplication.setAppContextForTesting(app)
         
         // Reset the TeachableTagsModel state
         resetTeachableTagsModelState()
@@ -41,7 +38,7 @@ class TeachableTagsModelTest {
 
     @Test
     fun addTeachableTag_newId_addsTagToList() {
-        setTeachableTagIds(TrackableCollection())
+        setTeachableTagIds(listOf())
         
         TeachableTagsModel.addTeachableTag(42)
         
@@ -50,7 +47,7 @@ class TeachableTagsModelTest {
 
     @Test
     fun addTeachableTag_duplicateId_doesNotAddDuplicate() {
-        setTeachableTagIds(TrackableCollection(mutableListOf(42)))
+        setTeachableTagIds(listOf(42))
         
         TeachableTagsModel.addTeachableTag(42)
         
@@ -59,7 +56,7 @@ class TeachableTagsModelTest {
 
     @Test
     fun addTeachableTag_multipleIds_addsAllTags() {
-        setTeachableTagIds(TrackableCollection())
+        setTeachableTagIds(listOf())
         
         TeachableTagsModel.addTeachableTag(1)
         TeachableTagsModel.addTeachableTag(2)
@@ -73,7 +70,7 @@ class TeachableTagsModelTest {
 
     @Test
     fun removeTeachableTag_existingId_removesTagFromList() {
-        setTeachableTagIds(TrackableCollection(mutableListOf(42, 100)))
+        setTeachableTagIds(listOf(42, 100))
         
         TeachableTagsModel.removeTeachableTag(42)
         
@@ -83,7 +80,7 @@ class TeachableTagsModelTest {
 
     @Test
     fun removeTeachableTag_nonExistingId_noEffect() {
-        setTeachableTagIds(TrackableCollection(mutableListOf(42)))
+        setTeachableTagIds(listOf(42))
         
         TeachableTagsModel.removeTeachableTag(999)
         
@@ -93,21 +90,21 @@ class TeachableTagsModelTest {
 
     @Test
     fun getIsTeachableTag_existingId_returnsTrue() {
-        setTeachableTagIds(TrackableCollection(mutableListOf(42)))
+        setTeachableTagIds(listOf(42))
         
         assertTrue(TeachableTagsModel.getIsTeachableTag(42))
     }
 
     @Test
     fun getIsTeachableTag_nonExistingId_returnsFalse() {
-        setTeachableTagIds(TrackableCollection())
+        setTeachableTagIds(listOf())
         
         assertFalse(TeachableTagsModel.getIsTeachableTag(999))
     }
 
     @Test
     fun getIsTeachableTag_afterAddTeachableTag_returnsTrue() {
-        setTeachableTagIds(TrackableCollection())
+        setTeachableTagIds(listOf())
         
         assertFalse(TeachableTagsModel.getIsTeachableTag(42))
         TeachableTagsModel.addTeachableTag(42)
@@ -116,7 +113,7 @@ class TeachableTagsModelTest {
 
     @Test
     fun getIsTeachableTag_afterRemoveTeachableTag_returnsFalse() {
-        setTeachableTagIds(TrackableCollection(mutableListOf(42)))
+        setTeachableTagIds(listOf(42))
         
         assertTrue(TeachableTagsModel.getIsTeachableTag(42))
         TeachableTagsModel.removeTeachableTag(42)
@@ -125,63 +122,63 @@ class TeachableTagsModelTest {
 
     @Test
     fun canMoveUp_firstElement_returnsFalse() {
-        setTeachableTagIds(TrackableCollection(mutableListOf(1, 2, 3)))
+        setTeachableTagIds(listOf(1, 2, 3))
         
         assertFalse(TeachableTagsModel.canMoveUp(1))
     }
 
     @Test
     fun canMoveUp_middleElement_returnsTrue() {
-        setTeachableTagIds(TrackableCollection(mutableListOf(1, 2, 3)))
+        setTeachableTagIds(listOf(1, 2, 3))
         
         assertTrue(TeachableTagsModel.canMoveUp(2))
     }
 
     @Test
     fun canMoveUp_lastElement_returnsTrue() {
-        setTeachableTagIds(TrackableCollection(mutableListOf(1, 2, 3)))
+        setTeachableTagIds(listOf(1, 2, 3))
         
         assertTrue(TeachableTagsModel.canMoveUp(3))
     }
 
     @Test
     fun canMoveDown_firstElement_returnsTrue() {
-        setTeachableTagIds(TrackableCollection(mutableListOf(1, 2, 3)))
+        setTeachableTagIds(listOf(1, 2, 3))
         
         assertTrue(TeachableTagsModel.canMoveDown(1))
     }
 
     @Test
     fun canMoveDown_middleElement_returnsTrue() {
-        setTeachableTagIds(TrackableCollection(mutableListOf(1, 2, 3)))
+        setTeachableTagIds(listOf(1, 2, 3))
         
         assertTrue(TeachableTagsModel.canMoveDown(2))
     }
 
     @Test
     fun canMoveDown_lastElement_returnsFalse() {
-        setTeachableTagIds(TrackableCollection(mutableListOf(1, 2, 3)))
+        setTeachableTagIds(listOf(1, 2, 3))
         
         assertFalse(TeachableTagsModel.canMoveDown(3))
     }
 
     @Test
     fun canMoveUp_singleElement_returnsFalse() {
-        setTeachableTagIds(TrackableCollection(mutableListOf(1)))
+        setTeachableTagIds(listOf(1))
         
         assertFalse(TeachableTagsModel.canMoveUp(1))
     }
 
     @Test
     fun canMoveDown_singleElement_returnsFalse() {
-        setTeachableTagIds(TrackableCollection(mutableListOf(1)))
+        setTeachableTagIds(listOf(1))
         
         assertFalse(TeachableTagsModel.canMoveDown(1))
     }
 
     @Test
     fun resetTeachableTags_clearsAllTags() {
-        setTeachableTagIds(TrackableCollection(mutableListOf(1, 2, 3)))
+        setTeachableTagIds(listOf(1, 2, 3))
         
         TeachableTagsModel.resetTeachableTags()
         
@@ -190,7 +187,7 @@ class TeachableTagsModelTest {
 
     @Test
     fun resetTeachableTags_emptyList_noError() {
-        setTeachableTagIds(TrackableCollection())
+        setTeachableTagIds(listOf())
         
         TeachableTagsModel.resetTeachableTags()
         
@@ -199,7 +196,7 @@ class TeachableTagsModelTest {
 
     @Test
     fun moveUp_middleElement_movesElementUp() {
-        setTeachableTagIds(TrackableCollection(mutableListOf(1, 2, 3)))
+        setTeachableTagIds(listOf(1, 2, 3))
         
         TeachableTagsModel.moveUp(2)
         
@@ -210,7 +207,7 @@ class TeachableTagsModelTest {
 
     @Test
     fun moveDown_middleElement_movesElementDown() {
-        setTeachableTagIds(TrackableCollection(mutableListOf(1, 2, 3)))
+        setTeachableTagIds(listOf(1, 2, 3))
         
         TeachableTagsModel.moveDown(2)
         
@@ -221,7 +218,7 @@ class TeachableTagsModelTest {
 
     @Test
     fun moveUp_lastElement_movesElementUp() {
-        setTeachableTagIds(TrackableCollection(mutableListOf(1, 2, 3)))
+        setTeachableTagIds(listOf(1, 2, 3))
         
         TeachableTagsModel.moveUp(3)
         
@@ -232,7 +229,7 @@ class TeachableTagsModelTest {
 
     @Test
     fun moveDown_firstElement_movesElementDown() {
-        setTeachableTagIds(TrackableCollection(mutableListOf(1, 2, 3)))
+        setTeachableTagIds(listOf(1, 2, 3))
         
         TeachableTagsModel.moveDown(1)
         
@@ -243,7 +240,7 @@ class TeachableTagsModelTest {
 
     @Test
     fun addTeachableTag_zeroId_addsTag() {
-        setTeachableTagIds(TrackableCollection())
+        setTeachableTagIds(listOf())
         
         TeachableTagsModel.addTeachableTag(0)
         
@@ -252,7 +249,7 @@ class TeachableTagsModelTest {
 
     @Test
     fun addTeachableTag_negativeId_addsTag() {
-        setTeachableTagIds(TrackableCollection())
+        setTeachableTagIds(listOf())
         
         TeachableTagsModel.addTeachableTag(-1)
         
@@ -261,9 +258,9 @@ class TeachableTagsModelTest {
 
     @Test
     fun teachableTagIds_setNewCollection_replacesOldCollection() {
-        setTeachableTagIds(TrackableCollection(mutableListOf(1, 2, 3)))
+        setTeachableTagIds(listOf(1, 2, 3))
         
-        val newCollection = TrackableCollection(mutableListOf(100, 200))
+        val newCollection = listOf(100, 200)
         TeachableTagsModel.teachableTagIds = newCollection
         
         assertEquals(2, TeachableTagsModel.teachableTagIds.size)
@@ -274,33 +271,21 @@ class TeachableTagsModelTest {
 
     @Test
     fun addTeachableTag_largeId_addsTag() {
-        setTeachableTagIds(TrackableCollection())
+        setTeachableTagIds(listOf())
         
         TeachableTagsModel.addTeachableTag(Int.MAX_VALUE)
         
         assertTrue(TeachableTagsModel.teachableTagIds.contains(Int.MAX_VALUE))
     }
 
-    /**
-     * Helper method to reset and set teachable tag ids.
-     */
-    private fun setTeachableTagIds(ids: TrackableCollection<Int>) {
-        try {
-            // Get the backing ListModel
-            val modelField = TeachableTagsModel::class.java.getDeclaredField("model")
-            modelField.isAccessible = true
-            val listModel = modelField.get(TeachableTagsModel) as ListModel
-            listModel.ids = ids
-        } catch (e: Exception) {
-            // Fallback: direct assignment
-            TeachableTagsModel.teachableTagIds = ids
-        }
+    private fun setTeachableTagIds(ids: List<Int>) {
+        TeachableTagsModel.teachableTagIds = ids
     }
 
     /**
      * Resets the TeachableTagsModel state.
      */
     private fun resetTeachableTagsModelState() {
-        setTeachableTagIds(TrackableCollection())
+        setTeachableTagIds(listOf())
     }
 }

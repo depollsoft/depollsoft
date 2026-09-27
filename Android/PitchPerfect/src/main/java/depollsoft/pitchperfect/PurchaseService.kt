@@ -4,7 +4,6 @@ import android.content.ContextWrapper
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.android.billingclient.api.*
-import com.bindroid.trackable.trackable
 import depollsoft.lib.activity.RichApplication
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -38,10 +37,7 @@ object PurchaseService {
 
     private lateinit var billingClient: BillingClient
 
-    fun bind(
-        context: ContextWrapper,
-        callback: Runnable?,
-    ): Boolean {
+    fun bind(context: ContextWrapper) {
         billingClient =
             BillingClient
                 .newBuilder(context)
@@ -90,12 +86,14 @@ object PurchaseService {
                 }
             },
         )
-        return true
     }
 
-    var areAdsRemoved: Boolean by trackable(false) {
-        SettingsModel.areAdsRemoved = it
-    }
+    /** Whether the remove-ads subscription is active; stored in [SettingsModel.areAdsRemoved]. */
+    var areAdsRemoved: Boolean
+        get() = SettingsModel.areAdsRemoved
+        set(value) {
+            SettingsModel.areAdsRemoved = value
+        }
 
     fun beginRemoveAds(
         activity: AppCompatActivity,

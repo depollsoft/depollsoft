@@ -1,12 +1,11 @@
 package depollsoft.tagmaster
 
 import android.app.Application
-import com.bindroid.trackable.Trackable
-import com.bindroid.trackable.TrackableCollection
-import com.bindroid.trackable.Tracker
-import com.bindroid.utils.Function
+import androidx.compose.runtime.snapshots.Snapshot
 import depollsoft.lib.activity.RichApplication
 import depollsoft.lib.json.JsonSerializer
+import depollsoft.lib.state.SnapshotNotifications
+import depollsoft.lib.state.watchState
 import depollsoft.lib.util.Preferences
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -29,14 +28,14 @@ import org.robolectric.annotation.Config
  * nothing here needs — or can reach — a FirebaseApp.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [28])
+@Config(application = Application::class)
 class TagListsTest {
+    private var preferencesWereInTestMode = false
+
     @Before
     fun setUp() {
-        RichApplication::class.java
-            .getDeclaredField("context")
-            .apply { isAccessible = true }
-            .set(null, RuntimeEnvironment.getApplication())
+        preferencesWereInTestMode = Preferences.isTestMode()
+        RichApplication.setAppContextForTesting(RuntimeEnvironment.getApplication())
         ListModel.setTestMode(true)
         Preferences.setTestMode(true)
         Preferences.clearTestValues()
@@ -49,6 +48,24 @@ class TagListsTest {
         clearStoredLists()
         TagLists.resetForTest()
         Preferences.clearTestValues()
+        Preferences.setTestMode(preferencesWereInTestMode)
+    }
+
+    @Test
+    fun theFirstReadWorksInsideAReadOnlySnapshot() {
+        val key = TagLists.create("Afterglow set")
+        // A new process: the registry is read again on first use, here inside a snapshotFlow-style
+        // read-only snapshot, where writing state would throw.
+        TagLists.resetForTest()
+        val snapshot = Snapshot.takeSnapshot()
+        val keys =
+            try {
+                snapshot.enter { TagLists.customKeys.toList() }
+            } finally {
+                snapshot.dispose()
+            }
+        assertEquals(listOf(key), keys)
+        assertEquals("Afterglow set", TagLists.name(key))
     }
 
     // MARK: - Names
@@ -138,16 +155,10 @@ class TagListsTest {
     fun create_bumpsTheVersionAndNotifiesTrackers() {
         val before = TagLists.version
         var notifications = 0
-        lateinit var tracker: Tracker
-        tracker =
-            object : Tracker {
-                override fun update() {
-                    notifications++
-                    Trackable.track(tracker, Function { TagLists.version })
-                }
-            }
-        Trackable.track(tracker, Function { TagLists.version })
+        val watch = watchState(read = { TagLists.version }) { notifications++ }
         TagLists.create("Afterglow set")
+        SnapshotNotifications.flush()
+        watch.stop()
         assertTrue(TagLists.version > before)
         assertTrue(notifications > 0)
     }
@@ -268,6 +279,17 @@ class TagListsTest {
         assertEquals(keys.reversed(), TagLists.customKeys.toList())
     }
 
+    @Test
+    fun aDragsOrderIsRefusedOnceTheListsHaveBeenReorderedUnderIt() {
+        val keys = listOf("One", "Two", "Three").map(TagLists::create)
+        // The drag began from keys and would move One to the end; a sync reverses the lists first.
+        assertTrue(TagLists.reorder(keys.reversed()))
+        assertFalse(TagLists.reorder(baseline = keys, order = listOf(keys[1], keys[2], keys[0])))
+        assertEquals("the synced order stands", keys.reversed(), TagLists.customKeys.toList())
+        assertTrue(TagLists.reorder(baseline = keys.reversed(), order = keys))
+        assertEquals(keys, TagLists.customKeys.toList())
+    }
+
     // MARK: - Keys
 
     @Test
@@ -295,7 +317,7 @@ class TagListsTest {
 
     @Test
     fun listsWithoutMetadataSurfaceUnderTheirKey() {
-        ListModel("legacy-key").ids = TrackableCollection(mutableListOf(1, 2))
+        ListModel("legacy-key").ids = listOf(1, 2)
         TagLists.resetForTest()
         assertEquals(listOf("legacy-key"), TagLists.customKeys.toList())
         assertEquals("legacy-key", TagLists.name("legacy-key"))
@@ -309,8 +331,8 @@ class TagListsTest {
     @Test
     fun namedListsComeBeforeUnnamedOnes() {
         val named = TagLists.create("Afterglow set")
-        ListModel("zzz-legacy").ids = TrackableCollection(mutableListOf(7))
-        ListModel("aaa-legacy").ids = TrackableCollection(mutableListOf(8))
+        ListModel("zzz-legacy").ids = listOf(7)
+        ListModel("aaa-legacy").ids = listOf(8)
         TagLists.resetForTest()
         assertEquals(listOf(named, "aaa-legacy", "zzz-legacy"), TagLists.customKeys.toList())
     }
@@ -352,7 +374,7 @@ class TagListsTest {
 
     @Test
     fun remoteInfo_namesAnUnnamedListAfterItsKey() {
-        ListModel("legacy-key").ids = TrackableCollection(mutableListOf(1))
+        ListModel("legacy-key").ids = listOf(1)
         TagLists.resetForTest()
         assertEquals(mapOf("name" to "legacy-key", "order" to 0), TagLists.remoteInfo()["legacy-key"])
     }
@@ -556,7 +578,7 @@ class TagListsTest {
             ListModel::class.java
                 .getDeclaredField("preferences\$delegate")
                 .apply { isAccessible = true }
-                .get(null) as Lazy<MutableMap<String, TrackableCollection<Int>>>
+                .get(null) as Lazy<MutableMap<String, depollsoft.lib.state.StateList<Int>>>
         // Emptying a collection notifies its ListModel, which removes the key: snapshot first.
         val stored = delegate.value
         val collections = stored.values.toList()

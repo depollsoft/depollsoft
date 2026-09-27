@@ -1,0 +1,7 @@
+window
+  pane="Tag Master"
+    Button desc="Navigate up" [click, longClick]
+    text="Tag Master"
+    Button text="EDIT" [click]
+  collection=1x1 group [scroll]
+    desc="Sheet music available" | "Learning tracks available" text="Heart of My Heart" | "a.k.a. The Story of the Rose" | "ID:" | "2147483101" | "Rating: " | "4.26" | "Posted: " | " 12/07/08" | "DLs:" | "48213" [click]

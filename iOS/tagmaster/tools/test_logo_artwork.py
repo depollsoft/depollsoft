@@ -11,16 +11,13 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[3]
 GENERATOR = Path('iOS/tagmaster/tools/generate_logo_artwork.py')
-ANDROID = Path('Android/TagMaster/src/main/java/depollsoft/tagmaster/BarberPoleLoadingView.kt')
+ANDROID = Path('Android/TagMaster/src/main/java/depollsoft/tagmaster/ui/Loaders.kt')
 IOS = Path('iOS/tagmaster/tagmaster/TMBarberPoleLoadingView.m')
-KOTLIN = ANDROID.with_name('BarberPoleLogo.kt')
+KOTLIN = Path('Android/TagMaster/src/main/java/depollsoft/tagmaster/BarberPoleLogo.kt')
 OBJC = IOS.with_name('TMLogoArtwork.m')
 FILES = [GENERATOR, ANDROID, IOS, KOTLIN, OBJC, IOS.with_name('TMLogoArtwork.h'),
          Path('shared/tagmaster/barberpole-loader.json'),
          Path('Android/TagMaster/src/main/res/drawable/ic_barberpole.xml'),
-         Path('Android/TagMaster/src/main/res/layout/tagqueryview.xml'),
-         Path('Android/TagMaster/src/main/res/values/barberpole_dimensions.xml'),
-         Path('Android/TagMaster/src/main/res/values/barberpole_loader.xml'),
          IOS.with_name('DPTagQueryViewController.m')]
 ASSET = Path('iOS/tagmaster/tagmaster/Images.xcassets/LaunchWatermark.imageset')
 FILES += [ASSET / 'LaunchWatermark.pdf', ASSET / 'Contents.json']
@@ -80,9 +77,11 @@ class SharedLoaderDriftTests(unittest.TestCase):
     def test_compact_definition_requires_regeneration(self):
         self.drift(Path('shared/tagmaster/barberpole-loader.json'), '"compactArtworkHeight": 32', '"compactArtworkHeight": 30')
 
-    def test_compact_xml_size_drift(self):
-        self.drift(Path('Android/TagMaster/src/main/res/values/barberpole_loader.xml'),
-                   '@dimen/barberpole_compact_height', '31dp')
+    def test_android_compact_box_drift(self):
+        self.drift(ANDROID, 'BarberPoleLogo.COMPACT_WIDTH.dp', '19.dp')
+
+    def test_android_artwork_box_drift(self):
+        self.drift(ANDROID, 'BarberPoleLogo.ARTWORK_HEIGHT.dp', '58.dp')
 
     def test_ios_independent_period(self):
         self.drift(IOS, 'TMLoaderStripeStep * TMLoaderPhaseMultiplier', '96')

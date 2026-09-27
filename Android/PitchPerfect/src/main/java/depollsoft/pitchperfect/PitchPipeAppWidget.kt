@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Build
+import androidx.annotation.RequiresApi
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -95,7 +96,7 @@ class PitchPipeAppWidget : AppWidgetProvider() {
 
     /**
      * The system delivers widget broadcasts on the app's main thread, so each
-     * render (one face plus thirteen cells per size) used to stall the UI.
+     * render (one face plus thirteen cells per size) runs off it to keep the UI responsive.
      */
     private fun renderAsync(
         context: Context,
@@ -209,7 +210,8 @@ class PitchPipeAppWidget : AppWidgetProvider() {
                     (rangeHeight * density).roundToInt(),
                 ),
             )
-            positionModernHitTargets(
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                positionModernHitTargets(
                 views,
                 widthDp,
                 heightDp,
@@ -218,10 +220,12 @@ class PitchPipeAppWidget : AppWidgetProvider() {
                 rangeWidth,
                 rangeHeight,
             )
+            }
         }
         return views
     }
 
+    @RequiresApi(Build.VERSION_CODES.S)
     private fun positionModernHitTargets(
         views: RemoteViews,
         widgetWidth: Float,

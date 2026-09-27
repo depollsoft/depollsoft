@@ -1,16 +1,15 @@
 package depollsoft.pitchperfect.lib;
 
-import com.bindroid.trackable.TrackableCollection;
-import com.bindroid.trackable.TrackableField;
+import depollsoft.lib.state.StateList;
 
 public class Key {
-  private static TrackableCollection<Key> majorKeys;
+  private static StateList<Key> majorKeys;
 
-  private static TrackableCollection<Key> minorKeys;
+  private static StateList<Key> minorKeys;
 
-  public static TrackableCollection<Key> getMajorKeys() {
+  public static StateList<Key> getMajorKeys() {
     if (Key.majorKeys == null) {
-      Key.majorKeys = new TrackableCollection<Key>();
+      Key.majorKeys = new StateList<Key>();
       Key.majorKeys.add(new Key(Note.findNote("G", Accidental.Flat, 4), KeyType.Major, -6));
       Key.majorKeys.add(new Key(Note.findNote("D", Accidental.Flat, 4), KeyType.Major, -5));
       Key.majorKeys.add(new Key(Note.findNote("A", Accidental.Flat, 4), KeyType.Major, -4));
@@ -28,9 +27,9 @@ public class Key {
     return Key.majorKeys;
   }
 
-  public static TrackableCollection<Key> getMinorKeys() {
+  public static StateList<Key> getMinorKeys() {
     if (Key.minorKeys == null) {
-      Key.minorKeys = new TrackableCollection<Key>();
+      Key.minorKeys = new StateList<Key>();
       Key.minorKeys.add(new Key(Note.findNote("E", Accidental.Flat, 4), KeyType.Minor, -6));
       Key.minorKeys.add(new Key(Note.findNote("B", Accidental.Flat, 4), KeyType.Minor, -5));
       Key.minorKeys.add(new Key(Note.findNote("F", Accidental.Natural, 4), KeyType.Minor, -4));
@@ -48,11 +47,11 @@ public class Key {
     return Key.minorKeys;
   }
 
-  private TrackableField<Note> note = new TrackableField<Note>();
+  private Note note = null;
 
-  private TrackableField<KeyType> keyType = new TrackableField<KeyType>();
+  private KeyType keyType = null;
 
-  private TrackableField<Integer> numAccidentals = new TrackableField<Integer>(0);
+  private Integer numAccidentals = 0;
 
   public Key() {
     this(Note.getC4(), KeyType.Major, 0);
@@ -87,26 +86,26 @@ public class Key {
   }
 
   public KeyType getKeyType() {
-    return this.keyType.get();
+    return this.keyType;
   }
 
   public Note getNote() {
-    return this.note.get();
+    return this.note;
   }
 
   public int getNumAccidentals() {
-    return this.numAccidentals.get();
+    return this.numAccidentals;
   }
 
   public void setKeyType(KeyType value) {
-    this.keyType.set(value);
+    this.keyType = value;
   }
 
   public void setNote(Note value) {
-    this.note.set(value);
+    this.note = value;
   }
 
   public void setNumAccidentals(int value) {
-    this.numAccidentals.set(value);
+    this.numAccidentals = value;
   }
 }

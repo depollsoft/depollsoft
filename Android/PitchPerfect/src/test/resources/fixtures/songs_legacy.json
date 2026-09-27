@@ -1,0 +1,89 @@
+{
+  "*type": "List",
+  "*items": [
+    {
+      "*type": "PitchedSong",
+      "Key": {
+        "*type": "Key",
+        "NumAccidentals": {
+          "*type": "Primitive",
+          "Type": "Integer",
+          "Value": -6
+        },
+        "Note": {
+          "*type": "Note",
+          "KeyNumber": null,
+          "Frequency": {
+            "*type": "Primitive",
+            "Type": "Double",
+            "Value": 369.99442271163446
+          },
+          "Accidental": {
+            "*type": "Accidental",
+            "*name": "Flat"
+          },
+          "FriendlyName": "G",
+          "Alternate": null,
+          "IsPlaying": {
+            "*type": "Primitive",
+            "Type": "Boolean",
+            "Value": false
+          },
+          "Octave": {
+            "*type": "Primitive",
+            "Type": "Integer",
+            "Value": 4
+          }
+        },
+        "KeyType": {
+          "*type": "KeyType",
+          "*name": "Major"
+        }
+      },
+      "Id": "4e9c",
+      "Name": "Heart of My Heart"
+    },
+    {
+      "*type": "PitchedSong",
+      "Key": {
+        "*type": "Key",
+        "NumAccidentals": {
+          "*type": "Primitive",
+          "Type": "Integer",
+          "Value": 6
+        },
+        "Note": {
+          "*type": "Note",
+          "KeyNumber": null,
+          "Frequency": {
+            "*type": "Primitive",
+            "Type": "Double",
+            "Value": 311.12698372208087
+          },
+          "Accidental": {
+            "*type": "Accidental",
+            "*name": "Sharp"
+          },
+          "FriendlyName": "D",
+          "Alternate": null,
+          "IsPlaying": {
+            "*type": "Primitive",
+            "Type": "Boolean",
+            "Value": false
+          },
+          "Octave": {
+            "*type": "Primitive",
+            "Type": "Integer",
+            "Value": 4
+          }
+        },
+        "KeyType": {
+          "*type": "KeyType",
+          "*name": "Minor"
+        }
+      },
+      "Id": "5f0d",
+      "Name": "The Old Songs"
+    }
+  ]
+}

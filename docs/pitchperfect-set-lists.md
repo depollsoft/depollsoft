@@ -265,7 +265,8 @@ both platforms for when it grows one.
 - Screen (Robolectric / hosted XCTest): the selector renders and switches, the
   FAB/Add targets the current list, edit-mode actions appear and act, delete
   falls back to My Songs, empty states.
-- Emulator (skips when nothing listens on `localhost:8080` / `:9099`, and on
+- Emulator (skips when nothing listens on `localhost:8080` / `:9099`, or the ports in
+  `FIRESTORE_EMULATOR_HOST` / `FIREBASE_AUTH_EMULATOR_HOST` when those are set, and on
   iOS when the build is unsigned, since Firebase Auth needs the keychain):
   `scripts/firestore-emulator.sh pitchperfect` starts Firestore + Auth for the
   reserved project `demo-pitchperfect`. Each test creates a fresh user and two

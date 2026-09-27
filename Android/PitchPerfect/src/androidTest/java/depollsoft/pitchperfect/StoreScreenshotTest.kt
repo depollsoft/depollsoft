@@ -36,16 +36,16 @@ class StoreScreenshotTest {
             }
         }
         ActivityScenario.launch(PitchPerfectActivity::class.java).use { scenario ->
-            for ((tab, name) in listOf(R.id.pitchpipe_item to "01-pitch-pipe", R.id.notes_item to "02-notes", R.id.keys_item to "03-keys", R.id.songs_item to "04-songs")) {
+            for ((tab, name) in listOf(MainTab.PITCH_PIPE to "01-pitch-pipe", MainTab.NOTES to "02-notes", MainTab.KEYS to "03-keys", MainTab.SONGS to "04-songs")) {
                 scenario.onActivity { activity ->
                     PurchaseService.areAdsRemoved = true
-                    activity.findViewById<android.view.View>(tab).performClick()
+                    activity.showTab(tab)
                     check(!activity.adsShouldShow)
                 }
                 capture(name)
             }
             scenario.onActivity { activity ->
-                activity.supportFragmentManager.fragments.filterIsInstance<SongListFragment>().single().toggleEditingSongs()
+                activity.songs.toggleEditing()
             }
             capture("05-edit-songs")
             val intent = android.content.Intent(instrumentation.targetContext, AddSongActivity::class.java)

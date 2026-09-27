@@ -8,7 +8,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 
-import com.bindroid.trackable.Trackable;
+import depollsoft.lib.state.ChangeSignal;
 
 import depollsoft.lib.activity.RichApplication;
 import depollsoft.lib.json.JsonSerializer;
@@ -36,12 +36,23 @@ public class Preferences {
   }
   public static class MappingList extends ArrayList<Mapping> {}
   private static SharedPreferences preferences;
-  private static Map<String, Trackable> trackableMap;
+  private static Map<String, ChangeSignal> trackableMap;
   private static boolean initialized = false;
 
   // Test mode support
   private static boolean testMode = false;
   private static Map<String, Object> testValues = new HashMap<>();
+  /** Per-key change signals for the test store, so observers behave as they do on a device. */
+  private static final Map<String, ChangeSignal> testSignals = new HashMap<>();
+
+  private static ChangeSignal testSignal(String key) {
+    ChangeSignal signal = testSignals.get(key);
+    if (signal == null) {
+      signal = new ChangeSignal();
+      testSignals.put(key, signal);
+    }
+    return signal;
+  }
 
   /**
    * Lazily initialize SharedPreferences. This is done lazily to allow test mode
@@ -60,12 +71,12 @@ public class Preferences {
     Preferences.preferences = context
         .getSharedPreferences("depollsoft.lib.Preferences",
             Context.MODE_PRIVATE);
-    Preferences.trackableMap = new HashMap<String, Trackable>();
+    Preferences.trackableMap = new HashMap<String, ChangeSignal>();
     Preferences.preferences
         .registerOnSharedPreferenceChangeListener((sharedPreferences, key) -> {
-          Trackable trackable = Preferences.trackableMap.remove(key);
-          if (trackable != null) {
-            trackable.updateTrackers();
+          ChangeSignal signal = Preferences.trackableMap.get(key);
+          if (signal != null) {
+            signal.changed();
           }
         });
     initialized = true;
@@ -99,6 +110,7 @@ public class Preferences {
   @SuppressWarnings("unchecked")
   public static <T> T get(String key) {
     if (testMode) {
+      testSignal(key).read();
       return (T) testValues.get(key);
     }
 
@@ -107,8 +119,8 @@ public class Preferences {
       return null;
     }
     if (!Preferences.trackableMap.containsKey(key))
-      Preferences.trackableMap.put(key, new Trackable());
-    Preferences.trackableMap.get(key).track();
+      Preferences.trackableMap.put(key, new ChangeSignal());
+    Preferences.trackableMap.get(key).read();
     String stringValue = Preferences.preferences.getString(key, null);
     if (stringValue == null)
       return null;
@@ -128,6 +140,8 @@ public class Preferences {
     if (testMode) {
       if (value != null && !testValues.containsKey(key)) {
         testValues.put(key, value);
+        // As on a device, where initialize stores through set and the preference listener fires.
+        testSignal(key).changed();
       }
       return;
     }
@@ -179,10 +193,14 @@ public class Preferences {
 
   private static boolean set(String key, Object value, boolean synchronous) {
     if (testMode) {
-      if (value == null) {
-        testValues.remove(key);
-      } else {
-        testValues.put(key, value);
+      Object previous = value == null ? testValues.remove(key) : testValues.put(key, value);
+      // Like SharedPreferences' listener, an equal value is no change. The same collection or
+      // object set again may have been edited in place, so it counts: on a device its stored
+      // string would differ.
+      boolean editedInPlace = previous == value && value != null && !(value instanceof String
+          || value instanceof Number || value instanceof Boolean);
+      if (editedInPlace || !java.util.Objects.equals(previous, value)) {
+        testSignal(key).changed();
       }
       return true;
     }

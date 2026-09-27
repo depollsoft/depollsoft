@@ -1,5 +1,7 @@
 package depollsoft.pitchperfect
 
+import kotlin.math.abs
+
 /** Musical name for the ascending interval between two chromatic cells. */
 object PitchInterval {
     private val names =
@@ -22,5 +24,5 @@ object PitchInterval {
     fun name(
         firstCell: Int,
         secondCell: Int,
-    ): String = names[kotlin.math.abs(secondCell - firstCell).coerceIn(0, names.lastIndex)]
+    ): String = names[abs(secondCell - firstCell).coerceIn(0, names.lastIndex)]
 }

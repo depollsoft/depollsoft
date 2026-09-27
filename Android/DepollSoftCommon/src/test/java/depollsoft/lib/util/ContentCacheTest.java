@@ -12,7 +12,6 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 
 import java.io.File;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import depollsoft.lib.activity.RichApplication;
@@ -30,9 +29,7 @@ public class ContentCacheTest {
     public void setUp() throws Exception {
         // Ensure RichApplication has a non-null Context
         Application app = RuntimeEnvironment.getApplication();
-        Field f = RichApplication.class.getDeclaredField("context");
-        f.setAccessible(true);
-        f.set(null, app.getApplicationContext());
+        RichApplication.setAppContextForTesting(app.getApplicationContext());
         
         context = app.getApplicationContext();
         cache = new ContentCache(context);

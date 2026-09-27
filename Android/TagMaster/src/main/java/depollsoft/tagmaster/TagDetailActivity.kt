@@ -2,80 +2,101 @@ package depollsoft.tagmaster
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import bolts.Task
-import com.bindroid.BindingMode
-import com.bindroid.ui.UiBinder
-import com.bindroid.utils.ReflectedProperty
 import depollsoft.tagmaster.barbershop.Tag
+import depollsoft.tagmaster.ui.ListDialogsHost
+import depollsoft.tagmaster.ui.TagMasterTopBar
+import depollsoft.tagmaster.ui.detail.TagDetailContent
+import depollsoft.tagmaster.ui.detail.tagActions
+import depollsoft.tagmaster.ui.navigateUpOrHome
+import depollsoft.tagmaster.ui.rememberListDialogs
+import depollsoft.tagmaster.ui.setTagMasterContent
 
 /**
- * Full-screen host for one tag. Everything the screen does lives in [TagDetailFragment]; this
- * activity owns only the chrome (toolbar, title, options menu) and the intent that names the tag.
+ * Full-screen host for one tag (phones, deep links, Random Tag): the toolbar with the tag's title
+ * and actions over its detail.
  */
-class TagDetailActivity :
-    AppCompatActivity(),
-    TagDetailHost {
-    internal val detailFragment: TagDetailFragment?
-        get() = supportFragmentManager.findFragmentById(R.id.tagDetailFragment) as? TagDetailFragment
-
-    override var tag: Tag?
-        get() = detailFragment?.tag
-        set(value) {
-            detailFragment?.tag = value
-        }
-
-    val isLoading: Boolean
-        get() = detailFragment?.isLoading ?: false
-
-    val loadFailed: Boolean
-        get() = detailFragment?.loadFailed ?: false
-
+class TagDetailActivity : AppCompatActivity() {
     /**
-     * Per-screen request dependency, read by the detail fragment when it starts its first load.
-     * Tests set it before onCreate without changing the cache contract.
+     * Per-screen request dependency, read when the first load starts. Tests set it before
+     * onCreate without changing the cache contract.
      */
     internal var tagLoader: (Int, Boolean) -> Task<Tag> = { id, refresh -> Tag.loadTagById(id, refresh) }
 
-    /** Toolbar title: the tag once loaded, the app name while loading or after a failure. */
-    val displayTitle: CharSequence
-        get() = tag?.title ?: getString(R.string.detail_brand_title).makeTitleString(this)
+    lateinit var detail: TagDetailState
+        private set
+
+    val tag: Tag?
+        get() = detail.tag
+
+    val isLoading: Boolean
+        get() = detail.isLoading
+
+    val loadFailed: Boolean
+        get() = detail.loadFailed
 
     val tagId: Int
-        get() = this.intent.getIntExtra(TAG_ID_EXTRA, -1)
+        get() = intent.getIntExtra(TAG_ID_EXTRA, -1)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.tagdetailview)
-        setUpToolbar(true)
-        UiBinder.bind(ReflectedProperty(this, "Title"), ReflectedProperty(this, "DisplayTitle"), BindingMode.ONE_WAY)
+        val restoredId = savedInstanceState?.getInt(STATE_TAG_ID, -1)?.takeIf { it > 0 }
+        detail = TagDetailState(restoredId ?: tagId, this, tagLoader)
+        detail.page = savedInstanceState?.getInt(STATE_PAGE, 0) ?: 0
+        setTagMasterContent { TagDetailScreen(detail) { navigateUpOrHome() } }
+        detail.start()
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         if (intent.getIntExtra(TAG_ID_EXTRA, -1) == tagId) return
         setIntent(intent)
-        detailFragment?.showTag(tagId)
+        detail.showTag(tagId)
     }
 
-    override fun onSupportNavigateUp() = navigateUpOrHome()
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean = detailFragment?.buildMenu(menu, menuInflater) ?: false
-
-    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-        detailFragment?.prepareMenu(menu)
-        return super.onPrepareOptionsMenu(menu)
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putInt(STATE_TAG_ID, detail.tagId)
+        outState.putInt(STATE_PAGE, detail.page)
+        super.onSaveInstanceState(outState)
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (detailFragment?.handleMenuItem(item) == true) return true
-        return super.onOptionsItemSelected(item)
+    override fun onDestroy() {
+        detail.stop()
+        super.onDestroy()
     }
 
     companion object {
         @JvmField
         val TAG_ID_EXTRA = "depollsoft.tagmaster.tagid"
+        private const val STATE_TAG_ID = "depollsoft.tagmaster.TagDetailActivity.tagId"
+        private const val STATE_PAGE = "depollsoft.tagmaster.TagDetailActivity.page"
     }
+}
+
+/** The detail screen: the tag's title (the app name until it loads) and actions, then its pages. */
+@Composable
+fun TagDetailScreen(
+    detail: TagDetailState,
+    onNavigateUp: () -> Unit,
+) {
+    val dialogs = rememberListDialogs()
+    val tag = detail.tag
+    Column(Modifier.fillMaxSize()) {
+        TagMasterTopBar(
+            title = tag?.title ?: stringResource(R.string.detail_brand_title),
+            brandTitle = tag?.title == null,
+            onNavigateUp = onNavigateUp,
+            actions = tagActions(detail, dialogs),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        TagDetailContent(detail, dialogs, inPane = false, modifier = Modifier.weight(1f))
+    }
+    ListDialogsHost(dialogs)
 }

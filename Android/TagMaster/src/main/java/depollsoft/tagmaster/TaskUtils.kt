@@ -19,4 +19,3 @@ fun <TResult> bolts.Task<TResult>.asDeferred(): Deferred<TResult> {
 
 suspend fun <TResult> bolts.Task<TResult>.await(): TResult = this.asDeferred().await()
 
-suspend fun <TResult> bolts.Task<TResult>?.awaitOrNull(): TResult? = this?.asDeferred()?.await()

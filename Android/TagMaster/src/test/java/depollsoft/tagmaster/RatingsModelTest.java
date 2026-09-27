@@ -33,9 +33,7 @@ public class RatingsModelTest {
     public void setUp() throws Exception {
         // Initialize RichApplication context for Preferences
         Context app = RuntimeEnvironment.getApplication();
-        Field contextField = RichApplication.class.getDeclaredField("context");
-        contextField.setAccessible(true);
-        contextField.set(null, app);
+        RichApplication.setAppContextForTesting(app);
         
         mockRatedIds = new ArrayList<>();
     }
