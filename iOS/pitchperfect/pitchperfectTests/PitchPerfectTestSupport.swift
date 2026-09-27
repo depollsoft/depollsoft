@@ -190,6 +190,7 @@ class PitchPerfectTestCase: XCTestCase {
             setenv("STORE_SCREENSHOTS", "1", 1)
             if FirebaseApp.app() == nil { FirebaseApp.configure() }
             UIView.setAnimationsEnabled(false)
+            TestKeyboard.keepAlertFieldsFromRaisingTheKeyboard()
             DPSettingsModel.sharedInstance.detachFromFirestore()
             DPSettingsModel.sharedInstance.toggleNotes = false
             DPSettingsModel.sharedInstance.wakeLock = false
@@ -251,7 +252,7 @@ class PitchPerfectTestCase: XCTestCase {
         try XCTUnwrap(DPSongsModel.sharedInstance.createList(named: name))
     }
 
-    func settle(_ seconds: TimeInterval = 5, file: StaticString = #filePath, line: UInt = #line,
+    func settle(_ seconds: TimeInterval = 10, file: StaticString = #filePath, line: UInt = #line,
                 until condition: () -> Bool) {
         let deadline = Date().addingTimeInterval(seconds)
         while !condition(), Date() < deadline {

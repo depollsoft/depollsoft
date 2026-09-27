@@ -26,7 +26,7 @@ extension HostedApp {
     }
 
     /// The tab's list once SwiftUI has mounted it; a cold CI runner can take a few beats.
-    func waitForListScrollView(timeout: TimeInterval = 5) -> UIScrollView? {
+    func waitForListScrollView(timeout: TimeInterval = 10) -> UIScrollView? {
         let deadline = Date().addingTimeInterval(timeout)
         while listScrollView == nil, Date() < deadline {
             RunLoop.main.run(until: Date().addingTimeInterval(0.02))

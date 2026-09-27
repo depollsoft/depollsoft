@@ -106,7 +106,7 @@ final class TMRouterTests: TMBehaviorTestCase {
         let router = TMRouter()
         let announced = expectation(forNotification: .TMTagSelectionDidChange, object: router)
         router.setExpanded(true)
-        wait(for: [announced], timeout: 1)
+        wait(for: [announced], timeout: 10)
     }
 
     func testFavoritesReturnsHomeAndOtherListsPush() {

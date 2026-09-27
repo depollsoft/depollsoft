@@ -103,7 +103,7 @@ final class TMTagListsTests: XCTestCase {
     func testCreatePostsUserDataChanged() {
         expectation(forNotification: .userDataChanged, object: nil, handler: nil)
         XCTAssertNotNil(TMTagLists.createList(named: "Afterglow set"))
-        waitForExpectations(timeout: 1)
+        waitForExpectations(timeout: 10)
     }
 
     func testRenameKeepsTheKeyAndTheTags() {

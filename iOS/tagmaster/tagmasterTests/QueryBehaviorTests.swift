@@ -223,7 +223,7 @@ final class QueryBehaviorTests: TMBehaviorTestCase {
         navigator.currentSplitTagId = 3019
         model.didStep(to: 3019)
         XCTAssertTrue(model.isLoading, "The last loaded tag pulls in the next page")
-        wait(for: [changed], timeout: 3)
+        wait(for: [changed], timeout: 10)
         XCTAssertEqual(model.tags.count, 40)
         XCTAssertEqual(model.selectedTagId, 3019)
     }

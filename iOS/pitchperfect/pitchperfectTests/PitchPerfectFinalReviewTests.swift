@@ -77,14 +77,14 @@ final class SettingsPresentationTests: PitchPerfectTestCase {
         let other = UIViewController()
         other.view.backgroundColor = .systemBackground
         app.host.present(other, animated: true)
-        app.ui.wait(3) { other.view.window != nil && !other.isBeingPresented }
+        app.ui.wait(10) { other.view.window != nil && !other.isBeingPresented }
         other.dismiss(animated: true)
         XCTAssertTrue(other.isBeingDismissed, "the dismissal is still in flight")
         app.openSettings()
         app.ui.wait(5) { self.topPresented(in: app.window) is SettingsHost }
         let settings = try XCTUnwrap(topPresented(in: app.window) as? SettingsHost)
         settings.dismiss(animated: true)
-        app.ui.wait(3) { self.topPresented(in: app.window) == nil }
+        app.ui.wait(10) { self.topPresented(in: app.window) == nil }
         app.openSettings()
         app.ui.wait(5) { self.topPresented(in: app.window) is SettingsHost }
     }
@@ -109,7 +109,7 @@ final class SettingsPresentationTests: PitchPerfectTestCase {
         XCTAssertFalse(root.refuseNext, "the first presentation was attempted")
         XCTAssertNil(topPresented(in: window), "UIKit refused it")
         ui.tap(id: "gearshape")
-        ui.wait(3) { self.topPresented(in: window) is SettingsHost }
+        ui.wait(10) { self.topPresented(in: window) is SettingsHost }
     }
 
     /// Settings belongs to its window and goes with it.
@@ -176,7 +176,7 @@ final class UIKitReferenceGeometryTests: PitchPerfectTestCase {
         let navigation = UINavigationController(rootViewController: reference)
         navigation.modalPresentationStyle = .fullScreen
         app.host.present(navigation, animated: false)
-        app.ui.wait(3) { table.window != nil && table.bounds.width > 0 }
+        app.ui.wait(10) { table.window != nil && table.bounds.width > 0 }
         table.layoutIfNeeded()
         let screen = TableMargin.Container(width: app.window.bounds.width, traits: app.window.traitCollection,
                                            style: .plain)

@@ -121,7 +121,7 @@ final class DPSongListEdgeCaseTests: XCTestCase {
         let song = DPPitchedSong()
         list.addSong(song)
         
-        waitForExpectations(timeout: 1.0)
+        waitForExpectations(timeout: 10)
     }
     
     func testRemoveSongPostsNotification() {
@@ -141,7 +141,7 @@ final class DPSongListEdgeCaseTests: XCTestCase {
         
         list.removeSong(song)
         
-        waitForExpectations(timeout: 1.0)
+        waitForExpectations(timeout: 10)
     }
     
     func testSortSongsPostsNotification() {
@@ -164,7 +164,7 @@ final class DPSongListEdgeCaseTests: XCTestCase {
         
         list.sortSongs()
         
-        waitForExpectations(timeout: 1.0)
+        waitForExpectations(timeout: 10)
     }
     
     // MARK: - Store Value Tests

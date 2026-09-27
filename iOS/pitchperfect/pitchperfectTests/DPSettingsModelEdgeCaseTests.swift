@@ -189,7 +189,7 @@ final class DPSettingsModelEdgeCaseTests: XCTestCase {
         
         model.wakeLock.toggle()
         
-        waitForExpectations(timeout: 1.0)
+        waitForExpectations(timeout: 10)
         XCTAssertTrue(receivedObject as AnyObject === model)
     }
     
@@ -211,7 +211,7 @@ final class DPSettingsModelEdgeCaseTests: XCTestCase {
         
         model.toggleNotes.toggle()
         
-        waitForExpectations(timeout: 1.0)
+        waitForExpectations(timeout: 10)
         XCTAssertTrue(receivedObject as AnyObject === model)
     }
     

@@ -71,6 +71,7 @@
 		28F695DF481EE0B06AFD6D03 /* TagMasterAuditTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63D3134C1B0898F50EE69316 /* TagMasterAuditTests.swift */; };
 		0B5E23ECC4A55E046E880953 /* TagMasterTestObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22AFC827264EA1C0323A6EC6 /* TagMasterTestObserver.swift */; };
 		E217FA772065AE2778C513F6 /* TagMasterRound2Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 935F312ACBF6F0E5B126DB34 /* TagMasterRound2Tests.swift */; };
+		F7FA5FABF4407A7627F98A37 /* TestKeyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C560A928A2DFE595C4E83838 /* TestKeyboard.swift */; };
 		B4A1A0000000000000000030 /* TMBehaviorTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000020 /* TMBehaviorTestSupport.swift */; };
 		B4A1A0000000000000000031 /* FavoritesBehaviorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000021 /* FavoritesBehaviorTests.swift */; };
 		B4A1A0000000000000000032 /* SearchBehaviorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000022 /* SearchBehaviorTests.swift */; };
@@ -314,6 +315,7 @@
 		5E07E69E458972825B43D2BF /* PrivacyChoicesTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PrivacyChoicesTests.swift; path = tagmasterTests/PrivacyChoicesTests.swift; sourceTree = "<group>"; };
 		FC7D60E9982541B0A82AC843 /* ScreenCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ScreenCatalog.swift; path = ../shared/ScreenCatalog.swift; sourceTree = "<group>"; };
 		7C42CD1CE6BA8E54914DEA7E /* SwiftUITestDriver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SwiftUITestDriver.swift; path = ../shared/SwiftUITestDriver.swift; sourceTree = "<group>"; };
+		C560A928A2DFE595C4E83838 /* TestKeyboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TestKeyboard.swift; path = ../shared/TestKeyboard.swift; sourceTree = "<group>"; };
 		65D06CA2A30E2817B10D6A31 /* TelemetryConsent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TelemetryConsent.swift; path = ../shared/TelemetryConsent.swift; sourceTree = "<group>"; };
 		8D43DEC18C63FA36BF5D446B /* ConsentUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConsentUITests.swift; path = ../shared/ConsentUITests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -410,6 +412,7 @@
 				5E07E69E458972825B43D2BF /* PrivacyChoicesTests.swift */,
 				8D43DEC18C63FA36BF5D446B /* ConsentUITests.swift */,
 				65D06CA2A30E2817B10D6A31 /* TelemetryConsent.swift */,
+				C560A928A2DFE595C4E83838 /* TestKeyboard.swift */,
 				7C42CD1CE6BA8E54914DEA7E /* SwiftUITestDriver.swift */,
 				FC7D60E9982541B0A82AC843 /* ScreenCatalog.swift */,
 				1ECAAF8225F05AB300A2A3F1 /* Localizable.strings */,
@@ -926,6 +929,7 @@
 				4B737AE82EE04FD78D0EA597 /* DPHomeViewControllerExtensionTests.swift in Sources */,
 				B4A1A0000000000000000003 /* TMBalanceAudioPlayerTests.swift in Sources */,
 				B4A1A0000000000000000030 /* TMBehaviorTestSupport.swift in Sources */,
+				F7FA5FABF4407A7627F98A37 /* TestKeyboard.swift in Sources */,
 				E217FA772065AE2778C513F6 /* TagMasterRound2Tests.swift in Sources */,
 				0B5E23ECC4A55E046E880953 /* TagMasterTestObserver.swift in Sources */,
 				28F695DF481EE0B06AFD6D03 /* TagMasterAuditTests.swift in Sources */,

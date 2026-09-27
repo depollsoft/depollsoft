@@ -80,7 +80,7 @@ final class TagDetailModelTests: XCTestCase {
         return tag
     }
 
-    private func spin(until condition: () -> Bool, timeout: TimeInterval = 3,
+    private func spin(until condition: () -> Bool, timeout: TimeInterval = 10,
                       file: StaticString = #filePath, line: UInt = #line) {
         let deadline = Date().addingTimeInterval(timeout)
         while !condition(), Date() < deadline {

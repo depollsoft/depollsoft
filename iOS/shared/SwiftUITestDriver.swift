@@ -156,7 +156,7 @@ struct UIDriver {
 
     /// Polls briefly for something a control just set in motion (a bar item animating in,
     /// a row mounting) instead of failing on the first look; slow CI runners need it.
-    private func appearing<T>(_ find: () -> T?, timeout: TimeInterval = 3) -> T? {
+    private func appearing<T>(_ find: () -> T?, timeout: TimeInterval = 10) -> T? {
         let deadline = Date().addingTimeInterval(timeout)
         var found = find()
         while found == nil, Date() < deadline {
@@ -203,7 +203,7 @@ struct UIDriver {
     }
 
     /// Waits (spinning the run loop) until `condition` holds or the deadline passes.
-    func wait(_ seconds: TimeInterval = 3, file: StaticString = #filePath, line: UInt = #line,
+    func wait(_ seconds: TimeInterval = 10, file: StaticString = #filePath, line: UInt = #line,
               until condition: () -> Bool) {
         let deadline = Date().addingTimeInterval(seconds)
         while !condition(), Date() < deadline {

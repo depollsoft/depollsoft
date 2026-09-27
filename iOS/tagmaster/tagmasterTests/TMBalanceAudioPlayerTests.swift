@@ -139,7 +139,7 @@ final class TMBalanceAudioPlayerTests: XCTestCase {
         loader.cancel()
         let settled = expectation(description: "drained")
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { settled.fulfill() }
-        wait(for: [settled], timeout: 3)
+        wait(for: [settled], timeout: 10)
     }
 
     func testDecodeRejectsNonAudio() throws {

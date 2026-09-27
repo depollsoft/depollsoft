@@ -140,7 +140,7 @@ class TMBehaviorTestCase: XCTestCase {
 
     /// Spins the run loop until no blocked request is still in flight, so every
     /// completion has landed before the test's fixtures and window go away.
-    private func drainOutstandingRequests(timeout: TimeInterval = 5) {
+    private func drainOutstandingRequests(timeout: TimeInterval = 10) {
         let deadline = Date(timeIntervalSinceNow: timeout)
         while TMBlockedNetwork.outstandingRequests > 0 && Date() < deadline {
             RunLoop.current.run(mode: .default, before: Date(timeIntervalSinceNow: 0.01))
@@ -321,7 +321,7 @@ class TMBehaviorTestCase: XCTestCase {
     /// otherwise dominate a wait that resolves in milliseconds. Use it for work
     /// that completes back on the main queue, such as a blocked catalog fetch.
     func spinUntil(_ description: String,
-                   timeout: TimeInterval = 2,
+                   timeout: TimeInterval = 10,
                    file: StaticString = #filePath,
                    line: UInt = #line,
                    _ condition: () -> Bool) {

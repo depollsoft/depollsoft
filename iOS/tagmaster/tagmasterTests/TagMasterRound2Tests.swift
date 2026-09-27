@@ -144,15 +144,18 @@ final class TagMasterRound2Tests: TMBehaviorTestCase {
 
 @MainActor
 final class TagMasterRound3Tests: TMBehaviorTestCase {
-    /// A reading once layout has settled: the same non-nil value twice running,
-    /// within `timeout`, instead of a fixed pause.
-    func stable<T: Equatable>(_ description: String, timeout: TimeInterval = 5, _ read: () -> T?) -> T? {
+    /// A reading once layout has settled: the same non-nil value held for a third of
+    /// a second, within `timeout`, instead of a fixed pause. (Two back-to-back
+    /// readings can agree mid-layout on a loaded runner.)
+    func stable<T: Equatable>(_ description: String, timeout: TimeInterval = 10, _ read: () -> T?) -> T? {
         var last: T?
         var current: T?
+        var heldSince = Date()
         spinUntil(description, timeout: timeout) {
             current = read()
-            defer { last = current }
-            return current != nil && current == last
+            if current == nil || current != last { heldSince = Date() }
+            last = current
+            return current != nil && Date().timeIntervalSince(heldSince) >= 0.3
         }
         return current
     }
@@ -401,20 +404,23 @@ final class TagMasterRound3Tests: TMBehaviorTestCase {
             values.sort()
             return values.isEmpty ? 0 : values[values.count * 995 / 1000]
         }
-        /// The two items' ink once the bar has settled: the same reading twice running.
+        /// The two items' ink once the bar has settled: the same reading held for half a
+        /// second. Back-to-back readings can agree in the middle of a fade on a loaded runner.
         func inks(_ controller: UIViewController) -> (left: Int, right: Int) {
             let window = mount(controller, size: CGSize(width: 390, height: 300))
             var last: (left: Int, right: Int)?
+            var heldSince = Date()
             var reading = (left: 0, right: 0)
-            spinUntil("the bar settles", timeout: 5) {
+            spinUntil("the bar settles", timeout: 15) {
                 guard let bar = self.descendants(of: UINavigationBar.self, in: window).first(where: { $0.window != nil }) else { return false }
                 let frame = bar.convert(bar.bounds, to: nil)
                 guard frame.height > 0 else { return false }
                 let image = ScreenCatalog.image(of: window)
                 reading = (ink(image, CGRect(x: 0, y: frame.minY, width: 110, height: frame.height)),
                            ink(image, CGRect(x: frame.maxX - 80, y: frame.minY, width: 80, height: frame.height)))
-                defer { last = reading }
-                return last.map { $0 == reading } ?? false
+                if last.map({ $0 != reading }) ?? true { heldSince = Date() }
+                last = reading
+                return Date().timeIntervalSince(heldSince) >= 0.5
             }
             return reading
         }

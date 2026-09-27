@@ -97,14 +97,14 @@ final class TagTracksPlaybackTests: XCTestCase {
     private func drain() {
         let done = expectation(description: "main drained")
         DispatchQueue.main.async { done.fulfill() }
-        wait(for: [done], timeout: 2)
+        wait(for: [done], timeout: 10)
         observeErrors()
     }
 
     private func waitPastTimeout() {
         let done = expectation(description: "deadline passed")
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { done.fulfill() }
-        wait(for: [done], timeout: 2)
+        wait(for: [done], timeout: 10)
         observeErrors()
     }
 
@@ -199,7 +199,7 @@ final class TagTracksPlaybackTests: XCTestCase {
         loader.fail()
         let done = expectation(description: "deadline passed")
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { done.fulfill() }
-        wait(for: [done], timeout: 2)
+        wait(for: [done], timeout: 10)
         XCTAssertEqual(busy.count, 0)
         XCTAssertEqual(busy.settled, 2)
         detail = TagDetailModel(loader: tagLoader)

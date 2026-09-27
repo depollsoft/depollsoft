@@ -316,8 +316,6 @@ final class CleanupHelperTests: PitchPerfectTestCase {
         seedSongs(["Blue Skies", "Shenandoah"])
         let app = try launch()
         app.editSongs()
-        ScreenCatalog.settle(0.6)
-        let list = try XCTUnwrap(app.descendants(of: UICollectionView.self, in: app.window).first { $0.window != nil })
         func frame(_ name: String, in root: UIView, relativeTo base: UIView) -> CGRect? {
             var found: UIView?
             func walk(_ view: UIView) {
@@ -327,7 +325,20 @@ final class CleanupHelperTests: PitchPerfectTestCase {
             walk(root)
             return found.map { $0.convert($0.bounds, to: base) }
         }
-        let cell = try XCTUnwrap(list.visibleCells.min { $0.frame.minY < $1.frame.minY })
+        func topCell(of list: UICollectionView) -> UICollectionViewCell? {
+            list.visibleCells.min { $0.frame.minY < $1.frame.minY }
+        }
+        var editing: UICollectionView? {
+            app.descendants(of: UICollectionView.self, in: app.window).first { $0.window != nil }
+        }
+        // Edit mode brings the controls in on a later pass; a loaded runner can take seconds.
+        settle {
+            guard let list = editing, let cell = topCell(of: list) else { return false }
+            return frame("_UICollectionViewListAccessoryControl", in: cell, relativeTo: list) != nil
+                && frame("_UICollectionViewListCellReorderControl", in: cell, relativeTo: list) != nil
+        }
+        let list = try XCTUnwrap(editing)
+        let cell = try XCTUnwrap(topCell(of: list))
         let delete = try XCTUnwrap(frame("_UICollectionViewListAccessoryControl", in: cell, relativeTo: list))
         let reorder = try XCTUnwrap(frame("_UICollectionViewListCellReorderControl", in: cell, relativeTo: list))
         let info = try XCTUnwrap(app.descendants(of: UIButton.self, in: cell).first).convert(
