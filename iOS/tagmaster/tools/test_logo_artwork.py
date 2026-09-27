@@ -12,13 +12,13 @@ import unittest
 ROOT = Path(__file__).resolve().parents[3]
 GENERATOR = Path('iOS/tagmaster/tools/generate_logo_artwork.py')
 ANDROID = Path('Android/TagMaster/src/main/java/depollsoft/tagmaster/ui/Loaders.kt')
-IOS = Path('iOS/tagmaster/tagmaster/TMBarberPoleLoadingView.m')
+IOS = Path('iOS/tagmaster/tagmaster/TMArtworkViews.swift')
 KOTLIN = Path('Android/TagMaster/src/main/java/depollsoft/tagmaster/BarberPoleLogo.kt')
 OBJC = IOS.with_name('TMLogoArtwork.m')
 FILES = [GENERATOR, ANDROID, IOS, KOTLIN, OBJC, IOS.with_name('TMLogoArtwork.h'),
          Path('shared/tagmaster/barberpole-loader.json'),
          Path('Android/TagMaster/src/main/res/drawable/ic_barberpole.xml'),
-         IOS.with_name('DPTagQueryViewController.m')]
+         IOS.with_name('TMQueryScreen.swift')]
 ASSET = Path('iOS/tagmaster/tagmaster/Images.xcassets/LaunchWatermark.imageset')
 FILES += [ASSET / 'LaunchWatermark.pdf', ASSET / 'Contents.json']
 
@@ -66,7 +66,7 @@ class SharedLoaderDriftTests(unittest.TestCase):
         self.drift(ANDROID, 'BarberPoleLogo.STRIPE_STEP', '96f')
 
     def test_ios_independent_palette(self):
-        self.drift(IOS, 'TMLoaderColor(@"white")', 'UIColor.systemRedColor.CGColor')
+        self.drift(IOS, 'Color(cgColor: TMLoaderColor(name))', 'Color(UIColor.systemRed)')
 
     def test_android_compact_size_drift(self):
         self.drift(ANDROID, 'BarberPoleLogo.COMPACT_HEIGHT', '31f')

@@ -245,7 +245,8 @@ if '--check' in sys.argv:
     for token in ['BarberPoleLogo.COMPACT_WIDTH.dp, BarberPoleLogo.COMPACT_HEIGHT.dp',
                   'BarberPoleLogo.ARTWORK_WIDTH.dp, BarberPoleLogo.ARTWORK_HEIGHT.dp']:
         assert token in loaders, f'Renderer bypasses shared compact size: {token}'
-    ios = (app / 'tagmaster/TMBarberPoleLoadingView.m').read_text()
+    # The SwiftUI pole (TMArtworkViews.swift) draws from the generated TMLogoArtwork data.
+    ios = (app / 'tagmaster/TMArtworkViews.swift').read_text()
     for text, required, forbidden in [
         (loaders, ['BarberPoleLogo.REPEAT_MIN..BarberPoleLogo.REPEAT_MAX', 'phase * BarberPoleLogo.PHASE_MULTIPLIER',
                    'BarberPoleLogo.STRIPE_STEP', 'BarberPoleLogo.AXIS_ANGLE', 'BarberPoleLogo.DURATION_SECONDS',
@@ -253,20 +254,19 @@ if '--check' in sys.argv:
                    'BarberPoleLogo.METAL_LIGHT', 'BarberPoleLogo.METAL_DARK', 'canvas.clipPath(logo.shaft)',
                    'BarberPoleLogo.COMPACT_HEIGHT', 'BarberPoleLogo.COMPACT_WIDTH'],
                   [r'Color\.', r'PathParser', r'\b(?:96|108|2000)\b', r'getColor\(']),
-        (ios, ['TMLoaderMetalPath()', 'kCAFillRuleEvenOdd', 'TMLoaderShaftPath()', 'TMLoaderStripePath()',
-               'TMLoaderRepeatMin', 'TMLoaderRepeatMax', 'index * TMLoaderStripeStep',
+        (ios, ['TMLoaderMetalPath()', 'FillStyle(eoFill: true)', 'TMLoaderShaftPath()', 'TMLoaderStripePath()',
+               'TMLoaderRepeatMin...TMLoaderRepeatMax', 'CGFloat(index) * TMLoaderStripeStep',
                'TMLoaderStripeStep * TMLoaderPhaseMultiplier', 'TMLoaderAxisAngle', 'TMLoaderDurationSeconds',
                'TMLoaderArtworkWidth', 'TMLoaderArtworkHeight', 'TMLoaderCompactWidth', 'TMLoaderCompactHeight',
-               '[self.axisLayer addSublayer:self.stripes]',
-               'TMLoaderColor(@"white")', 'TMLoaderColor(index % 2 == 0 ? @"red" : @"blue")',
-               '@"metalDark" : @"metalLight"'],
+               'TMLoaderColor(name)', 'color("white")', 'index % 2 == 0 ? "red" : "blue"',
+               'metalDark ? "metalDark" : "metalLight"'],
               [r'\b(?:96|108|216)\b', r'UIBezierPath', r'CGPath(?:Move|Add)', r'UIColor\.', r'colorWithRed:'])]:
         for token in required: assert token in text, f'Renderer bypasses shared definition: {token}'
         checked = renderer if text is loaders else text
         for pattern in forbidden: assert not re.search(pattern, checked), f'Independent renderer definition: {pattern}'
-    query = (app / 'tagmaster/DPTagQueryViewController.m').read_text()
-    assert '#import "TMBarberPoleLoadingView.h"' in query, 'Renderer bypasses extracted consumer'
-    assert '@implementation TMBarberPoleLoadingView' not in query, 'Independent renderer in query controller'
+    query = (app / 'tagmaster/TMQueryScreen.swift').read_text()
+    assert 'TMBarberPole' in query, 'Results screen bypasses the shared pole'
+    assert 'TMLoaderStripePath' not in query, 'Independent renderer in the results screen'
 
 for path, data in outputs.items():
     if '--check' in sys.argv:
