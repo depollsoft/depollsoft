@@ -442,3 +442,41 @@ final class TMListsAuditTests: TMBehaviorTestCase {
         XCTAssertGreaterThan(large, small * 1.5, "The row grows with the text size without being rebuilt")
     }
 }
+
+// MARK: - The key sounds at touch-down
+
+@MainActor
+final class TMPressSurfaceTests: XCTestCase {
+    private final class Finger: UITouch {}
+
+    func testThePageStopsDelayingTouchesSoTheKeySoundsAtOnce() {
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 480))
+        let page = UIScrollView(frame: window.bounds)
+        XCTAssertTrue(page.delaysContentTouches, "UIKit's default held the note back ~150 ms")
+        let key = UIView(frame: CGRect(x: 20, y: 200, width: 280, height: 44))
+        page.addSubview(key)
+        window.addSubview(page)
+        window.isHidden = false
+        key.addSubview(TMPressSurface.Surface())
+        XCTAssertFalse(page.delaysContentTouches, "the key sounds at touch-down")
+        XCTAssertTrue(page.canCancelContentTouches, "a scroll that starts on the key still scrolls")
+        window.isHidden = true
+    }
+
+    func testAPressLastsFromTheFirstFingerDownToTheLastUpOrACancel() {
+        var began = 0, ended = 0
+        let surface = TMPressSurface.Surface()
+        surface.began = { began += 1 }
+        surface.ended = { ended += 1 }
+        let first = Finger(), second = Finger()
+        surface.touchesBegan([first], with: nil)
+        surface.touchesBegan([second], with: nil)
+        XCTAssertEqual(began, 1)
+        surface.touchesEnded([first], with: nil)
+        XCTAssertEqual(ended, 0, "one finger is still down")
+        surface.touchesCancelled([second], with: nil)
+        XCTAssertEqual(ended, 1, "a cancelled press lets the note go")
+        surface.touchesEnded([second], with: nil)
+        XCTAssertEqual(ended, 1)
+    }
+}

@@ -141,6 +141,59 @@ final class NotesAndKeysTests: PitchPerfectTestCase {
         XCTAssertFalse(app.ui.exists(label: middle))
     }
 
+    // MARK: Lit rows
+
+    func testAPressedNotesRowIsLitUntilTheFingerLifts() throws {
+        let app = try launch()
+        app.show(tab: 1)
+        let notes = DPNote.prunedNotes() as! [DPNote]
+        let note = notes[notes.count / 2]
+        let label = NoteSpelling.spoken(note)
+        XCTAssertFalse(app.ui.isSelected(label: label), "a resting row is not lit")
+        NotePlayer.shared.pressBegan(note)
+        app.ui.wait(10) { app.ui.isSelected(label: label) }
+        NotePlayer.shared.pressEnded(note)
+        app.ui.wait(10) { !app.ui.isSelected(label: label) }
+    }
+
+    func testAPressedKeysRowIsLitUntilTheFingerLifts() throws {
+        let app = try launch()
+        app.show(tab: 2)
+        let key = (DPKey.majorKeys() as! [DPKey])[6]
+        let label = SongEditorSpeech.name(for: key, minor: false)
+        XCTAssertFalse(app.ui.isSelected(label: label), "a resting row is not lit")
+        NotePlayer.shared.pressBegan(key.note)
+        app.ui.wait(10) { app.ui.isSelected(label: label) }
+        NotePlayer.shared.pressEnded(key.note)
+        app.ui.wait(10) { !app.ui.isSelected(label: label) }
+    }
+
+    func testAToggledNotesRowStaysLitWhileItsNoteSounds() throws {
+        DPSettingsModel.sharedInstance.toggleNotes = true
+        let app = try launch()
+        app.show(tab: 1)
+        let notes = DPNote.prunedNotes() as! [DPNote]
+        let note = notes[notes.count / 2]
+        let label = NoteSpelling.spoken(note)
+        NotePlayer.shared.pressBegan(note)
+        NotePlayer.shared.pressEnded(note)
+        app.ui.wait(10) { app.ui.isSelected(label: label) }
+        NotePlayer.shared.pressBegan(note)
+        app.ui.wait(10) { !app.ui.isSelected(label: label) }
+    }
+
+    func testNoteListsHandTouchesToTheirRowsAtOnce() throws {
+        let app = try launch()
+        for tab in [1, 2] {
+            app.show(tab: tab)
+            let lists = app.descendants(of: UICollectionView.self, in: app.window)
+                .filter { $0.window != nil && !$0.isHidden && $0.bounds.height > 100 }
+            let list = try XCTUnwrap(lists.first, "tab \(tab) has its list")
+            app.ui.wait(10) { !list.delaysContentTouches }
+            XCTAssertTrue(list.canCancelContentTouches, "a scroll still cancels a press")
+        }
+    }
+
     func testSwitchingModeStopsTheOtherModesNotes() throws {
         DPSettingsModel.sharedInstance.toggleNotes = true
         let app = try launch()

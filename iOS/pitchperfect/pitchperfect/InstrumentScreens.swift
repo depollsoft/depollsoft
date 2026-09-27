@@ -66,6 +66,17 @@ struct TouchPressSurface: UIViewRepresentable {
         @available(*, unavailable)
         required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
+        /// A List waits about 150 ms before handing a touch to its rows, to see whether
+        /// the finger is starting a scroll; a note row must sound at touch-down, as the
+        /// pitch pipe's cells do. Scrolling still cancels the press (the list keeps
+        /// `canCancelContentTouches`), which stops a momentary note.
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            var ancestor = superview
+            while let view = ancestor, !(view is UIScrollView) { ancestor = view.superview }
+            (ancestor as? UIScrollView)?.delaysContentTouches = false
+        }
+
         override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
             let wasIdle = touching.isEmpty
             touches.forEach { touching.insert(ObjectIdentifier($0)) }
@@ -339,6 +350,9 @@ final class NotesModel {
     }
 
     func stopSounding() { player.stop(notes) }
+
+    /// A row is lit while its note sounds: held down, or toggled on.
+    func isLit(_ note: DPNote) -> Bool { player.isPlaying(note) }
 }
 
 struct NotesScreen: View {
@@ -350,7 +364,7 @@ struct NotesScreen: View {
         InstrumentPage {
             ScrollViewReader { proxy in
                 List(notes.indices, id: \.self) { index in
-                    NoteRow(note: notes[index])
+                    NoteRow(note: notes[index], lit: model.isLit(notes[index]))
                         .notePress(notes[index])
                         .plateRow()
                         .id(index)
@@ -380,6 +394,8 @@ struct NotesScreen: View {
 /// centred on the first 44 pt of the row with integer arithmetic.
 struct NoteRow: View {
     let note: DPNote
+    /// Sounding: the lit plate with on-lit ink, as a sounding Songs row shows.
+    var lit = false
 
     private struct Part: Identifiable {
         let id: Int
@@ -388,11 +404,11 @@ struct NoteRow: View {
     }
 
     private var parts: [Part] {
-        var parts: [(Text, NSAttributedString)] = [NoteSpelling.parts(note)]
+        var parts: [(Text, NSAttributedString)] = [NoteSpelling.parts(note, lit: lit)]
         if let alternate = note.alternate {
             let slash = NSAttributedString(string: "/", attributes: [.font: DPTheme.listTitleFont(size: 24)])
-            parts.append((Text("/").font(Plate.text(24)).foregroundColor(Plate.inkSecondary), slash))
-            parts.append(NoteSpelling.parts(alternate))
+            parts.append((Text("/").font(Plate.text(24)).foregroundColor(lit ? Plate.onLit : Plate.inkSecondary), slash))
+            parts.append(NoteSpelling.parts(alternate, lit: lit))
         }
         return parts.enumerated().map { index, part in
             Part(id: index, text: part.0, size: Self.fittedSize(part.1))
@@ -425,7 +441,7 @@ struct NoteRow: View {
                 Text(String(format: "%1.2f Hz", note.frequency))
                     .font(Plate.mono(14))
                     .kerning(14 * 0.04)
-                    .foregroundStyle(Plate.inkSecondary)
+                    .foregroundStyle(lit ? Plate.onLit : Plate.inkSecondary)
                     // A value1 cell's detail label ends at the table margin.
                     .padding(.trailing, tableMargin)
             }
@@ -433,27 +449,33 @@ struct NoteRow: View {
             .offset(y: 4.0 / 3.0)
         }
         .frame(maxWidth: .infinity, minHeight: 52, maxHeight: 52, alignment: .topLeading)
+        // The lit plate cross-dissolves in 0.12 s, as a highlighted UIKit cell did.
+        .background(lit ? Plate.lit : Color.clear)
+        .animation(.easeInOut(duration: 0.12), value: lit)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(NoteSpelling.spoken(note))
+        .accessibilityAddTraits(lit ? .isSelected : [])
         .accessibilityValue(String(format: "%1.2f Hz", note.frequency))
     }
 }
 
 enum NoteSpelling {
     /// The spelling as SwiftUI text and as the attributed string UIKit measured.
-    static func parts(_ note: DPNote) -> (Text, NSAttributedString) {
+    static func parts(_ note: DPNote, lit: Bool = false) -> (Text, NSAttributedString) {
+        let ink = lit ? Plate.onLit : Plate.ink
+        let secondary = lit ? Plate.onLit : Plate.inkSecondary
         let measured = NSMutableAttributedString(string: note.friendlyName ?? "",
                                                  attributes: [.font: DPTheme.listTitleFont(size: 24)])
-        var text = Text(note.friendlyName ?? "").font(Plate.text(24)).foregroundColor(Plate.ink)
+        var text = Text(note.friendlyName ?? "").font(Plate.text(24)).foregroundColor(ink)
         if let glyph = Plate.glyph(for: Int(note.accidental.get())) {
             let font = UIFont(name: "NoteHedz", size: 26) ?? DPTheme.listTitleFont(size: 24)
             measured.append(NSAttributedString(string: glyph, attributes: [.font: font]))
-            text = text + Text(glyph).font(Font(font as CTFont)).foregroundColor(Plate.ink)
+            text = text + Text(glyph).font(Font(font as CTFont)).foregroundColor(ink)
         }
         measured.append(NSAttributedString(string: "\(note.octave)", attributes: [
             .font: DPTheme.listTitleFont(size: 14), .baselineOffset: -5,
         ]))
-        text = text + Text("\(note.octave)").font(Plate.text(14)).foregroundColor(Plate.inkSecondary).baselineOffset(-5)
+        text = text + Text("\(note.octave)").font(Plate.text(14)).foregroundColor(secondary).baselineOffset(-5)
         return (text, measured)
     }
 
@@ -498,6 +520,9 @@ final class KeysModel {
     var keys: [DPKey] { mode.keys }
 
     func stopSounding() { player.stop(keys.map(\.note)) }
+
+    /// A row is lit while its key's note sounds: held down, or toggled on.
+    func isLit(_ key: DPKey) -> Bool { player.isPlaying(key.note) }
 }
 
 struct KeysScreen: View {
@@ -509,7 +534,7 @@ struct KeysScreen: View {
         InstrumentPage {
             ScrollViewReader { proxy in
                 List(keys.indices, id: \.self) { index in
-                    KeyRow(key: keys[index])
+                    KeyRow(key: keys[index], lit: model.isLit(keys[index]))
                         .notePress(keys[index].note)
                         .plateRow()
                         .id(index)
@@ -606,12 +631,14 @@ struct KeyModeBarItem: UIViewControllerRepresentable {
 /// The engraved signature on the left, the key's name on the right.
 struct KeyRow: View {
     let key: DPKey
+    /// Sounding: the lit plate with on-lit ink, as a sounding Songs row shows.
+    var lit = false
 
     var body: some View {
         HStack(alignment: .center, spacing: 0) {
             Text(SongEditorSpeech.signatureGlyphs(numAccidentals: Int(key.numAccidentals)))
                 .font(Plate.music(44))
-                .foregroundStyle(Plate.ink)
+                .foregroundStyle(lit ? Plate.onLit : Plate.ink)
                 .fixedSize()
             Spacer(minLength: 0)
             HStack(alignment: .center, spacing: 0) {
@@ -621,13 +648,18 @@ struct KeyRow: View {
                     Text(glyph).font(Plate.noteHedz(26))
                 }
             }
-            .foregroundStyle(Plate.ink)
+            .foregroundStyle(lit ? Plate.onLit : Plate.ink)
             .fixedSize()
         }
         .padding(.horizontal, 8)
         // The 1 pt a self-sizing UIKit cell adds for its separator.
         .padding(.bottom, 1)
+        .frame(maxWidth: .infinity)
+        // The lit plate cross-dissolves in 0.12 s, as a highlighted UIKit cell did.
+        .background(lit ? Plate.lit : Color.clear)
+        .animation(.easeInOut(duration: 0.12), value: lit)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(SongEditorSpeech.name(for: key, minor: Int(key.keyType.get()) == Int(Minor.rawValue)))
+        .accessibilityAddTraits(lit ? .isSelected : [])
     }
 }

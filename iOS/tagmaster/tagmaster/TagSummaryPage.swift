@@ -8,6 +8,7 @@
 
 import Combine
 import SwiftUI
+import UIKit
 
 /// The page body every detail page shares: scrolls within the safe area, 16 pt in
 /// from the edges, limited to a readable width.
@@ -351,30 +352,16 @@ struct TMKeyNoteButton: View {
         .background(RoundedRectangle(cornerRadius: 8).fill(playing ? fill : .clear))
         .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(accent, lineWidth: 1.5))
         .contentShape(Rectangle())
-        // A button, so a scroll that starts on the key scrolls, and a press the
-        // system cancels (a call, a system gesture) lets the note go, as the
-        // UIKit button's touch-cancel did.
-        .overlay {
-            Button {} label: { Color.clear.contentShape(Rectangle()) }
-                .buttonStyle(TMKeyPressStyle(model: model))
-        }
+        // UIKit touches, so the key sounds at touch-down: a SwiftUI press inside the
+        // page's scroll view is held back while the system decides whether a scroll
+        // is starting. A scroll that starts on the key still scrolls and lets the
+        // note go, as does a press the system cancels (a call, a system gesture).
+        .overlay { TMPressSurface(began: model.pressKey, ended: model.releaseKey) }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Play key note \(model.keyNote?.description ?? title)")
         .accessibilityHint("Plays for one and a half seconds")
         .accessibilityAddTraits(.isButton)
         .accessibilityAction { model.playTimedKeyNote() }
-    }
-
-    /// Sounds the key for exactly as long as the button is held.
-    private struct TMKeyPressStyle: ButtonStyle {
-        let model: TagSummaryModel
-
-        func makeBody(configuration: Configuration) -> some View {
-            configuration.label
-                .onChange(of: configuration.isPressed) { _, pressed in
-                    if pressed { model.pressKey() } else { model.releaseKey() }
-                }
-        }
     }
 
     /// UIKit's high-contrast accent, for white text on the filled key in light mode.
@@ -496,5 +483,59 @@ struct TMMatchedHeightStack: Layout {
                           proposal: ProposedViewSize(width: bounds.width, height: heights[index]))
             y += heights[index]
         }
+    }
+}
+
+/// A transparent view that reports one press from the first finger down to the
+/// last one up (or a cancel), with no delay from the scroll view around it.
+struct TMPressSurface: UIViewRepresentable {
+    let began: () -> Void
+    let ended: () -> Void
+
+    final class Surface: UIView {
+        var began: () -> Void = {}
+        var ended: () -> Void = {}
+        private var touching = Set<ObjectIdentifier>()
+
+        override init(frame: CGRect) {
+            super.init(frame: frame)
+            backgroundColor = .clear
+            isAccessibilityElement = false
+        }
+
+        @available(*, unavailable)
+        required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+        /// A scroll view waits about 150 ms before handing a touch to its content, to
+        /// see whether it starts a scroll. The key must sound at touch-down; scrolling
+        /// still cancels the press (`canCancelContentTouches` stays on).
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            var ancestor = superview
+            while let view = ancestor, !(view is UIScrollView) { ancestor = view.superview }
+            (ancestor as? UIScrollView)?.delaysContentTouches = false
+        }
+
+        override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+            let wasIdle = touching.isEmpty
+            touches.forEach { touching.insert(ObjectIdentifier($0)) }
+            if wasIdle { began() }
+        }
+
+        override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) { finish(touches) }
+        override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) { finish(touches) }
+
+        private func finish(_ touches: Set<UITouch>) {
+            guard !touching.isEmpty else { return }
+            touches.forEach { touching.remove(ObjectIdentifier($0)) }
+            if touching.isEmpty { ended() }
+        }
+    }
+
+    func makeUIView(context: Context) -> Surface { Surface() }
+
+    func updateUIView(_ surface: Surface, context: Context) {
+        surface.began = began
+        surface.ended = ended
     }
 }

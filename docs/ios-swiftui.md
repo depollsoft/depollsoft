@@ -190,8 +190,12 @@ Deliberate differences from the UIKit screens:
   before it and Android always kept them.
 - A toggled Songs row stays lit while its note sounds, including after the
   list redraws; UIKit's lit state was the cell's highlight and was lost on a
-  reload. Pressed Notes and Keys rows show no highlight, exactly as UIKit's
-  clear cells showed none.
+  reload. Notes and Keys rows light the same way while their note sounds
+  (UIKit's clear cells lost their highlight in the Liquid Glass restyle; the
+  owner asked for it back).
+- Note rows sound at touch-down. UIKit's tables, and SwiftUI's List, hold a
+  touch about 150 ms to see whether it starts a scroll; `TouchPressSurface`
+  turns that off for its list, and a scroll still cancels the press.
 - VoiceOver activation of a Notes, Keys or Songs row sounds the note for 1.5 s
   (or toggles it). UIKit's synthesized tap started and stopped it in the same
   instant.

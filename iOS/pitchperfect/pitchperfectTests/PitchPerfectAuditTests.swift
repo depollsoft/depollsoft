@@ -64,6 +64,20 @@ final class TouchPressSurfaceTests: XCTestCase {
         XCTAssertEqual(ended, 1)
     }
 
+    func testTheEnclosingListStopsDelayingTouches() {
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 480))
+        let list = UIScrollView(frame: window.bounds)
+        XCTAssertTrue(list.delaysContentTouches, "UIKit's default, which held a note back ~150 ms")
+        let row = UIView(frame: CGRect(x: 0, y: 0, width: 320, height: 52))
+        list.addSubview(row)
+        window.addSubview(list)
+        window.isHidden = false
+        row.addSubview(surface())
+        XCTAssertFalse(list.delaysContentTouches, "a row sounds at touch-down")
+        XCTAssertTrue(list.canCancelContentTouches, "a scroll still cancels the press")
+        window.isHidden = true
+    }
+
     func testAScrollThatCancelsTheTouchEndsThePress() {
         let surface = surface()
         let finger = FakeTouch()

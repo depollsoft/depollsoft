@@ -94,6 +94,7 @@ struct UIDriver {
     func value(id: String) -> String? { element(id: id)?.accessibilityValue }
     func traits(id: String) -> UIAccessibilityTraits { element(id: id)?.accessibilityTraits ?? [] }
     func isSelected(id: String) -> Bool { traits(id: id).contains(.selected) }
+    func isSelected(label: String) -> Bool { element(label: label)?.accessibilityTraits.contains(.selected) ?? false }
     func isEnabled(id: String) -> Bool { !traits(id: id).contains(.notEnabled) }
 
     // MARK: - Acting
