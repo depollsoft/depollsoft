@@ -33,6 +33,35 @@ public class JsonSerializerExtraTest {
         public void setName(String name) { Name = name; }
     }
 
+    public static class Playable {
+        private String Name;
+        private boolean Playing;
+
+        public String getName() { return Name; }
+        public void setName(String name) { Name = name; }
+        @NotStored
+        public boolean getPlaying() { return Playing; }
+        public void setPlaying(boolean playing) { Playing = playing; }
+    }
+
+    @Test
+    public void notStoredPropertiesAreNeitherWrittenNorRestored() throws Exception {
+        Playable p = new Playable();
+        p.setName("A4");
+        p.setPlaying(true);
+
+        JSONObject jo = JsonSerializer.serialize(p);
+        assertTrue(jo.toString(), jo.has("Name"));
+        assertFalse(jo.toString(), jo.has("Playing"));
+
+        // A copy stored before the property was marked still carries it; it is ignored.
+        JSONObject stored = new JSONObject(jo.toString());
+        stored.put("Playing", JsonSerializer.serialize(Boolean.TRUE));
+        Playable back = (Playable) JsonSerializer.deserialize(stored);
+        assertEquals("A4", back.getName());
+        assertFalse(back.getPlaying());
+    }
+
     @Test
     public void serialize_handlesEnumsNullsAndNestedCollections() {
         Holder h = new Holder();

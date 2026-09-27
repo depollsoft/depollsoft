@@ -1,44 +1,27 @@
 package depollsoft.pitchperfect
 
 import android.content.Context
-import android.graphics.Rect
 import android.os.Looper
-import android.view.View
 import androidx.test.core.app.ApplicationProvider
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import depollsoft.lib.util.Preferences
-import org.junit.Assert.assertTrue
+import depollsoft.pitchperfect.lib.Note
 import org.robolectric.Shadows.shadowOf
 
-/**
- * Shared helpers for the Robolectric screen tests migrated from `src/androidTest`.
- *
- * Espresso's `isDisplayed()` means "attached, shown, and at least one pixel inside the screen".
- * Robolectric lays activities out for real once they reach RESUMED, so the same three conditions
- * are checkable directly and without Espresso's polling.
- */
+/** Shared setup and teardown for the Robolectric screen tests. */
 internal object ScreenTestSupport {
     fun idle() = shadowOf(Looper.getMainLooper()).idle()
 
-    fun isDisplayed(view: View?): Boolean =
-        view != null && view.isShown && view.width > 0 && view.height > 0 &&
-            view.getGlobalVisibleRect(Rect())
+    /** Plays nothing: screen tests are about state, and a sounding note would outlive its test. */
+    val silentPlayer =
+        object : Note.NotePlayer {
+            override fun play(n: Note) = Unit
 
-    fun assertDisplayed(
-        name: String,
-        view: View?,
-    ) {
-        assertTrue("$name should be displayed", isDisplayed(view))
-    }
-
-    /** Espresso's `scrollTo()`: bring the view inside its scrolling ancestor, then settle. */
-    fun scrollTo(view: View) {
-        view.requestRectangleOnScreen(Rect(0, 0, view.width, view.height), true)
-        idle()
-    }
+            override fun stop(n: Note) = Unit
+        }
 
     /**
      * Start each test from a never-launched app.
@@ -51,6 +34,7 @@ internal object ScreenTestSupport {
      * first-launch state that suppresses the login and changelog prompts.
      */
     fun startFromFirstLaunch() {
+        Note.setPlayer(silentPlayer)
         Preferences.setTestMode(true)
         Preferences.clearTestValues()
         seedSettingsDefaults()

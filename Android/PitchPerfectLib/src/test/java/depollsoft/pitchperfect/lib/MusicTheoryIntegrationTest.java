@@ -1,6 +1,6 @@
 package depollsoft.pitchperfect.lib;
 
-import com.bindroid.trackable.TrackableCollection;
+import depollsoft.lib.state.StateList;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -42,7 +42,7 @@ public class MusicTheoryIntegrationTest {
 
     @Test
     public void testCircleOfFifths_majorKeysCorrectOrder() {
-        TrackableCollection<Key> majorKeys = Key.getMajorKeys();
+        StateList<Key> majorKeys = Key.getMajorKeys();
         
         // Expected order by accidentals: -6 (Gb) to +6 (F#)
         int prevAccidentals = Integer.MIN_VALUE;
@@ -55,7 +55,7 @@ public class MusicTheoryIntegrationTest {
 
     @Test
     public void testCircleOfFifths_minorKeysCorrectOrder() {
-        TrackableCollection<Key> minorKeys = Key.getMinorKeys();
+        StateList<Key> minorKeys = Key.getMinorKeys();
         
         int prevAccidentals = Integer.MIN_VALUE;
         for (Key k : minorKeys) {
@@ -206,7 +206,7 @@ public class MusicTheoryIntegrationTest {
 
     @Test
     public void testPitchedSong_withAllMajorKeys() {
-        TrackableCollection<Key> majorKeys = Key.getMajorKeys();
+        StateList<Key> majorKeys = Key.getMajorKeys();
         
         for (Key k : majorKeys) {
             PitchedSong song = new PitchedSong();
@@ -221,7 +221,7 @@ public class MusicTheoryIntegrationTest {
 
     @Test
     public void testPitchedSong_withAllMinorKeys() {
-        TrackableCollection<Key> minorKeys = Key.getMinorKeys();
+        StateList<Key> minorKeys = Key.getMinorKeys();
         
         for (Key k : minorKeys) {
             PitchedSong song = new PitchedSong();

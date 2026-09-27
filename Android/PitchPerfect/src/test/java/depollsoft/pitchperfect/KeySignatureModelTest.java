@@ -6,7 +6,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
-import com.bindroid.trackable.TrackableCollection;
+import depollsoft.lib.state.StateList;
 
 import depollsoft.pitchperfect.lib.Accidental;
 import depollsoft.pitchperfect.lib.Key;
@@ -81,7 +81,7 @@ public class KeySignatureModelTest {
     @Test
     public void constructor_initializesMajorKeys() {
         KeySignatureModel model = new KeySignatureModel();
-        TrackableCollection<Key> majorKeys = model.getMajorKeys();
+        StateList<Key> majorKeys = model.getMajorKeys();
         
         assertNotNull(majorKeys);
         assertEquals(13, majorKeys.size()); // 13 major keys (circle of fifths + enharmonic)
@@ -90,7 +90,7 @@ public class KeySignatureModelTest {
     @Test
     public void majorKeys_containsAllExpectedKeys() {
         KeySignatureModel model = new KeySignatureModel();
-        TrackableCollection<Key> majorKeys = model.getMajorKeys();
+        StateList<Key> majorKeys = model.getMajorKeys();
         
         // Verify some expected major keys exist
         assertTrue(containsKeyWithNote(majorKeys, "C", Accidental.Natural, KeyType.Major));
@@ -103,7 +103,7 @@ public class KeySignatureModelTest {
     @Test
     public void majorKeys_containsCMajorWithZeroAccidentals() {
         KeySignatureModel model = new KeySignatureModel();
-        TrackableCollection<Key> majorKeys = model.getMajorKeys();
+        StateList<Key> majorKeys = model.getMajorKeys();
         
         Key cMajor = findKeyWithNote(majorKeys, "C", Accidental.Natural);
         assertNotNull("C Major should exist", cMajor);
@@ -114,7 +114,7 @@ public class KeySignatureModelTest {
     @Test
     public void majorKeys_hasCorrectAccidentalCounts() {
         KeySignatureModel model = new KeySignatureModel();
-        TrackableCollection<Key> majorKeys = model.getMajorKeys();
+        StateList<Key> majorKeys = model.getMajorKeys();
         
         // G Major has 1 sharp
         Key gMajor = findKeyWithNote(majorKeys, "G", Accidental.Natural);
@@ -130,7 +130,7 @@ public class KeySignatureModelTest {
     @Test
     public void majorKeys_allHaveMajorKeyType() {
         KeySignatureModel model = new KeySignatureModel();
-        TrackableCollection<Key> majorKeys = model.getMajorKeys();
+        StateList<Key> majorKeys = model.getMajorKeys();
         
         for (int i = 0; i < majorKeys.size(); i++) {
             assertEquals("Key at index " + i + " should be Major", 
@@ -143,7 +143,7 @@ public class KeySignatureModelTest {
     @Test
     public void constructor_initializesMinorKeys() {
         KeySignatureModel model = new KeySignatureModel();
-        TrackableCollection<Key> minorKeys = model.getMinorKeys();
+        StateList<Key> minorKeys = model.getMinorKeys();
         
         assertNotNull(minorKeys);
         assertEquals(13, minorKeys.size()); // 13 minor keys (relative to major keys)
@@ -152,7 +152,7 @@ public class KeySignatureModelTest {
     @Test
     public void minorKeys_containsAllExpectedKeys() {
         KeySignatureModel model = new KeySignatureModel();
-        TrackableCollection<Key> minorKeys = model.getMinorKeys();
+        StateList<Key> minorKeys = model.getMinorKeys();
         
         // Verify some expected minor keys exist
         assertTrue(containsKeyWithNote(minorKeys, "A", Accidental.Natural, KeyType.Minor));
@@ -163,7 +163,7 @@ public class KeySignatureModelTest {
     @Test
     public void minorKeys_containsAMinorWithZeroAccidentals() {
         KeySignatureModel model = new KeySignatureModel();
-        TrackableCollection<Key> minorKeys = model.getMinorKeys();
+        StateList<Key> minorKeys = model.getMinorKeys();
         
         Key aMinor = findKeyWithNote(minorKeys, "A", Accidental.Natural);
         assertNotNull("A Minor should exist", aMinor);
@@ -174,7 +174,7 @@ public class KeySignatureModelTest {
     @Test
     public void minorKeys_hasCorrectAccidentalCounts() {
         KeySignatureModel model = new KeySignatureModel();
-        TrackableCollection<Key> minorKeys = model.getMinorKeys();
+        StateList<Key> minorKeys = model.getMinorKeys();
         
         // E Minor has 1 sharp
         Key eMinor = findKeyWithNote(minorKeys, "E", Accidental.Natural);
@@ -190,7 +190,7 @@ public class KeySignatureModelTest {
     @Test
     public void minorKeys_allHaveMinorKeyType() {
         KeySignatureModel model = new KeySignatureModel();
-        TrackableCollection<Key> minorKeys = model.getMinorKeys();
+        StateList<Key> minorKeys = model.getMinorKeys();
         
         for (int i = 0; i < minorKeys.size(); i++) {
             assertEquals("Key at index " + i + " should be Minor", 
@@ -204,7 +204,7 @@ public class KeySignatureModelTest {
     public void setMajorKeys_updatesCollection() {
         KeySignatureModel model = new KeySignatureModel();
         
-        TrackableCollection<Key> customKeys = new TrackableCollection<>();
+        StateList<Key> customKeys = new StateList<>();
         customKeys.add(new Key(Note.findNote("C", Accidental.Natural, 4), KeyType.Major, 0));
         
         model.setMajorKeys(customKeys);
@@ -216,7 +216,7 @@ public class KeySignatureModelTest {
     public void setMinorKeys_updatesCollection() {
         KeySignatureModel model = new KeySignatureModel();
         
-        TrackableCollection<Key> customKeys = new TrackableCollection<>();
+        StateList<Key> customKeys = new StateList<>();
         customKeys.add(new Key(Note.findNote("A", Accidental.Natural, 4), KeyType.Minor, 0));
         
         model.setMinorKeys(customKeys);
@@ -230,8 +230,8 @@ public class KeySignatureModelTest {
     public void majorAndMinorKeys_areIndependent() {
         KeySignatureModel model = new KeySignatureModel();
         
-        TrackableCollection<Key> majorKeys = model.getMajorKeys();
-        TrackableCollection<Key> minorKeys = model.getMinorKeys();
+        StateList<Key> majorKeys = model.getMajorKeys();
+        StateList<Key> minorKeys = model.getMinorKeys();
         
         assertNotSame(majorKeys, minorKeys);
     }
@@ -246,8 +246,8 @@ public class KeySignatureModelTest {
     @Test
     public void relativeMinors_haveMatchingAccidentals() {
         KeySignatureModel model = new KeySignatureModel();
-        TrackableCollection<Key> majorKeys = model.getMajorKeys();
-        TrackableCollection<Key> minorKeys = model.getMinorKeys();
+        StateList<Key> majorKeys = model.getMajorKeys();
+        StateList<Key> minorKeys = model.getMinorKeys();
         
         // C Major (0 accidentals) relative minor is A minor (0 accidentals)
         Key cMajor = findKeyWithNote(majorKeys, "C", Accidental.Natural);
@@ -263,10 +263,10 @@ public class KeySignatureModelTest {
         KeySignatureModel model = new KeySignatureModel();
         
         // Access multiple times
-        TrackableCollection<Key> majorKeys1 = model.getMajorKeys();
-        TrackableCollection<Key> majorKeys2 = model.getMajorKeys();
-        TrackableCollection<Key> minorKeys1 = model.getMinorKeys();
-        TrackableCollection<Key> minorKeys2 = model.getMinorKeys();
+        StateList<Key> majorKeys1 = model.getMajorKeys();
+        StateList<Key> majorKeys2 = model.getMajorKeys();
+        StateList<Key> minorKeys1 = model.getMinorKeys();
+        StateList<Key> minorKeys2 = model.getMinorKeys();
         
         // Should return same instances
         assertSame(majorKeys1, majorKeys2);
@@ -275,7 +275,7 @@ public class KeySignatureModelTest {
 
     // ========== Helper Methods ==========
 
-    private boolean containsKeyWithNote(TrackableCollection<Key> keys, String noteName, 
+    private boolean containsKeyWithNote(StateList<Key> keys, String noteName, 
             Accidental accidental, KeyType keyType) {
         for (int i = 0; i < keys.size(); i++) {
             Key key = keys.get(i);
@@ -288,7 +288,7 @@ public class KeySignatureModelTest {
         return false;
     }
 
-    private Key findKeyWithNote(TrackableCollection<Key> keys, String noteName, Accidental accidental) {
+    private Key findKeyWithNote(StateList<Key> keys, String noteName, Accidental accidental) {
         for (int i = 0; i < keys.size(); i++) {
             Key key = keys.get(i);
             if (key.getNote().getFriendlyName().equals(noteName) 

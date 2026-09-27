@@ -21,7 +21,6 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import android.util.Xml;
 
-import com.bindroid.trackable.TrackableField;
 
 public class XmlDocument {
   private static class XmlHandler extends DefaultHandler {
@@ -242,7 +241,7 @@ public class XmlDocument {
     return buffer.toByteArray();
   }
 
-  private TrackableField<List<XmlElement>> elements = new TrackableField<List<XmlElement>>();
+  private List<XmlElement> elements;
 
   private XmlDocument() {
   }
@@ -256,10 +255,10 @@ public class XmlDocument {
   }
 
   public List<XmlElement> getElements() {
-    return this.elements.get();
+    return this.elements;
   }
 
   private void setElements(List<XmlElement> value) {
-    this.elements.set(value);
+    this.elements = value;
   }
 }

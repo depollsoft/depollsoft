@@ -6,11 +6,8 @@ import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.firestore
-import depollsoft.lib.activity.RichApplication
 import depollsoft.lib.licensing.LicenseChecker
-import depollsoft.lib.util.Preferences
 import depollsoft.lib.util.preference
-import kotlinx.coroutines.tasks.await
 
 object SettingsModel {
     private const val TOGGLE_NOTE_KEY = "depollsoft.pitchperfect.ToggleNote"
@@ -22,8 +19,6 @@ object SettingsModel {
     private val attachment = AuthAttachmentState()
     private var restoring = false
 
-    val appStore: String
-        get() = RichApplication.getAppContext().getString(R.string.app_store)
     var areAdsRemoved: Boolean by preference(ARE_ADS_REMOVED_KEY, false)
 
     @JvmStatic

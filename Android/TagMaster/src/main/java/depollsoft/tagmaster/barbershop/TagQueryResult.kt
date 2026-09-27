@@ -1,11 +1,10 @@
 package depollsoft.tagmaster.barbershop
 
-import com.bindroid.trackable.TrackableField
-import com.bindroid.trackable.trackable
+import depollsoft.lib.state.StateField
 
 class TagQueryResult {
-    var tags: List<Tag> by trackable(emptyList())
-    var start: Int by trackable(0)
-    var count: Int by trackable(0)
-    var available: Int by trackable(0)
+    var tags: List<Tag> by StateField(emptyList())
+    var start: Int by StateField(0)
+    var count: Int by StateField(0)
+    var available: Int by StateField(0)
 }

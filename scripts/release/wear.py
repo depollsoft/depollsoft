@@ -26,8 +26,9 @@ def wait_for_instrument(adb, timeout=120):
             run(*adb, 'shell', 'rm', '-f', '/sdcard/store-window.xml', timeout=10)
             run(*adb, 'shell', 'uiautomator', 'dump', '/sdcard/store-window.xml', timeout=20)
             last_state = output(*adb, 'shell', 'cat', '/sdcard/store-window.xml', timeout=10)
-            # The custom instrument exposes virtual accessibility nodes for notes.
-            if 'id/pitchInstrument' in last_state and 'octave 4' in last_state:
+            # The face is tagged pitchInstrument (exposed as its resource id) and its notes
+            # are accessibility nodes named by octave.
+            if 'resource-id="pitchInstrument"' in last_state and 'octave 4' in last_state:
                 return
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
             last_state = str(error)

@@ -3,7 +3,7 @@
 
 A file under a directory that only one app owns selects that app alone.
 Every other file under a platform root is shared code (Android libraries,
-Bindroid, Gradle files, the Xcode workspace, depolllib, Fastlane) and selects
+Gradle files, the Xcode workspace, depolllib, Fastlane) and selects
 every app on that platform. The platform's workflow files and CI scripts are
 shared too. A few files select everything on both platforms.
 

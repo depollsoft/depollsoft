@@ -1,61 +1,93 @@
 package depollsoft.tagmaster
 
 import android.os.Bundle
-import android.view.KeyEvent
-import androidx.appcompat.app.AppCompatActivity
-import depollsoft.lib.ui.ThreadSwitchContext
+import androidx.activity.viewModels
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.res.stringResource
+import depollsoft.compose.revealItem
+import depollsoft.lib.json.JsonSerializer
+import depollsoft.tagmaster.ui.BarAction
+import depollsoft.tagmaster.ui.ListDetailScaffold
+import depollsoft.tagmaster.ui.ListDialogsHost
+import depollsoft.tagmaster.ui.QueryList
+import depollsoft.tagmaster.ui.ShowAs
+import depollsoft.tagmaster.ui.TagMasterTopBar
+import depollsoft.tagmaster.ui.Watermark
+import depollsoft.tagmaster.ui.navigateUpOrHome
+import depollsoft.tagmaster.ui.rememberListDialogs
+import depollsoft.tagmaster.ui.setTagMasterContent
+import kotlinx.coroutines.launch
 
-class TagSearchResultsActivity :
-    AppCompatActivity(),
-    TagPaneHost {
-    internal lateinit var tagPane: TagPaneController
+/**
+ * The results of a search: the query the search form built (the [QUERY_MODEL] extra, as JSON),
+ * titled with the search text.
+ */
+class TagSearchResultsActivity : TagPaneActivity() {
+    lateinit var model: QueryModel
         private set
 
-    private val queryFragment: TagQueryFragment?
-        get() = supportFragmentManager.findFragmentById(R.id.tagQueryFragment) as? TagQueryFragment
+    private val retained: RetainedQueries by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        this.setContentView(R.layout.tagqueryactivity)
-        setUpToolbar(true)
-
-        supportActionBar?.title = queryFragment?.model?.query
-
+        // A rotated screen keeps the results it loaded.
+        val fresh = !retained.isRetained
+        model =
+            retained.models {
+                listOf(intent?.getStringExtra(QUERY_MODEL)?.let(::readModel) ?: QueryModel())
+            }.single()
+        val configuration = resources.configuration
         tagPane =
-            TagPaneController(
-                activity = this,
-                listedIds = { queryFragment?.model?.tags?.map { it.id } ?: emptyList() },
-                reveal = { id -> queryFragment?.revealTag(id) },
-                hasMoreResults = { queryFragment?.model?.hasMoreResults == true },
-                fetchMore = { queryFragment?.model?.fetchResults(ThreadSwitchContext(this)) },
+            TagPaneState(
+                this,
+                hasTwoPanes(configuration.screenWidthDp, configuration.screenHeightDp),
+                listedIds = { model.tags.map { it.id } },
+                hasMoreResults = { model.hasMoreResults },
+                fetchMore = { model.fetchResults() },
             )
-        tagPane.onCreate(savedInstanceState)
+        setTagMasterContent { ResultsScreen() }
+        tagPane.restore(savedInstanceState)
+        if (fresh) model.refresh()
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        tagPane.onSaveInstanceState(outState)
-        super.onSaveInstanceState(outState)
-    }
-
-    override val hasDetailPane: Boolean
-        get() = tagPane.hasDetailPane
-
-    override var selectedTagId: Int?
-        get() = tagPane.selectedTagId
-        set(value) {
-            tagPane.selectedTagId = value
+    private fun readModel(json: String): QueryModel? =
+        try {
+            JsonSerializer.deserialize(json) as? QueryModel
+        } catch (_: Exception) {
+            null
         }
 
-    override fun showTag(id: Int) = tagPane.showTag(id)
+    companion object {
+        const val QUERY_MODEL = "QueryModel"
+    }
 
-    override fun listedTagIds(): List<Int> = tagPane.listedTagIds()
-
-    override fun revealTag(id: Int) = tagPane.revealTag(id)
-
-    override fun onKeyDown(
-        keyCode: Int,
-        event: KeyEvent,
-    ): Boolean = tagPane.onKeyDown(keyCode, event) || super.onKeyDown(keyCode, event)
-
-    override fun onSupportNavigateUp() = navigateUpOrHome()
+    @Composable
+    private fun ResultsScreen() {
+        val dialogs = rememberListDialogs()
+        val pane = tagPane
+        val listState = rememberLazyListState()
+        val scope = rememberCoroutineScope()
+        pane.reveal = { id ->
+            val index = model.tags.indexOfFirst { it.id == id }
+            if (index >= 0) scope.launch { listState.revealItem(index) }
+        }
+        val bar =
+            @Composable {
+                TagMasterTopBar(
+                    title = model.query ?: "",
+                    onNavigateUp = { navigateUpOrHome() },
+                    paneTitle = if (pane.hasDetailPane) stringResource(R.string.tag_pane_list_title) else null,
+                    actions =
+                        listOf(
+                            BarAction("refresh", stringResource(R.string.Refresh), R.drawable.ic_refresh, ShowAs.IfRoom) { model.refresh() },
+                        ),
+                )
+            }
+        ListDetailScaffold(pane, dialogs, Watermark.Content, bar) {
+            QueryList(model, listState, pane.selectedTagId, pane::showTag)
+        }
+        ListDialogsHost(dialogs)
+    }
 }

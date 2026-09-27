@@ -9,7 +9,8 @@ import org.mockito.Mockito;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
-import com.bindroid.trackable.TrackableCollection;
+import java.util.List;
+import java.util.ArrayList;
 
 import depollsoft.lib.util.Preferences;
 import depollsoft.pitchperfect.lib.Accidental;
@@ -47,7 +48,7 @@ public class PitchPipeModelTest {
             Preferences.set(IS_FROM_F_TO_F_KEY, false);
             
             PitchPipeModel model = new PitchPipeModel();
-            TrackableCollection<Note> notes = model.getNotes();
+            List<Note> notes = model.getNotes();
             
             assertNotNull(notes);
             assertEquals(13, notes.size());
@@ -65,7 +66,7 @@ public class PitchPipeModelTest {
             Preferences.set(IS_FROM_F_TO_F_KEY, true);
             
             PitchPipeModel model = new PitchPipeModel();
-            TrackableCollection<Note> notes = model.getNotes();
+            List<Note> notes = model.getNotes();
             
             assertNotNull(notes);
             assertEquals(13, notes.size());
@@ -82,12 +83,16 @@ public class PitchPipeModelTest {
             // Start with C-to-C
             Preferences.set(IS_FROM_F_TO_F_KEY, false);
             
-            PitchPipeModel model = new PitchPipeModel();
-            
+            int[] widgetUpdates = {0};
+            PitchPipeModel model = new PitchPipeModel(() -> {
+                widgetUpdates[0]++;
+                return kotlin.Unit.INSTANCE;
+            });
+
             // Switch to F-to-F
-            model.setIsFromFToF(true);
+            model.setFromFToF(true);
             
-            TrackableCollection<Note> notes = model.getNotes();
+            List<Note> notes = model.getNotes();
             assertEquals("F", notes.get(0).getFriendlyName());
             assertEquals(4, notes.get(0).getOctave());
             
@@ -95,7 +100,7 @@ public class PitchPipeModelTest {
             assertTrue((Boolean) Preferences.get(IS_FROM_F_TO_F_KEY));
             
             // Verify widget update was called
-            widgetMock.verify(() -> PitchPipeAppWidget.updateWidgets());
+            assertEquals(1, widgetUpdates[0]);
         }
     }
 
@@ -108,9 +113,9 @@ public class PitchPipeModelTest {
             PitchPipeModel model = new PitchPipeModel();
             
             // Switch to C-to-C
-            model.setIsFromFToF(false);
+            model.setFromFToF(false);
             
-            TrackableCollection<Note> notes = model.getNotes();
+            List<Note> notes = model.getNotes();
             assertEquals("C", notes.get(0).getFriendlyName());
             assertEquals(4, notes.get(0).getOctave());
             
@@ -125,7 +130,7 @@ public class PitchPipeModelTest {
             Preferences.set(IS_FROM_F_TO_F_KEY, true);
             
             PitchPipeModel model = new PitchPipeModel();
-            assertTrue(model.getIsFromFToF());
+            assertTrue(model.isFromFToF());
         }
     }
 
@@ -137,7 +142,7 @@ public class PitchPipeModelTest {
             Preferences.set(IS_FROM_F_TO_F_KEY, false);
             
             PitchPipeModel model = new PitchPipeModel();
-            TrackableCollection<Note> notes = model.getNotes();
+            List<Note> notes = model.getNotes();
             
             // Full inclusive chromatic octave: C4 through C5.
             String[] expectedNotes = {"C", "C", "D", "D", "E", "F", "F", "G", "G", "A", "A", "B", "C"};
@@ -166,7 +171,7 @@ public class PitchPipeModelTest {
             Preferences.set(IS_FROM_F_TO_F_KEY, true);
             
             PitchPipeModel model = new PitchPipeModel();
-            TrackableCollection<Note> notes = model.getNotes();
+            List<Note> notes = model.getNotes();
             
             // Full inclusive chromatic octave: F4 through F5.
             String[] expectedNotes = {"F", "F", "G", "G", "A", "A", "B", "C", "C", "D", "D", "E", "F"};
@@ -195,7 +200,7 @@ public class PitchPipeModelTest {
             Preferences.set(IS_FROM_F_TO_F_KEY, true);
             
             PitchPipeModel model = new PitchPipeModel();
-            TrackableCollection<Note> notes = model.getNotes();
+            List<Note> notes = model.getNotes();
             
             Note lastNote = notes.get(12);
             assertEquals("F", lastNote.getFriendlyName());
@@ -211,7 +216,7 @@ public class PitchPipeModelTest {
             
             PitchPipeModel model = new PitchPipeModel();
             
-            TrackableCollection<Note> customNotes = new TrackableCollection<>();
+            List<Note> customNotes = new ArrayList<>();
             customNotes.add(Note.findNote("A", Accidental.Natural, 4));
             
             model.setNotes(customNotes);
@@ -245,10 +250,10 @@ public class PitchPipeModelTest {
             PitchPipeModel model = new PitchPipeModel();
             assertEquals(13, model.getNotes().size());
 
-            model.setIsFromFToF(true);
+            model.setFromFToF(true);
             assertEquals(13, model.getNotes().size());
 
-            model.setIsFromFToF(false);
+            model.setFromFToF(false);
             assertEquals(13, model.getNotes().size());
         }
     }

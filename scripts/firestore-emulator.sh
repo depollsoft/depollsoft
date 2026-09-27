@@ -45,4 +45,24 @@ fi
 export PATH="$JAVA_HOME/bin:$PATH:$HOME/.local/bin"
 
 cd "$(dirname "$0")/../Firebase/$app"
-exec firebase emulators:start --only firestore,auth --project "demo-$app" "$@"
+
+# FIRESTORE_EMULATOR_HOST / FIREBASE_AUTH_EMULATOR_HOST (the variables the Firebase SDKs and the
+# sync tests read) move the emulators off the default ports, e.g. when 8080 is taken:
+#   FIRESTORE_EMULATOR_HOST=localhost:8180 FIREBASE_AUTH_EMULATOR_HOST=localhost:9199 \
+#     scripts/firestore-emulator.sh tagmaster
+firestore_port="${FIRESTORE_EMULATOR_HOST##*:}"
+auth_port="${FIREBASE_AUTH_EMULATOR_HOST##*:}"
+config=firebase.json
+if [ -n "$firestore_port" ] || [ -n "$auth_port" ]; then
+  config=".firebase.emulator-ports.json"
+  trap 'rm -f "$config"' EXIT
+  python3 - "$firestore_port" "$auth_port" "$config" <<'PY'
+import json, sys
+firestore, auth, out = sys.argv[1:4]
+config = json.load(open("firebase.json"))
+if firestore: config["emulators"]["firestore"]["port"] = int(firestore)
+if auth: config["emulators"]["auth"]["port"] = int(auth)
+json.dump(config, open(out, "w"), indent=2)
+PY
+fi
+firebase emulators:start --config "$config" --only firestore,auth --project "demo-$app" "$@"

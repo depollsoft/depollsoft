@@ -1,17 +1,17 @@
 package depollsoft.pitchperfect;
 
-import com.bindroid.trackable.TrackableCollection;
-import com.bindroid.trackable.TrackableField;
+import depollsoft.lib.state.StateList;
+import depollsoft.lib.state.StateField;
 
 import depollsoft.pitchperfect.lib.Key;
 
 public class KeySignatureModel {
 
-  private TrackableField<Boolean> isMajor = new TrackableField<Boolean>(true);
+  private StateField<Boolean> isMajor = new StateField<>(true);
 
-  private TrackableField<TrackableCollection<Key>> majorKeys = new TrackableField<TrackableCollection<Key>>();
+  private StateField<StateList<Key>> majorKeys = new StateField<>(null);
 
-  private TrackableField<TrackableCollection<Key>> minorKeys = new TrackableField<TrackableCollection<Key>>();
+  private StateField<StateList<Key>> minorKeys = new StateField<>(null);
 
   public KeySignatureModel() {
     this.setMajorKeys(Key.getMajorKeys());
@@ -22,11 +22,11 @@ public class KeySignatureModel {
     return this.isMajor.get();
   }
 
-  public TrackableCollection<Key> getMajorKeys() {
+  public StateList<Key> getMajorKeys() {
     return this.majorKeys.get();
   }
 
-  public TrackableCollection<Key> getMinorKeys() {
+  public StateList<Key> getMinorKeys() {
     return this.minorKeys.get();
   }
 
@@ -34,11 +34,11 @@ public class KeySignatureModel {
     this.isMajor.set(value);
   }
 
-  public void setMajorKeys(TrackableCollection<Key> value) {
+  public void setMajorKeys(StateList<Key> value) {
     this.majorKeys.set(value);
   }
 
-  public void setMinorKeys(TrackableCollection<Key> value) {
+  public void setMinorKeys(StateList<Key> value) {
     this.minorKeys.set(value);
   }
 }

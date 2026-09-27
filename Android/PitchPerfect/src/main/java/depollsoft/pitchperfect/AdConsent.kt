@@ -1,6 +1,7 @@
 package depollsoft.pitchperfect
 
 import android.app.Activity
+import android.widget.Toast
 import com.google.android.ump.ConsentInformation
 import com.google.android.ump.ConsentRequestParameters
 import com.google.android.ump.UserMessagingPlatform
@@ -23,8 +24,8 @@ object AdConsent {
         TelemetryConsent.showAdPrivacy = { host ->
             UserMessagingPlatform.showPrivacyOptionsForm(host) { error ->
                 revision++
-                if (error != null) android.widget.Toast.makeText(host,
-                    "Ad privacy choices are unavailable. Please try again.", android.widget.Toast.LENGTH_LONG).show()
+                if (error != null) Toast.makeText(host,
+                    "Ad privacy choices are unavailable. Please try again.", Toast.LENGTH_LONG).show()
             }
         }
         if (gathering) return

@@ -66,7 +66,15 @@ scripts/firestore-emulator.sh tagmaster
 ```
 
 Firestore listens on `localhost:8080`, Auth on `localhost:9099`; the ports and the disabled
-emulator UI are configured in `Firebase/tagmaster/firebase.json`. The script pins
+emulator UI are configured in `Firebase/tagmaster/firebase.json`. When 8080 or 9099 is taken, the
+Firebase SDKs' own variables move both the emulators and the Android suite:
+
+```bash
+FIRESTORE_EMULATOR_HOST=localhost:8180 FIREBASE_AUTH_EMULATOR_HOST=localhost:9199 \
+  scripts/firestore-emulator.sh tagmaster
+```
+
+Run the Android suite with the same two variables set. The script pins
 `JAVA_HOME=/opt/homebrew/opt/openjdk@21` because firebase-tools needs a JDK 21 or newer and the
 shell profile here points at 17, and it always runs under the project id `demo-tagmaster`. That id
 is reserved for emulation: the emulators refuse to reach any real Google service under it, so no
@@ -76,7 +84,7 @@ Stop the emulators with Ctrl-C. Nothing persists between runs.
 
 ## Running the sync tests
 
-Both suites skip themselves — they do not fail — when nothing is listening on port 8080, so an
+Both suites skip themselves — they do not fail — when nothing is listening on the emulator ports, so an
 ordinary test run needs no emulator.
 
 **Android** (`Android/TagMaster/src/test/kotlin/depollsoft/tagmaster/TagListSyncEmulatorTest.kt`,

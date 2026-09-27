@@ -2,16 +2,16 @@ package depollsoft.pitchperfect.lib;
 
 import java.util.UUID;
 
-import com.bindroid.trackable.TrackableField;
+import depollsoft.lib.state.StateField;
 
 public class PitchedSong implements Comparable<PitchedSong> {
-  private TrackableField<String> name = new TrackableField<String>();
+  private StateField<String> name = new StateField<>(null);
 
-  private TrackableField<Key> key = new TrackableField<Key>();
+  private StateField<Key> key = new StateField<>(null);
 
-  private TrackableField<String> uuid = new TrackableField<String>();
+  private String uuid = null;
 
-  private TrackableField<Boolean> isPlaying = new TrackableField<Boolean>(false);
+  private StateField<Boolean> isPlaying = new StateField<>(false);
 
   public PitchedSong() {
     this.setId(UUID.randomUUID().toString());
@@ -29,7 +29,7 @@ public class PitchedSong implements Comparable<PitchedSong> {
   }
 
   public String getId() {
-    return this.uuid.get();
+    return this.uuid;
   }
 
   public boolean getIsPlaying() {
@@ -55,7 +55,7 @@ public class PitchedSong implements Comparable<PitchedSong> {
   }
 
   public void setId(String value) {
-    this.uuid.set(value);
+    this.uuid = value;
   }
 
   public void setKey(Key value) {

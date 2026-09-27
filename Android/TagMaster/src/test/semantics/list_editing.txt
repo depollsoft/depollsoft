@@ -1,0 +1,11 @@
+window
+  pane="Afterglow set"
+    Button desc="Navigate up" [click, longClick]
+    text="Afterglow set"
+    Button text="DONE" [click]
+    Button desc="More options" [click, longClick]
+  collection=2x1 group [scroll]
+    desc="Heart of My Heart, position 1 of 2 in Afterglow set" | "Reorder Heart of My Heart, position 1 of 2 in Afterglow set. Drag or use Alt + arrow keys." ["Remove", "Move down"]
+      Button desc="Remove Heart of My Heart from Afterglow set" [click]
+    desc="Sweet Adeline, the one I dream of when the harmonies ring all night long, position 2 of 2 in Afterglow set" | "Reorder Sweet Adeline, the one I dream of when the harmonies ring all night long, position 2 of 2 in Afterglow set. Drag or use Alt + arrow keys." ["Remove", "Move up"]
+      Button desc="Remove Sweet Adeline, the one I dream of when the harmonies ring all night long from Afterglow set" [click]

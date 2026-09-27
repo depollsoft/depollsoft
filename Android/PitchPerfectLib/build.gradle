@@ -1,8 +1,12 @@
 apply plugin: 'com.android.library'
+apply plugin: 'org.jetbrains.kotlin.plugin.compose'
 
 dependencies {
     api fileTree(include: '*.jar', dir: 'libs')
     api project(':DepollSoftCommon')
+    implementation platform(compose_bom)
+    implementation 'androidx.compose.ui:ui'
+    implementation 'androidx.compose.foundation:foundation'
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.robolectric:robolectric:4.16.1'
 }
@@ -10,6 +14,10 @@ dependencies {
 android {
     namespace = 'depollsoft.pitchperfect.lib'
     compileSdk 37
+
+    buildFeatures {
+        compose = true
+    }
 
     defaultConfig {
         minSdk 23

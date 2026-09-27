@@ -14,7 +14,7 @@ class QuartetArtworkTests(unittest.TestCase):
         self.root = Path(self.temp.name)
         self.definition = json.loads((g.ROOT / g.DEFINITION).read_text())
         self.outputs = g.outputs(self.definition)
-        for path in [*self.outputs, g.ANDROID/'TagLoadingView.kt', g.IOS/'DPTagViewController.m']:
+        for path in [*self.outputs, g.ANDROID/'ui/Loaders.kt', g.IOS/'DPTagViewController.m']:
             target = self.root / path
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(g.ROOT/path, target)
@@ -66,7 +66,7 @@ class QuartetArtworkTests(unittest.TestCase):
 
     def test_consumers_reject_independent_geometry_palette_and_motion(self):
         replacements = {
-            g.ANDROID/'TagLoadingView.kt': [('QuartetArtwork.opacity','sin'),('QuartetArtwork.WIDTH','204f'),('QuartetArtwork.note','android.graphics.Path()'),('QuartetArtwork.PERIOD','2.4f'),('QuartetArtwork.lightNote','context.getColor(R.color.md_primary)')],
+            g.ANDROID/'ui/Loaders.kt': [('QuartetArtwork.opacity','sin'),('QuartetArtwork.WIDTH','204f'),('QuartetArtwork.note','android.graphics.Path()'),('QuartetArtwork.PERIOD','2.4f'),('QuartetArtwork.lightNote','context.getColor(R.color.md_primary)')],
             g.IOS/'DPTagViewController.m': [('TMQuartetSamples(i)','@[@0, @(-4), @0]'),('TMQuartetWidth','204'),('TMQuartetNotePath()','CGPathCreateMutable()'),('TMQuartetPeriod','2.4'),('kCAAnimationLinear','kCAAnimationCubic'),('TMQuartetColor(','IndependentColor(')]
         }
         for path, mutations in replacements.items():

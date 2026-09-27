@@ -1,0 +1,19 @@
+window
+  Button desc="Navigate up" [click, longClick]
+  text="Add songs"
+  Button desc="Add 1 song" [click, longClick]
+  Button desc="More options" [click, longClick]
+  collection=12x1 group [scroll]
+    text="MY SONGS"
+    Checkbox desc="Blue Skies, A flat major, 4 flats" text="Blue Skies" | "Aí" toggle=Off [click]
+    Checkbox desc="Down Our Way, E flat major, 3 flats" text="Down Our Way" | "Eí" toggle=Off [click]
+    Checkbox desc="Heart of My Heart, B flat major, 2 flats" text="Heart of My Heart" | "Bí" toggle=On [click]
+    Checkbox desc="Shenandoah, F major, 1 flat" text="Shenandoah" | "F" toggle=Off [click]
+    Checkbox desc="Sweet Adeline, C major, no sharps or flats" text="Sweet Adeline" | "C" toggle=Off [click]
+    Checkbox desc="The Old Songs, G major, 1 sharp" text="The Old Songs" | "G" toggle=Off [click]
+    Checkbox desc="When You Were Sweet Sixteen, D major, 2 sharps" text="When You Were Sweet Sixteen" | "D" toggle=Off [click]
+    Checkbox desc="You Are My Sunshine, A major, 3 sharps" text="You Are My Sunshine" | "A" toggle=Off [click]
+    text="CONTEST SET"
+    Checkbox desc="Sweet Adeline, B flat major, 2 flats" text="Sweet Adeline" | "Bí" toggle=Off [click]
+    Checkbox desc="Shenandoah, A minor, no sharps or flats" text="Shenandoah" | "a" toggle=Off [click]
+  Button text="ADD 1 SONG" [click]

@@ -1,0 +1,29 @@
+window
+  pane="Tag Master"
+    Button desc="Navigate up" [click, longClick]
+    text="Tag Master"
+  group [scroll]
+    heading text="Cache"
+    text="Current cache size:"
+    text="0.00 MB" live=Polite
+    Button text="Clear cached sheet music and tracks" [click]
+    heading text="Log in"
+    text="Log in to back up and synchronize your tag lists."
+    Button text="Log in" [click]
+    heading text="Favorites"
+    Button text="Clear favorites" [click]
+    heading text="Teachable Tags"
+    Button text="Clear teachable tags" [click]
+    heading text="Random Tag Filters"
+    DropdownList desc="Minimum rating" text="2" state="2" [click]
+    DropdownList desc="Minimum downloads" text="100" state="100" [click]
+    DropdownList desc="Sheet music" text="Yes" state="Yes" [click]
+    DropdownList desc="Learning tracks" text="Not important" state="Not important" [click]
+    heading text="Keep Screen On"
+    Switch text="While Viewing Sheet Music" toggle=On [click]
+    heading text="Theme"
+    RadioButton text="Default" selected [click]
+    RadioButton text="Light" unselected [click]
+    RadioButton text="Dark" unselected [click]
+    Button text="View Changelog" [click]
+    Button text="Privacy choices" [click]

@@ -1,44 +1,39 @@
 package depollsoft.pitchperfect
 
-import android.os.Looper
-import android.view.View
-import android.widget.PopupMenu
-import android.widget.TextView
-import androidx.recyclerview.widget.RecyclerView
-import androidx.viewpager2.widget.ViewPager2
-import com.google.android.material.floatingactionbutton.FloatingActionButton
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
+import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextReplacement
+import androidx.compose.ui.test.performTouchInput
 import depollsoft.lib.activity.RichApplication
-import depollsoft.pitchperfect.ScreenTestSupport.assertDisplayed
-import depollsoft.pitchperfect.ScreenTestSupport.idle
+import depollsoft.lib.toMap
 import depollsoft.pitchperfect.lib.Key
-import depollsoft.pitchperfect.lib.PitchedSong
+import depollsoft.pitchperfect.ComposeScreens.Companion.song
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
-import org.robolectric.android.controller.ActivityController
 import org.robolectric.annotation.Config
-import java.time.Duration
 
-/**
- * The set list selector on the Songs tab, and the edit-mode actions that manage the current list.
- *
- * The positions are child views tagged with their list id, so a test finds one the same way a
- * person does: by the name it carries.
- */
+/** The Songs tab's set list selector and the list actions around it. */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35], application = RichApplication::class, qualifiers = "w411dp-h891dp")
+@Config(application = RichApplication::class, qualifiers = "w411dp-h891dp")
 class SetListSelectorTest {
-    private var controller: ActivityController<PitchPerfectActivity>? = null
+    @get:Rule
+    val compose = createEmptyComposeRule()
 
+    private val screens = ComposeScreens(compose)
     private val model get() = SongsModel.get()
 
     @Before
@@ -53,7 +48,7 @@ class SetListSelectorTest {
     fun tearDown() {
         resetLists()
         PurchaseService.areAdsRemoved = false
-        ScreenTestSupport.finishScreenTest(controller)
+        screens.finish()
     }
 
     private fun resetLists() {
@@ -63,107 +58,72 @@ class SetListSelectorTest {
         model.currentListId = SongsModel.DEFAULT_ID
     }
 
-    private fun launch(): PitchPerfectActivity {
-        val created = Robolectric.buildActivity(PitchPerfectActivity::class.java)
-        controller = created
-        created.setup()
-        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(2))
-        return created.get()
-    }
-
-    private fun PitchPerfectActivity.goToSongs(): SongListFragment {
-        findViewById<View>(R.id.songs_item).performClick()
-        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(2))
-        assertEquals("Songs is page 3", 3, findViewById<ViewPager2>(R.id.viewPager).currentItem)
-        return supportFragmentManager.fragments.filterIsInstance<SongListFragment>().single()
-    }
-
-    private fun SongListFragment.selector(): SetListSelectorView =
-        requireView().findViewById(R.id.setListSelector)
-
-    private fun song(title: String): PitchedSong =
-        PitchedSong().apply {
-            name = title
-            key = Key.getMajorKeys()[0]
+    private fun songs(): PitchPerfectActivity =
+        screens.launchMain().also { activity ->
+            with(screens) { activity.show(MainTab.SONGS) }
+            assertEquals("Songs is page 3", MainTab.SONGS.ordinal, activity.pager.currentPage)
         }
 
-    private fun songsMenu(activity: PitchPerfectActivity): android.view.Menu {
-        val menu = PopupMenu(activity, activity.findViewById<ViewPager2>(R.id.viewPager)).menu
-        activity.onCreateOptionsMenu(menu)
-        activity.syncSongMenuItems(menu)
-        return menu
-    }
+    private fun position(listId: String) = TestTags.setListPosition(listId)
+
+    private fun select(listId: String) = screens.click(position(listId))
+
+    private fun rows(list: SongList): Int = list.songs.count { screens.exists(TestTags.songRow(it.id)) }
 
     // ==================== The part ====================
 
     @Test
     fun theSelectorShowsMySongsAndTheAddPosition() {
-        val activity = launch()
-        val fragment = activity.goToSongs()
-        val part = fragment.selector()
-        assertDisplayed("setListSelector", part)
-
-        val mySongs = part.positionView(SongsModel.DEFAULT_ID)
-        assertNotNull("My Songs has a position", mySongs)
-        assertEquals("MY SONGS", (mySongs as TextView).text.toString())
-        assertTrue("the current list's position reads as selected", mySongs.isSelected)
-
-        val add = part.addPositionView
-        assertNotNull("the trailing + is always there", add)
-        assertEquals("New set list", add!!.contentDescription)
+        songs()
+        assertTrue(screens.exists(TestTags.SET_LIST_SELECTOR))
+        assertEquals("MY SONGS", screens.text(position(SongsModel.DEFAULT_ID)))
+        assertTrue("the current list's position reads as selected", screens.isSelected(position(SongsModel.DEFAULT_ID)))
+        assertEquals("New set list", screens.description(TestTags.SET_LIST_ADD_POSITION))
     }
 
     @Test
     fun aPositionIsDescribedWithItsSongCount() {
         model.defaultSongList.addSong(song("Blue Skies"))
-        val fragment = launch().goToSongs()
-        assertEquals(
-            "My Songs, 1 song",
-            fragment.selector().positionView(SongsModel.DEFAULT_ID)!!.contentDescription,
-        )
+        songs()
+        assertEquals("My Songs, 1 song", screens.description(position(SongsModel.DEFAULT_ID)))
     }
 
     @Test
     fun anEmptyListIsDescribedAsHavingNoSongs() {
-        val fragment = launch().goToSongs()
-        assertEquals(
-            "My Songs, no songs",
-            fragment.selector().positionView(SongsModel.DEFAULT_ID)!!.contentDescription,
-        )
+        songs()
+        assertEquals("My Songs, no songs", screens.description(position(SongsModel.DEFAULT_ID)))
     }
 
     // ==================== Creating ====================
 
     @Test
     fun creatingAListSwitchesToItAndShowsTheSetListEmptyState() {
-        val activity = launch()
-        val fragment = activity.goToSongs()
-        fragment.selector().addPositionView!!.performClick()
-        idle()
+        val activity = songs()
+        activity.songs.toggleEditing()
+        screens.click(TestTags.SET_LIST_ADD_POSITION)
+        assertTrue("the + opens the name prompt", screens.exists(TestTags.NAME_DIALOG_FIELD))
 
-        val dialog =
-            activity.supportFragmentManager.findFragmentByTag(SetListNameDialog.FRAGMENT_TAG)
-        assertNotNull("the + opens the name prompt", dialog)
+        compose.onNodeWithTag(TestTags.NAME_DIALOG_FIELD).performTextReplacement("Saturday show")
+        screens.click(TestTags.NAME_DIALOG_CONFIRM)
 
-        // Naming is the model's job; the prompt's result is what the tab reacts to.
-        val id = model.createList("Saturday show")
-        activity.supportFragmentManager.setFragmentResult(
-            "depollsoft.pitchperfect.songs.setListName",
-            android.os.Bundle().apply {
-                putString(SetListNameDialog.RESULT_LIST_ID, id)
-                putBoolean(SetListNameDialog.RESULT_CREATED, true)
-            },
-        )
-        idle()
-
+        val id = model.songLists.values.single { it.name == "Saturday show" }.id
         assertEquals(id, model.currentListId)
-        assertNotNull(fragment.selector().positionView(id))
-        assertTrue(fragment.selector().positionView(id)!!.isSelected)
-        assertEquals(
-            activity.getString(R.string.NoSongsInSetList),
-            fragment.requireView().findViewById<TextView>(R.id.sorryText).text.toString(),
-        )
-        assertFalse("creating leaves edit mode", fragment.isEditingSongs())
+        assertTrue(screens.isSelected(position(id)))
+        assertEquals(activity.getString(R.string.NoSongsInSetList), screens.text(TestTags.SONGS_EMPTY))
+        assertFalse("creating leaves edit mode", activity.songs.editing)
+        assertFalse("the prompt closes", screens.exists(TestTags.NAME_DIALOG_FIELD))
+    }
+
+    @Test
+    fun aRejectedNameKeepsThePromptOpenWithTheReason() {
+        model.createList("Saturday show")
+        val activity = songs()
+        screens.click(TestTags.SET_LIST_ADD_POSITION)
+        compose.onNodeWithTag(TestTags.NAME_DIALOG_FIELD).performTextReplacement("saturday  SHOW")
+        screens.click(TestTags.NAME_DIALOG_CONFIRM)
+        assertTrue(screens.exists(TestTags.NAME_DIALOG_FIELD))
+        compose.onNodeWithText(activity.getString(R.string.SetListNameErrorDuplicate)).assertExists()
+        assertEquals(2, model.songLists.size)
     }
 
     // ==================== Switching ====================
@@ -174,65 +134,44 @@ class SetListSelectorTest {
         model.defaultSongList.addSong(song("Blue Skies"))
         model.songLists[other]!!.addSong(song("Shenandoah"))
         model.songLists[other]!!.addSong(song("Coney Island Baby"))
+        songs()
+        assertEquals(1, rows(model.defaultSongList))
 
-        val fragment = launch().goToSongs()
-        val recycler = fragment.requireView().findViewById<RecyclerView>(R.id.songListView)
-        assertEquals(1, recycler.adapter!!.itemCount)
-
-        fragment.selector().positionView(other)!!.performClick()
-        idle()
+        select(other)
 
         assertEquals(other, model.currentListId)
-        assertEquals(2, recycler.adapter!!.itemCount)
-        assertTrue(fragment.selector().positionView(other)!!.isSelected)
-        assertFalse(fragment.selector().positionView(SongsModel.DEFAULT_ID)!!.isSelected)
+        assertEquals(2, rows(model.songLists[other]!!))
+        assertEquals(0, rows(model.defaultSongList))
+        assertTrue(screens.isSelected(position(other)))
+        assertFalse(screens.isSelected(position(SongsModel.DEFAULT_ID)))
     }
 
     @Test
     fun theAddButtonTargetsTheCurrentList() {
         val other = model.createList("Saturday show")
-        val activity = launch()
-        val fragment = activity.goToSongs()
-        fragment.selector().positionView(other)!!.performClick()
-        idle()
+        val activity = songs()
+        select(other)
 
-        activity.findViewById<FloatingActionButton>(R.id.addSongButton).performClick()
-        idle()
-        val started = shadowOf(activity).nextStartedActivityForResult
+        screens.click(TestTags.ADD_SONG_FAB)
+        val started = shadowOf(activity).nextStartedActivity
         assertNotNull("the FAB opens the song editor", started)
-        assertEquals(
-            AddSongActivity::class.java.name,
-            started.intent.component!!.className,
-        )
-        assertEquals(
-            other,
-            started.intent.getStringExtra(AddSongActivity.LIST_EXTRA),
-        )
+        assertEquals(AddSongActivity::class.java.name, started.component!!.className)
+        assertEquals(other, started.getStringExtra(AddSongActivity.LIST_EXTRA))
     }
 
     // ==================== Edit mode actions ====================
 
     @Test
     fun theSetListActionsAppearOnlyWhileEditing() {
-        val activity = launch()
-        val fragment = activity.goToSongs()
-        val menu = songsMenu(activity)
+        songs()
+        assertFalse(screens.exists(TestTags.OVERFLOW))
+        assertFalse(screens.exists(TestTags.SORT_SONGS))
 
-        listOf(
-            R.id.addFromListMenuItem,
-            R.id.manageListsMenuItem,
-        ).forEach { assertFalse(menu.findItem(it).isVisible) }
-
-        fragment.toggleEditingSongs()
-        activity.syncSongMenuItems(menu)
-
-        listOf(
-            R.id.addFromListMenuItem,
-            R.id.manageListsMenuItem,
-        ).forEach { assertTrue("$it should be visible in edit mode", menu.findItem(it).isVisible) }
-        // The list itself is managed from its selector position and the Set Lists screen.
-        assertNull(menu.findItem(R.id.renameSetListMenuItem))
-        assertNull(menu.findItem(R.id.deleteSetListMenuItem))
+        screens.click(TestTags.EDIT_SONGS)
+        assertTrue(screens.exists(TestTags.SORT_SONGS))
+        screens.click(TestTags.OVERFLOW)
+        assertTrue(screens.exists(TestTags.ADD_FROM_LIST))
+        assertTrue(screens.exists(TestTags.MANAGE_LISTS))
     }
 
     @Test
@@ -240,172 +179,191 @@ class SetListSelectorTest {
         repeat(40) { model.defaultSongList.addSong(song("Song $it")) }
         val other = model.createList("Saturday show")
         repeat(40) { model.songLists[other]!!.addSong(song("Other $it")) }
-        val activity = launch()
-        val fragment = activity.goToSongs()
-        val list = fragment.requireView().findViewById<RecyclerView>(R.id.songListView)
+        val activity = songs()
+        fun top(listId: String) = activity.songs.scrollStateFor(listId).firstVisibleItemIndex
 
-        list.scrollToPosition(30)
-        idle()
-        assertTrue("My Songs is scrolled down", fragment.firstVisibleSongPosition() >= 20)
+        compose.runOnIdle { kotlinx.coroutines.runBlocking { activity.songs.scrollStateFor(SongsModel.DEFAULT_ID).scrollToItem(30) } }
+        screens.settle()
+        assertTrue("My Songs is scrolled down", top(SongsModel.DEFAULT_ID) >= 20)
 
-        fragment.selector().positionView(other)!!.performClick()
-        idle()
-        assertEquals("a list shown for the first time starts at the top", 0, fragment.firstVisibleSongPosition())
+        select(other)
+        assertEquals("a list shown for the first time starts at the top", 0, top(other))
 
-        list.scrollToPosition(35)
-        idle()
-        fragment.selector().positionView(SongsModel.DEFAULT_ID)!!.performClick()
-        idle()
-        assertTrue("My Songs comes back where it was left", fragment.firstVisibleSongPosition() >= 20)
+        compose.runOnIdle { kotlinx.coroutines.runBlocking { activity.songs.scrollStateFor(other).scrollToItem(35) } }
+        screens.settle()
+        select(SongsModel.DEFAULT_ID)
+        assertTrue("My Songs comes back where it was left", top(SongsModel.DEFAULT_ID) >= 20)
+        assertTrue(screens.exists(TestTags.songRow(model.defaultSongList.songs[30].id)))
 
-        fragment.selector().positionView(other)!!.performClick()
-        idle()
-        assertTrue("and so does the other list", fragment.firstVisibleSongPosition() >= 25)
+        select(other)
+        assertTrue("and so does the other list", top(other) >= 25)
     }
 
     @Test
     fun switchingToAnEmptyListShowsItsEmptyState() {
         model.defaultSongList.addSong(song("Blue Skies"))
         val other = model.createList("Saturday show")
-        val activity = launch()
-        val fragment = activity.goToSongs()
-        val empty = fragment.requireView().findViewById<TextView>(R.id.sorryText)
-        assertEquals(View.GONE, empty.visibility)
+        val activity = songs()
+        assertFalse(screens.exists(TestTags.SONGS_EMPTY))
 
-        fragment.selector().positionView(other)!!.performClick()
-        idle()
-        assertEquals("an empty list must say so after a switch", View.VISIBLE, empty.visibility)
-        assertEquals(activity.getString(R.string.NoSongsInSetList), empty.text.toString())
+        select(other)
+        assertEquals(activity.getString(R.string.NoSongsInSetList), screens.text(TestTags.SONGS_EMPTY))
 
-        fragment.selector().positionView(SongsModel.DEFAULT_ID)!!.performClick()
-        idle()
-        assertEquals(View.GONE, empty.visibility)
+        select(SongsModel.DEFAULT_ID)
+        assertFalse(screens.exists(TestTags.SONGS_EMPTY))
     }
 
     @Test
     fun addFromAnotherListIsDisabledWhenNothingIsAddable() {
         val other = model.createList("Saturday show")
-        val activity = launch()
-        val fragment = activity.goToSongs()
-        fragment.selector().positionView(other)!!.performClick()
-        fragment.toggleEditingSongs()
-        val menu = songsMenu(activity)
-        activity.syncSongMenuItems(menu)
-        assertFalse(
-            "nothing to copy from an empty My Songs",
-            menu.findItem(R.id.addFromListMenuItem).isEnabled,
-        )
+        songs()
+        select(other)
+        screens.click(TestTags.EDIT_SONGS)
+        screens.click(TestTags.OVERFLOW)
+        compose.onNodeWithTag(TestTags.ADD_FROM_LIST).assertIsNotEnabled()
+        compose.onNodeWithText("Nothing to add from other set lists").assertExists()
 
         model.defaultSongList.addSong(song("Blue Skies"))
-        activity.syncSongMenuItems(menu)
-        assertTrue(menu.findItem(R.id.addFromListMenuItem).isEnabled)
+        screens.settle()
+        compose.onNodeWithTag(TestTags.ADD_FROM_LIST).assertIsEnabled()
     }
 
     @Test
     fun longPressingAPositionOffersTheListsOwnActions() {
-        val activity = launch()
-        val fragment = activity.goToSongs()
-        val other = SongsModel.get().createList("Saturday show")
-        ScreenTestSupport.idle()
+        val activity = songs()
+        val other = model.createList("Saturday show")
+        screens.settle()
 
         // My Songs: everything but Delete.
-        assertTrue(fragment.selector().positionView(SongsModel.DEFAULT_ID)!!.performLongClick())
-        ScreenTestSupport.idle()
-        var popup = org.robolectric.shadows.ShadowPopupMenu.getLatestPopupMenu()
-        assertNotNull("a long press shows the list's actions", popup)
-        var menu = popup.menu
-        assertEquals("the menu names the list it acts on", "My Songs", menu.getItem(0).title.toString())
-        assertFalse(menu.getItem(0).isEnabled)
-        assertTrue(menu.findItem(R.id.renameSetListMenuItem).isVisible)
-        assertTrue(menu.findItem(R.id.duplicateSetListMenuItem).isVisible)
-        assertFalse("My Songs cannot be deleted", menu.findItem(R.id.deleteSetListMenuItem).isVisible)
-        assertTrue(menu.findItem(R.id.manageSetListsMenuItem).isVisible)
-        popup.dismiss()
+        compose.onNodeWithTag(position(SongsModel.DEFAULT_ID)).performTouchInput { longClick() }
+        screens.settle()
+        compose.onNodeWithText("My Songs", useUnmergedTree = true).assertExists()
+        compose.onNodeWithText("Rename set list…").assertExists()
+        compose.onNodeWithText("Duplicate set list").assertExists()
+        compose.onNodeWithText("Manage set lists…").assertExists()
+        compose.onNodeWithText("Delete set list…").assertDoesNotExist()
+        activity.songs.menuFor = null
+        screens.settle()
 
-        // A custom list offers Delete too, and deleting one that is not on screen leaves the
-        // tab on My Songs.
-        assertTrue(fragment.selector().positionView(other)!!.performLongClick())
-        ScreenTestSupport.idle()
-        popup = org.robolectric.shadows.ShadowPopupMenu.getLatestPopupMenu()
-        menu = popup.menu
-        assertEquals("Saturday show", menu.getItem(0).title.toString())
-        assertTrue(menu.findItem(R.id.deleteSetListMenuItem).isVisible)
-        popup.dismiss()
-        val deleted = SongsModel.get().songLists[other]!!
-        fragment.deleteList(other)
-        ScreenTestSupport.idle()
-        assertNull(fragment.selector().positionView(other))
-        assertEquals(SongsModel.DEFAULT_ID, SongsModel.get().currentListId)
-        assertTrue(fragment.selector().positionView(SongsModel.DEFAULT_ID)!!.isSelected)
+        // A custom list offers Delete too, and deleting one not on screen leaves the tab on My Songs.
+        compose.onNodeWithTag(position(other)).performTouchInput { longClick() }
+        screens.settle()
+        compose.onNodeWithText("Delete set list…").performClick()
+        screens.settle()
+        assertEquals(other, activity.songs.pendingDelete)
+        compose.onNodeWithText("DELETE").performClick()
+        screens.settle()
+        assertFalse(screens.exists(position(other)))
+        assertEquals(SongsModel.DEFAULT_ID, model.currentListId)
+        assertTrue(screens.isSelected(position(SongsModel.DEFAULT_ID)))
 
-        // The Snackbar's Undo brings the list back under the same id.
-        SongsModel.get().restoreList(deleted)
-        ScreenTestSupport.idle()
-        assertNotNull(fragment.selector().positionView(other))
-        assertFalse(deleted.isDeleted)
+        // The snackbar's Undo brings the list back under the same id.
+        compose.onNodeWithText("Undo", ignoreCase = true).performClick()
+        screens.settle()
+        assertTrue(screens.exists(position(other)))
+        assertFalse(model.songLists[other]!!.isDeleted)
     }
 
     @Test
     fun deletingTheCurrentListReturnsToMySongs() {
         val other = model.createList("Saturday show")
-        val activity = launch()
-        val fragment = activity.goToSongs()
-        fragment.selector().positionView(other)!!.performClick()
-        fragment.toggleEditingSongs()
-        idle()
+        val activity = songs()
+        select(other)
+        screens.click(TestTags.EDIT_SONGS)
 
-        fragment.deleteCurrentList()
-        idle()
+        activity.songs.deleteList(other, { it }, "Undo")
+        screens.settle()
 
         assertEquals(SongsModel.DEFAULT_ID, model.currentListId)
-        assertNull("the deleted position is gone", fragment.selector().positionView(other))
-        assertTrue(fragment.selector().positionView(SongsModel.DEFAULT_ID)!!.isSelected)
-        assertFalse("deleting leaves edit mode", fragment.isEditingSongs())
-        assertEquals(
-            activity.getString(R.string.NoSongsInList),
-            fragment.requireView().findViewById<TextView>(R.id.sorryText).text.toString(),
-        )
+        assertFalse("the deleted position is gone", screens.exists(position(other)))
+        assertTrue(screens.isSelected(position(SongsModel.DEFAULT_ID)))
+        assertFalse("deleting leaves edit mode", activity.songs.editing)
+        assertEquals(activity.getString(R.string.NoSongsInList), screens.text(TestTags.SONGS_EMPTY))
     }
 
     @Test
     fun duplicatingSwitchesToTheCopyAndStaysInEditMode() {
         val other = model.createList("Saturday show")
         model.songLists[other]!!.addSong(song("Blue Skies"))
-        val activity = launch()
-        val fragment = activity.goToSongs()
-        fragment.selector().positionView(other)!!.performClick()
-        fragment.toggleEditingSongs()
-        idle()
+        val activity = songs()
+        select(other)
+        screens.click(TestTags.EDIT_SONGS)
 
-        fragment.duplicateCurrentList()
-        idle()
+        compose.onNodeWithTag(position(other)).performTouchInput { longClick() }
+        screens.settle()
+        compose.onNodeWithText("Duplicate set list").performClick()
+        screens.settle()
 
         val copy = model.songLists.values.single { model.displayName(it) == "Saturday show copy" }
         assertEquals(copy.id, model.currentListId)
         assertEquals(1, copy.songs.size)
-        assertTrue("duplicating stays in edit mode", fragment.isEditingSongs())
+        assertTrue("duplicating stays in edit mode", activity.songs.editing)
+        compose.onNodeWithText("Duplicated as Saturday show copy").assertExists()
     }
 
     @Test
     fun theManageAndPickerActionsOpenTheirScreens() {
         model.defaultSongList.addSong(song("Blue Skies"))
         val other = model.createList("Saturday show")
-        val activity = launch()
-        val fragment = activity.goToSongs()
-        fragment.selector().positionView(other)!!.performClick()
-        idle()
+        val activity = songs()
+        select(other)
+        screens.click(TestTags.EDIT_SONGS)
 
-        fragment.openManageSetLists()
-        idle()
-        assertEquals(
-            ManageSetListsActivity::class.java.name,
-            shadowOf(activity).nextStartedActivity.component!!.className,
-        )
+        screens.click(TestTags.OVERFLOW)
+        screens.click(TestTags.MANAGE_LISTS)
+        assertEquals(ManageSetListsActivity::class.java.name, shadowOf(activity).nextStartedActivity.component!!.className)
 
-        fragment.openAddSongsFromList()
-        idle()
+        screens.click(TestTags.OVERFLOW)
+        screens.click(TestTags.ADD_FROM_LIST)
         val picker = shadowOf(activity).nextStartedActivity
         assertEquals(AddSongsFromListActivity::class.java.name, picker.component!!.className)
         assertEquals(other, picker.getStringExtra(AddSongsFromListActivity.LIST_EXTRA))
+    }
+
+    // ==================== Synced songs ====================
+
+    @Test
+    fun aRowPlaysTheSyncedCopyOfItsSong() {
+        val original = song("Blue Skies", Key.getMajorKeys()[6])
+        model.defaultSongList.addSong(original)
+        songs()
+        // Another device changed the key: the synced copy keeps the id and replaces the instance.
+        val copy =
+            song("Blue Skies", Key.getMajorKeys()[8]).apply { id = original.id }
+        model.defaultSongList.songs.replaceWith(listOf(copy))
+        screens.settle()
+
+        val row = compose.onNodeWithTag(TestTags.songRow(original.id))
+        row.performTouchInput { down(center) }
+        assertTrue("the row sounds the key it now shows", copy.isPlaying)
+        assertFalse(original.isPlaying)
+        row.performTouchInput { up() }
+        assertFalse(copy.isPlaying)
+    }
+
+    @Test
+    fun aSyncThatReplacesASoundingSongStopsIt() {
+        val original = song("Blue Skies", Key.getMajorKeys()[6])
+        model.defaultSongList.addSong(original)
+        original.play()
+        val copy = song("Blue Skies", Key.getMajorKeys()[8]).apply { id = original.id }
+        val snapshot = syncedSnapshot(model.defaultSongList.id, "Default", listOf(copy))
+        model.defaultSongList.restore(snapshot)
+        assertFalse("nothing can reach the replaced song to stop it any more", original.isPlaying)
+        assertEquals(listOf(copy.key), model.defaultSongList.songs.map { it.key })
+    }
+
+    private fun syncedSnapshot(
+        id: String,
+        name: String,
+        songs: List<depollsoft.pitchperfect.lib.PitchedSong>,
+    ): com.google.firebase.firestore.DocumentSnapshot {
+        val snapshot = org.mockito.Mockito.mock(com.google.firebase.firestore.DocumentSnapshot::class.java)
+        val raw = songs.map { depollsoft.lib.json.JsonSerializer.serialize(it).toMap() }
+        org.mockito.Mockito.`when`(snapshot.id).thenReturn(id)
+        org.mockito.Mockito.`when`(snapshot.getString("name")).thenReturn(name)
+        org.mockito.Mockito.`when`(snapshot.get("songs")).thenReturn(raw)
+        org.mockito.Mockito.`when`(snapshot.get("songs", Any::class.java)).thenReturn(raw)
+        return snapshot
     }
 }

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A dialog window fades out as it closes, however it is closed; its entrance is drawn in Compose. -->
+<alpha xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="75"
+    android:fromAlpha="1.0"
+    android:interpolator="@android:anim/linear_interpolator"
+    android:toAlpha="0.0" />

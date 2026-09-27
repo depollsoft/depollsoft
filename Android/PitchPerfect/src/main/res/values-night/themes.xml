@@ -18,10 +18,9 @@
         <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.Plate</item>
         <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.Plate</item>
         <item name="android:navigationBarColor">@color/plate_surface</item>
-        <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>
+        <item name="android:windowOptOutEdgeToEdgeEnforcement" tools:targetApi="35">true</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
-        <item name="bottomNavigationStyle">@style/Widget.Plate.BottomNavigation</item>
         <item name="alertDialogTheme">@style/AlertDialogTheme</item>
         <item name="materialAlertDialogTheme">@style/ThemeOverlay.Plate.Dialog</item>
         <item name="actionBarStyle">@style/Widget.Plate.ActionBar</item>

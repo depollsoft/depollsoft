@@ -1,0 +1,179 @@
+{
+  "*type": "depollsoft.lib.util.Preferences$MappingList",
+  "*items": [
+    {
+      "*type": "depollsoft.lib.util.Preferences$Mapping",
+      "Key": "default",
+      "Value": {
+        "*type": "SongList",
+        "Id": "default",
+        "Songs": {
+          "*type": "List",
+          "*items": [
+            {
+              "*type": "PitchedSong",
+              "Key": {
+                "*type": "Key",
+                "NumAccidentals": {
+                  "*type": "Primitive",
+                  "Type": "Integer",
+                  "Value": -4
+                },
+                "Note": {
+                  "*type": "Note",
+                  "KeyNumber": null,
+                  "Frequency": {
+                    "*type": "Primitive",
+                    "Type": "Double",
+                    "Value": 415.3046975799452
+                  },
+                  "Accidental": {
+                    "*type": "Accidental",
+                    "*name": "Flat"
+                  },
+                  "FriendlyName": "A",
+                  "Alternate": null,
+                  "IsPlaying": {
+                    "*type": "Primitive",
+                    "Type": "Boolean",
+                    "Value": false
+                  },
+                  "Octave": {
+                    "*type": "Primitive",
+                    "Type": "Integer",
+                    "Value": 4
+                  }
+                },
+                "KeyType": {
+                  "*type": "KeyType",
+                  "*name": "Major"
+                }
+              },
+              "Id": "1b6f",
+              "Name": "Blue Skies"
+            },
+            {
+              "*type": "PitchedSong",
+              "Key": {
+                "*type": "Key",
+                "NumAccidentals": {
+                  "*type": "Primitive",
+                  "Type": "Integer",
+                  "Value": -3
+                },
+                "Note": {
+                  "*type": "Note",
+                  "KeyNumber": null,
+                  "Frequency": {
+                    "*type": "Primitive",
+                    "Type": "Double",
+                    "Value": 261.6255653005986
+                  },
+                  "Accidental": {
+                    "*type": "Accidental",
+                    "*name": "Natural"
+                  },
+                  "FriendlyName": "C",
+                  "Alternate": null,
+                  "IsPlaying": {
+                    "*type": "Primitive",
+                    "Type": "Boolean",
+                    "Value": false
+                  },
+                  "Octave": {
+                    "*type": "Primitive",
+                    "Type": "Integer",
+                    "Value": 4
+                  }
+                },
+                "KeyType": {
+                  "*type": "KeyType",
+                  "*name": "Minor"
+                }
+              },
+              "Id": "2c7a",
+              "Name": "Shenandoah"
+            }
+          ]
+        },
+        "Order": null,
+        "Name": "Default"
+      }
+    },
+    {
+      "*type": "depollsoft.lib.util.Preferences$Mapping",
+      "Key": "contest-set-ab12",
+      "Value": {
+        "*type": "SongList",
+        "Id": "contest-set-ab12",
+        "Songs": {
+          "*type": "List",
+          "*items": [
+            {
+              "*type": "PitchedSong",
+              "Key": {
+                "*type": "Key",
+                "NumAccidentals": {
+                  "*type": "Primitive",
+                  "Type": "Integer",
+                  "Value": -2
+                },
+                "Note": {
+                  "*type": "Note",
+                  "KeyNumber": null,
+                  "Frequency": {
+                    "*type": "Primitive",
+                    "Type": "Double",
+                    "Value": 466.1637615180899
+                  },
+                  "Accidental": {
+                    "*type": "Accidental",
+                    "*name": "Flat"
+                  },
+                  "FriendlyName": "B",
+                  "Alternate": null,
+                  "IsPlaying": {
+                    "*type": "Primitive",
+                    "Type": "Boolean",
+                    "Value": false
+                  },
+                  "Octave": {
+                    "*type": "Primitive",
+                    "Type": "Integer",
+                    "Value": 4
+                  }
+                },
+                "KeyType": {
+                  "*type": "KeyType",
+                  "*name": "Major"
+                }
+              },
+              "Id": "3d8b",
+              "Name": "Sweet Adeline"
+            }
+          ]
+        },
+        "Order": {
+          "*type": "Primitive",
+          "Type": "java.lang.Long",
+          "Value": 0
+        },
+        "Name": "Contest Set"
+      }
+    },
+    {
+      "*type": "depollsoft.lib.util.Preferences$Mapping",
+      "Key": "tags-9z9z",
+      "Value": {
+        "*type": "SongList",
+        "Id": "tags-9z9z",
+        "Songs": {
+          "*type": "List",
+          "*items": []
+        },
+        "Order": null,
+        "Name": "Tags"
+      }
+    }
+  ]
+}
