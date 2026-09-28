@@ -7,8 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		63A99D85158840C000C78CC0 /* DPPitchPipeButton.h in Headers */ = {isa = PBXBuildFile; fileRef = 63A99D83158840C000C78CC0 /* DPPitchPipeButton.h */; };
-		63A99D86158840C000C78CC0 /* DPPitchPipeButton.m in Sources */ = {isa = PBXBuildFile; fileRef = 63A99D84158840C000C78CC0 /* DPPitchPipeButton.m */; };
 		63C14A901579E4DE00348592 /* DPAudioSynthesizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 63C14A8E1579E4DE00348592 /* DPAudioSynthesizer.h */; };
 		63C14A911579E4DE00348592 /* DPAudioSynthesizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 63C14A8F1579E4DE00348592 /* DPAudioSynthesizer.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		63C14A9B157AA4C600348592 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63C14A9A157AA4C600348592 /* CoreAudio.framework */; };
@@ -36,7 +34,6 @@
 		C0PPT002000000000000000A /* DPKeyTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0PTF002000000000000000A /* DPKeyTests.m */; };
 		C0PPT003000000000000000B /* DPPitchedSongTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0PTF003000000000000000B /* DPPitchedSongTests.m */; };
 		C0PPT004000000000000000C /* DPAudioSynthesizerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0PTF004000000000000000C /* DPAudioSynthesizerTests.m */; };
-		C0PPT005000000000000000D /* DPPitchPipeButtonTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0PTF005000000000000000D /* DPPitchPipeButtonTests.m */; };
 		C0PPFWK0010000000000000E /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0PPFWR0010000000000000F /* UIKit.framework */; };
 		C0PPFWK0020000000000000G /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0PPFWR0020000000000000H /* CoreGraphics.framework */; };
 		C0PPT00800000000000000E3 /* DPNoteEdgeCaseTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0PTF00800000000000000E3 /* DPNoteEdgeCaseTests.m */; };
@@ -71,8 +68,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		63A99D83158840C000C78CC0 /* DPPitchPipeButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPPitchPipeButton.h; sourceTree = "<group>"; };
-		63A99D84158840C000C78CC0 /* DPPitchPipeButton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPPitchPipeButton.m; sourceTree = "<group>"; };
 		63C14A8E1579E4DE00348592 /* DPAudioSynthesizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPAudioSynthesizer.h; sourceTree = "<group>"; };
 		63C14A8F1579E4DE00348592 /* DPAudioSynthesizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPAudioSynthesizer.m; sourceTree = "<group>"; };
 		63C14A9A157AA4C600348592 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
@@ -101,7 +96,6 @@
 		C0PTF002000000000000000A /* DPKeyTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPKeyTests.m; sourceTree = "<group>"; };
 		C0PTF003000000000000000B /* DPPitchedSongTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPPitchedSongTests.m; sourceTree = "<group>"; };
 		C0PTF004000000000000000C /* DPAudioSynthesizerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPAudioSynthesizerTests.m; sourceTree = "<group>"; };
-		C0PTF005000000000000000D /* DPPitchPipeButtonTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPPitchPipeButtonTests.m; sourceTree = "<group>"; };
 		C0PPFWR0010000000000000F /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		C0PPFWR0020000000000000H /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		C0PTF00800000000000000E3 /* DPNoteEdgeCaseTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPNoteEdgeCaseTests.m; sourceTree = "<group>"; };
@@ -189,8 +183,6 @@
 				63FF007D1554D22000C28218 /* DPPitchedSong.m */,
 				63C14A8E1579E4DE00348592 /* DPAudioSynthesizer.h */,
 				63C14A8F1579E4DE00348592 /* DPAudioSynthesizer.m */,
-				63A99D83158840C000C78CC0 /* DPPitchPipeButton.h */,
-				63A99D84158840C000C78CC0 /* DPPitchPipeButton.m */,
 			);
 			path = pitchperfectlib;
 			sourceTree = "<group>";
@@ -213,7 +205,6 @@
 				C0PTF002000000000000000A /* DPKeyTests.m */,
 				C0PTF003000000000000000B /* DPPitchedSongTests.m */,
 				C0PTF004000000000000000C /* DPAudioSynthesizerTests.m */,
-				C0PTF005000000000000000D /* DPPitchPipeButtonTests.m */,
 				C0PTF00800000000000000E3 /* DPNoteEdgeCaseTests.m */,
 				C0PTF00900000000000000E4 /* DPKeyEdgeCaseTests.m */,
 				C0PTF00A00000000000000E5 /* DPPitchedSongEdgeCaseTests.m */,
@@ -254,7 +245,6 @@
 				63FF00791554CDC800C28218 /* DPKeyType.h in Headers */,
 				63FF007E1554D22000C28218 /* DPPitchedSong.h in Headers */,
 				63C14A901579E4DE00348592 /* DPAudioSynthesizer.h in Headers */,
-				63A99D85158840C000C78CC0 /* DPPitchPipeButton.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -364,7 +354,6 @@
 				63FF007A1554CDC800C28218 /* DPKeyType.m in Sources */,
 				63FF007F1554D22000C28218 /* DPPitchedSong.m in Sources */,
 				63C14A911579E4DE00348592 /* DPAudioSynthesizer.m in Sources */,
-				63A99D86158840C000C78CC0 /* DPPitchPipeButton.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -377,7 +366,6 @@
 				C0PPT002000000000000000A /* DPKeyTests.m in Sources */,
 				C0PPT003000000000000000B /* DPPitchedSongTests.m in Sources */,
 				C0PPT004000000000000000C /* DPAudioSynthesizerTests.m in Sources */,
-				C0PPT005000000000000000D /* DPPitchPipeButtonTests.m in Sources */,
 				C0PPT00800000000000000E3 /* DPNoteEdgeCaseTests.m in Sources */,
 				C0PPT00900000000000000E4 /* DPKeyEdgeCaseTests.m in Sources */,
 				C0PPT00A00000000000000E5 /* DPPitchedSongEdgeCaseTests.m in Sources */,

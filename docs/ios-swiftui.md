@@ -1,0 +1,506 @@
+# iOS SwiftUI
+
+Pitch Perfect and Tag Master draw every screen in SwiftUI. This page records how
+the UIKit screens were ported, the conventions the SwiftUI code follows, and how
+to check a screen against its reference captures.
+
+## Shape of a screen
+
+- **One view, one model.** A screen is a `View` (`SongListScreen`,
+  `TagDetailScreen`) plus, when it has behaviour, an `@Observable @MainActor final
+  class` model (`SongListModel`). The model owns state and exposes intents
+  (`addSong()`, `select(listId:)`, `toggleFavorite()`); the view only lays out and
+  forwards gestures. Anything worth testing lives in the model.
+- **Dependencies are injected with production defaults.** Models take the stores
+  and services they use (`DPSongsModel.sharedInstance`, a tag loader, a clock) as
+  initializer parameters with defaults, so tests can pass fakes without swizzling.
+- **Stores stay the source of truth.** The Objective-C and Swift model layers
+  (`DPSongsModel`, `DPSettingsModel`, `TMTagLists`, `DPTag`) are not rewritten.
+  Screens observe them through the models, which translate their notifications
+  into observable state.
+- **Presentation state is model state.** Sheets, alerts, confirmation dialogs and
+  navigation paths are driven by optional/enum properties on the model, not by
+  view-local `@State`, so a test can open and answer them.
+
+## Pixel parity
+
+Each UIKit screen was captured before it was ported and the SwiftUI screen was
+diffed against that capture, as the Android Compose port did.
+
+- `iOS/shared/ScreenCatalog.swift` renders a full-screen window on the host scene
+  (real safe areas and Liquid Glass bars) and writes `<name>.png` when
+  `SCREEN_CATALOG_DIR` is set. Pass it to a test run as
+  `TEST_RUNNER_SCREEN_CATALOG_DIR=/path xcodebuild test ...`.
+- Each app's `*ScreenCatalogTests` puts every screen in every interesting state
+  (empty, populated, editing, errors, alerts, light and dark, iPad where the
+  layout differs).
+- `scripts/ios/snapshot_diff.py <reference> <candidate> --out <diffs>` reports
+  every changed pixel with no tolerance and writes red-marked diff images.
+- Match UIKit's metrics exactly: the same `UIFont`s bridged with `Font(uiFont)`,
+  the same SF Symbol configuration (17 pt, regular, medium scale for bar
+  buttons), explicit paddings taken from the old constraints, hairlines drawn at
+  the same widths. Animated regions (breathing cells, the barber pole, the
+  quartet) are compared at rest.
+- Keep the simulator clean. A system dialog left on it (an "Open in …?" prompt
+  from `simctl openurl`) keeps the host app inactive, and UIKit then never
+  finishes presenting alerts; `ScreenCatalog.capture` now fails in that state.
+  Preferences written with `simctl spawn … defaults write <bundle id>` land in
+  a device-wide domain the app also reads, so a later in-app reset cannot clear
+  them; don't seed app defaults that way.
+- Run XCUITests with `xcodebuild test` after changing them: a
+  `test-without-building` run can use a previously installed UI test runner.
+
+## Driving screens in tests
+
+`iOS/shared/SwiftUITestDriver.swift` (`UIDriver`) walks the accessibility tree of a
+mounted window and activates elements by identifier or label, so hosted tests go
+through the real buttons, toggles, toolbar items and links. It turns on
+accessibility automation for the test process, which SwiftUI needs before it
+builds that tree. Prefer, in order:
+
+1. model tests for logic and state transitions;
+2. `UIDriver` tests for wiring: that the control exists, says the right thing and
+   calls the right intent;
+3. screen-catalog captures for appearance.
+
+Accessibility identifiers and labels carried over from UIKit unchanged, because
+the XCUITest bundles and `scripts/release/capture.py` use them.
+
+## Pitch Perfect
+
+- **Entry.** `PitchPerfectMain` (`DPAppDelegate.swift`) starts the SwiftUI
+  `PitchPerfectApp`, or a bare `DPTestAppDelegate` host under XCTest. The Swift
+  `DPAppDelegate` keeps the launch work (Firebase, consent, audio session, the
+  widget playback) through `@UIApplicationDelegateAdaptor`. SwiftUI creates the
+  App, and with it the song store, before `didFinishLaunching`, so
+  `DPSongsModel` registers the serialization aliases its saved songs name
+  their classes by (`SongSerialization`) before its first read. Auth
+  callbacks arrive through the scene's `onOpenURL`; Privacy choices is offered
+  on every activation, including the launch's own (`onChange(initial:)`), and
+  the stored theme reaches the window as it appears (`ThemeWindowHook`).
+- **Shell.** `PitchPerfectRoot` is a `TabView` of four `NavigationStack`s. The
+  tabs' models live in `PitchPerfectModels`, made once per app (or per test), so
+  a tab comes back as it was left and tests can reach its state.
+- **Screens.** `PitchPipeScreen`, `NotesScreen` and `KeysScreen`
+  (`InstrumentScreens.swift`), `SongListScreen` with `SetListSelector`,
+  `SetListsScreen`, `SongEditorScreen`, `AddSongsScreen`, `SettingsScreen`,
+  `LoginIntroScreen`, and the shared `PrivacyChoicesView`
+  (`iOS/shared/TelemetryConsent.swift`, also used by Tag Master through
+  `TelemetryConsent.present(from:)`).
+- **Style.** `PlateStyle.swift` bridges DPTheme's colours and fonts,
+  `StaffBackground` tiles the etched staff from the same origin the UIKit
+  pattern colours used (a screen's staff starts below the bars; a full-screen
+  table's starts at the top), and `BarSymbol` draws bar symbols at UIKit's bar
+  configuration. `plateList()` and `plateRow()` reproduce the UITableView rows:
+  rules at the table margin UIKit would give the screen (`tableMargins(style:)`
+  measures, once per width and size classes, a real table of the screen's style
+  filling a navigation screen as wide as the screen's own container, so a sheet
+  is measured as a sheet: 20 pt on an iPhone 17, 16 pt on an iPad; a new screen
+  starts from the last margin measured, so nothing flashes from one to the
+  other; Set Lists and Add songs set their 20 pt rules themselves), 1 pt rows
+  added for separators, rules that stay put in edit mode. In edit mode the
+  List's delete and reorder controls are placed by each cell's layout margins,
+  which SwiftUI sets itself (16 or 20 pt): `ListCellMargins` sets them to the
+  table margin (the reorder control sits 1.5 pt inside the trailing one), which
+  puts the delete, detail-disclosure and reorder controls exactly where UIKit's
+  table put them on both devices. The tab bar (`TabBarChrome`) is tinted with the
+  label colour through UIKit (`tabBar.tintColor`) and SwiftUI alike wherever it
+  is a bottom bar, iPad at compact width included (SwiftUI rewrites the bar's
+  tint on every update); iPadOS 18's top tab bar (regular width) kept the
+  system accent. Unselected items take the label colour through the bar's
+  appearance, as UIKit's items did: SwiftUI's leave them in the secondary label
+  colour, which an alert greys far past UIKit's.
+- **Sound.** `NotePlayer` sounds every note and makes playing observable.
+  Notes, Keys and Songs rows press through `TouchPressSurface`, a transparent
+  `UIView` with the UIKit cells' touch semantics: a press lasts until that
+  finger lifts, wherever it slides, and a scroll cancels it (SwiftUI's
+  `isPressed` ends when the finger leaves the row and begins again when it
+  returns, stopping a note early or toggling it twice). A VoiceOver
+  activation toggles with Toggle Notes and otherwise sounds the note for
+  1.5 s, as the pitch pipe's cells do.
+- **Songs.** Rows reach the `List` as values (`SongRowData`: title and key),
+  because a `List` reloads a row only when its element changes, and the song
+  is one object across edits. A List also drops a row update made while a
+  presented editor is going away, so the rows are redrawn once it has gone.
+  Each list keeps its exact scroll offset: the rows report the List's scroll
+  view and the model files and restores `contentOffset` on every switch of
+  list, wherever it came from (the selector, the Set Lists screen, another
+  device), clamped as UIKit did. SwiftUI's `ScrollPosition` does not drive a
+  `List`. The selector reveals the chosen position the same way whenever the
+  positions change size, since `ScrollViewReader` cannot reach views placed by
+  a custom `Layout`.
+- **Pitch pipe.** `InstrumentGeometry` and `PitchPipeModel` hold the layout and
+  touch rules; `InstrumentRenderer` draws the face into a `Canvas` with the same
+  Core Graphics calls the UIKit view made. `MultiTouchSurface`, a transparent
+  `UIView`, is the one UIKit view left: SwiftUI gestures follow a single touch
+  before iOS 18 (`SpatialEventGesture`), and chords need every finger.
+- **Built from UIKit's pieces.** Where SwiftUI's version of a control draws
+  differently, the screen hosts the UIKit one: the Keys Major/Minor control
+  is a `UISegmentedControl` bar item (`KeyModeBarItem`); the Songs rows'
+  detail-disclosure and Settings' spinners and disclosure indicator are
+  UIKit's own; the login explanation is the `UITextView` the screen always
+  had, holding the attributed string its HTML imported to (built directly,
+  because HTML import spins the run loop and is unsafe in a SwiftUI update; a
+  test checks it run for run against a fresh import); set-list selector
+  positions are the frames a real `.fillProportionally` stack gives them
+  (`StackGeometry`), checked against the shipped UIKit selector itself
+  (`UIKitSetListSelectorReference` in the tests); note spellings are measured
+  with `UILabel.sizeToFit`.
+- **Measured on the device, not constants.** Table margins (`TableMargin`),
+  Settings' row heights (`SettingsCellHeights`: a grouped table built with the
+  UIKit screen's own cells) and Privacy choices' card inset
+  (`InsetGroupedMargin`: a real inset-grouped `UITableViewController`) come
+  from UIKit at the screen's width, text size and size classes, so the iPhone
+  SE (16 pt margins, 2x pixels) matches as the larger phones do. Privacy's
+  remaining sub-point footer corrections are given for 2x and 3x separately.
+- **Remaining UIKit.** The set-list naming and delete prompts are
+  `UIAlertController`s presented by `SetListAlertPresenter`: SwiftUI's `.alert`
+  fixes its message and buttons once shown, which would let an invalid name
+  through. The song editor's content is SwiftUI inside the UIKit shell the
+  editor always had (`SongEditorPresenter`: a `UINavigationController` asking
+  for 320 × 480 with Close and Done bar items, the banner pinned to the safe
+  area and only the hosted form making room for the keyboard), because a
+  sheet can neither
+  flip over (editing an existing song) nor size itself as a form before
+  iOS 18, and a `NavigationStack` in a UIKit-presented controller hands its
+  title and toolbar to the presenting screen's bar. The banner is the ad SDK's
+  `BannerView` in `BannerAdSlot`; like UIKit's, it stays pinned to the safe
+  area's foot and the keyboard covers it. It presents its overlay from its own
+  screen's controller. Privacy choices, presented from UIKit, reports its
+  dismissal from `PrivacyChoicesHost.viewDidDisappear`, once it has really
+  gone, so the ad-consent flow that follows can present.
+- **Models built once.** Screens whose model observes notifications or starts
+  an auth listener keep it in `@StateObject ModelBox`: `@State`'s initial value
+  is evaluated again every time the view struct is recreated.
+
+Deliberate differences from the UIKit screens:
+
+- Keys opens centred on C. UIKit scrolled before the table had a size, so it
+  opened a row and a half from the top instead.
+- Add songs' section headers show the engraved label once; UIKit also drew
+  the system header title over it. Add songs is otherwise the UIKit screen:
+  presented from UIKit with UIKit bar items (`AddSongsController`).
+- Wake Lock keeps the screen awake. UIKit stored the setting but never
+  applied it.
+- Cancelling sign-in from Settings stops the Log in row's spinner.
+- The pitch pipe breathes on the clock (one breath every four seconds) rather
+  than per frame, so ProMotion displays no longer breathe twice as fast.
+- Toggle Notes and Wake Lock survive a relaunch. The Swift settings model
+  (2021) reset both to off whenever it was created; the Objective-C model
+  before it and Android always kept them.
+- A toggled Songs row stays lit while its note sounds, including after the
+  list redraws; UIKit's lit state was the cell's highlight and was lost on a
+  reload. Notes and Keys rows light the same way while their note sounds
+  (UIKit's clear cells lost their highlight in the Liquid Glass restyle; the
+  owner asked for it back).
+- Note rows sound at touch-down. UIKit's tables, and SwiftUI's List, hold a
+  touch about 150 ms to see whether it starts a scroll; `TouchPressSurface`
+  turns that off for its list, and a scroll still cancels the press.
+- VoiceOver activation of a Notes, Keys or Songs row sounds the note for 1.5 s
+  (or toggles it). UIKit's synthesized tap started and stopped it in the same
+  instant.
+- A deleted account is signed out even if Settings was closed while the
+  server was deleting it; the delete confirmation reads the account's name
+  when asked, not on every redraw, and never crashes on an account without an
+  email.
+- Keys and Settings declared portrait-only orientation masks that UIKit never
+  consulted (a plain navigation controller and a page sheet do not ask), so
+  they were not carried over; nothing changes for users.
+- Settings is one controller per window (`SettingsHost`, owned by the window
+  and released with it), presented from UIKit as the UIKit app presented its
+  singleton, so reopening it from any
+  tab finds it as it was left, scroll position included. It is made outside
+  SwiftUI's update (a hosting controller made during one never builds its
+  NavigationStack's navigation controller) and presented from the window's
+  root (a NavigationStack presented from inside another hands its bar items
+  to the presenting screen). A request made while another sheet is still
+  presenting or dismissing waits for that transition, and one UIKit refuses is
+  handed back so the next tap tries again. Two held songs are both lit, as
+  each UIKit cell kept its own highlight.
+- On a phone narrow enough for the set-list positions to overflow (iPhone SE),
+  the selector shows the chosen position. UIKit's meant to, but scrolled
+  before its stack had laid out, so it stayed at the first position.
+- The key list in the song editor is an eager `VStack` (fifteen rows). A lazy
+  stack re-estimated its height when the title's error line appeared and the
+  keyboard came up, and on an iPhone SE that reset the list to its top;
+  UIKit's kept its place.
+- The SpringBoard widget UI tests (`WidgetHitTargetUITests`,
+  `DesignTourUITests.testWidgetGalleryShowsPitchPipe` and
+  `testWidgetRecognizesBarbershopInBothRanges`) skip when SpringBoard does not
+  expose the Home Screen editor, the widget gallery or a placed widget's
+  controls. On the iOS 26.5 simulator it exposes none of them reliably, and the
+  pre-port UIKit app (edab6cec) fails them the same way; the widget itself
+  is unchanged SwiftUI.
+- Under an alert the unselected tab glyphs come out a little lighter than
+  UIKit's, though every tint in the bar's hierarchy now matches UIKit's; the
+  selected item and the titles match.
+- The row, rule and bar metrics match to the pixel on iPhone and iPad, edit
+  mode included (see `ListCellMargins` above); a test compares the controls'
+  frames with a real UITableView row in edit mode laid out at the same width.
+- Keys still opens centred on C (above). Replaying UIKit's first scroll, made
+  before its table had a size, does not reproduce where it landed; UIKit's
+  iPad table opened at the top and its iPhone 17 table about two and a half
+  rows down.
+
+- Settings that arrive from the account are applied without being written
+  back. `DPSettingsModel` used to apply each snapshot through its setters, which
+  wrote the values back to the account and filled a field the account did not
+  have with this device's value.
+
+Pitch Perfect's tests, beyond the hosted unit suites:
+
+- `MainFlowsUITests` runs the main flows in the real app: the pitch pipe's range
+  by touch, Notes and Keys, a song added, edited and deleted, a set list created,
+  managed and deleted, and a setting that outlives its sheet.
+- `SongManagementUITests.testSongsSavedByTheOldAppDecodeInAFreshProcess` seeds
+  the pre-set-list app's saved songs (a literal fixture, handed over in the
+  DEBUG-only `PP_LEGACY_SONGS_JSON` launch variable, which only writes the
+  defaults) into a fresh app process, where nothing has registered the
+  serializer's aliases, and finds the song; the store registers them itself
+  before it reads. The song flow works in a set list of its own, so songs
+  other runs left in My Songs never push its rows off screen.
+- `DPSongListSyncEmulatorTests` (set lists and settings, both ways) run against
+  the emulators in an ad-hoc signed simulator build, which gives Firebase Auth
+  the keychain: add `CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=`
+  to `xcodebuild test`. If another server holds 8080, run the emulators on other
+  ports and pass them as `TEST_RUNNER_FIRESTORE_EMULATOR_PORT` and
+  `TEST_RUNNER_AUTH_EMULATOR_PORT`.
+
+## Project files
+
+The Xcode projects list files explicitly. Register or remove files with
+`iOS/<app>/tools/add_source.py` (`--target tests`, `--shared` for `iOS/shared`,
+`--remove`). Object ids are hash-derived, so branches that add different files
+merge without id collisions.
+
+## Tag Master lists
+
+Home, Browse, Search, the results list, Settings, Teachable Tags and the
+user's own lists are SwiftUI (`TMHomeScreen`, `TMBrowseScreen`,
+`TMQueryScreen`, `TMSearchScreen`, `TMSettingsScreen`, `TMTagListScreen`),
+each over an `@Observable` model.
+
+- **Navigation goes through `TMNavigator`.** Models ask it to open a tag, push a
+  destination (`TMDestination`), remove their own screen or open a URL. The app
+  supplies a `TMRouteNavigator` per screen (see *Tag Master shell*), and tests
+  pass `RecordingNavigator`. `TMScreens` puts each screen and its bar together.
+- **Catalog access is injected.** `TMCatalog` runs queries (tests pass
+  `TMFixtureCatalog`), and `TMTagStore` loads rows on demand.
+  `DPTagQueryResult.failed` separates "no matches" from "catalog unreachable".
+- **UIKit metrics are copied deliberately.** `tmLabelMetrics` lays text out as
+  UILabel does: lines a line height plus the font's leading apart, the whole
+  rounded up to the pixel grid (a wrapped two-line facts line was 2.5 pt short
+  on iPad before the leading was added). Rows use UITableView's measured
+  margins (below) and section-aware separator insets. Filters keep `UISegmentedControl` because it
+  sizes segments to their titles, and fall back to a menu when a row is narrow
+  or the text size is an accessibility size.
+- **Alerts.** The list-naming alert stays a `UIAlertController`
+  (`TMListNamePrompt`, presented by `TMAlertPresenter`) because its message has
+  to follow the typing. Every other alert is a SwiftUI `.alert`.
+- **Watermark.** Each column tells its screens one backdrop policy
+  (`TMBackdrop`, applied by `TMScreenBackground` alone):
+  - `.own` on a phone or a collapsed split: the screen's colour and a pole
+    fitted to it.
+  - `.windowSlice` beside the list (the detail column, the placeholder, and
+    before iOS 26 the list column too): the colour plus the screen's slice of
+    one window-wide pole (`TMWindowWatermark`), so both columns show a single
+    pole. The slice is a small UIKit view that places the pole from its own live
+    position in the window (and follows it for a moment after anything that can
+    move it), not from SwiftUI's global frame: UIKit moves a pushed, revealed or
+    resized screen without SwiftUI laying it out again, and a slice placed from
+    an earlier frame would land a column away. Before iOS 26 UIKit's list column
+    was a clear view over the split's pole, which the slice reproduces exactly
+    without depending on the column's own fill being cleared.
+  - `.glassColumn` for the list column from iOS 26: the screen draws nothing;
+    UIKit's glass sidebar is the surface and the split's pole lies beneath it.
+    Grouped screens colour their hosting view there (`TMPageColorHook`), as
+    UIKit did. Browse's pages are the one place something must be cleared: the
+    TabView's container, only in this case, again on every layout.
+  Detail pages draw theirs inside each TabView page (`tmTabPageBackground`), so
+  no UIKit container needs clearing. Columns get their policy through the route
+  wrappers (`tmRoute(in:)`); a stack does not pass its environment to pushed
+  screens. `RealAppAppearanceUITests` checks the pole in the launched app, in
+  light and dark (`--appearance`, debug builds): its grey spread as a diagonal
+  band on every detail page, landscape, the iPad placeholder, Home, each Browse
+  page, a list and pushed results (on iPad in the list column where it draws a
+  slice, and in the detail column), and on iPad that the detail's pole stays
+  where the placeholder's was after page changes, a rotation and a keyboard.
+- **Margins.** UITableView's margins are measured, not assumed
+  (`TMTableMarginReader`: hidden plain and inset-grouped tables laid out at the
+  column's size, in the hierarchy only while they are measured). UIKit gives 20
+  points on most phones but 16 on an iPhone SE and in the iPad list column, and
+  not by width alone: a 375-point window is 20 on an iPhone 17 and 16 on an SE.
+  Each column passes its measurement down (`tmTableMargin`, `tmGroupedMargin`,
+  `tmGroupedTextInset`); inset-grouped screens (Settings, Search) put their
+  cards on the grouped margin and pass the row inset that puts text where
+  UIKit's cell put it down as `tmInsetRowMargin`. The list picker measures its
+  own sheet or popover. Rows apply it with
+  `tmInsetRow()`, read inside the list: a screen's own `@Environment` sees the
+  value from above its list, before the list's modifiers set it.
+- **UIKit controls kept where SwiftUI cannot match.** The filter menu fallback
+  is UIKit's gray menu button (`TMFilterMenuButton`). Its representable answers
+  an unproposed width with its natural width, or `ViewThatFits` never picks the
+  segmented control.
+- Captures: `TagListsScreenCatalogTests` (iPhone `iphone-*`, iPad `ipad-*`).
+
+## Tag Master tag detail
+
+- **Structure.** `TagDetailScreen` (TagDetailView.swift) over `TagDetailModel`, with
+  `TagSummaryModel` and `TagTracksModel` for the two pages that do work. The pages are
+  `TagSummaryPage`, `TagDetailsPage`, `TagTracksPage` (with the inline `TMTrackPlayer`)
+  and `TagVideosPage`; `TMListChips`, `TMListPicker`, `TMSheetMusicScreen` and
+  `TMTagPlaceholder` complete it. Tags come through `TMTagLoading` (production:
+  `TMCatalogTagLoader`), so tests finish loads in any order without swizzling.
+- **In the shell.** `TMTagRoute` carries the screen on a stack or in the split's
+  detail column: it adds the backdrop, the horizontal-safe-area reading that keeps
+  the page bar clear of the floating list, and the undo manager shake-to-undo
+  reaches. The router sets `navigator` and `expanded`; the screen sets `screenVisible`.
+- **Shared artwork.** `TMQuartetStaff(animating:)` and `TMBarberPole(compact:darkSurface:animating:)`
+  (TMArtworkViews.swift) draw the vector artwork and hold still under Reduce Motion,
+  in an inactive scene, or when told to. `TMBarberPole.listLoading()` and
+  `.operation(_:active:)` carry the old views' accessibility labels and identifiers.
+- **UIKit left in place, deliberately.** QuickLook (`TMQuickLookPreview`), the in-app
+  browser (`TMSafariView`), the tag actions sheet (`TMActionSheet`; on iOS 26
+  SwiftUI's `confirmationDialog` draws an anchored bubble without Cancel, not the
+  centred sheet the app had) and the list picker's presentation (`TMListPickerPresenter`;
+  SwiftUI's popover inside a toolbar lands on the button without an arrow).
+- **Presenting from a toolbar.** Presenters in `.toolbar` content must be
+  `UIViewRepresentable`s (`TMPresentingAnchor`): a view *controller* representable there
+  is adopted by the navigation controller as a pushed screen. SwiftUI also builds toolbar
+  items twice, once off screen, so only the copy in a window presents, once it has its
+  final size. `TMPageTabBarBridge` gives the TabView's bar the
+  `page-tab-bar`/`page-<Title>` identifiers and keeps it a bottom bar on iPad.
+- **Readable width.** `TMPageScroll` measures UIKit's readable guide in place
+  (`TMReadableProbe`, a view with 16-point margins) rather than assuming
+  672 points; on iOS 26 the guide is 896 points wide.
+- **UIKit-hosted pieces.** Sheet Music is UIKit's filled button
+  (`TMSheetMusicButton`), and Share presents `UIActivityViewController`
+  (`TMShareSheet`) with the title line and the link as two items, as before.
+- **Parity notes.** Bar symbols are the same `UIImage` a bar button item gets, offset
+  by its alignment insets. `tmFollowsUIKitTint` reads the live UIKit tint once per
+  route, in `tmRoute(in:)` (accent and dimmed state together), so accent colours
+  dim behind sheets as UIKit's did; screens do not add their own. It sits inside
+  `tmClearColumnBackground`: `containerBackground` only works as the outermost
+  modifier of a column's root. Every bar item's label goes through `TMBarLabel`,
+  which draws it in the bar's white or dimmed ink; the bar keeps
+  `tintAdjustmentMode = .normal` so Back does not dim twice, and the page bar
+  keeps unselected items in `.label`. The bar hook (`TMBarAppearance.apply`)
+  checks each property it owns separately and repairs only the title colours,
+  keeping Home's font. Key and Sheet Music share one height through
+  `TMMatchedHeightStack`, which measures both unconstrained each layout pass. Beside a list on iPad the TabView sits one
+  pixel inside the column's safe area; flush, it grows into the unsafe strip under the
+  floating list. That pixel is the remaining iPad difference.
+
+## Tag Master shell
+
+- **Entry.** `TagMasterMain` (`TMShell.swift`) starts the SwiftUI `TagMasterApp`,
+  or a bare `TMTestAppDelegate` host under XCTest. `DPAppDelegate` (now Swift)
+  keeps the launch work (Firebase, consent, the cache serializers, list sync)
+  through `@UIApplicationDelegateAdaptor`, with the saved-tag helpers beside it.
+  Opened URLs go to the sign-in providers first (`DPAppDelegate.handleAuthURL`,
+  with `authCanHandle` injectable for tests) and otherwise to the router.
+  Privacy choices is offered on every activation, the first included
+  (`TMPrivacyOffer`): from the foreground-active scene's key window root once
+  it is in the window and not mid-transition, never over something already
+  presented, and it counts as shown only once UIKit accepted the presentation;
+  leaving the active phase cancels an attempt in flight.
+  `TMWindowTint` gives the window the accent before any screen appears.
+- **Layout.** iPhone is one `NavigationStack` (`TMStackRoot`) with Home at its
+  root. iPad is a `NavigationSplitView` (`TMSplitRoot`): Home's stack in a
+  320–400 pt column (36% of the width), the tag or `TMTagPlaceholder` beside it,
+  one watermark across both columns (see *Watermark* under Tag Master lists), and
+  a chosen tag kept on top when the split collapses. The collapsed column is
+  stored (`preferredCompactColumn`), decided at collapse and then following
+  Back, as UIKit's top-column choice applied only at the moment of collapse.
+  The list column is glass only from iOS 26; before that its screens draw their
+  window slice (`TMSplitRoot.backdrops`).
+- **Routing.** `TMRouter` owns the list stack, the detail column's stack (the
+  sheet music reader) and the tag beside the list, which it reuses from tag to
+  tag so the open page survives. `show(_:)` makes each screen's model with its
+  route, so a screen's `TMRouteNavigator` can remove exactly that screen and the
+  tags it opens step through it (`TMListingSource`). Deep links
+  (`tagmaster://tag/<id>`, `tagmaster:///open/tag/<id>`) keep the Objective-C
+  delegate's exact grammar in `TMDeepLink`, and a linked tag steps through the
+  list on top of the list stack (`topListingSource`), as the delegate adopted
+  it. Each Browse page is its own list, so a tag keeps stepping through the page
+  it was opened from.
+- **Keyboard.** ⌘↑ / ⌘↓ are keyboard shortcuts on the detail's stepper buttons,
+  so they reach the detail from either column. SwiftUI keeps them registered on
+  the scene's root while the sheet music reader covers the detail, so they
+  still step (and close the reader) there.
+- **The bar.** Each screen's bar is SwiftUI toolbar content (`TMScreens`), with
+  `TMEditButton` for Edit/Done. `tmCharcoalBar` reaches the UIKit navigation
+  controller SwiftUI draws with to give it the charcoal appearance, set back
+  titles and, on Home, the Wickhop title (`TMHomeTitle`); SwiftUI has no
+  modifiers for those. SwiftUI rewrites the bar's title attributes when it
+  re-renders the toolbar, so the hook applies again on the next turn; its guard
+  compares the background colour. `toolbarBackground`/`toolbarColorScheme`
+  fight the hook and are not used.
+- **Real-app tests.** `RealAppAppearanceUITests` and `RealAppFlowUITests`
+  (tagmasterUITests) launch the app and check the watermark, page switching,
+  favouriting, making a list from a tag and search end to end. They leave the
+  saved lists alone (launch-argument defaults would shadow the app's writes).
+- **Tests.** `TMShellTestSupport.swift` hosts screens on a plain UIKit stack
+  (`TMHostedScreen`, a test-only `TagDetailViewController`) and mounts the real
+  shell (`mountShell`). `TMRouterTests` covers routing and the deep-link
+  grammar; the catalogs capture through the real shell.
+- **Sidebar backgrounds.** Search and Settings colour their hosting
+  controller's view (`TMPageColorHook`), beneath the sidebar's glass, as the
+  UIKit screens coloured their own view; painted in SwiftUI the grey sat above
+  the glass and whole columns differed.
+- **Bar items.** Edit's Done is UIKit's done-style checkmark in its own glass,
+  and the list menu gets a glass of its own. Symbols UIKit created without a
+  configuration use the large scale (`TMBarButton.symbol(_:scale:)`).
+- **Page bars.** `TMPageTabBarBridge` (detail and Browse) gives the bar its
+  identifiers, keeps it compact-width on iPad, and pins its vertical size class
+  to regular so a phone in landscape keeps the full-height bar and 44-point
+  targets the UIKit bar had. The landscape pill spans more of the width than
+  UIKit's did.
+- **Search.** The field keeps the bar and its Search action while in use
+  (`searchPresentationToolbarBehavior(.avoidHidingContent)`), as the UIKit
+  search controller did.
+- **Text size.** List text is set with `tmFont` / `tmLabelMetrics` and the
+  facts layout with the environment's `DynamicTypeSize`, so a text size change
+  (or a window's trait override in tests) re-renders it, as UILabel's
+  `adjustsFontForContentSizeCategory` did.
+- **Rows.** `TMTagStore` asks again for a tag that failed to load after 30
+  seconds, when the app becomes active and when the lists change, as the UIKit
+  cell fetched on every configure. A list naming a tag twice keys each row by
+  tag and occurrence (`TMListedTag`); catalog pages drop tags already shown.
+- **Deliberate differences, from the behaviour review.**
+  - Stepping to another tag rebuilds the pages, so each page starts at its top;
+    the selected page is kept. UIKit kept each scroll view's offset, which would
+    need the pages to go on showing the previous tag while the next loads.
+  - The detail counts as visible from the start of its appearance transition
+    (`onAppear`) to the end of its disappearance (`onDisappear`), not from
+    `viewDidAppear` to `viewWillDisappear`: a track keeps playing through a pop
+    transition, and a back swipe the user abandons no longer stops it.
+  - "Rated" survives a refresh that fails; a refresh that loads the tag puts
+    Rate back, as UIKit did.
+  - Before iOS 18 a list change arriving mid-scroll applies at once;
+    `onScrollPhaseChange` (iOS 18) is what holds it until the scroll ends.
+  - Swiping to delete a list closes the swipe before the confirmation, rather
+    than holding it half-open under it.
+- **Behaviour that follows UIKit (second and third reviews).** Home and list
+  rows are disabled while editing, as UIKit's tables did not select then; their
+  delete and reorder controls stay. A tag row's facts keep, while editing, the
+  lines they had at rest and truncate the rest, as UIKit's rows kept their
+  height when the edit controls came in. Disabled bar items use UIKit's disabled
+  ink (a title and an image differ slightly, as UIKit's did), and Edit is set
+  in UIKit's medium weight. Summary and Details scroll above the page bar and
+  clip there, as UIKit's scroller ended at the safe area's foot; the key's
+  outline takes Sheet Music's height when that is the taller. Open Tag takes an edit whole when what was
+  typed or pasted holds a digit and refuses it otherwise, as the UIKit field did,
+  so a pasted "1e3" stays "1e3" and opens nothing instead of becoming tag 13.
+- **Accepted differences.** SwiftUI's edit-mode delete control reads "Remove"
+  to VoiceOver (UIKit's read "Delete"). iOS 17 and 18 layouts are not checked on
+  a simulator here: only iOS 26.5 is installed, and Xcode 27 offers no older
+  simulator runtime to download. Random Tag says a tag "couldn't be loaded" when
+  the catalog can't be reached, where UIKit, which could not tell that apart
+  from no matches, said none could be selected; the query itself is UIKit's
+  (uncached, ids only).
+- **Remaining differences from UIKit.** The detail catalog's iPad goldens were
+  recaptured with the real Home in the list column (the first ones used an
+  empty stand-in). The iPad sidebar's tag rows, once 1.7 pt off where a facts
+  line wrapped, now match (Browse and results under 0.1% of pixels).
+

@@ -316,6 +316,7 @@ NSString *const API_URI_STRING = @"https://www.barbershoptags.com/api.php?client
     DPTagQueryResult *queryResult = [parseResult.firstObject isKindOfClass:[DPTagQueryResult class]]
         ? parseResult.firstObject
         : [[DPTagQueryResult alloc] init];
+    queryResult.failed = ![parseResult.firstObject isKindOfClass:[DPTagQueryResult class]];
     queryResult.start = start;
     if (!queryResult.tags) {
         queryResult.tags = @[];

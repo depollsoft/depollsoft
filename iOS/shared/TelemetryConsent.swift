@@ -1,3 +1,4 @@
+import SwiftUI
 import UIKit
 import FirebaseAnalytics
 import FirebaseCrashlytics
@@ -55,97 +56,253 @@ struct PrivacyChoices {
         present(from: presenter)
     }
 
+    /// Presents Privacy choices from UIKit: a sheet with its own navigation bar.
+    /// `onDismiss` runs once the sheet has fully gone, however it closed.
     @objc static func present(from presenter: UIViewController) {
-        let controller = PrivacyViewController(style: .insetGrouped)
-        let navigation = UINavigationController(rootViewController: controller)
-        navigation.view.tintColor = .label
-        navigation.navigationBar.tintColor = .label
-        presenter.present(navigation, animated: true)
-        navigation.presentationController?.delegate = controller
+        presenter.present(PrivacyChoicesHost(), animated: true)
     }
 }
 
-private final class PrivacyViewController: UITableViewController, UIAdaptivePresentationControllerDelegate {
-    private let analytics = UISwitch()
-    private let crashes = UISwitch()
-    private let choices = PrivacyChoices()
-    private var hasAdPrivacy: Bool { TelemetryConsent.adPrivacyRequired() }
+/// Reports the dismissal only once it has finished: the ad-consent flow that
+/// follows presents from the root and gives up while anything is still
+/// presented. A form shown over the sheet (Ad privacy choices) is not a dismissal.
+final class PrivacyChoicesHost: UIHostingController<PrivacyChoicesSheet> {
+    init() { super.init(rootView: PrivacyChoicesSheet()) }
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        title = "Privacy choices"
-        analytics.isOn = choices.analytics
-        crashes.isOn = choices.crashes
-        analytics.accessibilityLabel = "Usage analytics"
-        crashes.accessibilityLabel = "Crash reports"
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Save choices", style: .plain,
-                                                            target: self, action: #selector(save))
-        navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel,
-                                                           target: self, action: #selector(cancel))
-        tableView.rowHeight = UITableView.automaticDimension
-        tableView.estimatedRowHeight = 56
+    @available(*, unavailable)
+    @MainActor required dynamic init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        if isBeingDismissed || presentingViewController == nil { TelemetryConsent.onDismiss?() }
+    }
+}
+
+/// What the Privacy choices screen shows and saves.
+@Observable
+@MainActor
+final class PrivacyChoicesModel {
+    private let choices: PrivacyChoices
+    var analytics: Bool
+    var crashes: Bool
+    let showsAdPrivacy: Bool
+
+    init(choices: PrivacyChoices = PrivacyChoices(),
+         adPrivacyRequired: Bool = TelemetryConsent.adPrivacyRequired()) {
+        self.choices = choices
+        analytics = choices.analytics
+        crashes = choices.crashes
+        showsAdPrivacy = adPrivacyRequired
     }
 
-    override func numberOfSections(in tableView: UITableView) -> Int { 4 }
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        section == 3 ? (hasAdPrivacy ? 3 : 2) : 1
-    }
-    override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
-        switch section {
-        case 1: return "Share screens visited, sessions, and app and device information with Google Analytics to understand app usage."
-        case 2: return "Send crash reports, including stack traces and app and device information, to Google Firebase Crashlytics to help fix problems. Turning this off takes full effect the next time you start the app."
-        default: return nil
-        }
-    }
-    override func tableView(_ tableView: UITableView, willDisplayFooterView view: UIView, forSection section: Int) {
-        guard let footer = view as? UITableViewHeaderFooterView else { return }
-        footer.textLabel?.textColor = .label
-        footer.textLabel?.adjustsFontForContentSizeCategory = true
-    }
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = UITableViewCell(style: .default, reuseIdentifier: nil)
-        cell.textLabel?.numberOfLines = 0
-        cell.textLabel?.font = .preferredFont(forTextStyle: .body)
-        cell.textLabel?.adjustsFontForContentSizeCategory = true
-        cell.selectionStyle = .none
-        switch indexPath.section {
-        case 0:
-            cell.textLabel?.text = "Choose whether to share optional data to help improve this app. Both choices are off until you enable them. The app works either way. You can change these choices in Settings."
-        case 1:
-            cell.textLabel?.text = "Usage analytics"
-            cell.accessoryView = analytics
-        case 2:
-            cell.textLabel?.text = "Crash reports"
-            cell.accessoryView = crashes
-        default:
-            cell.textLabel?.text = indexPath.row == 0 ? "Decline both" : indexPath.row == 1 ? "Privacy policy" : "Ad privacy choices"
-            cell.textLabel?.textColor = view.tintColor
-            cell.selectionStyle = .default
-            cell.accessibilityTraits = .button
-        }
-        return cell
-    }
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
-        guard indexPath.section == 3 else { return }
-        switch indexPath.row {
-        case 0:
-            analytics.isOn = false
-            crashes.isOn = false
-            save()
-        case 1: UIApplication.shared.open(URL(string: "https://apps.depoll.com/privacy/")!)
-        default: TelemetryConsent.showAdPrivacy?(self)
-        }
-    }
-    @objc private func save() {
-        choices.save(analytics: analytics.isOn, crashes: crashes.isOn)
+    func save() {
+        choices.save(analytics: analytics, crashes: crashes)
         TelemetryConsent.applySavedChoices()
-        dismiss(animated: true) { TelemetryConsent.onDismiss?() }
     }
-    @objc private func cancel() {
-        dismiss(animated: true) { TelemetryConsent.onDismiss?() }
+
+    func declineBoth() {
+        analytics = false
+        crashes = false
+        save()
     }
-    func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
-        TelemetryConsent.onDismiss?()
+}
+
+/// Privacy choices in its own navigation stack, as both apps present it.
+/// Whoever presents it reports the dismissal (see PrivacyChoicesHost).
+struct PrivacyChoicesSheet: View {
+    var body: some View {
+        NavigationStack { PrivacyChoicesView() }
+            .tint(Color(uiColor: .label))
+    }
+}
+
+struct PrivacyChoicesView: View {
+    @Environment(\.displayScale) private var scale
+    @State private var model = PrivacyChoicesModel()
+    @State private var cardMargin = InsetGroupedMargin.lastMeasured
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
+
+    var body: some View {
+        List {
+            Section {
+                Text("Choose whether to share optional data to help improve this app. Both choices are off until you enable them. The app works either way. You can change these choices in Settings.")
+                    // A multi-line UITableViewCell label sat closer to the card's edges.
+                    .padding(.top, -3)
+                    .padding(.bottom, TableNudge.at(scale, threeX: -10.0 / 3.0, twoX: -3.5))
+            }
+            Section {
+                Toggle("Usage analytics", isOn: $model.analytics)
+                    // UISwitch kept its green; the sheet's label tint is for its bar items.
+                    .tint(nil)
+                    // A cell's accessory switch sat 6 pt further in than SwiftUI's.
+                    .padding(.trailing, 6)
+            } footer: {
+                Text("Share screens visited, sessions, and app and device information with Google Analytics to understand app usage.")
+                    .foregroundStyle(Color(uiColor: .label))
+                    // UITableView's phone footers: this text ⅓ pt higher, the next card ⅔ pt lower.
+                    .offset(y: FooterNudge.phone(TableNudge.at(scale, threeX: -1.0 / 3.0, twoX: -5.0 / 6.0)))
+                    .padding(.bottom, FooterNudge.phone(TableNudge.at(scale, threeX: 2.0 / 3.0, twoX: -1.0 / 3.0)))
+            }
+            Section {
+                Toggle("Crash reports", isOn: $model.crashes)
+                    // UISwitch kept its green; the sheet's label tint is for its bar items.
+                    .tint(nil)
+                    // A cell's accessory switch sat 6 pt further in than SwiftUI's.
+                    .padding(.trailing, 6)
+            } footer: {
+                Text("Send crash reports, including stack traces and app and device information, to Google Firebase Crashlytics to help fix problems. Turning this off takes full effect the next time you start the app.")
+                    .foregroundStyle(Color(uiColor: .label))
+                    .offset(y: FooterNudge.phone(-2.0 / 3.0))
+                    .padding(.bottom, FooterNudge.phone(TableNudge.at(scale, threeX: 1.0 / 3.0, twoX: -1.0 / 6.0)))
+            }
+            Section {
+                Button("Decline both") {
+                    model.declineBoth()
+                    dismiss()
+                }
+                Button("Privacy policy") { openURL(URL(string: "https://apps.depoll.com/privacy/")!) }
+                if model.showsAdPrivacy {
+                    Button("Ad privacy choices") { TelemetryConsent.presentAdPrivacy() }
+                }
+            }
+            .foregroundStyle(.tint)
+        }
+        .listStyle(.insetGrouped)
+        // UIKit's inset-grouped cards sat at its controller's system margin
+        // (16 pt on an iPhone SE, 20 pt on larger phones).
+        .contentMargins(.horizontal, cardMargin, for: .scrollContent)
+        .background(InsetGroupedMargin { cardMargin = $0 })
+        .navigationTitle("Privacy choices")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                CancelButton { dismiss() }
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    model.save()
+                    dismiss()
+                } label: {
+                    // A plain UIBarButtonItem's title is set in the medium weight.
+                    Text("Save choices").fontWeight(.medium)
+                }
+            }
+        }
+    }
+}
+
+/// Where UIKit put an inset-grouped table's cards in the controller showing a view:
+/// the layout margin of a UITableViewController's own inset-grouped table, in a
+/// navigation controller of the same width and size classes, as the UIKit
+/// Privacy choices screen was built (16 pt on an iPhone SE, 20 pt on larger phones).
+private struct InsetGroupedMargin: UIViewRepresentable {
+    struct Key: Hashable {
+        var width: CGFloat
+        var horizontal: UIUserInterfaceSizeClass
+        var vertical: UIUserInterfaceSizeClass
+    }
+
+    @MainActor static var lastMeasured: CGFloat = 20
+    @MainActor private static var measured: [Key: CGFloat] = [:]
+    let changed: (CGFloat) -> Void
+
+    @MainActor static func measure(_ key: Key, in window: UIWindow) -> CGFloat {
+        if let margin = measured[key] { return margin }
+        let screen = UITableViewController(style: .insetGrouped)
+        let navigation = UINavigationController(rootViewController: screen)
+        navigation.traitOverrides.horizontalSizeClass = key.horizontal
+        navigation.traitOverrides.verticalSizeClass = key.vertical
+        navigation.view.frame = CGRect(x: 0, y: 0, width: key.width, height: 600)
+        navigation.view.isHidden = true
+        window.addSubview(navigation.view)
+        defer { navigation.view.removeFromSuperview() }
+        navigation.view.layoutIfNeeded()
+        screen.tableView.layoutIfNeeded()
+        let margin = screen.tableView.layoutMargins.left - screen.tableView.safeAreaInsets.left
+        measured[key] = margin
+        return margin
+    }
+
+    final class View: UIView {
+        var changed: (CGFloat) -> Void = { _ in }
+        private var measuredFor: Key?
+
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            report()
+        }
+
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            report()
+        }
+
+        private func report() {
+            var responder: UIResponder? = next
+            while let current = responder, !(current is UIViewController) { responder = current.next }
+            guard let window, let container = (responder as? UIViewController)?.view,
+                  container.bounds.width > 0 else { return }
+            let traits = container.traitCollection
+            let key = Key(width: container.bounds.width, horizontal: traits.horizontalSizeClass,
+                          vertical: traits.verticalSizeClass)
+            guard key != measuredFor else { return }
+            measuredFor = key
+            let margin = InsetGroupedMargin.measure(key, in: window)
+            InsetGroupedMargin.lastMeasured = margin
+            let changed = self.changed
+            DispatchQueue.main.async { changed(margin) }
+        }
+    }
+
+    func makeUIView(context: Context) -> View {
+        let view = View()
+        view.isUserInteractionEnabled = false
+        view.isAccessibilityElement = false
+        return view
+    }
+
+    func updateUIView(_ view: View, context: Context) { view.changed = changed }
+}
+
+/// UIKit's table rounds its rows and footers to the screen's pixels, so its
+/// sub-point positions differ at 2x and 3x; these corrections were measured at both.
+private enum TableNudge {
+    static func at(_ scale: CGFloat, threeX: CGFloat, twoX: CGFloat) -> CGFloat {
+        scale >= 3 ? threeX : twoX
+    }
+}
+
+/// Sub-point corrections measured against UIKit's table on a phone; an iPad's
+/// table sets its footers differently.
+private enum FooterNudge {
+    static func phone(_ value: CGFloat) -> CGFloat {
+        UIDevice.current.userInterfaceIdiom == .phone ? value : 0
+    }
+}
+
+extension TelemetryConsent {
+    /// The ad SDK's own privacy form, presented over whatever is frontmost.
+    static func presentAdPrivacy() {
+        guard let presenter = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene }).flatMap(\.windows)
+            .first(where: \.isKeyWindow)?.rootViewController else { return }
+        var top = presenter
+        while let next = top.presentedViewController { top = next }
+        showAdPrivacy?(top)
+    }
+}
+
+/// The system Cancel bar item: an ✕ on iOS 26, the word before it.
+private struct CancelButton: View {
+    let action: () -> Void
+
+    var body: some View {
+        if #available(iOS 26.0, *) {
+            Button(role: .close, action: action)
+                .accessibilityLabel("Cancel")
+        } else {
+            Button("Cancel", role: .cancel, action: action)
+        }
     }
 }

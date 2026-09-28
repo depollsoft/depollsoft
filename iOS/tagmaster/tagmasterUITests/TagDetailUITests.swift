@@ -41,8 +41,45 @@ class TagMasterUITestCase: XCTestCase {
 // XCTest's existence waiter polls after one second even for a visible element.
 // Keep the bounded wait for asynchronous content, with no delay when ready.
 extension XCUIElement {
+    /// Tag rows in any SwiftUI list: buttons whose label carries a tag id.
+    var tagRows: XCUIElementQuery {
+        buttons.matching(NSPredicate(format: "label CONTAINS 'Tag ID' OR label BEGINSWITH 'Tag '"))
+    }
+
     func existsOrWait(timeout: TimeInterval) -> Bool {
         exists || waitForExistence(timeout: timeout)
+    }
+
+    /// Waits until a tab or segment reports itself selected.
+    func waitUntilSelected(timeout: TimeInterval) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        while !isSelected, Date() < deadline { RunLoop.current.run(until: Date().addingTimeInterval(0.1)) }
+        return isSelected
+    }
+
+    /// Waits until the element can take a tap (not mid-animation or covered).
+    @discardableResult
+    func waitUntilHittable(timeout: TimeInterval) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        while !(exists && isHittable), Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        }
+        return exists && isHittable
+    }
+
+    /// Taps a text field until it holds keyboard focus: a tap that lands while the
+    /// screen is still being pushed is dropped, and typing then has nowhere to go.
+    func focusForTyping(timeout: TimeInterval = 5) {
+        let deadline = Date().addingTimeInterval(timeout)
+        repeat {
+            waitUntilHittable(timeout: 2)
+            tap()
+            let focused = Date().addingTimeInterval(1)
+            while Date() < focused {
+                if (value(forKey: "hasKeyboardFocus") as? Bool) == true { return }
+                RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+            }
+        } while Date() < deadline
     }
 }
 
@@ -107,8 +144,13 @@ final class TagMasterPolishUITests: TagMasterUITestCase {
     }
 
     private func openTag() {
-        let favorite = app.tables.firstMatch.cells.matching(NSPredicate(
+        let favorite = app.buttons.matching(NSPredicate(
             format: "label CONTAINS 'Tag ID 1809' OR label == 'Tag 1809. Open to load details.'")).firstMatch
+        // A SwiftUI list only exposes the rows it has laid out; scroll until the favourite is one.
+        let list = app.collectionViews.firstMatch
+        for _ in 0..<6 where !favorite.existsOrWait(timeout: 1) || !favorite.isHittable {
+            list.swipeUp()
+        }
         XCTAssertTrue(favorite.existsOrWait(timeout: 5))
         favorite.tap()
         assertTagLoaded()
@@ -138,8 +180,8 @@ final class TagMasterPolishUITests: TagMasterUITestCase {
         let orientation = XCUIDevice.shared.orientation
         defer { XCUIDevice.shared.orientation = orientation }
         XCUIDevice.shared.orientation = .portrait
-        app.tables.staticTexts["Browse"].tap()
-        XCTAssertTrue(app.tables.cells.firstMatch.existsOrWait(timeout: 30))
+        app.buttons["Browse"].firstMatch.tap()
+        XCTAssertTrue(app.tagRows.firstMatch.existsOrWait(timeout: 30))
         app.buttons["page-Classic"].tap()
         try assertTabsSurviveRotation(["Latest", "Rating", "Downloads", "Classic"], selected: "Classic")
     }
@@ -237,7 +279,20 @@ final class TagMasterPolishUITests: TagMasterUITestCase {
         layoutCapture("sheet-defect-portrait")
         XCTAssertGreaterThanOrEqual(key.frame.width, 44)
         XCTAssertGreaterThanOrEqual(key.frame.height, 44)
-        XCUIDevice.shared.orientation = .landscapeLeft
+        // The simulator sometimes ignores a single orientation request; ask again,
+        // from the other side, until the window is landscape.
+        for orientation in [UIDeviceOrientation.landscapeLeft, .landscapeRight, .landscapeLeft] {
+            XCUIDevice.shared.orientation = orientation
+            let deadline = Date().addingTimeInterval(4)
+            while app.frame.width <= app.frame.height, Date() < deadline {
+                RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+            }
+            if app.frame.width > app.frame.height { break }
+        }
+        // A simulator that has run for hours can stop honouring orientation requests
+        // for every app; rebooting it restores them. Say so rather than fail obscurely.
+        XCTAssertGreaterThan(app.frame.width, app.frame.height,
+                             "The simulator ignored every orientation request (even Home stays portrait); reboot it")
         var previousFrame = CGRect.null
         let landscape = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
             let frame = key.frame
@@ -249,7 +304,9 @@ final class TagMasterPolishUITests: TagMasterUITestCase {
                 && frame == previousFrame && key.isHittable
                 && frame.width >= 44 && frame.height >= 44
         }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [landscape], timeout: 5), .completed)
+        // A cold iPad simulator can take several seconds to finish rotating.
+        let rotated = XCTWaiter.wait(for: [landscape], timeout: 15)
+        XCTAssertEqual(rotated, .completed)
         print("TM_LAYOUT_PROBE native landscape key frame=\(key.frame)")
         XCTAssertGreaterThanOrEqual(key.frame.width, 44)
         XCTAssertGreaterThanOrEqual(key.frame.height, 44)
@@ -280,19 +337,19 @@ final class TagMasterPolishUITests: TagMasterUITestCase {
     }
 
     func testSettingsLoginDismissal() throws {
-        let settings = app.tables.staticTexts["Settings"]
-        if !settings.isHittable { app.tables.firstMatch.swipeUp() }
+        let settings = app.navigationBars.buttons["Settings"]
+        XCTAssertTrue(settings.existsOrWait(timeout: 10))
         settings.tap()
         XCTAssertTrue(app.staticTexts["Log in to back up and synchronize your tag lists."].existsOrWait(timeout: 5))
         layoutCapture("settings")
-        let login = app.tables.staticTexts["Log In"]
+        let login = app.buttons["Log In"]
         // Never tap Log Out on an existing account.
         XCTAssertTrue(login.exists, "This read-only journey requires the signed-out entry")
         login.tap()
         XCTAssertTrue(app.buttons["Close"].existsOrWait(timeout: 5))
         layoutCapture("login-entry")
         app.buttons["Close"].tap()
-        XCTAssertTrue(app.tables.staticTexts["Log In"].existsOrWait(timeout: 5))
+        XCTAssertTrue(app.buttons["Log In"].existsOrWait(timeout: 5))
     }
 
     func testDetailShareDismissal() throws {
@@ -326,6 +383,8 @@ final class TagMasterPolishUITests: TagMasterUITestCase {
 final class StoreScreenshotTests: XCTestCase {
     func testCaptureStoreScreenshots() throws {
         try XCTSkipUnless(ProcessInfo.processInfo.environment["STORE_SCREENSHOTS"] == "1")
+        // The whole store tour, live catalog loads included, runs about 90 seconds.
+        executionTimeAllowance = 180
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .portrait
         let app = XCUIApplication()
@@ -333,7 +392,7 @@ final class StoreScreenshotTests: XCTestCase {
             app.terminate()
             app.launchArguments += ["-telemetry.chosen", "YES", "-telemetry.analytics", "NO", "-telemetry.crashes", "NO"]
             app.launch()
-            XCTAssertTrue(app.tables.staticTexts["Browse"].existsOrWait(timeout: 15))
+            XCTAssertTrue(app.buttons["Browse"].existsOrWait(timeout: 15))
         }
         func snap(_ name: String) {
             Thread.sleep(forTimeInterval: 2)
@@ -341,8 +400,8 @@ final class StoreScreenshotTests: XCTestCase {
         }
         func open(_ id: String) {
             home()
-            let item = app.tables.staticTexts["Open Tag"]
-            if !item.isHittable { app.tables.firstMatch.swipeUp() }
+            let item = app.buttons["Open Tag"]
+            if !item.isHittable { app.collectionViews.firstMatch.swipeUp() }
             item.tap()
             let alert = app.alerts["Open Tag"]
             XCTAssertTrue(alert.existsOrWait(timeout: 5))
@@ -377,9 +436,9 @@ final class StoreScreenshotTests: XCTestCase {
             let item = app.buttons["page-\(title)"]
             XCTAssertTrue(item.existsOrWait(timeout: 10))
             item.tap()
-            XCTAssertTrue(item.isSelected)
+            XCTAssertTrue(item.waitUntilSelected(timeout: 5), "\(title) is the page showing")
             if title == "Tracks" {
-                let lead = app.tables.cells.containing(.staticText, identifier: "Lead").firstMatch
+                let lead = app.buttons["Lead"].firstMatch
                 XCTAssertTrue(lead.existsOrWait(timeout: 15))
                 lead.tap()
                 let transport = app.buttons["tagmaster.trackPlayer.playPause"]
@@ -389,27 +448,28 @@ final class StoreScreenshotTests: XCTestCase {
                 if transport.label == "Pause" { transport.tap() }
             }
             if title == "Videos" {
-                XCTAssertTrue(app.tables.cells.firstMatch.existsOrWait(timeout: 30))
-                app.tables.firstMatch.swipeUp()
+                let videos = app.collectionViews.firstMatch
+                XCTAssertTrue(videos.buttons.firstMatch.existsOrWait(timeout: 30))
+                videos.swipeUp()
                 Thread.sleep(forTimeInterval: 8)
             }
             snap(name)
         }
         home()
-        XCTAssertTrue(app.tables.staticTexts["Cheer Up, Charlie"].existsOrWait(timeout: 60))
+        XCTAssertTrue(app.staticTexts["Cheer Up, Charlie"].existsOrWait(timeout: 60))
         if UIDevice.current.userInterfaceIdiom == .pad {
             // Keep home distinct from the detail-only scenes, which use tag 122.
-            app.tables.staticTexts["Their Hearts Were Full Of Spring"].tap()
+            app.staticTexts["Their Hearts Were Full Of Spring"].tap()
             XCTAssertTrue(app.buttons["Rate tag"].existsOrWait(timeout: 30))
         }
         snap("01-home")
-        app.tables.staticTexts["Browse"].tap()
+        app.buttons["Browse"].firstMatch.tap()
         let classic = app.buttons["page-Classic"]
         XCTAssertTrue(classic.existsOrWait(timeout: 15))
         classic.tap()
-        XCTAssertTrue(app.tables.cells.firstMatch.existsOrWait(timeout: 90))
+        XCTAssertTrue(app.tagRows.firstMatch.existsOrWait(timeout: 90))
         if UIDevice.current.userInterfaceIdiom == .pad {
-            app.tables.cells.firstMatch.tap()
+            app.tagRows.firstMatch.tap()
             XCTAssertTrue(app.buttons["Rate tag"].existsOrWait(timeout: 30))
         }
         snap("02-browse")
@@ -420,7 +480,7 @@ final class StoreScreenshotTests: XCTestCase {
         app.searchFields.firstMatch.tap()
         app.searchFields.firstMatch.typeText("Lone Prairie")
         app.keyboards.buttons["Search"].tap()
-        let result = app.tables.cells.matching(NSPredicate(format: "label CONTAINS %@", "Lone Prairie")).firstMatch
+        let result = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Lone Prairie")).firstMatch
         // UISearchController can consume the keyboard action while dismissing
         // its presentation. Submit the retained query from the navigation bar.
         if !result.existsOrWait(timeout: 5) {

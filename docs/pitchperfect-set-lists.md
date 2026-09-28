@@ -267,8 +267,23 @@ both platforms for when it grows one.
   falls back to My Songs, empty states.
 - Emulator (skips when nothing listens on `localhost:8080` / `:9099`, or the ports in
   `FIRESTORE_EMULATOR_HOST` / `FIREBASE_AUTH_EMULATOR_HOST` when those are set, and on
-  iOS when the build is unsigned, since Firebase Auth needs the keychain):
+  iOS when the build is unsigned, since Firebase Auth needs the keychain; an
+  ad-hoc signed simulator build, `CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual
+  DEVELOPMENT_TEAM=`, is enough; iOS test runs take other ports via
+  `TEST_RUNNER_FIRESTORE_EMULATOR_PORT` / `TEST_RUNNER_AUTH_EMULATOR_PORT`):
   `scripts/firestore-emulator.sh pitchperfect` starts Firestore + Auth for the
   reserved project `demo-pitchperfect`. Each test creates a fresh user and two
   clients: local edits produce the documented documents; remote create,
   rename, reorder, and delete update the local model.
+
+## Settings sync
+
+Toggle Notes and Wake Lock ride on the user document (`users/{uid}`, fields
+`toggleNotes` and `wakeLock`) alongside the set lists. A change made on the
+device is written with `merge: true`; a value that arrives from the account is
+applied locally only, never written back, and a field the account does not have
+yet leaves the device's value alone. That is Android's behaviour
+(`SettingsModel.restoring`); on iOS `DPSettingsModel` applies snapshots without
+going through its setters. `DPSongListSyncEmulatorTests.testSettingsFollowTheAccountBothWays`
+covers both directions against the emulator.
+

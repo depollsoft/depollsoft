@@ -8,8 +8,6 @@
 #import <SenTestingKit/SenTestingKit.h>
 #import <UIKit/UIKit.h>
 #import "DPUtils+NSString.h"
-#import "DPUtils+UIControl.h"
-#import "UIToolbar+DPUtils.h"
 
 @interface DPUtilsTests : SenTestCase
 @end
@@ -25,22 +23,6 @@
     NSString *raw = @"hello world!";
     NSString *encoded = [raw stringByURLEncoding];
     STAssertEqualObjects(encoded, @"hello+world%21", @"Should URL-encode spaces and punctuation");
-}
-
-- (void)testUIControlBlockTarget {
-    UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem];
-    __block BOOL tapped = NO;
-    [button addBlock:^{ tapped = YES; } forControlEvents:UIControlEventTouchUpInside];
-    [button sendActionsForControlEvents:UIControlEventTouchUpInside];
-    STAssertTrue(tapped, @"Block should be invoked on control event");
-}
-
-- (void)testToolbarAddTitle {
-    UIToolbar *tb = [[UIToolbar alloc] initWithFrame:CGRectMake(0, 0, 200, 44)];
-    UILabel *label = [tb addTitle:@"My Title"];
-    STAssertNotNil(label, @"Label should be created");
-    STAssertEqualObjects(label.text, @"My Title", @"Label text should match");
-    STAssertTrue([[tb subviews] containsObject:label], @"Label should be added as subview");
 }
 
 @end

@@ -14,5 +14,8 @@
 @property (nonatomic) int start;
 @property (nonatomic) int count;
 @property (nonatomic) int available;
+/// The catalog could not be reached or answered with nothing readable. An empty but
+/// successful query leaves this NO, so "no matches" and "no connection" stay apart.
+@property (nonatomic) BOOL failed;
 
 @end

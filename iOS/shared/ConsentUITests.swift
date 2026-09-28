@@ -15,7 +15,10 @@ final class ConsentUITests: XCTestCase {
         screenshot.name = "Privacy choices - default off"
         screenshot.lifetime = .keepAlways
         add(screenshot)
-        analytics.tap()
+        // A SwiftUI Toggle's element spans its row; the switch itself sits inside it.
+        let knob = analytics.switches.firstMatch
+        (knob.exists ? knob : analytics).tap()
+        XCTAssertEqual(analytics.value as? String, "1")
         app.navigationBars.buttons["Save choices"].tap()
         app.terminate()
         app.launchArguments = ["-FIRDebugEnabled", "-depollsoft.pitchperfect.LoginShown", "YES"]
@@ -24,7 +27,7 @@ final class ConsentUITests: XCTestCase {
         openPrivacy(app)
         XCTAssertEqual(analytics.value as? String, "1")
         XCTAssertEqual(crashes.value as? String, "0")
-        app.staticTexts["Decline both"].tap()
+        app.buttons["Decline both"].tap()
         app.terminate()
         app.launch()
         openPrivacy(app)
@@ -34,11 +37,14 @@ final class ConsentUITests: XCTestCase {
 
     private func openPrivacy(_ app: XCUIApplication) {
         let settingsButton = app.buttons["Settings"].firstMatch
-        let settings = settingsButton.exists ? settingsButton : app.tables.staticTexts["Settings"].firstMatch
-        XCTAssertTrue(settings.waitForExistence(timeout: 15))
+        XCTAssertTrue(settingsButton.waitForExistence(timeout: 15))
+        let settings = settingsButton
         settings.tap()
-        let privacy = app.staticTexts["Privacy choices"].firstMatch
-        for _ in 0..<4 where !privacy.isHittable { app.swipeUp() }
+        // A button in SwiftUI Settings. A SwiftUI list only creates the rows it
+        // has laid out, so scroll until the row exists and can be tapped.
+        let privacy = app.buttons["Privacy choices"].firstMatch
+        _ = privacy.waitForExistence(timeout: 3)
+        for _ in 0..<6 where !(privacy.exists && privacy.isHittable) { app.swipeUp() }
         XCTAssertTrue(privacy.waitForExistence(timeout: 5))
         privacy.tap()
         XCTAssertTrue(app.switches["Usage analytics"].waitForExistence(timeout: 5))

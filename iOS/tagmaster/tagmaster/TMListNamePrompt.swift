@@ -2,8 +2,7 @@
 //  TMListNamePrompt.swift
 //  tagmaster
 //
-//  The two alerts every list-management entry point shares: naming a list (new
-//  or renamed) and confirming a delete.
+//  The alert every list-naming entry point shares, for a new list or a rename.
 //
 //  Naming validates as the user types through `TMTagLists.nameErrorMessage`, so
 //  the alert never closes on a name the registry would reject: the confirming
@@ -15,41 +14,50 @@ import Foundation
 import ObjectiveC
 import UIKit
 
-public final class TMListNamePrompt: NSObject {
-    /// Shown under the field of the new-list alert until the name needs correcting.
-    public static let exampleHint = "For example “Easy tags” or “High and lows”"
-
+final class TMListNamePrompt: NSObject {
     /// Address-only key for the association that keeps a validator alive.
     private static var validatorKey: UInt8 = 0
 
     private let excluding: String?
-    private let defaultMessage: String?
     private weak var alert: UIAlertController?
     private weak var confirmAction: UIAlertAction?
 
-    private init(excluding: String?, defaultMessage: String?) {
+    private init(excluding: String?) {
         self.excluding = excluding
-        self.defaultMessage = defaultMessage
     }
 
     /// The `New list` alert. `commit` receives the normalized, already-validated name.
-    public static func createAlert(commit: @escaping (String) -> Void) -> UIAlertController {
+    private static func createAlert(cancel: (() -> Void)? = nil,
+                                   commit: @escaping (String) -> Void) -> UIAlertController {
         makeAlert(title: "New list",
                   actionTitle: "Create",
                   initialName: nil,
                   excluding: nil,
-                  defaultMessage: exampleHint,
+                  defaultMessage: TMNamePrompt.exampleHint,
+                  cancel: cancel,
                   commit: commit)
     }
 
     /// The `Rename list` alert for an existing custom list, prefilled with its name.
-    public static func renameAlert(for key: String, commit: @escaping (String) -> Void) -> UIAlertController {
+    private static func renameAlert(for key: String, cancel: (() -> Void)? = nil,
+                                   commit: @escaping (String) -> Void) -> UIAlertController {
         makeAlert(title: "Rename list",
                   actionTitle: "Rename",
                   initialName: TMTagLists.name(for: key),
                   excluding: key,
                   defaultMessage: nil,
+                  cancel: cancel,
                   commit: commit)
+    }
+
+    /// The alert for a SwiftUI screen's prompt state. The message line must follow
+    /// the typing, which a SwiftUI alert cannot do, so the prompt is this UIKit alert.
+    static func alert(for prompt: TMNamePrompt, cancel: @escaping () -> Void,
+                      commit: @escaping (String) -> Void) -> UIAlertController {
+        switch prompt.purpose {
+        case .create: return createAlert(cancel: cancel, commit: commit)
+        case .rename(let key): return renameAlert(for: key, cancel: cancel, commit: commit)
+        }
     }
 
     private static func makeAlert(title: String,
@@ -57,8 +65,9 @@ public final class TMListNamePrompt: NSObject {
                                   initialName: String?,
                                   excluding: String?,
                                   defaultMessage: String?,
+                                  cancel: (() -> Void)?,
                                   commit: @escaping (String) -> Void) -> UIAlertController {
-        let prompt = TMListNamePrompt(excluding: excluding, defaultMessage: defaultMessage)
+        let prompt = TMListNamePrompt(excluding: excluding)
         let alert = UIAlertController(title: title, message: defaultMessage, preferredStyle: .alert)
         alert.view.accessibilityIdentifier = "list.name.alert"
         alert.addTextField { field in
@@ -70,11 +79,11 @@ public final class TMListNamePrompt: NSObject {
             field.accessibilityIdentifier = "list.name.field"
             field.addTarget(prompt, action: #selector(nameChanged(_:)), for: .editingChanged)
         }
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in cancel?() })
         let confirm = UIAlertAction(title: actionTitle, style: .default) { [weak alert] _ in
             let typed = alert?.textFields?.first?.text ?? ""
-            guard TMTagLists.validateName(typed, excluding: excluding) == .none else { return }
-            commit(TMTagLists.normalizeName(typed))
+            guard let name = TMListNamePrompt.prompt(excluding: excluding, text: typed).committedName else { return }
+            commit(name)
         }
         alert.addAction(confirm)
         alert.preferredAction = confirm
@@ -92,38 +101,13 @@ public final class TMListNamePrompt: NSObject {
     }
 
     private func validate(_ name: String) {
-        let problem = TMTagLists.nameErrorMessage(name, excluding: excluding)
-        confirmAction?.isEnabled = problem == nil
-        // Nothing typed yet is not a mistake worth reporting; keep the hint.
-        let untouched = TMTagLists.normalizeName(name).isEmpty
-        alert?.message = untouched ? defaultMessage : (problem ?? defaultMessage)
+        let prompt = TMListNamePrompt.prompt(excluding: excluding, text: name)
+        confirmAction?.isEnabled = prompt.canConfirm
+        alert?.message = prompt.message
     }
-}
 
-/// The confirmation every delete of a custom list goes through, naming the list
-/// and how many tags leave the user's lists with it.
-public final class TMListDeletePrompt: NSObject {
-    /// `settled` runs whichever way the alert goes, for the caller that has a
-    /// half-open swipe waiting on the answer.
-    public static func alert(for key: String,
-                             settled: (() -> Void)? = nil,
-                             confirm: @escaping () -> Void) -> UIAlertController {
-        let count = TMTagLists.ids(for: key).count
-        let message: String
-        switch count {
-        case 0: message = "“\(TMTagLists.name(for: key))” has no tags. It will be removed from your lists."
-        case 1: message = "This removes the list and its 1 tag from your lists. Tags stay in the catalog."
-        default: message = "This removes the list and its \(count) tags from your lists. Tags stay in the catalog."
-        }
-        let alert = UIAlertController(title: "Delete “\(TMTagLists.name(for: key))”?",
-                                      message: message,
-                                      preferredStyle: .alert)
-        alert.view.accessibilityIdentifier = "list.delete.alert"
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in settled?() })
-        alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { _ in
-            confirm()
-            settled?()
-        })
-        return alert
+    /// The same rules the SwiftUI screens hold their prompts to.
+    private static func prompt(excluding: String?, text: String) -> TMNamePrompt {
+        TMNamePrompt(purpose: excluding.map { .rename($0) } ?? .create, text: text)
     }
 }

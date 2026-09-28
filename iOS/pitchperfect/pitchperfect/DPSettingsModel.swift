@@ -28,18 +28,37 @@ public extension Notification.Name {
             detachFromFirestore()
             return
         }
+        attachToFirestore(userDoc: Firestore.firestore().document("users/\(user.uid)"))
+    }
 
+    /// Follows the settings on the account's document: local changes are written
+    /// there, and the document's values are applied here without being written
+    /// back. (Applying them through the setters wrote each one back, and filled a
+    /// field the document did not have yet with this device's value.)
+    func attachToFirestore(userDoc: DocumentReference) {
         listenerRegistration?.remove()
-        userRef = Firestore.firestore().document("users/\(user.uid)")
-        listenerRegistration = userRef?.addSnapshotListener { snapshot, error in
-            if error != nil {
-                return
-            }
-            self.wakeLock = snapshot?.get("wakeLock") as? Bool ?? self.wakeLock
-            self.toggleNotes = snapshot?.get("toggleNotes") as? Bool ?? self.toggleNotes
+        userRef = userDoc
+        listenerRegistration = userDoc.addSnapshotListener { [weak self] snapshot, error in
+            guard let self, error == nil, let snapshot else { return }
+            self.applyRemote(wakeLock: snapshot.get("wakeLock") as? Bool,
+                             toggleNotes: snapshot.get("toggleNotes") as? Bool)
         }
     }
-    
+
+    private func applyRemote(wakeLock: Bool?, toggleNotes: Bool?) {
+        let defaults = UserDefaults.standard
+        var changed = false
+        if let wakeLock, wakeLock != self.wakeLock {
+            defaults.set(wakeLock, forKey: wakeLockKey)
+            changed = true
+        }
+        if let toggleNotes, toggleNotes != self.toggleNotes {
+            defaults.set(toggleNotes, forKey: toggleNoteKey)
+            changed = true
+        }
+        if changed { NotificationCenter.default.post(name: .settingsChanged, object: self) }
+    }
+
     @objc public func detachFromFirestore() {
         if listenerRegistration != nil {
             listenerRegistration?.remove()
@@ -57,12 +76,14 @@ public extension Notification.Name {
             if (curUser!.providerData.count > 0) {
                 let providerData = curUser!.providerData.first!
                 switch(providerData.providerID) {
+                // Facebook and Google accounts can come without an email, and a
+                // phone account without its number; never crash reading them.
                 case FacebookAuthProviderID:
-                    return "Facebook \(providerData.email!)"
+                    return "Facebook \(providerData.email ?? "")"
                 case GoogleAuthProviderID:
-                    return "Google: \(providerData.email!)"
+                    return "Google: \(providerData.email ?? "")"
                 case PhoneAuthProviderID:
-                    return providerData.phoneNumber!
+                    return providerData.phoneNumber ?? "Current User: \(curUser!.uid)"
                 default:
                     return providerData.email ?? "Current User: \(curUser!.uid)"
                 }
@@ -99,9 +120,10 @@ public extension Notification.Name {
     
     @objc public static let sharedInstance: DPSettingsModel = DPSettingsModel()
     
-    private override init() {
+    /// Starts from whatever the user last chose. (Until the port this reset Toggle
+    /// Notes and Wake Lock to off at every launch, which the Objective-C model
+    /// and Android never did.) Internal so tests can make a fresh one.
+    override init() {
         super.init()
-        self.wakeLock = false
-        self.toggleNotes = false
     }
 }

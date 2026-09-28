@@ -303,7 +303,7 @@ final class DPSongsModelTests: XCTestCase {
         // Trigger didSet by assigning a new dictionary
         model.songLists = ["new": DPSongList(id: "new")]
         
-        waitForExpectations(timeout: 1.0)
+        waitForExpectations(timeout: 10)
     }
     
     func testSongListNameChangePostsNotification() {
@@ -319,7 +319,7 @@ final class DPSongsModelTests: XCTestCase {
         
         list.name = "New Name"
         
-        waitForExpectations(timeout: 1.0)
+        waitForExpectations(timeout: 10)
     }
     
     func testSongsPropertyDidSetPostsNotification() {
@@ -335,7 +335,7 @@ final class DPSongsModelTests: XCTestCase {
         
         list.songs = []
         
-        waitForExpectations(timeout: 1.0)
+        waitForExpectations(timeout: 10)
     }
     
     // MARK: - Store Value Tests

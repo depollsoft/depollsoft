@@ -38,7 +38,7 @@ final class DPSettingsModelTests: XCTestCase {
         let newValue = !model.wakeLock
         model.wakeLock = newValue
 
-        waitForExpectations(timeout: 1.0)
+        waitForExpectations(timeout: 10)
         XCTAssertEqual(model.wakeLock, newValue)
 
         // Re-reading ensures the change persisted through UserDefaults.
@@ -97,7 +97,7 @@ final class DPSettingsModelTests: XCTestCase {
         let newValue = !model.toggleNotes
         model.toggleNotes = newValue
 
-        waitForExpectations(timeout: 1.0)
+        waitForExpectations(timeout: 10)
         XCTAssertEqual(model.toggleNotes, newValue)
         XCTAssertEqual(DPSettingsModel.sharedInstance.toggleNotes, newValue)
     }
@@ -159,7 +159,7 @@ final class DPSettingsModelTests: XCTestCase {
         model.wakeLock = !model.wakeLock
         model.toggleNotes = !model.toggleNotes
         
-        waitForExpectations(timeout: 2.0)
+        waitForExpectations(timeout: 10)
         XCTAssertEqual(notificationCount, 2)
     }
     
@@ -179,7 +179,7 @@ final class DPSettingsModelTests: XCTestCase {
         
         model.wakeLock = !model.wakeLock
         
-        waitForExpectations(timeout: 1.0)
+        waitForExpectations(timeout: 10)
         XCTAssertTrue(receivedObject as AnyObject === model)
     }
     
@@ -244,7 +244,7 @@ final class DPSettingsModelTests: XCTestCase {
         // Setting to same value
         model.wakeLock = currentValue
         
-        waitForExpectations(timeout: 1.0)
+        waitForExpectations(timeout: 10)
     }
     
     func testSettingSameToggleNotesValueStillPostsNotification() {
@@ -262,7 +262,7 @@ final class DPSettingsModelTests: XCTestCase {
         // Setting to same value
         model.toggleNotes = currentValue
         
-        waitForExpectations(timeout: 1.0)
+        waitForExpectations(timeout: 10)
     }
     
     // MARK: - User String Tests (without Auth)

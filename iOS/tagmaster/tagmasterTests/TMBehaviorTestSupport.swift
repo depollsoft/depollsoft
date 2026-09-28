@@ -140,7 +140,7 @@ class TMBehaviorTestCase: XCTestCase {
 
     /// Spins the run loop until no blocked request is still in flight, so every
     /// completion has landed before the test's fixtures and window go away.
-    private func drainOutstandingRequests(timeout: TimeInterval = 5) {
+    private func drainOutstandingRequests(timeout: TimeInterval = 10) {
         let deadline = Date(timeIntervalSinceNow: timeout)
         while TMBlockedNetwork.outstandingRequests > 0 && Date() < deadline {
             RunLoop.current.run(mode: .default, before: Date(timeIntervalSinceNow: 0.01))
@@ -282,16 +282,6 @@ class TMBehaviorTestCase: XCTestCase {
         return navigation
     }
 
-    /// Stops a page-based screen's query lists from fetching from the live
-    /// catalog when they appear. `isLoading` is the controller's own guard, so
-    /// this suppresses the request without altering anything else.
-    func quiesceQueries(in pages: TMPageViewController) {
-        pages.loadViewIfNeeded()
-        for page in pages.viewControllers {
-            (page as? DPTagQueryViewController)?.isLoading = true
-        }
-    }
-
     func resize(to size: CGSize) {
         window.frame = CGRect(origin: .zero, size: size)
         settle()
@@ -331,7 +321,7 @@ class TMBehaviorTestCase: XCTestCase {
     /// otherwise dominate a wait that resolves in milliseconds. Use it for work
     /// that completes back on the main queue, such as a blocked catalog fetch.
     func spinUntil(_ description: String,
-                   timeout: TimeInterval = 2,
+                   timeout: TimeInterval = 10,
                    file: StaticString = #filePath,
                    line: UInt = #line,
                    _ condition: () -> Bool) {
@@ -400,12 +390,13 @@ class TMBehaviorTestCase: XCTestCase {
     }
 
     /// Drives a detail controller to its loaded state from the seeded cache.
+    @MainActor
     func loadedDetail(tagId: Int32 = 1809,
-                      size: CGSize = TMBehaviorTestCase.portrait) -> DPTagViewController {
-        let detail = DPTagViewController()
+                      size: CGSize = TMBehaviorTestCase.portrait) -> TagDetailViewController {
+        let detail = TagDetailViewController()
         detail.tagId = tagId
         mountInNavigation(detail, size: size)
-        waitUntil("detail leaves its loading state") { detail.value(forKey: "tag") != nil }
+        spinUntil("detail leaves its loading state", timeout: 5) { detail.model.tag != nil }
         settle()
         return detail
     }

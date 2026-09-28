@@ -5,22 +5,15 @@ import XCTest
 
 final class DPCommonTests: XCTestCase {
     
-    // MARK: - Settings Button Tests
-    
-    /// Tests that settings button is properly configured with target-action pattern
-    func testGetSettingsButtonConfiguresTargetActionCorrectly() {
-        let button = DPCommon.getSettingsButton(target: self, selector: #selector(dummySelector))
-        
-        // Verify target-action binding (the actual functionality being tested)
-        XCTAssertTrue(button.target as AnyObject === self, "Target should be correctly bound")
-        XCTAssertEqual(button.action, #selector(dummySelector), "Action should be correctly bound")
-        XCTAssertNotNil(button.image, "Button should have a gear image for visual identification")
-    }
-    
-    // MARK: - Helper Methods
-    
-    @objc func dummySelector() {
-        // Empty selector for testing
+    /// Bar symbols carry the names the UI tests and VoiceOver use.
+    func testBarSymbolsAreNamedForWhatTheyDo() {
+        XCTAssertEqual(DPCommon.accessibilityLabel(forSymbol: "gearshape"), "Settings")
+        XCTAssertEqual(DPCommon.accessibilityLabel(forSymbol: "checkmark"), "Done")
+        XCTAssertEqual(DPCommon.accessibilityLabel(forSymbol: "xmark"), "Close")
+        XCTAssertEqual(DPCommon.accessibilityLabel(forSymbol: "plus"), "Add")
+        XCTAssertEqual(DPCommon.accessibilityLabel(forSymbol: "pencil"), "Edit")
+        XCTAssertEqual(DPCommon.accessibilityLabel(forSymbol: "ellipsis.circle"), "More")
+        XCTAssertEqual(DPCommon.accessibilityLabel(forSymbol: "unmapped.symbol"), "unmapped.symbol")
     }
 }
 

@@ -146,6 +146,12 @@ private final class TMRenderState {
 
     override init() {
         super.init()
+        if !Self.usesAudioHardware, let stereo = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 2) {
+            // Even connecting to the main mixer wakes the device's output unit, which is
+            // what deadlocks on CI. An offline engine never touches the hardware; render
+            // tests switch it to their own format before loading.
+            try? engine.enableManualRenderingMode(.offline, format: stereo, maximumFrameCount: 4096)
+        }
         let center = NotificationCenter.default
         observers.append(center.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { [weak self] note in
             guard let self, self.isPlaying,
@@ -307,8 +313,14 @@ private final class TMRenderState {
         state.currentFrame = Int((max(0, time) * sampleRate).rounded())
     }
 
+    /// Off in the unit-test bundle: CI simulators have no audio device, and starting (or
+    /// even wiring) a hardware engine there deadlocks the audio server. Players made while
+    /// it is off render offline from the start, so the render tests exercise the real graph.
+    nonisolated(unsafe) static var usesAudioHardware = true
+
     private func startEngine() -> Bool {
         guard !engine.isRunning else { return true }
+        if !Self.usesAudioHardware && !engine.isInManualRenderingMode { return true }
         do {
             if !engine.isInManualRenderingMode { try? AVAudioSession.sharedInstance().setActive(true) }
             try engine.start()

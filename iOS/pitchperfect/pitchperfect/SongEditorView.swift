@@ -10,24 +10,24 @@
 //  sound.
 //
 
-import Combine
 import SwiftUI
 import UIKit
 
-final class SongEditorModel: ObservableObject {
-    @Published var title: String
-    @Published private(set) var selectedKey: DPKey
-    @Published var isMinor: Bool {
+@Observable
+final class SongEditorModel {
+    var title: String
+    private(set) var selectedKey: DPKey
+    var isMinor: Bool {
         didSet { if isMinor != oldValue { modeChanged() } }
     }
-    @Published var titleErrorVisible = false
+    var titleErrorVisible = false
     /// Incremented when the controller wants the title field focused.
-    @Published var titleFocusRequest = 0
+    var titleFocusRequest = 0
 
     let majorKeys = DPKey.majorKeys() as? [DPKey] ?? []
     let minorKeys = DPKey.minorKeys() as? [DPKey] ?? []
 
-    private let rowFeedback = UISelectionFeedbackGenerator()
+    @ObservationIgnored private let rowFeedback = UISelectionFeedbackGenerator()
 
     init(title: String, key: DPKey?) {
         self.title = title
@@ -72,81 +72,26 @@ final class SongEditorModel: ObservableObject {
         }
     }
 
-}
-
-/// The Objective-C face of the editor: owns the model and builds the hosted view.
-@objc public final class DPSongEditor: NSObject {
-    let model: SongEditorModel
-
-    @objc public init(title: String, key: DPKey?) {
-        model = SongEditorModel(title: title, key: key)
-    }
-
-    @objc public var title: String {
-        get { model.trimmedTitle }
-        set { model.title = newValue }
-    }
-    @objc public var selectedKey: DPKey { model.selectedKey }
-    @objc public var isMinor: Bool { model.isMinor }
-    @objc public var titleErrorVisible: Bool { model.titleErrorVisible }
-
-    @objc public func select(_ key: DPKey) { model.select(key) }
-
     /// Shows the inline requirement and focuses the field when the title is blank.
-    @objc public func requireTitle() -> Bool {
-        guard model.trimmedTitle.isEmpty else { return true }
-        model.titleErrorVisible = true
-        model.titleFocusRequest += 1
+    func requireTitle() -> Bool {
+        guard trimmedTitle.isEmpty else { return true }
+        titleErrorVisible = true
+        titleFocusRequest += 1
         return false
     }
 
-    @objc public func focusTitle() { model.titleFocusRequest += 1 }
-
-    @objc public func makeViewController() -> UIViewController {
-        let host = UIHostingController(rootView: SongEditorView(model: model))
-        host.view.backgroundColor = .clear
-        return host
-    }
 }
 
 // MARK: - Views
 
-private enum Plate {
-    static let ink = Color(DPTheme.plateInk)
-    static let inkSecondary = Color(DPTheme.plateInkSecondary)
-    static let surface = Color(DPTheme.plateSurface)
-    static let hairline = Color(DPTheme.plateHairline)
-    static let lit = Color(DPTheme.plateLit)
-    static let onLit = Color(DPTheme.plateOnLit)
-
-    static func display(_ size: CGFloat) -> Font { Font(DPTheme.condensedFont(size: size) as CTFont) }
-    static func text(_ size: CGFloat) -> Font { Font(DPTheme.listTitleFont(size: size) as CTFont) }
-    static func mono(_ size: CGFloat) -> Font { Font(DPTheme.monospacedFont(size: size) as CTFont) }
-    static func music(_ size: CGFloat) -> Font { Font.custom("MusiQwik", size: size) }
-    static func noteHedz(_ size: CGFloat) -> Font { Font.custom("NoteHedz", size: size) }
-}
-
-/// Engraved plate label: tracked monospaced capitals in secondary ink.
-private struct PlateLabel: View {
-    let text: String
-
-    var body: some View {
-        Text(text)
-            .font(Plate.mono(12))
-            .tracking(12 * 0.14)
-            .foregroundStyle(Plate.inkSecondary)
-            .accessibilityAddTraits(.isHeader)
-    }
-}
-
 struct SongEditorView: View {
-    @ObservedObject var model: SongEditorModel
+    @Bindable var model: SongEditorModel
     @FocusState private var titleFocused: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 0) {
-                PlateLabel(text: "SONG TITLE")
+                PlateHeader("Song title")
                 TextField("", text: $model.title, prompt: Text("Untitled").foregroundStyle(Plate.inkSecondary.opacity(0.6)))
                     .font(Plate.text(26))
                     .foregroundStyle(Plate.ink)
@@ -172,7 +117,7 @@ struct SongEditorView: View {
                         .accessibilityIdentifier("songTitleError")
                 }
                 HStack(alignment: .center) {
-                    PlateLabel(text: "KEY")
+                    PlateHeader("Key")
                     Spacer()
                     Picker("Key mode", selection: $model.isMinor) {
                         Text("Major").tag(false)
@@ -200,13 +145,13 @@ struct SongEditorView: View {
 /// The Keys screen's list: signature left, name right, hairline rules, and
 /// the chosen row lit. Opens scrolled to the chosen key.
 private struct KeySignatureList: View {
-    @ObservedObject var model: SongEditorModel
+    @Bindable var model: SongEditorModel
     let dismissKeyboard: () -> Void
 
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(spacing: 0) {
+                VStack(spacing: 0) {
                     Rectangle().fill(Plate.hairline).frame(height: 1)
                     ForEach(Array(model.keys.enumerated()), id: \.offset) { index, key in
                         let selected = key.isEqual(model.selectedKey)
@@ -221,6 +166,12 @@ private struct KeySignatureList: View {
             }
             .scrollDismissesKeyboard(.immediately)
             .onAppear { scrollToSelection(proxy, animated: false) }
+            // On iPad the form sheet rises for the keyboard (a required title) and
+            // the list re-fits; UIKit's kept the chosen key centred.
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidShowNotification)) { _ in
+                guard UIDevice.current.userInterfaceIdiom == .pad else { return }
+                scrollToSelection(proxy, animated: false)
+            }
             .onChange(of: model.isMinor) { _, _ in scrollToSelection(proxy, animated: true) }
         }
         .accessibilityIdentifier("keyList")
@@ -246,7 +197,7 @@ private struct KeySignatureRow: View {
         Button(action: action) {
             HStack(alignment: .center) {
                 Text(SongEditorSpeech.signatureGlyphs(numAccidentals: Int(key.numAccidentals)))
-                    .font(Plate.music(44))
+                    .font(Plate.scaledMusic(44))
                     .accessibilityHidden(true)
                 Spacer(minLength: 16)
                 KeyName(key: key, size: 22, color: selected ? Plate.onLit : Plate.ink)
@@ -276,7 +227,7 @@ private struct KeyName: View {
                 .font(Plate.text(size))
             if SongEditorSpeech.accidental(of: key) != Int(Natural.rawValue) {
                 Text(SongEditorSpeech.accidental(of: key) == Int(Sharp.rawValue) ? "\u{00EC}" : "\u{00ED}")
-                    .font(Plate.noteHedz(size * 1.2))
+                    .font(Plate.scaledNoteHedz(size * 1.2))
             }
         }
         .foregroundStyle(color)
@@ -313,4 +264,123 @@ enum SongEditorSpeech {
         let spelled = accidental == Int(Sharp.rawValue) ? "\(letter) sharp" : (accidental == Int(Flat.rawValue) ? "\(letter) flat" : letter)
         return "\(spelled) \(minor ? "minor" : "major"), \(accidentalCount(numAccidentals: Int(key.numAccidentals)))"
     }
+}
+
+// MARK: - Screen
+
+/// One editing of one song: the editor's state and what Close and Done do.
+@MainActor
+final class SongEditorSession {
+    let request: SongEditorRequest
+    let model: SongEditorModel
+
+    init(request: SongEditorRequest) {
+        self.request = request
+        model = SongEditorModel(title: request.song.name ?? "", key: request.song.key)
+    }
+
+    var title: String { (request.song.name ?? "").isEmpty ? "Add Song" : "Edit Song" }
+
+    /// Done: a blank title is refused (with the error haptic and announcement);
+    /// otherwise the song takes the title and key and the Songs screen closes the editor.
+    func complete() {
+        guard model.requireTitle() else {
+            UINotificationFeedbackGenerator().notificationOccurred(.error)
+            UIAccessibility.post(notification: .announcement, argument: "Song title is required")
+            return
+        }
+        request.song.name = model.trimmedTitle
+        request.song.key = model.selectedKey
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        request.completion(true)
+    }
+
+    func cancel() {
+        request.completion(false)
+    }
+}
+
+/// The editor as the Songs tab presents it, laid out as the UIKit editor was: its
+/// own navigation controller, titled Add Song or Edit Song, with Close and Done
+/// bar items; the SwiftUI form hosted over the staff; and, on iPhone, the banner
+/// pinned to the safe area's foot. Only the hosted form makes room for the
+/// keyboard, which covers the banner as it did in UIKit. (A SwiftUI
+/// NavigationStack in a UIKit-presented controller hands its title and toolbar
+/// to the presenting screen's bar instead.)
+final class SongEditorController: UIViewController {
+    let session: SongEditorSession
+    private let form: UIHostingController<SongEditorView>
+    private let banner = BannerHostView()
+    private var bannerHeight: NSLayoutConstraint?
+
+    private var isPhone: Bool { traitCollection.userInterfaceIdiom == .phone }
+
+    init(request: SongEditorRequest) {
+        session = SongEditorSession(request: request)
+        form = UIHostingController(rootView: SongEditorView(model: session.model))
+        super.init(nibName: nil, bundle: nil)
+        navigationItem.title = session.title
+        navigationItem.leftBarButtonItem = BarSymbol.item(systemName: "xmark", target: self, action: #selector(close))
+        navigationItem.rightBarButtonItem = BarSymbol.item(systemName: "checkmark", target: self, action: #selector(done))
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .systemBackground
+        edgesForExtendedLayout = .all
+
+        // The staff runs under the glass bars as a non-scrolling scroll view's
+        // pattern, which the bars sample; the pattern starts below the bars.
+        let backdrop = UIScrollView()
+        backdrop.isScrollEnabled = false
+        backdrop.backgroundColor = StaffPattern.color
+        backdrop.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(backdrop)
+        setContentScrollView(backdrop, for: .all)
+
+        addChild(form)
+        form.view.backgroundColor = .clear
+        form.view.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(form.view)
+        form.didMove(toParent: self)
+
+        let safe = view.safeAreaLayoutGuide
+        var constraints = [
+            backdrop.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            backdrop.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            backdrop.topAnchor.constraint(equalTo: view.topAnchor),
+            backdrop.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            form.view.topAnchor.constraint(equalTo: safe.topAnchor),
+            form.view.leadingAnchor.constraint(equalTo: safe.leadingAnchor),
+            form.view.trailingAnchor.constraint(equalTo: safe.trailingAnchor),
+        ]
+        if isPhone {
+            banner.translatesAutoresizingMaskIntoConstraints = false
+            banner.accessibilityElementsHidden = true
+            view.addSubview(banner)
+            let height = banner.heightAnchor.constraint(equalToConstant: 0)
+            bannerHeight = height
+            constraints += [
+                banner.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                banner.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                banner.bottomAnchor.constraint(equalTo: safe.bottomAnchor),
+                height,
+                form.view.bottomAnchor.constraint(equalTo: banner.topAnchor, constant: -8),
+            ]
+        } else {
+            constraints.append(form.view.bottomAnchor.constraint(equalTo: safe.bottomAnchor, constant: -8))
+        }
+        NSLayoutConstraint.activate(constraints)
+    }
+
+    override func viewWillLayoutSubviews() {
+        super.viewWillLayoutSubviews()
+        bannerHeight?.constant = AdBanner.size(width: view.bounds.width, landscape: banner.isLandscape).size.height
+    }
+
+    @objc private func close() { session.cancel() }
+    @objc private func done() { session.complete() }
 }

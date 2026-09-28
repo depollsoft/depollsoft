@@ -195,6 +195,11 @@ static NSNumber *kFalse;
             cur = [DPJsonSerializer deserializeDictionary:cur];
         }
         SEL selector = NSSelectorFromString([NSString stringWithFormat:@"set%@:", [key propertyCapitalize]]);
+        // A key the class has no property for (saved by another version, say) is
+        // skipped rather than crashing the whole read.
+        if (![result respondsToSelector:selector]) {
+            continue;
+        }
         NSMethodSignature *meth = [result methodSignatureForSelector:selector];
         NSInvocation *inv = [NSInvocation invocationWithMethodSignature:meth];
         inv.target = result;
