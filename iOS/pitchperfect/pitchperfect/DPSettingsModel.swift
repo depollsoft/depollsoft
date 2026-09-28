@@ -9,9 +9,11 @@
 import Foundation
 import FirebaseAuth
 import FirebaseFirestore
+import WidgetKit
 
 let wakeLockKey = "depollsoft.pitchperfect.WakeLock"
 let toggleNoteKey = "depollsoft.pitchperfect.ToggleNote"
+let referencePitchKey = "depollsoft.pitchperfect.ReferencePitch"
 
 public extension Notification.Name {
     static let settingsChanged = Notification.Name("pitchPerfect.settingsChanged")
@@ -41,11 +43,12 @@ public extension Notification.Name {
         listenerRegistration = userDoc.addSnapshotListener { [weak self] snapshot, error in
             guard let self, error == nil, let snapshot else { return }
             self.applyRemote(wakeLock: snapshot.get("wakeLock") as? Bool,
-                             toggleNotes: snapshot.get("toggleNotes") as? Bool)
+                             toggleNotes: snapshot.get("toggleNotes") as? Bool,
+                             referencePitch: (snapshot.get("referencePitch") as? NSNumber)?.intValue)
         }
     }
 
-    private func applyRemote(wakeLock: Bool?, toggleNotes: Bool?) {
+    private func applyRemote(wakeLock: Bool?, toggleNotes: Bool?, referencePitch: Int?) {
         let defaults = UserDefaults.standard
         var changed = false
         if let wakeLock, wakeLock != self.wakeLock {
@@ -54,6 +57,12 @@ public extension Notification.Name {
         }
         if let toggleNotes, toggleNotes != self.toggleNotes {
             defaults.set(toggleNotes, forKey: toggleNoteKey)
+            changed = true
+        }
+        if let referencePitch, DPSettingsModel.referencePitchRange.contains(referencePitch),
+           referencePitch != self.referencePitch {
+            defaults.set(referencePitch, forKey: referencePitchKey)
+            applyReferencePitch()
             changed = true
         }
         if changed { NotificationCenter.default.post(name: .settingsChanged, object: self) }
@@ -118,6 +127,38 @@ public extension Notification.Name {
         }
     }
     
+    /// Common choices for A4, in Hz: historical, standard and orchestral pitches.
+    public static let commonReferencePitches = [415, 430, 432, 435, 438, 440, 441, 442, 443, 444, 446]
+    public static let standardReferencePitch = 440
+    /// What a stored or synced tuning may hold; anything else reads as 440 Hz.
+    static let referencePitchRange = 400...480
+
+    /// The A4 the notes are tuned to, in Hz.
+    @objc public var referencePitch: Int {
+        get {
+            let stored = UserDefaults.standard.integer(forKey: referencePitchKey)
+            return DPSettingsModel.referencePitchRange.contains(stored) ? stored : DPSettingsModel.standardReferencePitch
+        }
+        set {
+            guard DPSettingsModel.referencePitchRange.contains(newValue) else { return }
+            UserDefaults.standard.set(newValue, forKey: referencePitchKey)
+            applyReferencePitch()
+            if userRef != nil {
+                userRef?.setData(["referencePitch": newValue], merge: true)
+            }
+            NotificationCenter.default.post(name: .settingsChanged, object: self)
+        }
+    }
+
+    /// Tunes the notes, and the widget in its own process, to the stored A4.
+    @objc public func applyReferencePitch() {
+        let pitch = referencePitch
+        DPNote.referencePitch = Double(pitch)
+        guard WidgetTuningState.referencePitch != Double(pitch) else { return }
+        WidgetTuningState.set(Double(pitch))
+        WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
+    }
+
     @objc public static let sharedInstance: DPSettingsModel = DPSettingsModel()
     
     /// Starts from whatever the user last chose. (Until the port this reset Toggle

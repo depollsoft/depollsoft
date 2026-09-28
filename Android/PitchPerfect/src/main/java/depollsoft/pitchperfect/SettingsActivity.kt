@@ -72,6 +72,7 @@ class SettingsActivity(
         setupPrivateBuildDiagnostics()
         val actions =
             SettingsActions(
+                chooseTuning = { dialog = SettingsDialog.TUNING },
                 clearSongs = { dialog = SettingsDialog.CLEAR_SONGS },
                 installOnWatch = ::installOnWatch,
                 logIn = { dialog = SettingsDialog.LOG_IN },
@@ -109,6 +110,11 @@ class SettingsActivity(
         when (dialog) {
             SettingsDialog.LOG_IN -> LoginPromptDialog(onDismiss = close, onAuthenticated = state::changed)
             SettingsDialog.CHANGELOG -> ChangelogDialog(onDismiss = close)
+            SettingsDialog.TUNING ->
+                TuningDialog(state.referencePitch, onDismiss = close) {
+                    close()
+                    state.referencePitch = it
+                }
             SettingsDialog.CLEAR_SONGS ->
                 ConfirmDialog(
                     title = stringResource(R.string.ClearAllSongs),
@@ -279,7 +285,7 @@ class SettingsActivity(
 }
 
 /** The settings screen's dialogs. */
-enum class SettingsDialog { LOG_IN, CHANGELOG, CLEAR_SONGS, DELETE_ACCOUNT }
+enum class SettingsDialog { LOG_IN, CHANGELOG, CLEAR_SONGS, DELETE_ACCOUNT, TUNING }
 
 /** A yes/no question in AppCompat's alert dialog. */
 @androidx.compose.runtime.Composable

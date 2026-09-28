@@ -438,7 +438,7 @@ struct NoteRow: View {
             }
             HStack {
                 Spacer(minLength: 0)
-                Text(String(format: "%1.2f Hz", note.frequency))
+                Text(String(format: "%1.2f Hz", NotePlayer.shared.frequency(of: note)))
                     .font(Plate.mono(14))
                     .kerning(14 * 0.04)
                     .foregroundStyle(lit ? Plate.onLit : Plate.inkSecondary)
@@ -455,7 +455,7 @@ struct NoteRow: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(NoteSpelling.spoken(note))
         .accessibilityAddTraits(lit ? .isSelected : [])
-        .accessibilityValue(String(format: "%1.2f Hz", note.frequency))
+        .accessibilityValue(String(format: "%1.2f Hz", NotePlayer.shared.frequency(of: note)))
     }
 }
 

@@ -36,6 +36,7 @@ final class DPAppDelegate: UIResponder, UIApplicationDelegate {
         // A fresh process cannot be sounding a widget pitch; never leave a cell lit.
         configureWidgetPlayback()
         guard !Self.isRunningTests else { return true }
+        DPSettingsModel.sharedInstance.applyReferencePitch()
 
         DPAppLog.start()
         FirebaseApp.configure()

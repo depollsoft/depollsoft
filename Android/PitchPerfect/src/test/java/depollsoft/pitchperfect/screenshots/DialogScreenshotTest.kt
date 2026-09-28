@@ -1,7 +1,10 @@
 package depollsoft.pitchperfect.screenshots
 
 import depollsoft.lib.activity.RichApplication
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import depollsoft.pitchperfect.SettingsActivity
+import depollsoft.pitchperfect.TestTags
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.captureScreen
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.launch
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.launchMain
@@ -107,6 +110,14 @@ class DialogScreenshotTest {
     fun loginPrompt() {
         launch(SettingsActivity::class.java).showLoginPrompt()
         captureScreen("dialog_login_prompt")
+    }
+
+    @Test
+    fun tuning() {
+        launch(SettingsActivity::class.java)
+        ScreenshotSupport.compose.onNodeWithTag(TestTags.TUNING).performClick()
+        ScreenshotSupport.settle()
+        captureScreen("dialog_tuning")
     }
 
     @Test

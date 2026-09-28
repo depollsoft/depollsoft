@@ -101,6 +101,10 @@ final class NotesAndKeysTests: PitchPerfectTestCase {
         let middle = notes[notes.count / 2]
         let row = try XCTUnwrap(app.ui.element(label: NoteSpelling.spoken(middle)))
         XCTAssertEqual(row.accessibilityValue, String(format: "%1.2f Hz", middle.frequency))
+        DPSettingsModel.sharedInstance.referencePitch = 415
+        settle { app.ui.element(label: NoteSpelling.spoken(middle))?.accessibilityValue == String(format: "%1.2f Hz", middle.frequency * 415 / 440) }
+        XCTAssertEqual(app.ui.element(label: NoteSpelling.spoken(middle))?.accessibilityValue,
+                       String(format: "%1.2f Hz", middle.frequency * 415 / 440), "the list follows the tuning")
         XCTAssertEqual(NoteSpelling.spoken(DPNote.c4()), "C 4")
         let sharp = try XCTUnwrap(notes.first { $0.alternate != nil })
         XCTAssertTrue(NoteSpelling.spoken(sharp).contains("sharp"))

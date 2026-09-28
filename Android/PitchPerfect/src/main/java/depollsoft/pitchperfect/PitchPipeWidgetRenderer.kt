@@ -328,7 +328,7 @@ object PitchPipeWidgetRenderer {
         }
         val line =
             when (playing.size) {
-                1 -> String.format("%.1f Hz", playing[0].value.frequency)
+                1 -> String.format("%.1f Hz", playing[0].value.tunedFrequency)
                 2 -> PitchInterval.name(playing[0].index, playing[1].index)
                 else -> "${playing.size} NOTES"
             }

@@ -47,6 +47,8 @@ object TestTags {
     const val ROW_OVERFLOW = "setListRowOverflow"
     const val TOGGLE_NOTES = "toggleNoteCheckBox"
     const val WAKE_LOCK = "wakeLockCheckBox"
+    const val TUNING = "tuningButton"
+    const val TUNING_CHOICE = "tuningChoice"
     const val CLEAR_SONGS = "clearSongListButton"
     const val WATCH_SECTION = "watchSection"
     const val WATCH_STATUS = "watchStatus"

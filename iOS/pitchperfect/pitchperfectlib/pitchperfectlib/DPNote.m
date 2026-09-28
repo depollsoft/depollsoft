@@ -14,11 +14,15 @@
 static DPNote *C4 = nil;
 static NSArray *commonNotes = nil;
 static NSArray *prunedNotes = nil;
+static const double standardA4 = 440;
+static double sReferencePitch = standardA4;
 
 @interface DPNote ()
 
 @property (nonatomic, readonly) NSObject *synchronizer;
 @property (nonatomic, readonly) DPAudioSynthesizer *synth;
+/// The frequency `synth` was made for.
+@property (nonatomic) double synthFrequency;
 
 @end
 
@@ -84,6 +88,18 @@ static NSArray *prunedNotes = nil;
 
 + (double)getNoteFrequency:(int)number {
     return 440 * pow(2, (number - 49) / 12.0);
+}
+
++ (double)referencePitch {
+    return sReferencePitch;
+}
+
++ (void)setReferencePitch:(double)value {
+    sReferencePitch = value;
+}
+
+- (double)tunedFrequency {
+    return self.frequency * sReferencePitch / standardA4;
 }
 
 + (NSArray *)prunedNotes {
@@ -163,8 +179,11 @@ static NSArray *prunedNotes = nil;
         if(self.isPlaying) {
             return;
         }
-        if (!synth) {
-            synth = [[DPAudioSynthesizer alloc] initWithFrequency:self.frequency sampleRate:44100];
+        double tuned = self.tunedFrequency;
+        if (!synth || self.synthFrequency != tuned) {
+            // Made again after the tuning changes.
+            synth = [[DPAudioSynthesizer alloc] initWithFrequency:tuned sampleRate:44100];
+            self.synthFrequency = tuned;
         }
         [synth start];
         self->isPlaying = YES;

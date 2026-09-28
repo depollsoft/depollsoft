@@ -253,7 +253,7 @@ final class PitchPipeModel {
         if let chord {
             detail = chord
         } else if playing.count == 1 {
-            detail = String(format: "%.1f Hz", notes[playing[0]].frequency)
+            detail = String(format: "%.1f Hz", player.frequency(of: notes[playing[0]]))
         } else if playing.count == 2 {
             detail = Self.intervalName(between: playing[0], and: playing[1])
         } else {

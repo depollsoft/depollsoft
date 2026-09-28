@@ -150,6 +150,20 @@ class PitchRowsTest {
     }
 
     @Test
+    fun aNoteRowShowsItsFrequencyAtTheChosenTuning() {
+        showNotes()
+        val index = notes.indexOfFirst { it.friendlyName == "A" && it.accidental == Accidental.Natural && it.octave == 4 }
+        compose.onNodeWithTag(TestTags.NOTE_LIST).performScrollToNode(hasTestTag(TestTags.noteRow(index)))
+        val row = compose.onNodeWithTag(TestTags.noteRow(index))
+        fun shown() = row.fetchSemanticsNode().config.getOrNull(SemanticsProperties.Text)?.joinToString(" ")
+        assertEquals("A4 440.00 Hz", shown())
+
+        SettingsModel.referencePitch = 415
+        settle()
+        assertEquals("the open list follows the new tuning", "A4 415.00 Hz", shown())
+    }
+
+    @Test
     fun aNoteSoundsWhileHeld() {
         showNotes()
         val index = notes.indexOfFirst { it.friendlyName == "C" && it.octave == 4 }

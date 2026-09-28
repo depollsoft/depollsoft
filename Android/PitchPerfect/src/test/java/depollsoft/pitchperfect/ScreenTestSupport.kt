@@ -55,6 +55,7 @@ internal object ScreenTestSupport {
         SettingsModel.toggleNotes = false
         SettingsModel.wakeLock = false
         SettingsModel.areAdsRemoved = false
+        SettingsModel.referencePitch = 440
     }
 
     /**

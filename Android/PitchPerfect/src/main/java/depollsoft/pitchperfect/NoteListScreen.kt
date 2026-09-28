@@ -76,7 +76,7 @@ private fun NoteRow(
             ).semantics(mergeDescendants = true) {
                 role = Role.Button
                 // The row shows its name in a music font whose letters would be spelled out.
-                contentDescription = NoteNames.spoken(note) + ", " + "%1.2f Hz".format(note.frequency)
+                contentDescription = NoteNames.spoken(note) + ", " + "%1.2f Hz".format(note.tunedFrequency)
                 selected = lit
                 onClick { BriefNotes.activate(note) }
             },
@@ -84,7 +84,7 @@ private fun NoteRow(
     ) {
         LegacyText(name, 24.sp, if (lit) colors.onAccent else colors.ink, PlateFonts.condensedTypeface, Modifier.weight(1f).padding(start = 20.dp, top = 10.dp, bottom = 10.dp), wrapWidth = true)
         PlateText(
-            "%1.2f Hz".format(note.frequency),
+            "%1.2f Hz".format(note.tunedFrequency),
             style = plateText(14.sp, if (lit) colors.onAccent else colors.inkSecondary, PlateFonts.mono, letterSpacing = 0.04f),
             modifier = Modifier.padding(end = 20.dp, top = 10.dp, bottom = 10.dp),
         )

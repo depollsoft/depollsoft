@@ -46,6 +46,9 @@ import depollsoft.compose.ViewAlign
 import depollsoft.compose.scrollViewScrollbar
 import depollsoft.lib.kotlin.R as LibKotlinR
 import depollsoft.lib.util.appVersionName
+import depollsoft.pitchperfect.lib.Note
+import depollsoft.pitchperfect.ui.AppCompatAlertDialog
+import depollsoft.pitchperfect.ui.DialogButton
 import depollsoft.pitchperfect.ui.PlateBackground
 import depollsoft.pitchperfect.ui.PlateContainedButton
 import depollsoft.pitchperfect.ui.PlateSectionHeader
@@ -81,6 +84,14 @@ class SettingsState {
             changed()
         }
 
+    /** The A4 the notes are tuned to, in Hz. */
+    var referencePitch: Int
+        get() = version.let { SettingsModel.referencePitch }
+        set(value) {
+            SettingsModel.referencePitch = value
+            changed()
+        }
+
     var themeMode: Int
         get() = version.let { PitchPerfectApplication.themeMode }
         set(value) {
@@ -101,6 +112,7 @@ class SettingsState {
 
 /** What the settings screen's controls do; the activity supplies them. */
 class SettingsActions(
+    val chooseTuning: () -> Unit,
     val clearSongs: () -> Unit,
     val installOnWatch: (WatchNode) -> Unit,
     val logIn: () -> Unit,
@@ -131,6 +143,7 @@ fun SettingsScreen(
             PlateSectionHeader(stringResource(R.string.SectionPitchPipe), Modifier.padding(top = 12.dp))
             SettingSwitch(stringResource(R.string.NotesToggle), state.toggleNotes, TestTags.TOGGLE_NOTES) { state.toggleNotes = it }
             SettingSwitch(stringResource(R.string.WakeLock), state.wakeLock, TestTags.WAKE_LOCK) { state.wakeLock = it }
+            TuningRow(state.referencePitch, actions.chooseTuning)
             PlateSettingsButton(
                 stringResource(R.string.ClearAllSongs),
                 Modifier.padding(top = 8.dp).fillMaxWidth().testTag(TestTags.CLEAR_SONGS),
@@ -249,10 +262,60 @@ private fun SettingSwitch(
     }
 }
 
-/**
- * One appearance choice, as a MaterialRadioButton drew it: a 32dp button area holding a 20dp ring
- * with a 2dp stroke (and a 5dp dot when chosen), then the label, the whole row 48dp tall.
- */
+/** The tuning row: its label, then the chosen A4, at least 56dp tall; a tap offers the choices. */
+@Composable
+private fun TuningRow(
+    referencePitch: Int,
+    onClick: () -> Unit,
+) {
+    val colors = plateColors
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 56.dp)
+            .testTag(TestTags.TUNING)
+            .clickable(role = Role.Button, onClick = onClick),
+        verticalAlignment = ViewAlign.CenterVertically,
+    ) {
+        PlateText(stringResource(R.string.Tuning), style = plateText(16.sp, colors.ink), modifier = Modifier.weight(1f))
+        PlateText(stringResource(R.string.TuningValue, referencePitch), style = plateText(16.sp, colors.inkSecondary))
+    }
+}
+
+/** The choices for A4, one radio row each; choosing one closes the dialog. */
+@Composable
+fun TuningDialog(
+    selected: Int,
+    onDismiss: () -> Unit,
+    onChoose: (Int) -> Unit,
+) {
+    AppCompatAlertDialog(
+        onDismissRequest = onDismiss,
+        title = stringResource(R.string.TuningTitle),
+        buttons = listOf(DialogButton(stringResource(android.R.string.cancel), onDismiss)),
+    ) {
+        val scroll = rememberScrollState()
+        Column(Modifier.verticalScroll(scroll).padding(start = 16.dp, end = 24.dp, top = 8.dp)) {
+            Note.COMMON_A4_FREQUENCIES.forEach { hz ->
+                RadioChoice(tuningLabel(hz), hz == selected, "${TestTags.TUNING_CHOICE}$hz") { onChoose(hz) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun tuningLabel(hz: Int): String {
+    val name =
+        when (hz) {
+            415 -> R.string.TuningBaroque
+            430 -> R.string.TuningClassical
+            440 -> R.string.TuningStandard
+            else -> null
+        }
+    return if (name == null) stringResource(R.string.TuningChoice, hz) else stringResource(R.string.TuningChoiceNamed, hz, stringResource(name))
+}
+
+/** One appearance choice. */
 @Composable
 private fun ThemeChoice(
     label: String,
@@ -260,8 +323,21 @@ private fun ThemeChoice(
     state: SettingsState,
     tag: String,
 ) {
+    RadioChoice(label, state.themeMode == mode, tag) { state.themeMode = mode }
+}
+
+/**
+ * A choice as a MaterialRadioButton drew it: a 32dp button area holding a 20dp ring with a 2dp
+ * stroke (and a 5dp dot when chosen), then the label, the whole row 48dp tall.
+ */
+@Composable
+private fun RadioChoice(
+    label: String,
+    selected: Boolean,
+    tag: String,
+    onSelect: () -> Unit,
+) {
     val colors = plateColors
-    val selected = state.themeMode == mode
     // The radio button's animated drawable: the ring takes the accent and the dot grows in.
     val ring by animateColorAsState(
         if (selected) colors.accent else colors.ink.copy(alpha = UNSELECTED_RING_ALPHA),
@@ -273,7 +349,7 @@ private fun ThemeChoice(
         Modifier
             .height(48.dp)
             .testTag(tag)
-            .selectable(selected, role = Role.RadioButton) { state.themeMode = mode },
+            .selectable(selected, role = Role.RadioButton, onClick = onSelect),
         verticalAlignment = ViewAlign.CenterVertically,
     ) {
         Box(
