@@ -19,20 +19,25 @@ private final class FakeSampler: NoteSampler {
     var loads: [Int] = []
     var started: [InstrumentNote] = []
     var stopped: [Int] = []
+    /// What happened, in order: "load", "start", "stop", "silence".
+    var events: [String] = []
     var failsToLoad = false
     init(index: Int) { self.index = index }
 
     func load(program: Int) throws {
         if failsToLoad { throw CocoaError(.fileReadCorruptFile) }
         loads.append(program)
+        events.append("load")
     }
-    func start(_ note: InstrumentNote) { started.append(note) }
-    func stop(key: Int) { stopped.append(key) }
+    func start(_ note: InstrumentNote) { started.append(note); events.append("start") }
+    func stop(key: Int) { stopped.append(key); events.append("stop") }
+    func silence() { events.append("silence") }
 }
 
 private final class FakeHost: NoteSamplerHost {
     var samplers: [FakeSampler] = []
     var runs = 0
+    var stops = 0
     var onNeedsRestart: (() -> Void)?
 
     func makeSampler() -> NoteSampler? {
@@ -41,6 +46,7 @@ private final class FakeHost: NoteSamplerHost {
         return sampler
     }
     func ensureRunning() { runs += 1 }
+    func stopOutput() { stops += 1 }
 }
 
 private let tableJSON = """
@@ -204,17 +210,125 @@ final class MIDINotePlayerTests: XCTestCase {
         XCTAssertEqual(host.samplers[0].stopped, [24], "and its own stop no longer reaches it")
     }
 
-    func testPreparingLoadsTheIdleSamplersButNotASoundingOne() throws {
+    func testPreparingWarmsTwoSamplersAndLeavesSoundingAndReleasingOnesAlone() throws {
         player.prepare(sound: "organ")
-        XCTAssertEqual(host.samplers.map(\.loads), [[19]], "one sampler is made ready")
+        XCTAssertEqual(host.samplers.map(\.loads), [[19], [19]], "two samplers are made ready")
+        player.prepare(sound: "organ")
+        XCTAssertEqual(host.samplers.count, 2, "already warm")
         let note = try XCTUnwrap(player.start(sound: "organ", a440Frequency: frequency(24)))
         _ = player.start(sound: "organ", a440Frequency: frequency(26))
         player.stopNote(note)
         player.prepare(sound: "flute")
-        XCTAssertEqual(host.samplers.map(\.loads), [[19, 73], [19]])
-        XCTAssertEqual(player.voiceStates.map(\.sounding), [false, true])
+        XCTAssertEqual(host.samplers.map(\.loads), [[19], [19], [73], [73]],
+                       "the releasing and the sounding sampler keep the organ; two new ones take the flute")
+        XCTAssertEqual(player.voiceStates.map(\.sounding), [false, true, false, false])
+        clock += 10
+        player.prepare(sound: "piano")
+        XCTAssertEqual(host.samplers.map(\.loads), [[19, 0], [19], [73, 0], [73]],
+                       "only two samplers load, however many are idle")
         player.prepare(sound: "square")
-        XCTAssertEqual(host.samplers.map(\.loads), [[19, 73], [19]], "a wave loads nothing")
+        XCTAssertEqual(host.samplers.count, 4, "a wave loads nothing")
+    }
+
+    func testANoteAskedForWhilePreparingStartsAfterTheFirstLoad() throws {
+        var queue: [() -> Void] = []
+        player = MIDINotePlayer(host: host, tuning: try InstrumentTuning(data: Data(tableJSON.utf8)),
+                                perform: { queue.append($0) }, now: { [unowned self] in clock })
+        player.prepare(sound: "organ")
+        _ = player.start(sound: "organ", a440Frequency: frequency(24))
+        queue.removeFirst()()
+        XCTAssertEqual(host.samplers.count, 1, "one sampler loads per queued block")
+        queue.removeFirst()()
+        XCTAssertEqual(host.samplers[0].started.map(\.key), [24], "the note didn't wait for the second load")
+        while !queue.isEmpty { queue.removeFirst()() }
+        XCTAssertEqual(host.samplers.map(\.loads), [[19], [19]])
+    }
+
+    func testAReleasingOrStolenSamplerIsSilencedBeforeItsNextNote() throws {
+        var tokens: [MIDINotePlayer.Token] = []
+        for key in [24, 26] {
+            tokens.append(try XCTUnwrap(player.start(sound: "piano", a440Frequency: frequency(key))))
+        }
+        player.stopNote(tokens[0])
+        clock += MIDINotePlayer.releaseTime + 1
+        _ = player.start(sound: "piano", a440Frequency: frequency(27))
+        XCTAssertEqual(host.samplers[0].events, ["load", "start", "stop", "start"],
+                       "a sampler whose release is over isn't silenced")
+        for _ in 0..<(MIDINotePlayer.maximumVoices - 2) {
+            _ = player.start(sound: "piano", a440Frequency: frequency(24))
+        }
+        _ = player.start(sound: "piano", a440Frequency: frequency(25))
+        XCTAssertEqual(host.samplers[1].events, ["load", "start", "stop", "silence", "start"],
+                       "the longest-sounding note is stopped and cut before its sampler is retuned")
+    }
+
+    func testAFallbackToAStillReleasingSamplerCutsItsTail() throws {
+        var tokens: [MIDINotePlayer.Token] = []
+        for _ in 0..<MIDINotePlayer.maximumVoices {
+            tokens.append(try XCTUnwrap(player.start(sound: "piano", a440Frequency: frequency(24))))
+        }
+        tokens.forEach { player.stopNote($0) }
+        clock += 0.1
+        _ = player.start(sound: "piano", a440Frequency: frequency(26))
+        XCTAssertEqual(host.samplers[0].events.suffix(2), ["silence", "start"])
+    }
+
+    func testTheOutputStopsOnceEveryReleaseHasFinished() throws {
+        var later: [(TimeInterval, () -> Void)] = []
+        player = MIDINotePlayer(host: host, tuning: try InstrumentTuning(data: Data(tableJSON.utf8)),
+                                perform: { $0() }, performAfter: { later.append(($0, $1)) },
+                                now: { [unowned self] in clock })
+        let first = try XCTUnwrap(player.start(sound: "piano", a440Frequency: frequency(24)))
+        let second = try XCTUnwrap(player.start(sound: "piano", a440Frequency: frequency(26)))
+        XCTAssertTrue(player.isSounding)
+        player.stopNote(first)
+        XCTAssertEqual(later.map(\.0), [MIDINotePlayer.releaseTime + 0.25])
+        clock += MIDINotePlayer.releaseTime + 0.25
+        later.removeFirst().1()
+        XCTAssertEqual(host.stops, 0, "a note still sounds")
+        player.stopNote(second)
+        let check = later.removeFirst().1
+        clock += 0.5
+        check()
+        XCTAssertEqual(host.stops, 0, "the second release isn't over")
+        XCTAssertTrue(player.isSounding)
+        clock += MIDINotePlayer.releaseTime
+        check()
+        XCTAssertEqual(host.stops, 1)
+        XCTAssertFalse(player.isSounding)
+    }
+
+    func testTheOutputStopsWhenNothingIsLeftSounding() throws {
+        var later: [() -> Void] = []
+        player = MIDINotePlayer(host: host, tuning: try InstrumentTuning(data: Data(tableJSON.utf8)),
+                                perform: { $0() }, performAfter: { later.append($1) },
+                                now: { [unowned self] in clock })
+        let note = try XCTUnwrap(player.start(sound: "piano", a440Frequency: frequency(24)))
+        player.stopNote(note)
+        clock += MIDINotePlayer.releaseTime + 0.25
+        later.removeFirst()()
+        XCTAssertEqual(host.stops, 1)
+        XCTAssertFalse(player.isSounding)
+        _ = player.start(sound: "piano", a440Frequency: frequency(24))
+        XCTAssertEqual(host.runs, 2, "the next note starts the output again")
+    }
+
+    func testANoteThatStartedLateIsStoppedAsLateSoATimedNoteKeepsItsLength() throws {
+        var queue: [() -> Void] = []
+        var later: [(TimeInterval, () -> Void)] = []
+        player = MIDINotePlayer(host: host, tuning: try InstrumentTuning(data: Data(tableJSON.utf8)),
+                                perform: { queue.append($0) }, performAfter: { later.append(($0, $1)) },
+                                now: { [unowned self] in clock })
+        let note = try XCTUnwrap(player.start(sound: "piano", a440Frequency: frequency(24)))
+        clock += 0.4 // a load ahead of it took this long
+        queue.removeFirst()()
+        clock += 1
+        player.stopNote(note)
+        queue.removeFirst()()
+        XCTAssertTrue(host.samplers[0].stopped.isEmpty)
+        XCTAssertEqual(later.first?.0 ?? 0, 0.4, accuracy: 0.001)
+        later.removeFirst().1()
+        XCTAssertEqual(host.samplers[0].stopped, [24])
     }
 
     func testAnInstrumentThatWontLoadStaysSilent() throws {
@@ -233,6 +347,13 @@ final class MIDINotePlayerTests: XCTestCase {
         XCTAssertNil(silent.start(sound: "organ", a440Frequency: 440))
         XCTAssertNil(player.start(sound: "sine", a440Frequency: 440))
         XCTAssertNil(player.start(sound: "pitchPipe", a440Frequency: 440))
+    }
+
+    func testMakingAndLoadingSamplersDoesntBuildTheEnginesOutput() throws {
+        let engine = SamplerEngine()
+        let sampler = try XCTUnwrap(engine.makeSampler())
+        try sampler.load(program: 19)
+        XCTAssertFalse(engine.outputConnected, "launch and preloading leave the output unbuilt")
     }
 
     func testTheOutputRestartsInTurnAfterAnInterruption() {
@@ -356,6 +477,7 @@ final class WidgetNoteSoundTests: XCTestCase {
         WidgetTonePlayer.shared.stop()
         WidgetInstrumentHook.start = nil
         WidgetInstrumentHook.stop = nil
+        WidgetInstrumentHook.isSounding = nil
         WidgetSoundState.set(savedSound)
         DPNote.instrumentPlayer = nil
         super.tearDown()
@@ -386,6 +508,28 @@ final class WidgetNoteSoundTests: XCTestCase {
         WidgetSoundState.set("flute")
         try WidgetTonePlayer.shared.toggle(pitchIndex: 9, frequency: 415)
         XCTAssertEqual(host.samplers.first?.started.first?.key, 69)
+    }
+
+    func testAnInstrumentCellLeavesTheSessionToTheAppsPlayer() throws {
+        var deactivations = 0
+        let widget = WidgetTonePlayer.shared
+        let original = widget.deactivateSession
+        widget.deactivateSession = { deactivations += 1 }
+        defer { widget.deactivateSession = original }
+        var appSounding = true
+        WidgetInstrumentHook.start = { _, _ in NSObject() }
+        WidgetInstrumentHook.stop = { _ in }
+        WidgetInstrumentHook.isSounding = { appSounding }
+        WidgetSoundState.set("piano")
+        try widget.toggle(pitchIndex: 0, frequency: 261.63)
+        try widget.toggle(pitchIndex: 0, frequency: 261.63)
+        XCTAssertEqual(deactivations, 0, "the instrument's release is still playing; the app's player gives the session up")
+        widget.stop()
+        XCTAssertEqual(deactivations, 0, "the app still sounds")
+        XCTAssertFalse(WidgetToneActivity.isSounding)
+        appSounding = false
+        widget.stop()
+        XCTAssertEqual(deactivations, 1, "with nothing left sounding the widget gives the session back")
     }
 
     func testStoppingTheWidgetStopsItsInstrumentNotes() throws {

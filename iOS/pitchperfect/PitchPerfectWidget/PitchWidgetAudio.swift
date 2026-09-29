@@ -130,6 +130,25 @@ enum WidgetInstrumentHook {
     /// instrument or can't play, and the cell then plays a tone.
     static var start: ((_ sound: String, _ frequency: Double) -> AnyObject?)?
     static var stop: ((AnyObject) -> Void)?
+    /// Whether the app is still sounding anything of its own (an instrument
+    /// note or its release, a pitch pipe or wave note), so the widget leaves
+    /// the shared audio session active.
+    static var isSounding: (() -> Bool)?
+}
+
+/// Whether the widget's own tone players are sounding, readable from any
+/// thread (the app's MIDI player checks it before giving up the session).
+enum WidgetToneActivity {
+    private static let lock = NSLock()
+    nonisolated(unsafe) private static var sounding = false
+
+    static var isSounding: Bool {
+        lock.withLock { sounding }
+    }
+
+    static func set(_ value: Bool) {
+        lock.withLock { sounding = value }
+    }
 }
 
 /// Lets a widget-process intent stop a tone the app process owns.
@@ -174,6 +193,10 @@ final class WidgetTonePlayer {
     static let shared = WidgetTonePlayer()
 
     private var players: [Int: AVAudioPlayer] = [:]
+    /// Gives the audio session back to other apps; tests count the calls.
+    var deactivateSession: () -> Void = {
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+    }
     /// Cells sounding in a MIDI instrument, by the app player's token.
     private var instrumentNotes: [Int: AnyObject] = [:]
 
@@ -189,8 +212,9 @@ final class WidgetTonePlayer {
         }
         players = players.filter { $0.value.isPlaying }
         if let note = instrumentNotes.removeValue(forKey: pitchIndex) {
+            // The app's MIDI player is still playing the release; it gives
+            // up the session itself once it falls silent.
             WidgetInstrumentHook.stop?(note)
-            deactivateIfSilent()
             return
         }
         if let playing = players.removeValue(forKey: pitchIndex) {
@@ -221,6 +245,7 @@ final class WidgetTonePlayer {
             guard nextPlayer.play() else {
                 throw WidgetToneError.playbackDidNotStart
             }
+            WidgetToneActivity.set(true)
         } catch {
             players.removeValue(forKey: pitchIndex)?.stop()
             balanceVolume()
@@ -244,11 +269,12 @@ final class WidgetTonePlayer {
         players.values.forEach { $0.volume = 1 }
     }
 
+    /// Gives up the session after the widget's last tone stops, unless the
+    /// app is still sounding something (an instrument's release included).
     private func deactivateIfSilent() {
-        // The app's MIDI player shares the session; leave it active while an
-        // instrument note sounds.
-        guard players.isEmpty, instrumentNotes.isEmpty else { return }
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        WidgetToneActivity.set(!players.isEmpty)
+        guard players.isEmpty, instrumentNotes.isEmpty, !(WidgetInstrumentHook.isSounding?() ?? false) else { return }
+        deactivateSession()
     }
 }
 

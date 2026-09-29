@@ -8,6 +8,7 @@
 #import "DPPitchPipeModel.h"
 #import "DPNote.h"
 #import "DPNoteSound.h"
+#import "DPAudioSynthesizer.h"
 #import "DPKey.h"
 #import "DPKeyType.h"
 #import "DPAccidental.h"
