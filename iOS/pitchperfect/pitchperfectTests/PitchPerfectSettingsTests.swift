@@ -195,7 +195,12 @@ final class PitchPerfectSettingsPresentationTests: PitchPerfectTestCase {
             settle { app.topPresented !== app.host }
             let sheet = app.sheet
             XCTAssertTrue(app.navigationTitles.contains("Settings"))
-            for label in ["Toggle Notes", "Wake Lock", "Theme", "Log in", "Privacy choices"] {
+            for label in ["Toggle Notes", "Wake Lock", "Tuning", "Sound", "Theme"] {
+                XCTAssertTrue(sheet.elements.contains { ($0.accessibilityLabel ?? "").contains(label) }, label)
+            }
+            // The account and privacy rows start below the fold on a small phone.
+            app.scrollSheetToBottom()
+            for label in ["Log in", "Privacy choices"] {
                 XCTAssertTrue(sheet.elements.contains { ($0.accessibilityLabel ?? "").contains(label) }, label)
             }
             XCTAssertEqual(sheet.label(id: "checkmark"), "Done")
@@ -232,6 +237,7 @@ final class PitchPerfectSettingsPresentationTests: PitchPerfectTestCase {
         let app = try launch()
         app.ui.tap(id: "gearshape")
         settle { app.topPresented !== app.host }
+        app.scrollSheetToBottom()
         app.sheet.tap(label: "Privacy choices")
         settle { app.navigationTitles.contains("Privacy choices") }
         XCTAssertTrue(app.sheet.exists(label: "Usage analytics"))
