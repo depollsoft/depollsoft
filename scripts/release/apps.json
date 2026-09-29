@@ -6,7 +6,7 @@
     "wear": {
       "module": "PitchPerfectWear",
       "track": "wear:production",
-      "notes": "The watch app now shows the Pitch Perfect icon while it opens."
+      "notes": "Fixes note touch handling and keeps the watch screen from dismissing while you hold a note. The watch continues to use the original Pitch Perfect sound at A440."
     },
     "ios_scheme": "pitchperfectUITests",
     "scenes": [
