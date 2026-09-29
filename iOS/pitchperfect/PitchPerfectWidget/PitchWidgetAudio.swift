@@ -87,6 +87,23 @@ enum WidgetRangeState {
     }
 }
 
+/// The A4 the app's Settings chose, shared so the widget's pitches match.
+enum WidgetTuningState {
+    private static let key = "referencePitch"
+    static let standard = 440.0
+
+    static var referencePitch: Double {
+        let value = WidgetSharedDefaults.defaults?.double(forKey: key) ?? 0
+        return (400...480).contains(value) ? value : standard
+    }
+
+    static func set(_ value: Double) {
+        guard let defaults = WidgetSharedDefaults.defaults else { return }
+        defaults.set(value, forKey: key)
+        defaults.synchronize()
+    }
+}
+
 /// Lets a widget-process intent stop a tone the app process owns.
 enum WidgetPlaybackBridge {
     static let stopNotificationName = "depollsoft.pitchperfect.widget.stop"

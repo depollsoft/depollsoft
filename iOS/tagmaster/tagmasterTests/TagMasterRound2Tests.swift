@@ -404,8 +404,21 @@ final class TagMasterRound3Tests: TMBehaviorTestCase {
             values.sort()
             return values.isEmpty ? 0 : values[values.count * 995 / 1000]
         }
-        /// The two items' ink once the bar has settled: the same reading held for half a
-        /// second. Back-to-back readings can agree in the middle of a fade on a loaded runner.
+        /// Whether any layer under `layer` is still running an animation that ends: a
+        /// fade or a move. The glass bar keeps its elements' "match-*" animations
+        /// attached for good (infinite duration), so those never count.
+        func animating(_ layer: CALayer) -> Bool {
+            let finite = (layer.animationKeys() ?? []).contains { key in
+                guard let animation = layer.animation(forKey: key) else { return false }
+                return animation.duration.isFinite && animation.repeatCount.isFinite
+                    && animation.repeatCount < .greatestFiniteMagnitude && animation.repeatDuration.isFinite
+            }
+            return finite || (layer.sublayers ?? []).contains(where: animating)
+        }
+        /// The two items' ink once the bar has settled: no finite animation left on the bar,
+        /// and the same reading held for half a second. A steady reading alone was not
+        /// enough: on a loaded CI runner the renderer can stall mid-fade for longer than
+        /// that (a disabled Edit read 66 against UIKit's 81).
         func inks(_ controller: UIViewController) -> (left: Int, right: Int) {
             let window = mount(controller, size: CGSize(width: 390, height: 300))
             var last: (left: Int, right: Int)?
@@ -415,6 +428,10 @@ final class TagMasterRound3Tests: TMBehaviorTestCase {
                 guard let bar = self.descendants(of: UINavigationBar.self, in: window).first(where: { $0.window != nil }) else { return false }
                 let frame = bar.convert(bar.bounds, to: nil)
                 guard frame.height > 0 else { return false }
+                if animating(bar.layer) {
+                    last = nil
+                    return false
+                }
                 let image = ScreenCatalog.image(of: window)
                 reading = (ink(image, CGRect(x: 0, y: frame.minY, width: 110, height: frame.height)),
                            ink(image, CGRect(x: frame.maxX - 80, y: frame.minY, width: 80, height: frame.height)))

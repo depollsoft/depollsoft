@@ -41,6 +41,7 @@ final class SettingsModel {
 
     private(set) var toggleNotes = false
     private(set) var wakeLock = false
+    private(set) var referencePitch = DPSettingsModel.standardReferencePitch
     private(set) var theme = 0
     private(set) var isSignedIn = false
 
@@ -79,12 +80,24 @@ final class SettingsModel {
     func reload() {
         toggleNotes = settings.toggleNotes
         wakeLock = settings.wakeLock
+        referencePitch = settings.referencePitch
         theme = DPTheme.storedTheme
         isSignedIn = account.isSignedIn()
     }
 
     func setToggleNotes(_ on: Bool) { settings.toggleNotes = on }
     func setWakeLock(_ on: Bool) { settings.wakeLock = on }
+    func setReferencePitch(_ hz: Int) { settings.referencePitch = hz }
+
+    /// A choice as the tuning menu names it.
+    static func tuningLabel(_ hz: Int) -> String {
+        switch hz {
+        case 415: "\(hz) Hz (Baroque)"
+        case 430: "\(hz) Hz (Classical)"
+        case 440: "\(hz) Hz (Standard)"
+        default: "\(hz) Hz"
+        }
+    }
 
     func setTheme(_ value: Int) {
         DPTheme.storedTheme = value
@@ -181,6 +194,7 @@ struct SettingsScreen: View {
                               isOn: Binding(get: { model.toggleNotes }, set: model.setToggleNotes))
                     SwitchRow(title: "Wake Lock", detail: "Prevent device from sleeping",
                               isOn: Binding(get: { model.wakeLock }, set: model.setWakeLock))
+                    TuningRow(selection: Binding(get: { model.referencePitch }, set: model.setReferencePitch))
                     HStack {
                         Text("Theme")
                         Spacer(minLength: 16)
@@ -324,6 +338,38 @@ private struct SwitchRow: View {
         .padding(.trailing, 4.0 / 3.0)
         // UIKit's own row height for this cell on this screen: the insets above
         // add up to it at 3x but round a pixel taller at 2x.
+        .frame(height: heights?.subtitle)
+        .settingsRow()
+    }
+}
+
+/// The tuning: a title and detail as the switch rows have, then a menu of
+/// choices for A4.
+private struct TuningRow: View {
+    @Binding var selection: Int
+    @Environment(\.settingsCellHeights) private var heights
+
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: SettingsMetrics.subtitleSpacing) {
+                Text("Tuning")
+                Text("Frequency of A4")
+                    .font(.subheadline)
+                    .foregroundStyle(Color(uiColor: .secondaryLabel))
+            }
+            .padding(.top, SettingsMetrics.subtitleTop)
+            .padding(.bottom, SettingsMetrics.subtitleBottom)
+            Spacer(minLength: 16)
+            Picker("Tuning", selection: $selection) {
+                ForEach(DPSettingsModel.referencePitchChoices(current: selection), id: \.self) { hz in
+                    Text(SettingsModel.tuningLabel(hz)).tag(hz)
+                }
+            }
+            .pickerStyle(.menu)
+            .labelsHidden()
+            .fixedSize()
+            .accessibilityIdentifier("settings.tuning")
+        }
         .frame(height: heights?.subtitle)
         .settingsRow()
     }

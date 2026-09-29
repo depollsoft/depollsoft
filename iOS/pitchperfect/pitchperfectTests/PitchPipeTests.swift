@@ -127,6 +127,9 @@ final class PitchPipeModelTests: PitchPerfectTestCase {
         DPSettingsModel.sharedInstance.toggleNotes = true
         model.touchBegan(id: 1, at: center(9))
         XCTAssertEqual(model.readout, .init(names: "A4", detail: "440.0 Hz", isChord: false))
+        DPSettingsModel.sharedInstance.referencePitch = 432
+        XCTAssertEqual(model.readout?.detail, "432.0 Hz", "the readout follows the tuning")
+        DPSettingsModel.sharedInstance.referencePitch = 440
         model.touchBegan(id: 2, at: center(0))
         XCTAssertEqual(model.readout?.names, "C4 A4")
         XCTAssertEqual(model.readout?.detail, "MAJOR 6TH")

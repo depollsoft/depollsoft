@@ -99,13 +99,15 @@ private enum PitchCatalog {
                 PitchSeed(name: "F", accidental: "natural", octave: 5, frequency: 698.46),
             ]
         }
+        // The seeds are at A4 = 440 Hz; sound them at the tuning Settings chose.
+        let tuning = WidgetTuningState.referencePitch / WidgetTuningState.standard
         return seeds.enumerated().map { index, seed in
             Pitch(
                 id: index,
                 name: seed.name,
                 accidental: seed.accidental,
                 octave: seed.octave,
-                frequency: seed.frequency
+                frequency: seed.frequency * tuning
             )
         }
     }

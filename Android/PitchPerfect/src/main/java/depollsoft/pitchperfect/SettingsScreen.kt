@@ -5,6 +5,8 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,10 +17,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Switch
 import androidx.compose.material.SwitchDefaults
@@ -32,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -46,6 +51,9 @@ import depollsoft.compose.ViewAlign
 import depollsoft.compose.scrollViewScrollbar
 import depollsoft.lib.kotlin.R as LibKotlinR
 import depollsoft.lib.util.appVersionName
+import depollsoft.pitchperfect.lib.Note
+import depollsoft.pitchperfect.ui.AppCompatAlertDialog
+import depollsoft.pitchperfect.ui.DialogButton
 import depollsoft.pitchperfect.ui.PlateBackground
 import depollsoft.pitchperfect.ui.PlateContainedButton
 import depollsoft.pitchperfect.ui.PlateSectionHeader
@@ -81,6 +89,16 @@ class SettingsState {
             changed()
         }
 
+    /** The A4 the notes are tuned to, in Hz. */
+    var referencePitch: Int
+        // Reads the notes' tuning too, which is snapshot state: a change synced from another
+        // device redraws the open screen, not only a change made here.
+        get() = version.let { Note.getReferencePitch().let { SettingsModel.referencePitch } }
+        set(value) {
+            SettingsModel.referencePitch = value
+            changed()
+        }
+
     var themeMode: Int
         get() = version.let { PitchPerfectApplication.themeMode }
         set(value) {
@@ -101,6 +119,7 @@ class SettingsState {
 
 /** What the settings screen's controls do; the activity supplies them. */
 class SettingsActions(
+    val chooseTuning: () -> Unit,
     val clearSongs: () -> Unit,
     val installOnWatch: (WatchNode) -> Unit,
     val logIn: () -> Unit,
@@ -131,6 +150,7 @@ fun SettingsScreen(
             PlateSectionHeader(stringResource(R.string.SectionPitchPipe), Modifier.padding(top = 12.dp))
             SettingSwitch(stringResource(R.string.NotesToggle), state.toggleNotes, TestTags.TOGGLE_NOTES) { state.toggleNotes = it }
             SettingSwitch(stringResource(R.string.WakeLock), state.wakeLock, TestTags.WAKE_LOCK) { state.wakeLock = it }
+            TuningRow(state.referencePitch, actions.chooseTuning)
             PlateSettingsButton(
                 stringResource(R.string.ClearAllSongs),
                 Modifier.padding(top = 8.dp).fillMaxWidth().testTag(TestTags.CLEAR_SONGS),
@@ -250,9 +270,92 @@ private fun SettingSwitch(
 }
 
 /**
- * One appearance choice, as a MaterialRadioButton drew it: a 32dp button area holding a 20dp ring
- * with a 2dp stroke (and a 5dp dot when chosen), then the label, the whole row 48dp tall.
+ * The tuning row: its label, then the chosen A4 in an outlined field with a drop-down arrow, so it
+ * reads as a control; a tap anywhere on the row offers the choices.
  */
+@Composable
+private fun TuningRow(
+    referencePitch: Int,
+    onClick: () -> Unit,
+) {
+    val colors = plateColors
+    val shape = RoundedCornerShape(2.dp)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 56.dp)
+            .testTag(TestTags.TUNING)
+            .clickable(role = Role.Button, onClick = onClick),
+        verticalAlignment = ViewAlign.CenterVertically,
+    ) {
+        PlateText(stringResource(R.string.Tuning), style = plateText(16.sp, colors.ink), modifier = Modifier.weight(1f))
+        Row(
+            Modifier
+                .heightIn(min = 40.dp)
+                .background(colors.surface, shape)
+                .border(1.dp, colors.hairline, shape)
+                .padding(start = 12.dp, end = 8.dp),
+            verticalAlignment = ViewAlign.CenterVertically,
+        ) {
+            PlateText(stringResource(R.string.TuningValue, referencePitch), style = plateText(16.sp, colors.ink))
+            // Material's drop-down arrow: a 10x5dp triangle in a 24dp box.
+            Box(
+                Modifier
+                    .padding(start = 4.dp)
+                    .size(24.dp)
+                    .drawBehind {
+                        val w = 10.dp.toPx()
+                        val h = 5.dp.toPx()
+                        val left = (size.width - w) / 2f
+                        val top = (size.height - h) / 2f
+                        val arrow =
+                            Path().apply {
+                                moveTo(left, top)
+                                lineTo(left + w, top)
+                                lineTo(left + w / 2f, top + h)
+                                close()
+                            }
+                        drawPath(arrow, colors.inkSecondary)
+                    },
+            )
+        }
+    }
+}
+
+/** The choices for A4, one radio row each; choosing one closes the dialog. */
+@Composable
+fun TuningDialog(
+    selected: Int,
+    onDismiss: () -> Unit,
+    onChoose: (Int) -> Unit,
+) {
+    AppCompatAlertDialog(
+        onDismissRequest = onDismiss,
+        title = stringResource(R.string.TuningTitle),
+        buttons = listOf(DialogButton(stringResource(android.R.string.cancel), onDismiss)),
+    ) {
+        val scroll = rememberScrollState()
+        Column(Modifier.verticalScroll(scroll).padding(start = 16.dp, end = 24.dp, top = 8.dp)) {
+            SettingsModel.referencePitchChoices(selected).forEach { hz ->
+                RadioChoice(tuningLabel(hz), hz == selected, "${TestTags.TUNING_CHOICE}$hz") { onChoose(hz) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun tuningLabel(hz: Int): String {
+    val name =
+        when (hz) {
+            415 -> R.string.TuningBaroque
+            430 -> R.string.TuningClassical
+            440 -> R.string.TuningStandard
+            else -> null
+        }
+    return if (name == null) stringResource(R.string.TuningChoice, hz) else stringResource(R.string.TuningChoiceNamed, hz, stringResource(name))
+}
+
+/** One appearance choice. */
 @Composable
 private fun ThemeChoice(
     label: String,
@@ -260,8 +363,21 @@ private fun ThemeChoice(
     state: SettingsState,
     tag: String,
 ) {
+    RadioChoice(label, state.themeMode == mode, tag) { state.themeMode = mode }
+}
+
+/**
+ * A choice as a MaterialRadioButton drew it: a 32dp button area holding a 20dp ring with a 2dp
+ * stroke (and a 5dp dot when chosen), then the label, the whole row 48dp tall.
+ */
+@Composable
+private fun RadioChoice(
+    label: String,
+    selected: Boolean,
+    tag: String,
+    onSelect: () -> Unit,
+) {
     val colors = plateColors
-    val selected = state.themeMode == mode
     // The radio button's animated drawable: the ring takes the accent and the dot grows in.
     val ring by animateColorAsState(
         if (selected) colors.accent else colors.ink.copy(alpha = UNSELECTED_RING_ALPHA),
@@ -273,7 +389,7 @@ private fun ThemeChoice(
         Modifier
             .height(48.dp)
             .testTag(tag)
-            .selectable(selected, role = Role.RadioButton) { state.themeMode = mode },
+            .selectable(selected, role = Role.RadioButton, onClick = onSelect),
         verticalAlignment = ViewAlign.CenterVertically,
     ) {
         Box(

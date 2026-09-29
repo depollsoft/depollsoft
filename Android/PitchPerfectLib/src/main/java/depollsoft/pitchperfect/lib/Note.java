@@ -30,7 +30,7 @@ public class Note {
     public void play(Note n) {
       AudioTrack track = tracks.get(n);
       if (track == null) {
-        track = PitchAudioTrackGenerator.getPitchAudioTrack(n.getFrequency(), 8000,
+        track = PitchAudioTrackGenerator.getPitchAudioTrack(n.getTunedFrequency(), 8000,
             AudioFormat.CHANNEL_CONFIGURATION_MONO, 2000);
         tracks.put(n, track);
       }
@@ -49,6 +49,25 @@ public class Note {
   };
 
   private static NotePlayer player = DEFAULT_PLAYER;
+
+  /** Standard concert pitch: the A4 every note's stored frequency is relative to. */
+  public static final double STANDARD_A4 = 440;
+
+  /** Common choices for A4, in Hz: historical, standard and orchestral pitches. */
+  public static final int[] COMMON_A4_FREQUENCIES = {415, 430, 432, 435, 438, 440, 441, 442, 443, 444, 446};
+
+  // Snapshot state, so a screen showing tuned frequencies redraws when the tuning changes.
+  private static final StateField<Double> referencePitch = new StateField<>(STANDARD_A4);
+
+  /** The A4 notes sound at, in Hz. */
+  public static double getReferencePitch() {
+    return Note.referencePitch.get();
+  }
+
+  /** Tunes every note to {@code value} Hz for A4; a note already sounding keeps its pitch until played again. */
+  public static void setReferencePitch(double value) {
+    Note.referencePitch.set(value);
+  }
 
   public static void setPlayer(NotePlayer player) {
     Note.player = player;
@@ -176,8 +195,14 @@ public class Note {
     return this.alternate;
   }
 
+  /** The note's frequency at A4 = 440 Hz, as stored with a song. */
   public double getFrequency() {
     return this.frequency;
+  }
+
+  /** The frequency the note sounds at, tuned to the chosen A4 (see {@link #setReferencePitch}). */
+  public double getTunedFrequency() {
+    return this.frequency * Note.getReferencePitch() / STANDARD_A4;
   }
 
   public String getFriendlyName() {

@@ -4,6 +4,7 @@ window
     text="PITCH PIPE"
     Switch text="Notes play until pressed again" toggle=Off [click]
     Switch text="Prevent screen from turning off or locking while Pitch Perfect is in use" toggle=Off [click]
+    Button text="Tuning" | "A4 = 440 Hz" [click]
     Button text="CLEAR ALL SONGS" [click]
     text="ACCOUNT"
     text="Log in to back up and synchronize your song list and settings."

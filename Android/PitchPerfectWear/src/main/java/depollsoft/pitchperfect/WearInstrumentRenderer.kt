@@ -191,7 +191,7 @@ class WearInstrumentRenderer(
             } else {
                 val readout =
                     when (playingNotes.size) {
-                        1 -> String.format("%.1f Hz", playingNotes[0].value.frequency)
+                        1 -> String.format("%.1f Hz", playingNotes[0].value.tunedFrequency)
                         2 -> PitchInterval.name(playingNotes[0].index, playingNotes[1].index)
                         else -> "${playingNotes.size} NOTES"
                     }

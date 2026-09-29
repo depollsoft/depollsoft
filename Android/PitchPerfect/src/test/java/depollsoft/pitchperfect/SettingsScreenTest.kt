@@ -11,6 +11,7 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
@@ -18,6 +19,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import depollsoft.lib.activity.RichApplication
+import depollsoft.pitchperfect.lib.Accidental
+import depollsoft.pitchperfect.lib.Note
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -92,6 +95,65 @@ class SettingsScreenTest {
         screens.settle()
         assertEquals(ToggleableState.On, toggleState(TestTags.TOGGLE_NOTES))
         assertEquals(ToggleableState.On, toggleState(TestTags.WAKE_LOCK))
+    }
+
+    @Test
+    fun tuningStartsAtA440AndAChoiceRetunesTheNotes() {
+        settings()
+        compose.onNodeWithTag(TestTags.TUNING).assert(hasText("A4 = 440 Hz", substring = true))
+        screens.click(TestTags.TUNING)
+        compose.onNodeWithTag(TestTags.TUNING_CHOICE + 440).assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
+        tapScrolled(TestTags.TUNING_CHOICE + 442)
+
+        assertEquals(442, SettingsModel.referencePitch)
+        assertEquals(442.0, Note.findNote("A", Accidental.Natural, 4)!!.tunedFrequency, 1e-9)
+        assertEquals("the stored A440 frequency is kept", 440.0, Note.findNote("A", Accidental.Natural, 4)!!.frequency, 1e-9)
+        assertFalse("choosing closes the dialog", screens.exists(TestTags.TUNING_CHOICE + 442))
+        compose.onNodeWithTag(TestTags.TUNING).assert(hasText("A4 = 442 Hz", substring = true))
+    }
+
+    @Test
+    fun cancellingTheTuningDialogKeepsTheTuning() {
+        SettingsModel.referencePitch = 432
+        settings()
+        screens.click(TestTags.TUNING)
+        compose.onNodeWithTag(TestTags.TUNING_CHOICE + 432).assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
+        compose.onNodeWithText("CANCEL").performClick()
+        screens.settle()
+        assertEquals(432, SettingsModel.referencePitch)
+        assertFalse(screens.exists(TestTags.TUNING_CHOICE + 432))
+    }
+
+    @Test
+    fun aTuningSyncedFromAnotherDeviceShowsOnTheOpenScreen() {
+        settings()
+        // Stands in for the account's snapshot listener: nothing on this screen asks to redraw.
+        SettingsModel.applyRemoteReferencePitch(443)
+        screens.settle()
+        compose.onNodeWithTag(TestTags.TUNING).assert(hasText("A4 = 443 Hz", substring = true))
+    }
+
+    @Test
+    fun aSyncedTuningThisVersionCannotUseFallsBackToA440() {
+        SettingsModel.referencePitch = 442
+        SettingsModel.applyRemoteReferencePitch(1000)
+        assertEquals(440, SettingsModel.referencePitch)
+        assertEquals(440.0, Note.getReferencePitch(), 1e-9)
+    }
+
+    @Test
+    fun anUncommonSyncedTuningIsOfferedAndSelected() {
+        SettingsModel.applyRemoteReferencePitch(431)
+        settings()
+        screens.click(TestTags.TUNING)
+        compose.onNodeWithTag(TestTags.TUNING_CHOICE + 431).assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
+        assertEquals(listOf(415, 430, 431, 432), SettingsModel.referencePitchChoices(431).take(4))
+    }
+
+    @Test
+    fun anUnexpectedStoredTuningReadsAsA440() {
+        SettingsModel.referencePitch = 1000
+        assertEquals("out-of-range values are refused", 440, SettingsModel.referencePitch)
     }
 
     @Test

@@ -395,5 +395,28 @@ public class NoteTest {
         Note note = new Note("A", 4, Accidental.Natural, 440.0);
         assertFalse("Default isPlaying should be false", note.getIsPlaying());
     }
-}
 
+    @Test
+    public void testTunedFrequencyFollowsTheReferencePitch() {
+        Note a4 = Note.findNote("A", Accidental.Natural, 4);
+        Note c4 = Note.getC4();
+        try {
+            assertEquals(440.0, a4.getTunedFrequency(), 0.001);
+            Note.setReferencePitch(442);
+            assertEquals(442.0, a4.getTunedFrequency(), 0.001);
+            assertEquals(c4.getFrequency() * 442 / 440, c4.getTunedFrequency(), 0.001);
+            assertEquals("the stored frequency stays at A440", 440.0, a4.getFrequency(), 0.001);
+            Note.setReferencePitch(415);
+            assertEquals(207.5, Note.findNote("A", Accidental.Natural, 3).getTunedFrequency(), 0.001);
+        } finally {
+            Note.setReferencePitch(Note.STANDARD_A4);
+        }
+    }
+
+    @Test
+    public void testCommonReferencePitchesIncludeStandard() {
+        boolean found = false;
+        for (int hz : Note.COMMON_A4_FREQUENCIES) found |= hz == 440;
+        assertTrue(found);
+    }
+}

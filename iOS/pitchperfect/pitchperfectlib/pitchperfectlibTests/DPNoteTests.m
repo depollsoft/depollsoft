@@ -339,5 +339,14 @@
     XCTAssertTrue(octaves.count >= 8, @"Common notes should contain multiple octaves");
 }
 
-@end
+- (void)testTunedFrequencyFollowsTheReferencePitch {
+    DPNote *a4 = [DPNote findNoteWithName:@"A" accidental:[DPAccidental enumWithInt:Natural] octave:4];
+    XCTAssertEqualWithAccuracy(a4.tunedFrequency, 440.0, 0.001);
+    DPNote.referencePitch = 442;
+    XCTAssertEqualWithAccuracy(a4.tunedFrequency, 442.0, 0.001);
+    XCTAssertEqualWithAccuracy(DPNote.C4.tunedFrequency, DPNote.C4.frequency * 442 / 440, 0.001);
+    XCTAssertEqualWithAccuracy(a4.frequency, 440.0, 0.001, @"The stored frequency stays at A440");
+    DPNote.referencePitch = 440;
+}
 
+@end

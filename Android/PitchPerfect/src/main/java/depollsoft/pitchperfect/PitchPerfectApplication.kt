@@ -39,6 +39,7 @@ class PitchPerfectApplication : RichApplication() {
         PerformanceDiagnostics.startMainThreadMonitor()
         Note.setPlayer(WidgetAwareNotePlayer(Note.DEFAULT_PLAYER) { PitchPipeAppWidget.updateWidgets() })
         registerStorageAliases()
+        SettingsModel.applyReferencePitch()
         AppCompatDelegate.setDefaultNightMode(themeMode)
         extraInit()
         PerformanceDiagnostics.logDuration(

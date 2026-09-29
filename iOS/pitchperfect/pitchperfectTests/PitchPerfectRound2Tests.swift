@@ -331,20 +331,26 @@ final class CleanupHelperTests: PitchPerfectTestCase {
         var editing: UICollectionView? {
             app.descendants(of: UICollectionView.self, in: app.window).first { $0.window != nil }
         }
-        // Edit mode brings the controls in on a later pass; a loaded runner can take seconds.
-        settle {
-            guard let list = editing, let cell = topCell(of: list) else { return false }
-            return frame("_UICollectionViewListAccessoryControl", in: cell, relativeTo: list) != nil
-                && frame("_UICollectionViewListCellReorderControl", in: cell, relativeTo: list) != nil
+        func controls() -> (delete: CGRect, reorder: CGRect, info: CGRect)? {
+            guard let list = editing, let cell = topCell(of: list),
+                  let delete = frame("_UICollectionViewListAccessoryControl", in: cell, relativeTo: list),
+                  let reorder = frame("_UICollectionViewListCellReorderControl", in: cell, relativeTo: list),
+                  let button = app.descendants(of: UIButton.self, in: cell).first else { return nil }
+            return (delete, reorder, button.convert(button.bounds, to: list))
         }
         let list = try XCTUnwrap(editing)
-        let cell = try XCTUnwrap(topCell(of: list))
-        let delete = try XCTUnwrap(frame("_UICollectionViewListAccessoryControl", in: cell, relativeTo: list))
-        let reorder = try XCTUnwrap(frame("_UICollectionViewListCellReorderControl", in: cell, relativeTo: list))
-        let info = try XCTUnwrap(app.descendants(of: UIButton.self, in: cell).first).convert(
-            app.descendants(of: UIButton.self, in: cell).first!.bounds, to: list)
-
         let reference = EditingTableReference(width: list.bounds.width, in: app.window)
+        func settled(_ c: (delete: CGRect, reorder: CGRect, info: CGRect)) -> Bool {
+            abs(c.delete.minX - reference.delete.minX) <= 0.5
+                && abs(c.reorder.minX - reference.reorder.minX) <= 0.5
+                && abs(c.info.maxX - reference.info.maxX) <= 0.5
+        }
+        // Edit mode brings the controls in over later layout passes, and the
+        // disclosure slides in with them: on a loaded runner the first frames
+        // seen can be mid-slide (CI once read the disclosure at 397.5, not 316).
+        // Wait for the layout to finish; if it never lands, the checks below say where it stopped.
+        settle { controls().map(settled) ?? false }
+        let (delete, reorder, info) = try XCTUnwrap(controls())
         XCTAssertEqual(delete.minX, reference.delete.minX, accuracy: 0.5, "delete control")
         XCTAssertEqual(reorder.minX, reference.reorder.minX, accuracy: 0.5, "reorder control")
         XCTAssertEqual(info.maxX, reference.info.maxX, accuracy: 0.5, "detail disclosure")

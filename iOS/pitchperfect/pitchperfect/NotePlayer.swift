@@ -18,6 +18,28 @@ final class NotePlayer {
     /// Bumped on every start and stop, so views reading `isPlaying` redraw.
     private(set) var revision = 0
 
+    /// The A4 the notes are tuned to, so views showing a frequency redraw when
+    /// Settings changes it.
+    private(set) var referencePitch = DPNote.referencePitch
+    @ObservationIgnored private var settingsObserver: NSObjectProtocol?
+
+    init() {
+        settingsObserver = NotificationCenter.default.addObserver(
+            forName: .settingsChanged, object: nil, queue: .main
+        ) { [weak self] _ in
+            // Every settings change resyncs (an Observable set notifies even when the
+            // value is equal), so a tuning applied without passing through here, as
+            // at launch, can never leave a stale copy.
+            MainActor.assumeIsolated { self?.referencePitch = DPNote.referencePitch }
+        }
+    }
+
+    /// The frequency `note` sounds at, at the chosen tuning.
+    func frequency(of note: DPNote) -> Double {
+        _ = referencePitch
+        return note.tunedFrequency
+    }
+
     /// Whether a press starts a note that sounds until pressed again. Reads the
     /// setting each time, so a change in Settings applies at once.
     var toggleNotes: () -> Bool = { DPSettingsModel.sharedInstance.toggleNotes }
