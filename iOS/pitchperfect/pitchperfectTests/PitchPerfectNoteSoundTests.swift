@@ -22,6 +22,8 @@ private final class FakeSampler: NoteSampler {
     /// What happened, in order: "load", "start", "stop", "silence".
     var events: [String] = []
     var failsToLoad = false
+    /// Advanced by the test, as the render thread would.
+    var renderCount = 0
     init(index: Int) { self.index = index }
 
     func load(program: Int) throws {
@@ -38,6 +40,7 @@ private final class FakeHost: NoteSamplerHost {
     var samplers: [FakeSampler] = []
     var runs = 0
     var stops = 0
+    var isRunning = false
     var onNeedsRestart: (() -> Void)?
 
     func makeSampler() -> NoteSampler? {
@@ -55,7 +58,10 @@ private let tableJSON = """
  "ios": {
   "0": {"gainDb": -8.6, "correctionCents": [1.0, 2.0, 3.0, 4.0]},
   "19": {"gainDb": 8.3, "correctionCents": [-5.0, null, 0.5, 7.0]},
-  "11": {"gainDb": 20.0, "correctionCents": [0, 0, 0, 0]}
+  "11": {"gainDb": 20.0, "correctionCents": [0, 0, 0, 0]},
+  "20": {"gainDb": 10.5, "correctionCents": [-1.5, 1.5, 2.5, null]},
+  "21": {"gainDb": 7.4, "correctionCents": [null, 0.0, 0.0, null]},
+  "22": {"gainDb": 11.2, "correctionCents": [null, null, 3.0, null]}
  },
  "android": {}
 }
@@ -87,6 +93,23 @@ final class InstrumentTuningTests: XCTestCase {
     func testASilentKeyPlaysThePiano() throws {
         let note = try XCTUnwrap(table().note(program: 19, key: 25, referencePitch: 440))
         XCTAssertEqual(note, InstrumentNote(program: 0, key: 25, pitchCents: 2, gainDb: -8.6))
+    }
+
+    func testASilentFreeReedKeyPlaysTheReedOrganWhereItSounds() throws {
+        // Harmonica and accordion fall back to the reed organ, the nearest
+        // sound to a pitch pipe's reed.
+        XCTAssertEqual(try table().note(program: 22, key: 24, referencePitch: 440),
+                       InstrumentNote(program: 20, key: 24, pitchCents: -1.5, gainDb: 10.5))
+        XCTAssertEqual(try table().note(program: 21, key: 24, referencePitch: 440)?.program, 20)
+        XCTAssertEqual(try table().note(program: 22, key: 26, referencePitch: 440)?.program, 22)
+    }
+
+    func testAKeyNeitherTheFreeReedNorTheReedOrganSoundsPlaysThePiano() throws {
+        XCTAssertEqual(try table().note(program: 22, key: 27, referencePitch: 440),
+                       InstrumentNote(program: 0, key: 27, pitchCents: 4, gainDb: -8.6))
+        XCTAssertEqual(try table().note(program: 21, key: 27, referencePitch: 440)?.program, 0)
+        XCTAssertEqual(try table().note(program: 20, key: 27, referencePitch: 440)?.program, 0,
+                       "the reed organ's own silent keys play the piano")
     }
 
     func testGainStopsAtTheSamplersLimitAndUnknownProgramsDontPlay() throws {
@@ -313,6 +336,81 @@ final class MIDINotePlayerTests: XCTestCase {
         XCTAssertEqual(host.runs, 2, "the next note starts the output again")
     }
 
+    /// The first-tap bug: a note on a sampler whose instrument loaded while the
+    /// output was rendering was silent, because AUSampler drops a note-on that
+    /// arrives before its next render. The note now waits for two renders.
+    func testANoteOnASamplerLoadedWhileTheOutputRunsWaitsForItToRender() throws {
+        var later: [(TimeInterval, () -> Void)] = []
+        player = MIDINotePlayer(host: host, tuning: try InstrumentTuning(data: Data(tableJSON.utf8)),
+                                perform: { $0() }, performAfter: { later.append(($0, $1)) },
+                                now: { [unowned self] in clock })
+        host.isRunning = true
+        _ = try XCTUnwrap(player.start(sound: "organ", a440Frequency: frequency(24)))
+        let sampler = host.samplers[0]
+        XCTAssertEqual(sampler.events, ["load"], "no note-on yet")
+        XCTAssertEqual(later.map(\.0), [MIDINotePlayer.renderPollInterval])
+        sampler.renderCount = 1
+        later.removeFirst().1()
+        XCTAssertEqual(sampler.events, ["load"], "one render isn't enough")
+        sampler.renderCount = 2
+        later.removeFirst().1()
+        XCTAssertEqual(sampler.events, ["load", "start"])
+        XCTAssertTrue(later.isEmpty)
+
+        // Once it has rendered, the loaded sampler's next note starts at once.
+        clock += 10
+        _ = player.start(sound: "organ", a440Frequency: frequency(26))
+        XCTAssertEqual(host.samplers.count, 2)
+        XCTAssertEqual(host.samplers[1].events, ["load"], "a new sampler loaded while running waits too")
+    }
+
+    func testASamplerLoadedWhileTheOutputIsStoppedStartsItsNoteAtOnce() throws {
+        host.isRunning = false
+        _ = try XCTUnwrap(player.start(sound: "organ", a440Frequency: frequency(24)))
+        XCTAssertEqual(host.samplers[0].events, ["load", "start"])
+    }
+
+    func testAPreparedSamplerThatHasRenderedPlaysItsFirstNoteAtOnce() throws {
+        host.isRunning = true
+        player.prepare(sound: "organ")
+        host.samplers.forEach { $0.renderCount = 5 }
+        _ = try XCTUnwrap(player.start(sound: "organ", a440Frequency: frequency(24)))
+        XCTAssertEqual(host.samplers[0].events, ["load", "start"])
+    }
+
+    func testANoteReleasedWhileWaitingToRenderStillSoundsThenStops() throws {
+        var later: [(TimeInterval, () -> Void)] = []
+        player = MIDINotePlayer(host: host, tuning: try InstrumentTuning(data: Data(tableJSON.utf8)),
+                                perform: { $0() }, performAfter: { later.append(($0, $1)) },
+                                now: { [unowned self] in clock })
+        host.isRunning = true
+        let note = try XCTUnwrap(player.start(sound: "organ", a440Frequency: frequency(24)))
+        player.stopNote(note)
+        let sampler = host.samplers[0]
+        XCTAssertTrue(sampler.stopped.isEmpty)
+        clock += 0.02
+        sampler.renderCount = 2
+        later.removeFirst().1()
+        XCTAssertEqual(sampler.events, ["load", "start", "stop"],
+                       "a quick tap is heard: it starts, then its stop applies")
+    }
+
+    func testAWaitingNoteStartsAnywayIfTheSamplerNeverRenders() throws {
+        var later: [(TimeInterval, () -> Void)] = []
+        player = MIDINotePlayer(host: host, tuning: try InstrumentTuning(data: Data(tableJSON.utf8)),
+                                perform: { $0() }, performAfter: { later.append(($0, $1)) },
+                                now: { [unowned self] in clock })
+        host.isRunning = true
+        _ = try XCTUnwrap(player.start(sound: "organ", a440Frequency: frequency(24)))
+        var checks = 0
+        while !later.isEmpty, checks < 100 {
+            later.removeFirst().1()
+            checks += 1
+        }
+        XCTAssertEqual(checks, MIDINotePlayer.renderPollLimit)
+        XCTAssertEqual(host.samplers[0].events, ["load", "start"])
+    }
+
     func testANoteThatStartedLateIsStoppedAsLateSoATimedNoteKeepsItsLength() throws {
         var queue: [() -> Void] = []
         var later: [(TimeInterval, () -> Void)] = []
@@ -401,7 +499,7 @@ final class NoteSoundSettingTests: PitchPerfectTestCase {
 
     func testAnUnknownSoundIsRefusedAndAStoredOneReadsAsThePitchPipe() {
         DPSettingsModel.sharedInstance.noteSound = "square"
-        DPSettingsModel.sharedInstance.noteSound = "harmonica"
+        DPSettingsModel.sharedInstance.noteSound = "theremin"
         XCTAssertEqual(DPSettingsModel.sharedInstance.noteSound, "square")
         UserDefaults.standard.set("kazoo", forKey: "depollsoft.pitchperfect.NoteSound")
         XCTAssertEqual(DPSettingsModel.sharedInstance.noteSound, "pitchPipe")
@@ -419,7 +517,9 @@ final class NoteSoundSettingTests: PitchPerfectTestCase {
 
     func testThePickersSectionsAndLabels() {
         let sections = DPSettingsModel.noteSoundSections
-        XCTAssertEqual(sections.map(\.title), [nil, "Waves", "Instruments"])
+        XCTAssertEqual(sections.map(\.title), [nil, "Sustained", "Waves", "Plucked & Struck"])
+        XCTAssertEqual(sections[1].sounds.first, "organ", "sustained instruments come first")
+        XCTAssertEqual(sections[3].sounds, ["piano", "electricPiano", "harpsichord", "vibraphone", "guitar", "harp"])
         XCTAssertEqual(sections.flatMap(\.sounds), DPNoteSound.allSounds())
         XCTAssertEqual(DPSettingsModel.noteSoundLabel("pitchPipe"), "Pitch Perfect (Loud)")
         XCTAssertEqual(DPSettingsModel.noteSoundLabel("electricPiano"), "Electric Piano")
@@ -448,18 +548,21 @@ final class NoteSoundSettingTests: PitchPerfectTestCase {
         XCTAssertEqual(app.sheet.label(id: "settings.sound"), "Sound")
         XCTAssertEqual(app.sheet.value(id: "settings.sound"), "Organ")
         app.sheet.tap(id: "settings.sound")
-        settle { app.navigationTitles.contains("Sound") && app.sheet.exists(id: "sound.sine") }
+        settle { app.navigationTitles.contains("Sound") && app.sheet.exists(id: "sound.strings") }
         XCTAssertTrue(app.sheet.isSelected(id: "sound.organ"))
         XCTAssertFalse(app.sheet.isSelected(id: "sound.pitchPipe"))
-        for header in ["Waves", "Instruments"] {
+        // The later headings can be below the fold on a small phone;
+        // PitchPerfectListScrollingTests scrolls there.
+        for header in ["Sustained"] {
             XCTAssertTrue(app.sheet.exists(label: header), header)
         }
         XCTAssertEqual(app.sheet.label(id: "sound.pitchPipe"), "Pitch Perfect (Loud)")
-        app.sheet.tap(id: "sound.sine")
-        settle { app.sheet.isSelected(id: "sound.sine") }
-        XCTAssertEqual(DPSettingsModel.sharedInstance.noteSound, "sine")
+        app.sheet.tap(id: "sound.strings")
+        settle { app.sheet.isSelected(id: "sound.strings") }
+        XCTAssertEqual(DPSettingsModel.sharedInstance.noteSound, "strings")
         XCTAssertFalse(app.sheet.isSelected(id: "sound.organ"))
         XCTAssertTrue(app.navigationTitles.contains("Sound"), "choosing stays on the list")
+        app.resetSettings()
     }
 }
 
@@ -532,6 +635,45 @@ final class WidgetNoteSoundTests: XCTestCase {
         XCTAssertEqual(deactivations, 1, "with nothing left sounding the widget gives the session back")
     }
 
+    func testAWaveCellFadesOutBeforeTheSessionIsGivenUp() throws {
+        var deactivations = 0
+        var pending: [@MainActor () -> Void] = []
+        let widget = WidgetTonePlayer.shared
+        let original = (widget.deactivateSession, widget.later)
+        widget.deactivateSession = { deactivations += 1 }
+        widget.later = { delay, work in
+            XCTAssertEqual(delay, WidgetTonePlayer.waveFade + 0.01, accuracy: 1e-9)
+            pending.append(work)
+        }
+        defer { (widget.deactivateSession, widget.later) = original }
+        WidgetSoundState.set("square")
+        try widget.toggle(pitchIndex: 2, frequency: 293.66)
+        XCTAssertEqual(widget.activePitches, [2])
+        try widget.toggle(pitchIndex: 2, frequency: 293.66)
+        XCTAssertTrue(widget.activePitches.isEmpty, "the cell is off at once")
+        XCTAssertEqual(deactivations, 0, "the loop is still fading out")
+        XCTAssertTrue(WidgetToneActivity.isSounding)
+        XCTAssertEqual(pending.count, 1)
+        pending.removeFirst()()
+        XCTAssertEqual(deactivations, 1, "once it has faded, the session is given back")
+        XCTAssertFalse(WidgetToneActivity.isSounding)
+    }
+
+    func testThePitchPipeCellStopsAtOnceAsItAlwaysHas() throws {
+        var deactivations = 0
+        var pending: [@MainActor () -> Void] = []
+        let widget = WidgetTonePlayer.shared
+        let original = (widget.deactivateSession, widget.later)
+        widget.deactivateSession = { deactivations += 1 }
+        widget.later = { _, work in pending.append(work) }
+        defer { (widget.deactivateSession, widget.later) = original }
+        WidgetSoundState.set(WidgetSoundState.pitchPipe)
+        try widget.toggle(pitchIndex: 2, frequency: 293.66)
+        try widget.toggle(pitchIndex: 2, frequency: 293.66)
+        XCTAssertTrue(pending.isEmpty, "no fade")
+        XCTAssertEqual(deactivations, 1)
+    }
+
     func testStoppingTheWidgetStopsItsInstrumentNotes() throws {
         var stopped = 0
         WidgetInstrumentHook.start = { _, _ in NSObject() }
@@ -580,7 +722,7 @@ final class WidgetNoteSoundTests: XCTestCase {
             var app = [Float](repeating: 0, count: 2000)
             DPWaveRender(&state, &app, 2000)
             let widget = PlayWidgetPitchIntent.samples(frequency: 440.1, frames: 2000, sampleRate: 44_100, sound: sound)
-            for frame in 220..<2000 {
+            for frame in 882..<2000 {
                 XCTAssertEqual(widget[frame] / Double(Int16.max), Double(app[frame]), accuracy: 1e-5, "\(sound) \(frame)")
             }
         }
@@ -590,6 +732,50 @@ final class WidgetNoteSoundTests: XCTestCase {
 /// The bundled sound bank through a real AVAudioUnitSampler, rendered offline:
 /// no audio hardware is involved.
 final class SoundBankRenderingTests: XCTestCase {
+    /// Peaks of a note held for `seconds`: the first 0.2 s, and the 0.2 s from `probe`.
+    private func heldNotePeaks(program: UInt8, key: UInt8, seconds: Double, probe: Double) throws -> (attack: Float, later: Float) {
+        let bank = try XCTUnwrap(Bundle.main.url(forResource: "PitchPerfectInstruments", withExtension: "sf2"))
+        let engine = AVAudioEngine()
+        let sampler = AVAudioUnitSampler()
+        engine.attach(sampler)
+        let format = try XCTUnwrap(AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 2))
+        try engine.enableManualRenderingMode(.offline, format: format, maximumFrameCount: 4096)
+        engine.connect(sampler, to: engine.mainMixerNode, format: nil)
+        try sampler.loadSoundBankInstrument(at: bank, program: program,
+                                            bankMSB: UInt8(kAUSampler_DefaultMelodicBankMSB),
+                                            bankLSB: UInt8(kAUSampler_DefaultBankLSB))
+        try engine.start()
+        defer { engine.stop() }
+        sampler.startNote(key, withVelocity: 100, onChannel: 0)
+        let buffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: engine.manualRenderingFormat, frameCapacity: 4096))
+        var attack: Float = 0, later: Float = 0
+        var frame = 0
+        while Double(frame) < seconds * 44_100 {
+            XCTAssertEqual(try engine.renderOffline(4096, to: buffer), .success)
+            let left = try XCTUnwrap(buffer.floatChannelData?[0])
+            for i in 0..<Int(buffer.frameLength) {
+                let time = Double(frame + i) / 44_100
+                if time < 0.2 { attack = max(attack, abs(left[i])) }
+                if time >= probe, time < probe + 0.2 { later = max(later, abs(left[i])) }
+            }
+            frame += Int(buffer.frameLength)
+        }
+        return (attack, later)
+    }
+
+    /// The bundled bank's plucked and struck presets sustain while the key is
+    /// down (HELD_PROGRAMS in subset_soundfont.py), so a held piano C4 still
+    /// sounds at 2.5 s, within 20 dB of its attack (piano: about 6), rather
+    /// than dying away.
+    func testAHeldPluckedOrStruckNoteStillSoundsAfterTwoAndAHalfSeconds() throws {
+        for sound in DPNoteSound.pluckedInstruments() {
+            let (attack, later) = try heldNotePeaks(program: UInt8(DPNoteSound.program(forSound: sound)),
+                                                     key: 60, seconds: 2.8, probe: 2.5)
+            XCTAssertGreaterThan(attack, 0.01, sound)
+            XCTAssertGreaterThan(later, attack * 0.1, "\(sound): \(later) at 2.5 s against \(attack) at the start")
+        }
+    }
+
     func testEveryInstrumentLoadsFromTheBundledBankAndSounds() throws {
         let bank = try XCTUnwrap(Bundle.main.url(forResource: "PitchPerfectInstruments", withExtension: "sf2"))
         for sound in DPNoteSound.instruments() {

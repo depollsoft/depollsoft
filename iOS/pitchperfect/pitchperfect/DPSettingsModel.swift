@@ -198,8 +198,9 @@ public extension Notification.Name {
     /// The picker's sections: the default alone, then the waves, then the instruments.
     static let noteSoundSections: [(title: String?, sounds: [String])] = [
         (nil, [DPNoteSoundPitchPipe]),
+        ("Sustained", DPNoteSound.sustainedInstruments()),
         ("Waves", DPNoteSound.waves()),
-        ("Instruments", DPNoteSound.instruments()),
+        ("Plucked & Struck", DPNoteSound.pluckedInstruments()),
     ]
 
     /// A sound as the picker names it.
@@ -215,7 +216,9 @@ public extension Notification.Name {
         case "harpsichord": "Harpsichord"
         case "vibraphone": "Vibraphone"
         case "organ": "Organ"
+        case "reedOrgan": "Reed Organ"
         case "accordion": "Accordion"
+        case "harmonica": "Harmonica"
         case "guitar": "Guitar"
         case "harp": "Harp"
         case "strings": "Strings"

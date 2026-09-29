@@ -204,8 +204,34 @@ final class PitchPerfectScreenCatalogTests: PitchPerfectTestCase {
             app.show(tab: 0)
             app.openSettings()
             app.sheet.tap(id: "settings.sound")
-            settle { app.navigationTitles.contains("Sound") && app.sheet.exists(id: "sound.sine") }
+            settle { app.navigationTitles.contains("Sound") && app.sheet.exists(id: "sound.organ") }
             capture("settings-sound\(style == .dark ? "-dark" : "")", app, settle: 0.8)
+            app.resetSettings()
+            app.tearDown()
+        }
+    }
+
+    /// The Sound list at its end, and at the largest accessibility text size.
+    func testSoundPickerScrolledAndAtTheLargestText() throws {
+        DPSettingsModel.sharedInstance.noteSound = "harp"
+        defer { DPSettingsModel.sharedInstance.noteSound = DPNoteSoundPitchPipe }
+        let scene = try XCTUnwrap(ScreenCatalog.scene)
+        defer { scene.traitOverrides.preferredContentSizeCategory = .unspecified }
+        for largest in [false, true] {
+            scene.traitOverrides.preferredContentSizeCategory = largest ? .accessibilityExtraExtraExtraLarge : .unspecified
+            let app = try launch()
+            app.show(tab: 0)
+            app.openSettings()
+            settle { app.navigationTitles.contains("Settings") }
+            app.revealInSheet(id: "settings.sound")
+            app.sheet.tap(id: "settings.sound")
+            settle { app.navigationTitles.contains("Sound") && app.sheet.exists(id: "sound.pitchPipe") }
+            if largest {
+                capture("settings-sound-ax5", app, settle: 0.8)
+            }
+            scrollListsToBottom(in: app.topPresented.view)
+            capture(largest ? "settings-sound-ax5-end" : "settings-sound-end", app, settle: 0.8)
+            app.resetSettings()
             app.tearDown()
         }
     }

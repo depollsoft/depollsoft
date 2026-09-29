@@ -200,6 +200,19 @@ final class WidgetTonePlayer {
     /// Cells sounding in a MIDI instrument, by the app player's token.
     private var instrumentNotes: [Int: AnyObject] = [:]
 
+    /// A wave cell's loop fades in and out over 20 ms, as waves do in the app
+    /// (docs/pitchperfect-note-sounds.md): a square starting at full level, or
+    /// any wave cut mid-cycle, clicks. The pitch pipe's loop starts and stops
+    /// as it always has.
+    static let waveFade: TimeInterval = 0.02
+    private var waveCells: Set<Int> = []
+    /// Wave loops still fading out; the session stays active until they stop.
+    private var fadingOut: [AVAudioPlayer] = []
+    /// Runs work on the main actor after a delay; tests run it when they choose.
+    var later: (TimeInterval, @escaping @MainActor () -> Void) -> Void = { delay, work in
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { MainActor.assumeIsolated(work) }
+    }
+
     /// Read the actual players, not a persisted or optimistically rendered state.
     var activePitches: Set<Int> {
         Set(players.filter { $0.value.isPlaying }.keys).union(instrumentNotes.keys)
@@ -218,7 +231,7 @@ final class WidgetTonePlayer {
             return
         }
         if let playing = players.removeValue(forKey: pitchIndex) {
-            playing.stop()
+            end(playing, cell: pitchIndex)
             balanceVolume()
             deactivateIfSilent()
             return
@@ -241,12 +254,21 @@ final class WidgetTonePlayer {
             nextPlayer.numberOfLoops = -1
             players[pitchIndex] = nextPlayer
             balanceVolume()
+            let fades = PlayWidgetPitchIntent.waveValue(sound, phase: 0, step: 0) != nil
+            if fades {
+                waveCells.insert(pitchIndex)
+                nextPlayer.volume = 0
+            }
             nextPlayer.prepareToPlay()
             guard nextPlayer.play() else {
                 throw WidgetToneError.playbackDidNotStart
             }
+            if fades {
+                nextPlayer.setVolume(1, fadeDuration: Self.waveFade)
+            }
             WidgetToneActivity.set(true)
         } catch {
+            waveCells.remove(pitchIndex)
             players.removeValue(forKey: pitchIndex)?.stop()
             balanceVolume()
             deactivateIfSilent()
@@ -255,12 +277,27 @@ final class WidgetTonePlayer {
     }
 
     func stop() {
-        players.values.forEach { $0.stop() }
+        players.forEach { end($0.value, cell: $0.key) }
         players.removeAll()
         instrumentNotes.values.forEach { WidgetInstrumentHook.stop?($0) }
         instrumentNotes.removeAll()
         WidgetPitchState.set([])
         deactivateIfSilent()
+    }
+
+    /// Stops a cell's loop: a wave fades out first, then stops.
+    private func end(_ player: AVAudioPlayer, cell: Int) {
+        guard waveCells.remove(cell) != nil else {
+            player.stop()
+            return
+        }
+        player.setVolume(0, fadeDuration: Self.waveFade)
+        fadingOut.append(player)
+        later(Self.waveFade + 0.01) { [weak self] in
+            player.stop()
+            self?.fadingOut.removeAll { $0 === player }
+            self?.deactivateIfSilent()
+        }
     }
 
     private func balanceVolume() {
@@ -272,8 +309,9 @@ final class WidgetTonePlayer {
     /// Gives up the session after the widget's last tone stops, unless the
     /// app is still sounding something (an instrument's release included).
     private func deactivateIfSilent() {
-        WidgetToneActivity.set(!players.isEmpty)
-        guard players.isEmpty, instrumentNotes.isEmpty, !(WidgetInstrumentHook.isSounding?() ?? false) else { return }
+        WidgetToneActivity.set(!players.isEmpty || !fadingOut.isEmpty)
+        guard players.isEmpty, fadingOut.isEmpty, instrumentNotes.isEmpty,
+              !(WidgetInstrumentHook.isSounding?() ?? false) else { return }
         deactivateSession()
     }
 }
