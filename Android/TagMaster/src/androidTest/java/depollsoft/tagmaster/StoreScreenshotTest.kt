@@ -2,8 +2,10 @@ package depollsoft.tagmaster
 
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performScrollTo
@@ -11,6 +13,7 @@ import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.espresso.Espresso.closeSoftKeyboard
 import androidx.test.platform.app.InstrumentationRegistry
 import depollsoft.testing.StoreScreenshots
 import org.junit.Assume.assumeTrue
@@ -33,8 +36,13 @@ class StoreScreenshotTest {
     private val instrumentation get() = InstrumentationRegistry.getInstrumentation()
 
     private fun capture(name: String) {
+        // Native screenshots do not advance the Compose test clock. Flush the
+        // last state change and its animations before reading the actual pixels.
+        compose.mainClock.advanceTimeBy(1000)
+        compose.waitForIdle()
         instrumentation.waitForIdleSync()
         Thread.sleep(1000)
+        compose.waitForIdle()
         StoreScreenshots.capture(instrumentation, name)
     }
 
@@ -70,6 +78,10 @@ class StoreScreenshotTest {
     private fun count(prefix: String) = compose.onAllNodes(tagged(prefix), useUnmergedTree = true).fetchSemanticsNodes().size
 
     private fun paneLoaded(pane: TagPaneState) = pane.detail?.let { it.tag != null && !it.isLoading } == true
+
+    private fun SemanticsNode.hasText(text: String): Boolean =
+        config.getOrNull(SemanticsProperties.Text)?.any { it.text == text } == true ||
+            children.any { it.hasText(text) }
 
     @Test
     fun captureStoreScreenshots() {
@@ -150,9 +162,9 @@ class StoreScreenshotTest {
                 val rows = compose.onAllNodes(tagged("savedTag:"), useUnmergedTree = true).fetchSemanticsNodes()
                 rows.isNotEmpty() &&
                     rows.all { row ->
-                        row.children.flatMap { it.children + it }.any { child ->
-                            child.config.getOrNull(SemanticsProperties.Text)?.any { it.text.startsWith("ID:") } == true
-                        }
+                        // Invisible loading placeholders also contain "ID:".
+                        // Require this row's real tag number, not just its label.
+                        row.hasText(row.config[SemanticsProperties.TestTag].substringAfter(':'))
                     }
             }
             if (activity.hasDetailPane) {
@@ -179,6 +191,8 @@ class StoreScreenshotTest {
             }
         ActivityScenario.launch(TagSearchActivity::class.java).use {
             compose.onNodeWithTag("searchTextBox").performTextInput("Lone Prairie")
+            compose.onNodeWithTag("searchTextBox").assertTextContains("Lone Prairie")
+            closeSoftKeyboard()
             capture("03-search")
         }
         val results =
