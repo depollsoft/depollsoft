@@ -2,6 +2,7 @@ package depollsoft.pitchperfect
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
@@ -11,6 +12,7 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
@@ -19,6 +21,9 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipe
+import androidx.compose.ui.unit.dp
 import depollsoft.lib.activity.RichApplication
 import depollsoft.pitchperfect.lib.Accidental
 import depollsoft.pitchperfect.lib.Note
@@ -32,6 +37,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
@@ -413,6 +419,75 @@ class SettingsScreenTest {
 
     @Test
     fun onATallPhoneEveryListScrollsToItsEnd() = everyListScrollsToItsEnd()
+
+    /** Where [tag]'s node sits on screen now. */
+    private fun top(tag: String) = compose.onNodeWithTag(tag).fetchSemanticsNode().positionInRoot.y
+
+    /** The dialog card's trailing edge in the dialog window: its button bar ends 12dp past Cancel. */
+    private fun cardRight(): Float {
+        val cancel = compose.onNodeWithText(RuntimeEnvironment.getApplication().getString(android.R.string.cancel), ignoreCase = true)
+        val node = cancel.fetchSemanticsNode()
+        return node.boundsInRoot.right + with(node.layoutInfo.density) { 12.dp.toPx() }
+    }
+
+    /**
+     * Swipes up [list] with the finger 8dp in from the dialog card's trailing edge, clear of every
+     * label (the user found that only a swipe starting on the text scrolled), and checks [first]
+     * moved up.
+     */
+    private fun aSwipeBesideTheLabelsScrolls(
+        list: String,
+        first: String,
+    ) {
+        val before = top(first)
+        val edge = cardRight()
+        val listNode = compose.onNodeWithTag(list)
+        val left = listNode.fetchSemanticsNode().boundsInRoot.left
+        listNode.performTouchInput {
+            val x = edge - left - 8.dp.toPx()
+            swipe(Offset(x, bottom - 16.dp.toPx()), Offset(x, top + 16.dp.toPx()), durationMillis = 300)
+        }
+        screens.settle()
+        assertTrue("$first moved from $before to ${top(first)}", top(first) < before - 50)
+    }
+
+    /** Taps [choice]'s row 28dp in from the card's trailing edge: past its label, inside its row. */
+    private fun tapBesideTheLabel(choice: String) {
+        val edge = cardRight()
+        val row = compose.onNodeWithTag(choice)
+        val left = row.fetchSemanticsNode().boundsInRoot.left
+        row.performTouchInput { click(Offset(edge - left - 28.dp.toPx(), center.y)) }
+        screens.settle()
+    }
+
+    @Test
+    @Config(qualifiers = "w320dp-h480dp")
+    fun theSoundListScrollsFromASwipeBesideItsLabels() {
+        settings()
+        screens.click(TestTags.SOUND)
+        aSwipeBesideTheLabelsScrolls(TestTags.SOUND_LIST, TestTags.SOUND_CHOICE + "pitchPipe")
+    }
+
+    @Test
+    @Config(qualifiers = "w320dp-h480dp")
+    fun theTuningListScrollsFromASwipeBesideItsLabels() {
+        settings()
+        tapScrolled(TestTags.TUNING)
+        aSwipeBesideTheLabelsScrolls(TestTags.TUNING_LIST, TestTags.TUNING_CHOICE + 415)
+    }
+
+    @Test
+    fun aTapBesideAChoicesLabelChoosesIt() {
+        settings()
+        screens.click(TestTags.SOUND)
+        tapBesideTheLabel(TestTags.SOUND_CHOICE + "organ")
+        assertEquals(NoteSound.ORGAN, SettingsModel.noteSound)
+        Note.setSound(NoteSound.DEFAULT)
+
+        tapScrolled(TestTags.TUNING)
+        tapBesideTheLabel(TestTags.TUNING_CHOICE + 432)
+        assertEquals(432, SettingsModel.referencePitch)
+    }
 
     @Test
     @Config(qualifiers = "w320dp-h480dp")

@@ -357,9 +357,11 @@ fun TuningDialog(
         buttons = listOf(DialogButton(stringResource(android.R.string.cancel), onDismiss)),
     ) {
         val scroll = rememberScrollState()
-        Column(Modifier.verticalScroll(scroll).padding(start = 16.dp, end = 24.dp, top = 8.dp)) {
+        // The whole width scrolls, and each row is tappable across it: a drag that starts beside a
+        // short label must still land on the list, not the dialog behind it.
+        Column(Modifier.fillMaxWidth().testTag(TestTags.TUNING_LIST).verticalScroll(scroll).padding(start = 16.dp, end = 24.dp, top = 8.dp)) {
             SettingsModel.referencePitchChoices(selected).forEach { hz ->
-                RadioChoice(tuningLabel(hz), hz == selected, "${TestTags.TUNING_CHOICE}$hz") { onChoose(hz) }
+                RadioChoice(tuningLabel(hz), hz == selected, "${TestTags.TUNING_CHOICE}$hz", Modifier.fillMaxWidth()) { onChoose(hz) }
             }
         }
     }
@@ -381,7 +383,8 @@ fun SoundDialog(
         buttons = listOf(DialogButton(stringResource(android.R.string.cancel), onDismiss)),
     ) {
         val scroll = rememberScrollState()
-        Column(Modifier.verticalScroll(scroll).padding(start = 16.dp, end = 24.dp, top = 8.dp)) {
+        // As the tuning list: the whole width scrolls, and a row is tappable across it.
+        Column(Modifier.fillMaxWidth().testTag(TestTags.SOUND_LIST).verticalScroll(scroll).padding(start = 16.dp, end = 24.dp, top = 8.dp)) {
             NoteSound.entries.forEachIndexed { index, sound ->
                 val previous = NoteSound.entries.getOrNull(index - 1)
                 if (sound.section != previous?.section) {
@@ -392,7 +395,7 @@ fun SoundDialog(
                         NoteSound.Section.DEFAULT -> {}
                     }
                 }
-                RadioChoice(soundLabel(sound), sound == selected, "${TestTags.SOUND_CHOICE}${sound.id}") { onChoose(sound) }
+                RadioChoice(soundLabel(sound), sound == selected, "${TestTags.SOUND_CHOICE}${sound.id}", Modifier.fillMaxWidth()) { onChoose(sound) }
             }
         }
     }
@@ -463,6 +466,7 @@ private fun RadioChoice(
     label: String,
     selected: Boolean,
     tag: String,
+    modifier: Modifier = Modifier,
     onSelect: () -> Unit,
 ) {
     val colors = plateColors
@@ -474,7 +478,7 @@ private fun RadioChoice(
     )
     val dot by animateFloatAsState(if (selected) 1f else 0f, tween(RADIO_MS, easing = FastOutSlowInEasing), label = "dot")
     Row(
-        Modifier
+        modifier
             .height(48.dp)
             .testTag(tag)
             .selectable(selected, role = Role.RadioButton, onClick = onSelect),
