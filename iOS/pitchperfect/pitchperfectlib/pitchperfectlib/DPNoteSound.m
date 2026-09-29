@@ -28,14 +28,25 @@ NSString *const DPNoteSoundPitchPipe = @"pitchPipe";
     return programs;
 }
 
++ (NSArray<NSString *> *)sustainedInstruments {
+    return @[@"organ", @"reedOrgan", @"accordion", @"harmonica", @"strings", @"choir",
+             @"trumpet", @"clarinet", @"flute"];
+}
+
++ (NSArray<NSString *> *)pluckedInstruments {
+    return @[@"piano", @"electricPiano", @"harpsichord", @"vibraphone", @"guitar", @"harp"];
+}
+
 + (NSArray<NSString *> *)instruments {
-    return @[@"piano", @"electricPiano", @"harpsichord", @"vibraphone", @"organ", @"reedOrgan",
-             @"accordion", @"harmonica", @"guitar", @"harp", @"strings", @"choir", @"trumpet", @"clarinet", @"flute"];
+    return [[self sustainedInstruments] arrayByAddingObjectsFromArray:[self pluckedInstruments]];
 }
 
 + (NSArray<NSString *> *)allSounds {
-    return [[@[DPNoteSoundPitchPipe] arrayByAddingObjectsFromArray:[self waves]]
-            arrayByAddingObjectsFromArray:[self instruments]];
+    NSMutableArray *all = [NSMutableArray arrayWithObject:DPNoteSoundPitchPipe];
+    [all addObjectsFromArray:[self sustainedInstruments]];
+    [all addObjectsFromArray:[self waves]];
+    [all addObjectsFromArray:[self pluckedInstruments]];
+    return all;
 }
 
 + (BOOL)isWave:(NSString *)sound {

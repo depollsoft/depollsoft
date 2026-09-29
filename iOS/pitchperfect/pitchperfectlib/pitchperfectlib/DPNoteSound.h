@@ -16,10 +16,15 @@ extern NSString *const DPNoteSoundPitchPipe;
 /// The sound ids, stored and synced as they are.
 @interface DPNoteSound : NSObject
 
-/// The default and original voice, then the waves, then the instruments.
+/// Every sound in the picker's order: the default and original voice, the
+/// instruments that sustain on their own, the waves, then the plucked and
+/// struck instruments.
 + (NSArray<NSString *> *)allSounds;
 + (NSArray<NSString *> *)waves;
+/// Every instrument: the sustained ones, then the plucked and struck ones.
 + (NSArray<NSString *> *)instruments;
++ (NSArray<NSString *> *)sustainedInstruments;
++ (NSArray<NSString *> *)pluckedInstruments;
 + (BOOL)isKnown:(nullable NSString *)sound;
 + (BOOL)isWave:(nullable NSString *)sound;
 + (BOOL)isInstrument:(nullable NSString *)sound;

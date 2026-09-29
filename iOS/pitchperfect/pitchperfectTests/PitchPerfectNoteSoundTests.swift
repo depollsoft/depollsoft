@@ -517,7 +517,9 @@ final class NoteSoundSettingTests: PitchPerfectTestCase {
 
     func testThePickersSectionsAndLabels() {
         let sections = DPSettingsModel.noteSoundSections
-        XCTAssertEqual(sections.map(\.title), [nil, "Waves", "Instruments"])
+        XCTAssertEqual(sections.map(\.title), [nil, "Sustained", "Waves", "Plucked & Struck"])
+        XCTAssertEqual(sections[1].sounds.first, "organ", "sustained instruments come first")
+        XCTAssertEqual(sections[3].sounds, ["piano", "electricPiano", "harpsichord", "vibraphone", "guitar", "harp"])
         XCTAssertEqual(sections.flatMap(\.sounds), DPNoteSound.allSounds())
         XCTAssertEqual(DPSettingsModel.noteSoundLabel("pitchPipe"), "Pitch Perfect (Loud)")
         XCTAssertEqual(DPSettingsModel.noteSoundLabel("electricPiano"), "Electric Piano")
@@ -549,7 +551,9 @@ final class NoteSoundSettingTests: PitchPerfectTestCase {
         settle { app.navigationTitles.contains("Sound") && app.sheet.exists(id: "sound.sine") }
         XCTAssertTrue(app.sheet.isSelected(id: "sound.organ"))
         XCTAssertFalse(app.sheet.isSelected(id: "sound.pitchPipe"))
-        for header in ["Waves", "Instruments"] {
+        // The last heading is below the fold; PitchPerfectListScrollingTests
+        // scrolls there.
+        for header in ["Sustained", "Waves"] {
             XCTAssertTrue(app.sheet.exists(label: header), header)
         }
         XCTAssertEqual(app.sheet.label(id: "sound.pitchPipe"), "Pitch Perfect (Loud)")

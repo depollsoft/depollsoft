@@ -47,15 +47,21 @@
 
 #pragma mark - Ids
 
-- (void)testTheSoundsAreThePitchPipeThenFourWavesThenFifteenInstruments {
-    NSArray *all = [DPNoteSound allSounds];
-    XCTAssertEqualObjects(all.firstObject, @"pitchPipe");
-    XCTAssertEqualObjects([DPNoteSound waves], (@[@"sine", @"triangle", @"square", @"sawtooth"]));
-    XCTAssertEqualObjects([DPNoteSound instruments],
-                          (@[@"piano", @"electricPiano", @"harpsichord", @"vibraphone", @"organ", @"reedOrgan",
-                             @"accordion", @"harmonica", @"guitar", @"harp", @"strings", @"choir", @"trumpet",
-                             @"clarinet", @"flute"]));
-    XCTAssertEqual(all.count, 20u);
+- (void)testTheSoundsAreThePitchPipeThenSustainedThenWavesThenPluckedAndStruck {
+    NSArray *sustained = @[@"organ", @"reedOrgan", @"accordion", @"harmonica", @"strings", @"choir",
+                           @"trumpet", @"clarinet", @"flute"];
+    NSArray *waves = @[@"sine", @"triangle", @"square", @"sawtooth"];
+    NSArray *plucked = @[@"piano", @"electricPiano", @"harpsichord", @"vibraphone", @"guitar", @"harp"];
+    XCTAssertEqualObjects([DPNoteSound sustainedInstruments], sustained);
+    XCTAssertEqualObjects([DPNoteSound waves], waves);
+    XCTAssertEqualObjects([DPNoteSound pluckedInstruments], plucked);
+    XCTAssertEqualObjects([DPNoteSound instruments], [sustained arrayByAddingObjectsFromArray:plucked]);
+    NSMutableArray *expected = [NSMutableArray arrayWithObject:@"pitchPipe"];
+    [expected addObjectsFromArray:sustained];
+    [expected addObjectsFromArray:waves];
+    [expected addObjectsFromArray:plucked];
+    XCTAssertEqualObjects([DPNoteSound allSounds], expected);
+    XCTAssertEqual([DPNoteSound allSounds].count, 20u);
 }
 
 - (void)testInstrumentsCarryTheirGeneralMIDIPrograms {
