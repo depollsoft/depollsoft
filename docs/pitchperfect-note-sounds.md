@@ -40,8 +40,8 @@ defines it. Nothing is pre-rendered or looped by the app.
 
 ## Storage and sync
 
-- Local preference: `depollsoft.pitchperfect.NoteSound` (Android) / the
-  settings store's `noteSound` key (iOS). Default `pitchPipe`.
+- Local preference: `depollsoft.pitchperfect.NoteSound` on both platforms
+  (the iOS widget's app-group key is `noteSound`). Default `pitchPipe`.
 - Account document `users/{uid}` field `noteSound` (string), written when the
   user changes it and applied when a snapshot arrives, like `referencePitch`.
 - An id this version doesn't know (a newer version's sound, or garbage) reads
@@ -161,7 +161,9 @@ renders sample-for-sample the same as the full bank in FluidSynth.
   sampler, sets `globalTuning = pitchCents` and `overallGain = gainDb`, then
   calls `startNote(key, withVelocity: 100, onChannel: 0)`. Stopping calls
   `stopNote`, which lets the sampler play the instrument's release. The
-  sampler goes back to the pool when the release is over (1.5 s).
+  sampler goes back to the pool when the release is over (1.5 s). If all
+  13 are busy, the note that has sounded longest stops to make room.
+  `overallGain` tops out at +12 dB, so `gainDb` is capped there.
 - Hold enough samplers for every note the app can sound at once: 13, one for
   each pitch pipe cell. Create and load them lazily. Load the chosen
   instrument into the pool when it's chosen and at launch, off the main
