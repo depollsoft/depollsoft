@@ -42,14 +42,21 @@ private final class FakeHost: NoteSamplerHost {
     var stops = 0
     var isRunning = false
     var onNeedsRestart: (() -> Void)?
+    /// No sampler can be made (the sound bank is missing).
+    var refusesSamplers = false
+    var releaseRequests = 0
+    var releaseChecks = 0
 
     func makeSampler() -> NoteSampler? {
+        guard !refusesSamplers else { return nil }
         let sampler = FakeSampler(index: samplers.count)
         samplers.append(sampler)
         return sampler
     }
     func ensureRunning() { runs += 1 }
     func stopOutput() { stops += 1 }
+    func requestSessionRelease() { releaseRequests += 1 }
+    func releaseSessionIfIdle() { releaseChecks += 1 }
 }
 
 private let tableJSON = """
@@ -150,7 +157,7 @@ final class MIDINotePlayerTests: XCTestCase {
         host = FakeHost()
         clock = 100
         player = MIDINotePlayer(host: host, tuning: try InstrumentTuning(data: Data(tableJSON.utf8)),
-                                perform: { $0() }, now: { [unowned self] in clock })
+                                perform: { $0() }, now: { [unowned self] in clock }, deliver: { $0() })
         DPNote.referencePitch = 440
     }
 
@@ -429,15 +436,41 @@ final class MIDINotePlayerTests: XCTestCase {
         XCTAssertEqual(host.samplers[0].stopped, [24])
     }
 
-    func testAnInstrumentThatWontLoadStaysSilent() throws {
-        host = FakeHost()
-        player = MIDINotePlayer(host: host, tuning: try InstrumentTuning(data: Data(tableJSON.utf8)),
-                                perform: { $0() }, now: { [unowned self] in clock })
+    func testAnInstrumentThatWontLoadStaysSilentAndSaysSo() throws {
         player.prepare(sound: "organ")
-        host.samplers[0].failsToLoad = true
-        player.prepare(sound: "piano")
-        _ = player.start(sound: "piano", a440Frequency: frequency(24))
-        XCTAssertTrue(host.samplers[0].started.isEmpty)
+        host.samplers.forEach { $0.failsToLoad = true }
+        var ended: [Bool] = []
+        _ = player.start(sound: "piano", a440Frequency: frequency(24)) { ended.append($0) }
+        XCTAssertTrue(host.samplers.allSatisfy { $0.started.isEmpty })
+        XCTAssertEqual(ended, [true], "the owner hears the note failed, so it can fall back")
+    }
+
+    func testANoteWithNoSamplerToPlayOnSaysItFailed() throws {
+        host.refusesSamplers = true
+        var ended: [Bool] = []
+        let token = player.start(sound: "organ", a440Frequency: frequency(24)) { ended.append($0) }
+        XCTAssertNotNil(token)
+        XCTAssertEqual(ended, [true])
+    }
+
+    func testANoteWhoseSamplerIsTakenTellsItsOwner() throws {
+        var ended: [Int: [Bool]] = [:]
+        for index in 0..<MIDINotePlayer.maximumVoices {
+            _ = player.start(sound: "piano", a440Frequency: frequency(24)) { ended[index, default: []].append($0) }
+            clock += 0.01
+        }
+        XCTAssertTrue(ended.isEmpty)
+        _ = player.start(sound: "piano", a440Frequency: frequency(27))
+        XCTAssertEqual(ended, [0: [false]], "only the longest-sounding note gave way, and it wasn't a failure")
+    }
+
+    func testAStoppedNoteDoesntReportEnding() throws {
+        var ended: [Bool] = []
+        let token = try XCTUnwrap(player.start(sound: "piano", a440Frequency: frequency(24)) { ended.append($0) })
+        player.stopNote(token)
+        clock += 5
+        _ = player.start(sound: "piano", a440Frequency: frequency(25))
+        XCTAssertTrue(ended.isEmpty)
     }
 
     func testWithoutAnEngineOrForAWaveNothingStarts() throws {
@@ -454,9 +487,83 @@ final class MIDINotePlayerTests: XCTestCase {
         XCTAssertFalse(engine.outputConnected, "launch and preloading leave the output unbuilt")
     }
 
-    func testTheOutputRestartsInTurnAfterAnInterruption() {
+    func testTheOutputRestartsAfterAnInterruptionOnlyWhileSomethingSounds() throws {
         host.onNeedsRestart?()
-        XCTAssertEqual(host.runs, 1)
+        XCTAssertEqual(host.runs, 0, "idle: the next note starts the output")
+        let token = try XCTUnwrap(player.start(sound: "piano", a440Frequency: frequency(24)))
+        let runs = host.runs
+        host.onNeedsRestart?()
+        XCTAssertEqual(host.runs, runs + 1, "a sounding note gets its output back")
+        player.stopNote(token)
+        clock += 0.5
+        host.onNeedsRestart?()
+        XCTAssertEqual(host.runs, runs + 2, "and so does a release still playing")
+        clock += MIDINotePlayer.releaseTime
+        host.onNeedsRestart?()
+        XCTAssertEqual(host.runs, runs + 2)
+    }
+
+    func testTheSessionIsGivenUpOnlyOnceNothingSounds() throws {
+        let token = try XCTUnwrap(player.start(sound: "piano", a440Frequency: frequency(24)))
+        player.releaseSessionWhenIdle()
+        XCTAssertEqual(host.releaseRequests, 1, "the widget's request is remembered")
+        XCTAssertEqual(host.releaseChecks, 0, "but a note still sounds")
+        player.stopNote(token)
+        player.releaseSessionIfIdle()
+        XCTAssertEqual(host.releaseChecks, 0, "its release still plays")
+        clock += MIDINotePlayer.releaseTime
+        player.releaseSessionIfIdle()
+        XCTAssertEqual(host.releaseChecks, 1, "the last pitch pipe note stopping gives it up")
+    }
+
+    func testAPlayingNoteWhoseSamplerIsTakenStopsAndRedraws() throws {
+        DPNote.instrumentPlayer = player
+        DPNote.sound = "piano"
+        let first = DPNote(friendlyName: "C", octave: 1, accidental: DPNote.c4().accidental, frequency: frequency(24))!
+        first.play()
+        XCTAssertTrue(first.isPlaying)
+        let redraw = expectation(forNotification: .DPNotePlayingDidChange, object: first)
+        var others: [DPNote] = []
+        for _ in 1...MIDINotePlayer.maximumVoices {
+            clock += 0.01
+            let note = DPNote(friendlyName: "D", octave: 1, accidental: DPNote.c4().accidental, frequency: frequency(26))!
+            note.play()
+            others.append(note)
+        }
+        wait(for: [redraw], timeout: 1)
+        XCTAssertFalse(first.isPlaying, "its sampler went to a newer note")
+        XCTAssertTrue(others.allSatisfy(\.isPlaying))
+        (others + [first]).forEach { $0.stop() }
+    }
+
+    func testANoteWhoseInstrumentFailsLaterFallsBackToThePitchPipeVoice() throws {
+        // As in the app: the player reports on the main queue, after startNote
+        // has handed the note its token.
+        host.refusesSamplers = true
+        player = MIDINotePlayer(host: host, tuning: try InstrumentTuning(data: Data(tableJSON.utf8)),
+                                perform: { $0() }, now: { [unowned self] in clock })
+        DPNote.instrumentPlayer = player
+        DPNote.sound = "organ"
+        let note = DPNote(friendlyName: "A", octave: 4, accidental: DPNote.c4().accidental, frequency: 440)!
+        let redraw = expectation(forNotification: .DPNotePlayingDidChange, object: note)
+        note.play()
+        wait(for: [redraw], timeout: 2)
+        XCTAssertTrue(note.isPlaying, "it sounds in the pitch pipe voice instead of silently")
+        XCTAssertTrue(host.samplers.isEmpty)
+        note.stop()
+        XCTAssertFalse(note.isPlaying)
+    }
+
+    func testANoteWhoseInstrumentFailsAtOncePlaysThePitchPipeVoiceAtOnce() throws {
+        host.refusesSamplers = true
+        DPNote.instrumentPlayer = player
+        DPNote.sound = "organ"
+        let note = DPNote(friendlyName: "A", octave: 4, accidental: DPNote.c4().accidental, frequency: 440)!
+        XCTAssertNil(player.startNote(note, sound: "organ"), "no token for a note that can't play")
+        note.play()
+        XCTAssertTrue(note.isPlaying)
+        note.stop()
+        XCTAssertFalse(note.isPlaying)
     }
 
     func testANotePlaysThroughThePlayerAtItsKeyAndTuning() throws {
@@ -598,6 +705,7 @@ final class WidgetNoteSoundTests: XCTestCase {
         WidgetInstrumentHook.start = nil
         WidgetInstrumentHook.stop = nil
         WidgetInstrumentHook.isSounding = nil
+        WidgetInstrumentHook.releaseSessionWhenIdle = nil
         WidgetSoundState.set(savedSound)
         DPNote.instrumentPlayer = nil
         super.tearDown()
@@ -637,7 +745,7 @@ final class WidgetNoteSoundTests: XCTestCase {
         widget.deactivateSession = { deactivations += 1 }
         defer { widget.deactivateSession = original }
         var appSounding = true
-        WidgetInstrumentHook.start = { _, _ in NSObject() }
+        WidgetInstrumentHook.start = { _, _, _ in NSObject() }
         WidgetInstrumentHook.stop = { _ in }
         WidgetInstrumentHook.isSounding = { appSounding }
         WidgetSoundState.set("piano")
@@ -650,6 +758,37 @@ final class WidgetNoteSoundTests: XCTestCase {
         appSounding = false
         widget.stop()
         XCTAssertEqual(deactivations, 1, "with nothing left sounding the widget gives the session back")
+    }
+
+    func testAnInstrumentCellGoesDarkWhenItsNoteEndsOnItsOwn() throws {
+        var ended: (@Sendable () -> Void)?
+        WidgetInstrumentHook.start = { _, _, onEnded in
+            ended = onEnded
+            return NSObject()
+        }
+        WidgetInstrumentHook.stop = { _ in }
+        WidgetInstrumentHook.isSounding = { false }
+        WidgetSoundState.set("organ")
+        let widget = WidgetTonePlayer.shared
+        try widget.toggle(pitchIndex: 3, frequency: 311.13)
+        XCTAssertEqual(widget.activePitches, [3])
+        try XCTUnwrap(ended)()
+        XCTAssertTrue(widget.activePitches.isEmpty, "a stolen or failed note leaves no lit cell")
+        XCTAssertTrue(WidgetPitchState.activePitches.isEmpty)
+    }
+
+    func testTheWidgetAsksTheAppToGiveUpTheSessionWhenItStillSounds() throws {
+        var requests = 0
+        let widget = WidgetTonePlayer.shared
+        let original = widget.deactivateSession
+        widget.deactivateSession = { XCTFail("the app still sounds") }
+        defer { widget.deactivateSession = original }
+        WidgetInstrumentHook.isSounding = { true }
+        WidgetInstrumentHook.releaseSessionWhenIdle = { requests += 1 }
+        WidgetSoundState.set(WidgetSoundState.pitchPipe)
+        try widget.toggle(pitchIndex: 0, frequency: 261.63)
+        try widget.toggle(pitchIndex: 0, frequency: 261.63)
+        XCTAssertEqual(requests, 1, "the last of the app's sounds to stop gives the session up")
     }
 
     func testAWaveCellFadesOutBeforeTheSessionIsGivenUp() throws {
@@ -693,7 +832,7 @@ final class WidgetNoteSoundTests: XCTestCase {
 
     func testStoppingTheWidgetStopsItsInstrumentNotes() throws {
         var stopped = 0
-        WidgetInstrumentHook.start = { _, _ in NSObject() }
+        WidgetInstrumentHook.start = { _, _, _ in NSObject() }
         WidgetInstrumentHook.stop = { _ in stopped += 1 }
         WidgetSoundState.set("piano")
         try WidgetTonePlayer.shared.toggle(pitchIndex: 0, frequency: 261.63)

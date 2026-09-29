@@ -22,6 +22,7 @@ final class NotePlayer {
     /// Settings changes it.
     private(set) var referencePitch = DPNote.referencePitch
     @ObservationIgnored private var settingsObserver: NSObjectProtocol?
+    @ObservationIgnored private var noteObserver: NSObjectProtocol?
 
     init() {
         settingsObserver = NotificationCenter.default.addObserver(
@@ -31,6 +32,13 @@ final class NotePlayer {
             // value is equal), so a tuning applied without passing through here, as
             // at launch, can never leave a stale copy.
             MainActor.assumeIsolated { self?.referencePitch = DPNote.referencePitch }
+        }
+        // A note that stops on its own (another note took its instrument's
+        // sampler) or falls back to the pitch pipe voice redraws its row.
+        noteObserver = NotificationCenter.default.addObserver(
+            forName: .DPNotePlayingDidChange, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.revision += 1 }
         }
     }
 

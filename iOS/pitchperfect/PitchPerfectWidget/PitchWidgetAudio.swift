@@ -127,13 +127,26 @@ enum WidgetSoundState {
 @MainActor
 enum WidgetInstrumentHook {
     /// Starts `sound` at `frequency` (tuned, Hz); nil when `sound` isn't an
-    /// instrument or can't play, and the cell then plays a tone.
-    static var start: ((_ sound: String, _ frequency: Double) -> AnyObject?)?
+    /// instrument or can't play, and the cell then plays a tone. `ended` is
+    /// called on the main queue if the note falls silent without being
+    /// stopped (its instrument wouldn't load, or another note took its
+    /// sampler), so the cell goes dark.
+    static var start: ((_ sound: String, _ frequency: Double,
+                        _ ended: @escaping @Sendable () -> Void) -> AnyObject?)?
     static var stop: ((AnyObject) -> Void)?
+    /// Asks the app to give up the audio session once its own sounds stop:
+    /// the widget's last tone stopped while the app was still sounding.
+    static var releaseSessionWhenIdle: (() -> Void)?
     /// Whether the app is still sounding anything of its own (an instrument
     /// note or its release, a pitch pipe or wave note), so the widget leaves
     /// the shared audio session active.
     static var isSounding: (() -> Bool)?
+}
+
+/// The note a widget cell started, set once `start` returns, for its `ended`
+/// callback to compare against (both run on the main actor).
+private final class StartedNote: @unchecked Sendable {
+    var note: AnyObject?
 }
 
 /// Whether the widget's own tone players are sounding, readable from any
@@ -237,7 +250,15 @@ final class WidgetTonePlayer {
             return
         }
         let sound = WidgetSoundState.sound
-        if let note = WidgetInstrumentHook.start?(sound, frequency) {
+        let started = StartedNote()
+        let ended: @Sendable () -> Void = { [weak self] in
+            MainActor.assumeIsolated {
+                guard let self, let note = started.note, self.instrumentNotes[pitchIndex] === note else { return }
+                self.instrumentEnded(cell: pitchIndex)
+            }
+        }
+        if let note = WidgetInstrumentHook.start?(sound, frequency, ended) {
+            started.note = note
             instrumentNotes[pitchIndex] = note
             return
         }
@@ -285,6 +306,14 @@ final class WidgetTonePlayer {
         deactivateIfSilent()
     }
 
+    /// A cell's instrument note fell silent on its own: the cell goes dark.
+    private func instrumentEnded(cell: Int) {
+        instrumentNotes.removeValue(forKey: cell)
+        WidgetPitchState.set(activePitches)
+        WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
+        deactivateIfSilent()
+    }
+
     /// Stops a cell's loop: a wave fades out first, then stops.
     private func end(_ player: AVAudioPlayer, cell: Int) {
         guard waveCells.remove(cell) != nil else {
@@ -310,8 +339,13 @@ final class WidgetTonePlayer {
     /// app is still sounding something (an instrument's release included).
     private func deactivateIfSilent() {
         WidgetToneActivity.set(!players.isEmpty || !fadingOut.isEmpty)
-        guard players.isEmpty, fadingOut.isEmpty, instrumentNotes.isEmpty,
-              !(WidgetInstrumentHook.isSounding?() ?? false) else { return }
+        guard players.isEmpty, fadingOut.isEmpty, instrumentNotes.isEmpty else { return }
+        guard !(WidgetInstrumentHook.isSounding?() ?? false) else {
+            // The app still sounds: the last of its sounds to stop gives the
+            // session up instead.
+            WidgetInstrumentHook.releaseSessionWhenIdle?()
+            return
+        }
         deactivateSession()
     }
 }

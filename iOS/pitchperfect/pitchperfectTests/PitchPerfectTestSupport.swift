@@ -252,6 +252,7 @@ class PitchPerfectTestCase: XCTestCase {
             DPNote.instrumentPlayer = nil
             WidgetInstrumentHook.start = nil
             WidgetInstrumentHook.stop = nil
+            WidgetInstrumentHook.releaseSessionWhenIdle = nil
             NotificationCenter.default.post(name: .settingsChanged, object: DPSettingsModel.sharedInstance)
             UIView.setAnimationsEnabled(true)
             unsetenv("STORE_SCREENSHOTS")

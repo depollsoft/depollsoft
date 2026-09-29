@@ -120,8 +120,13 @@ protocol NoteSamplerHost: AnyObject {
     /// Stops the output once nothing is sounding, so the app can suspend.
     func stopOutput()
     /// Called when the output stopped under the player (a route change, or an
-    /// interruption ending); the player then calls ensureRunning in turn.
+    /// interruption ending); the player restarts it if a note is sounding.
     var onNeedsRestart: (() -> Void)? { get set }
+    /// Gives up the audio session if it was kept for something that was still
+    /// sounding (requestSessionRelease, or stopOutput) and nothing sounds now.
+    func releaseSessionIfIdle()
+    /// Marks the session to be given up once nothing sounds.
+    func requestSessionRelease()
 }
 
 final class MIDINotePlayer: NSObject, DPNoteInstrumentPlayer {
@@ -169,7 +174,15 @@ final class MIDINotePlayer: NSObject, DPNoteInstrumentPlayer {
         fileprivate var started = false
         /// Stopped before it started: it stops once it has.
         fileprivate var stopRequested = false
-        init(note: InstrumentNote) { self.note = note }
+        /// Told, on the main queue, when the note ends without being stopped:
+        /// `failed` if it never got a sampler or its instrument wouldn't load,
+        /// otherwise because another note took its sampler. Either way it is
+        /// silent, and the owner must stop showing it as playing.
+        let onEnded: ((_ failed: Bool) -> Void)?
+        init(note: InstrumentNote, onEnded: ((_ failed: Bool) -> Void)? = nil) {
+            self.note = note
+            self.onEnded = onEnded
+        }
     }
 
     fileprivate final class Voice {
@@ -190,6 +203,8 @@ final class MIDINotePlayer: NSObject, DPNoteInstrumentPlayer {
     private let perform: (@escaping () -> Void) -> Void
     private let performAfter: (TimeInterval, @escaping () -> Void) -> Void
     private let now: () -> TimeInterval
+    /// Delivers a token's onEnded (the main queue unless a test passes its own).
+    private let deliver: (@escaping () -> Void) -> Void
     /// Only touched inside `perform`.
     private var voices: [Voice] = []
     private let soundingLock = NSLock()
@@ -212,8 +227,10 @@ final class MIDINotePlayer: NSObject, DPNoteInstrumentPlayer {
          tuning: InstrumentTuning?,
          perform: ((@escaping () -> Void) -> Void)? = nil,
          performAfter: ((TimeInterval, @escaping () -> Void) -> Void)? = nil,
-         now: @escaping () -> TimeInterval = { ProcessInfo.processInfo.systemUptime }) {
+         now: @escaping () -> TimeInterval = { ProcessInfo.processInfo.systemUptime },
+         deliver: @escaping (@escaping () -> Void) -> Void = { DispatchQueue.main.async(execute: $0) }) {
         self.host = host
+        self.deliver = deliver
         self.tuning = tuning
         if let perform {
             // A test's own queue; delayed work runs straight away unless it
@@ -227,8 +244,9 @@ final class MIDINotePlayer: NSObject, DPNoteInstrumentPlayer {
         }
         self.now = now
         super.init()
-        host?.onNeedsRestart = { [weak self, weak host] in
-            self?.perform { host?.ensureRunning() }
+        host?.onNeedsRestart = { [weak self] in
+            guard let self else { return }
+            self.perform { self.restartIfSounding() }
         }
     }
 
@@ -244,7 +262,20 @@ final class MIDINotePlayer: NSObject, DPNoteInstrumentPlayer {
     // MARK: DPNoteInstrumentPlayer
 
     func startNote(_ note: DPNote, sound: String) -> Any? {
-        start(sound: sound, a440Frequency: note.frequency)
+        let started = StartedToken()
+        let token = start(sound: sound, a440Frequency: note.frequency) { [weak note] failed in
+            guard let token = started.token else {
+                // Ended before start returned (a player that works synchronously):
+                // startNote reports it instead, below.
+                started.endedEarly = true
+                return
+            }
+            note?.instrumentNoteEnded(token, failed: failed)
+        }
+        started.token = token
+        // A note that already can't play gets no token, so DPNote plays it in
+        // the pitch pipe voice straight away.
+        return started.endedEarly ? nil : token
     }
 
     func stopNote(_ token: Any) {
@@ -252,10 +283,12 @@ final class MIDINotePlayer: NSObject, DPNoteInstrumentPlayer {
         perform { [self] in end(token) }
     }
 
-    /// Starts a note; nil when there is no engine or the sound isn't an instrument.
-    func start(sound: String, a440Frequency: Double) -> Token? {
+    /// Starts a note; nil when there is no engine or the sound isn't an
+    /// instrument. `onEnded` hears if the note ends before it's stopped.
+    func start(sound: String, a440Frequency: Double,
+               onEnded: ((_ failed: Bool) -> Void)? = nil) -> Token? {
         guard host != nil, let note = instrumentNote(sound: sound, a440Frequency: a440Frequency) else { return nil }
-        let token = Token(note: note)
+        let token = Token(note: note, onEnded: onEnded)
         token.requestedAt = now()
         perform { [self] in begin(token) }
         return token
@@ -294,17 +327,26 @@ final class MIDINotePlayer: NSObject, DPNoteInstrumentPlayer {
     }
 
     private func begin(_ token: Token) {
-        guard let voice = takeVoice(for: token.note.program) else { return }
+        guard let voice = takeVoice(for: token.note.program) else {
+            ended(token, failed: true)
+            return
+        }
         // A sampler still sounding a release (or a stolen note) is cut before
         // it's retuned, so its tail doesn't slide to the new note's tuning.
         if voice.token != nil || now() - voice.releasedAt < Self.releaseTime {
-            if let stolen = voice.token { end(stolen, when: now()) }
+            if let stolen = voice.token {
+                end(stolen, when: now())
+                ended(stolen, failed: false)
+            }
             voice.sampler.silence()
             voice.releasedAt = -.infinity
         }
         if voice.program != token.note.program {
             load(token.note.program, into: voice)
-            guard voice.program == token.note.program else { return }
+            guard voice.program == token.note.program else {
+                ended(token, failed: true)
+                return
+            }
         }
         setSounding(true)
         host?.ensureRunning()
@@ -355,11 +397,29 @@ final class MIDINotePlayer: NSObject, DPNoteInstrumentPlayer {
         performAfter(Self.releaseTime + 0.25) { [self] in stopOutputIfIdle() }
     }
 
+    /// Tells a note's owner that it ended without being stopped.
+    private func ended(_ token: Token, failed: Bool) {
+        guard let onEnded = token.onEnded else { return }
+        deliver { onEnded(failed) }
+    }
+
+    /// Whether a note sounds or a release still plays (inside `perform`).
+    private var poolIsSounding: Bool {
+        let time = now()
+        return voices.contains { $0.token != nil || time - $0.releasedAt < Self.releaseTime }
+    }
+
+    /// Restarts the output after a route change or an interruption only while
+    /// something sounds; otherwise the next note starts it.
+    private func restartIfSounding() {
+        guard poolIsSounding else { return }
+        host?.ensureRunning()
+    }
+
     /// Stops the engine once no note sounds and every release is over;
     /// ensureRunning starts it again for the next note.
     private func stopOutputIfIdle() {
-        let time = now()
-        guard voices.allSatisfy({ $0.token == nil && time - $0.releasedAt >= Self.releaseTime }) else { return }
+        guard !poolIsSounding else { return }
         setSounding(false)
         host?.stopOutput()
     }
@@ -401,10 +461,37 @@ final class MIDINotePlayer: NSObject, DPNoteInstrumentPlayer {
 
     // MARK: Tests
 
+    /// Gives up the audio session once nothing sounds, if it was kept for a
+    /// sound that was still playing (the MIDI engine stopping, or the widget's
+    /// last tone). Called when the last pitch pipe or wave note stops.
+    func releaseSessionIfIdle() {
+        perform { [self] in
+            guard !poolIsSounding else { return }
+            host?.releaseSessionIfIdle()
+        }
+    }
+
+    /// Marks the session for release once nothing sounds, and releases it now
+    /// if nothing does (the widget's last tone stopped while the app sounded).
+    func releaseSessionWhenIdle() {
+        perform { [self] in
+            host?.requestSessionRelease()
+            guard !poolIsSounding else { return }
+            host?.releaseSessionIfIdle()
+        }
+    }
+
     /// The pool's samplers and what each is doing, for tests.
     var voiceStates: [(program: Int?, sounding: Bool)] {
         voices.map { ($0.program, $0.token != nil) }
     }
+}
+
+/// The token startNote handed out, for its onEnded to find; both are touched
+/// on the main thread (onEnded is delivered there).
+private final class StartedToken {
+    var token: MIDINotePlayer.Token?
+    var endedEarly = false
 }
 
 /// The real output: one AVAudioEngine, its samplers mixed into the main mixer.
@@ -466,6 +553,7 @@ final class SamplerEngine: NoteSamplerHost {
             outputConnected = true
             onOutputConnected?(samplerMix)
         }
+        sessionReleasePending = false
         let session = AVAudioSession.sharedInstance()
         try? session.setCategory(.playback)
         try? session.setActive(true)
@@ -477,11 +565,25 @@ final class SamplerEngine: NoteSamplerHost {
         }
     }
 
+    /// stopOutput kept the session because something else was sounding; the
+    /// last of those to stop gives it up (releaseSessionIfIdle).
+    private var sessionReleasePending = false
+
     func stopOutput() {
         guard engine.isRunning else { return }
         engine.stop()
+        sessionReleasePending = true
+        releaseSessionIfIdle()
+    }
+
+    func requestSessionRelease() {
+        sessionReleasePending = true
+    }
+
+    func releaseSessionIfIdle() {
         // Give the audio back to other apps, unless this app still sounds.
-        guard !othersSounding() else { return }
+        guard sessionReleasePending, !engine.isRunning, !othersSounding() else { return }
+        sessionReleasePending = false
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 }
@@ -489,7 +591,8 @@ final class SamplerEngine: NoteSamplerHost {
 private final class EngineSampler: NoteSampler {
     let sampler: AVAudioUnitSampler
     let soundBank: URL
-    /// Written only by the render thread's notify, read by the player's queue.
+    /// Bumped by the render thread's notify and read on the player's queue,
+    /// so both go through atomic operations (DPAtomicCounter).
     private let renders = UnsafeMutablePointer<Int>.allocate(capacity: 1)
 
     init(sampler: AVAudioUnitSampler, soundBank: URL) {
@@ -504,7 +607,7 @@ private final class EngineSampler: NoteSampler {
         renders.deallocate()
     }
 
-    var renderCount: Int { renders.pointee }
+    var renderCount: Int { Int(DPAtomicCounterLoad(renders)) }
 
     func load(program: Int) throws {
         try sampler.loadSoundBankInstrument(at: soundBank, program: UInt8(program),
@@ -536,7 +639,7 @@ private func engineSamplerRendered(_ refCon: UnsafeMutableRawPointer,
                                    _ frames: UInt32,
                                    _ data: UnsafeMutablePointer<AudioBufferList>?) -> OSStatus {
     if flags.pointee.contains(.unitRenderAction_PostRender) {
-        refCon.assumingMemoryBound(to: Int.self).pointee &+= 1
+        DPAtomicCounterIncrement(refCon.assumingMemoryBound(to: Int.self))
     }
     return noErr
 }
@@ -546,9 +649,18 @@ extension MIDINotePlayer {
     @MainActor
     static func install(_ player: MIDINotePlayer = .shared) {
         DPNote.instrumentPlayer = player
-        WidgetInstrumentHook.start = { [weak player] sound, frequency in
+        WidgetInstrumentHook.start = { [weak player] sound, frequency, ended in
             // The widget passes the tuned frequency; the key comes from A440.
-            player?.start(sound: sound, a440Frequency: frequency * 440 / DPNote.referencePitch)
+            player?.start(sound: sound, a440Frequency: frequency * 440 / DPNote.referencePitch,
+                          onEnded: { _ in ended() })
+        }
+        WidgetInstrumentHook.releaseSessionWhenIdle = { [weak player] in
+            player?.releaseSessionWhenIdle()
+        }
+        // The last pitch pipe or wave note to stop gives up the session the
+        // MIDI engine kept for it.
+        DPAudioSynthesizer.setOnLastStopped { [weak player] in
+            player?.releaseSessionIfIdle()
         }
         WidgetInstrumentHook.stop = { [weak player] token in
             player?.stopNote(token)
