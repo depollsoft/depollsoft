@@ -16,8 +16,8 @@
 /// Starts `note` in the instrument `sound` at the current tuning. Returns a
 /// token for stopNote:, or nil when it can't play (the note then plays in the
 /// pitch pipe voice).
-- (nullable id)startNote:(nonnull DPNote *)note sound:(nonnull NSString *)sound;
-- (void)stopNote:(nonnull id)token;
+- (id)startNote:(DPNote *)note sound:(NSString *)sound NS_SWIFT_NAME(startNote(_:sound:));
+- (void)stopNote:(id)token NS_SWIFT_NAME(stopNote(_:));
 @end
 
 @interface DPNote : NSObject
@@ -34,11 +34,11 @@
 /// The sound notes play in: a DPNoteSound id, the pitch pipe unless changed.
 /// An id this version doesn't know reads as the pitch pipe. A note already
 /// sounding keeps its sound until it is played again.
-@property (class, nonatomic, copy, null_resettable) NSString *sound;
+@property (class, nonatomic, copy) NSString *sound;
 
 /// Plays notes whose sound is an instrument. Without one, instruments play
 /// in the pitch pipe voice.
-@property (class, nonatomic, strong, nullable) id<DPNoteInstrumentPlayer> instrumentPlayer;
+@property (class, nonatomic, strong) id<DPNoteInstrumentPlayer> instrumentPlayer;
 
 - (id)initWithFriendlyName:(NSString *)friendlyName octave:(int)octave accidental:(DPAccidental *)accidental frequency:(double)frequency;
 - (id)initWithFriendlyName:(NSString *)friendlyName octave:(int)octave accidental:(DPAccidental *)accidental keyNumber:(int)keyNumber;
