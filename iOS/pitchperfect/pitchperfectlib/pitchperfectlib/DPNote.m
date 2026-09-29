@@ -9,6 +9,7 @@
 #import "DPNote.h"
 #import "DPAccidental.h"
 #import "DPAudioSynthesizer.h"
+#import "DPNoteSound.h"
 #import <AVKit/AVKit.h>
 
 static DPNote *C4 = nil;
@@ -16,6 +17,8 @@ static NSArray *commonNotes = nil;
 static NSArray *prunedNotes = nil;
 static const double standardA4 = 440;
 static double sReferencePitch = standardA4;
+static NSString *sSound = nil;
+static id<DPNoteInstrumentPlayer> sInstrumentPlayer = nil;
 
 @interface DPNote ()
 
@@ -23,6 +26,12 @@ static double sReferencePitch = standardA4;
 @property (nonatomic, readonly) DPAudioSynthesizer *synth;
 /// The frequency `synth` was made for.
 @property (nonatomic) double synthFrequency;
+/// The sound `synth` was made for.
+@property (nonatomic, copy) NSString *synthSound;
+/// The instrument player's handle on this note while it sounds in an instrument.
+@property (nonatomic, strong) id instrumentToken;
+/// The player that gave out `instrumentToken`.
+@property (nonatomic, strong) id<DPNoteInstrumentPlayer> tokenPlayer;
 
 @end
 
@@ -96,6 +105,34 @@ static double sReferencePitch = standardA4;
 
 + (void)setReferencePitch:(double)value {
     sReferencePitch = value;
+}
+
++ (NSString *)sound {
+    @synchronized([DPNote class]) {
+        return sSound ?: DPNoteSoundPitchPipe;
+    }
+}
+
++ (void)setSound:(NSString *)sound {
+    @synchronized([DPNote class]) {
+        sSound = [[DPNoteSound validated:sound] copy];
+    }
+}
+
++ (id<DPNoteInstrumentPlayer>)instrumentPlayer {
+    @synchronized([DPNote class]) {
+        return sInstrumentPlayer;
+    }
+}
+
++ (void)setInstrumentPlayer:(id<DPNoteInstrumentPlayer>)player {
+    @synchronized([DPNote class]) {
+        sInstrumentPlayer = player;
+    }
+}
+
+- (int)midiKey {
+    return [DPNoteSound keyForA440Frequency:self.frequency];
 }
 
 - (double)tunedFrequency {
@@ -179,11 +216,23 @@ static double sReferencePitch = standardA4;
         if(self.isPlaying) {
             return;
         }
+        NSString *sound = DPNote.sound;
+        id<DPNoteInstrumentPlayer> player = DPNote.instrumentPlayer;
+        if ([DPNoteSound isInstrument:sound] && player) {
+            id token = [player startNote:self sound:sound];
+            if (token) {
+                self.instrumentToken = token;
+                self.tokenPlayer = player;
+                self->isPlaying = YES;
+                return;
+            }
+        }
         double tuned = self.tunedFrequency;
-        if (!synth || self.synthFrequency != tuned) {
-            // Made again after the tuning changes.
-            synth = [[DPAudioSynthesizer alloc] initWithFrequency:tuned sampleRate:44100];
+        if (!synth || self.synthFrequency != tuned || ![self.synthSound isEqualToString:sound]) {
+            // Made again after the tuning or the sound changes.
+            synth = [[DPAudioSynthesizer alloc] initWithFrequency:tuned sampleRate:44100 sound:sound];
             self.synthFrequency = tuned;
+            self.synthSound = sound;
         }
         [synth start];
         self->isPlaying = YES;
@@ -192,6 +241,11 @@ static double sReferencePitch = standardA4;
 
 - (void)stop {
     @synchronized(self.synchronizer) {
+        if (self.instrumentToken) {
+            [self.tokenPlayer stopNote:self.instrumentToken];
+            self.instrumentToken = nil;
+            self.tokenPlayer = nil;
+        }
         [synth stop];
         self->isPlaying = NO;
     }

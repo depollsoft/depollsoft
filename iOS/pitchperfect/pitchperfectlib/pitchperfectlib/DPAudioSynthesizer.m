@@ -8,6 +8,7 @@
 
 #include <AudioUnit/AudioUnit.h>
 #import "DPAudioSynthesizer.h"
+#import "DPNoteSound.h"
 
 #define kOutputBus 0
 #define kInputBus 1
@@ -25,6 +26,15 @@
 @property (nonatomic, readonly) double frequency;
 @property (nonatomic, readonly) double time;
 @property (readonly) BOOL isPlaying;
+/// Whether `wave` is the voice; the pitch pipe otherwise.
+@property (nonatomic, readonly) BOOL playsWave;
+
+@end
+
+@interface DPAudioSynthesizer () {
+    DPWaveState wave;
+    DPWaveShape waveShape;
+}
 
 @end
 
@@ -62,6 +72,7 @@ OSStatus renderAudio (void *inRefCon,
 @synthesize frequency;
 @synthesize isPlaying;
 @synthesize time;
+@synthesize playsWave;
 
 - (UInt32)LPCMFlagsWithValidBitsPerChannel:(UInt32)validBitsPerChannel
                        totalBitsPerChannel:(UInt32)totalBitsPerChannel
@@ -164,10 +175,21 @@ OSStatus renderAudio (void *inRefCon,
     return self;
 }
 
+- (id)initWithFrequency:(double)newFrequency
+             sampleRate:(int)newSampleRate
+                  sound:(NSString *)sound {
+    if (self = [self initWithFrequency:newFrequency sampleRate:newSampleRate]) {
+        playsWave = DPWaveShapeForSound(sound, &waveShape);
+    }
+    return self;
+}
+
 - (void)start {
     if (isPlaying) {
         return;
     }
+    // A wave starts again from its beginning, ramp and all.
+    wave = DPWaveStateMake(waveShape, frequency, sampleRate);
     isPlaying = YES;
     AudioOutputUnitStart(audioUnit);
     time = 0;
@@ -186,6 +208,9 @@ OSStatus renderAudio (void *inRefCon,
                        busNumber:(UInt32)busNumber
                     numberFrames:(UInt32)numberFrames
                             data:(AudioBufferList *)data {
+    if (playsWave) {
+        return [self renderWaveInto:data];
+    }
     // double time = timeStamp->mSampleTime;
     double timeDelta = 1.0 / sampleRate;
     for (UInt32 i = 0; i < data->mNumberBuffers; i++) {
@@ -200,6 +225,29 @@ OSStatus renderAudio (void *inRefCon,
         time += timeDelta * numSamples;
     }
     return errno;
+}
+
+/// A wave's samples, in both channels.
+- (OSStatus)renderWaveInto:(AudioBufferList *)data {
+    float scratch[512];
+    for (UInt32 i = 0; i < data->mNumberBuffers; i++) {
+        UInt32 numSamples = data->mBuffers[i].mDataByteSize / 4;
+        UInt32 *buffer = data->mBuffers[i].mData;
+        UInt32 done = 0;
+        while (done < numSamples) {
+            UInt32 chunk = MIN(numSamples - done, (UInt32)(sizeof(scratch) / sizeof(float)));
+            DPWaveRender(&wave, scratch, chunk);
+            for (UInt32 n = 0; n < chunk; n++) {
+                long value = lrintf(scratch[n] * SHRT_MAX);
+                if (value > SHRT_MAX) value = SHRT_MAX;
+                if (value < SHRT_MIN) value = SHRT_MIN;
+                UInt32 channel = (UInt16)(short)value;
+                buffer[done + n] = channel | (channel << 16);
+            }
+            done += chunk;
+        }
+    }
+    return noErr;
 }
 
 - (void)dealloc {

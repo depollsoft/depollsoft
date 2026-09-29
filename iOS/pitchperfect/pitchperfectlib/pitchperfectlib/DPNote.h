@@ -9,6 +9,16 @@
 #import <Foundation/Foundation.h>
 
 @class DPAccidental;
+@class DPNote;
+
+/// Plays notes in a MIDI instrument; the app provides one (see DPNote.instrumentPlayer).
+@protocol DPNoteInstrumentPlayer <NSObject>
+/// Starts `note` in the instrument `sound` at the current tuning. Returns a
+/// token for stopNote:, or nil when it can't play (the note then plays in the
+/// pitch pipe voice).
+- (nullable id)startNote:(nonnull DPNote *)note sound:(nonnull NSString *)sound;
+- (void)stopNote:(nonnull id)token;
+@end
 
 @interface DPNote : NSObject
 
@@ -21,6 +31,15 @@
 /// keeps its pitch until it is played again.
 @property (class, nonatomic) double referencePitch;
 
+/// The sound notes play in: a DPNoteSound id, the pitch pipe unless changed.
+/// An id this version doesn't know reads as the pitch pipe. A note already
+/// sounding keeps its sound until it is played again.
+@property (class, nonatomic, copy, null_resettable) NSString *sound;
+
+/// Plays notes whose sound is an instrument. Without one, instruments play
+/// in the pitch pipe voice.
+@property (class, nonatomic, strong, nullable) id<DPNoteInstrumentPlayer> instrumentPlayer;
+
 - (id)initWithFriendlyName:(NSString *)friendlyName octave:(int)octave accidental:(DPAccidental *)accidental frequency:(double)frequency;
 - (id)initWithFriendlyName:(NSString *)friendlyName octave:(int)octave accidental:(DPAccidental *)accidental keyNumber:(int)keyNumber;
 - (void)play;
@@ -32,6 +51,8 @@
 @property (nonatomic) double frequency;
 /// The frequency the note sounds at, tuned to `referencePitch`.
 @property (nonatomic, readonly) double tunedFrequency;
+/// The note's MIDI key, from its A440 frequency (keyNumber is only set for octave 0).
+@property (nonatomic, readonly) int midiKey;
 @property (nonatomic, copy) NSString *friendlyName;
 @property (nonatomic) BOOL isPlaying;
 @property (nonatomic, strong) NSNumber *keyNumber;
