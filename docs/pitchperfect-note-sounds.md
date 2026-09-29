@@ -8,37 +8,44 @@ offer the same sounds and store and sync the choice the same way.
 ## The sounds
 
 Ids are stored and synced. Labels are shown in the picker, grouped under
-the section headings below; the default has no heading and comes first.
+the section headings below, in this order; the default has no heading and
+comes first. Instruments that sustain on their own come before everything
+else, since they make the most useful reference tones.
 
 | id | label | how it sounds |
 | --- | --- | --- |
 | `pitchPipe` | Pitch Perfect (Loud) | the original voice, unchanged |
-| **Waves** | | |
-| `sine` | Sine | oscillator |
-| `triangle` | Triangle | oscillator |
-| `square` | Square | oscillator |
-| `sawtooth` | Sawtooth | oscillator |
-| **Instruments** | | General MIDI program |
-| `piano` | Piano | 0 |
-| `electricPiano` | Electric Piano | 4 |
-| `harpsichord` | Harpsichord | 6 |
-| `vibraphone` | Vibraphone | 11 |
+| **Sustained** | | General MIDI program |
 | `organ` | Organ | 19 |
 | `reedOrgan` | Reed Organ | 20 |
 | `accordion` | Accordion | 21 |
 | `harmonica` | Harmonica | 22 |
-| `guitar` | Guitar | 24 |
-| `harp` | Harp | 46 |
 | `strings` | Strings | 48 |
 | `choir` | Choir | 52 |
 | `trumpet` | Trumpet | 56 |
 | `clarinet` | Clarinet | 71 |
 | `flute` | Flute | 73 |
+| **Waves** | | |
+| `sine` | Sine | oscillator |
+| `triangle` | Triangle | oscillator |
+| `square` | Square | oscillator |
+| `sawtooth` | Sawtooth | oscillator |
+| **Plucked & Struck** | | General MIDI program |
+| `piano` | Piano | 0 |
+| `electricPiano` | Electric Piano | 4 |
+| `harpsichord` | Harpsichord | 6 |
+| `vibraphone` | Vibraphone | 11 |
+| `guitar` | Guitar | 24 |
+| `harp` | Harp | 46 |
 
-Plucked and struck instruments (piano, guitar, harp and so on) fade out while
-the note is held, as the real instrument does. The others sound until the
-note stops. Either way, the synth plays the instrument as its sound bank
-defines it. Nothing is pre-rendered or looped by the app.
+Every instrument sounds for as long as its note is held. Plucked and struck
+instruments would normally fade out on their own. Their presets in the
+bundled soundfont are changed to sustain at full level while the key is
+down (`HELD_PROGRAMS` in `subset_soundfont.py`). Every one of their samples
+loops, so a held piano note settles at its sample loop's level, about 0 to
+10 dB below the attack, and still plays its release when the note stops.
+Measured in both FluidSynth and AUSampler. The synth plays everything else
+as the sound bank defines it; nothing is pre-rendered or looped by the app.
 
 ## Storage and sync
 

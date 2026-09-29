@@ -3,7 +3,8 @@
 
 Copies only the General MIDI presets Pitch Perfect offers, with their
 instruments, generators, modulators and samples unchanged, so each keeps the
-envelopes, filters and loops its author programmed. Presets keep their GM
+envelopes, filters and loops its author programmed, except that plucked and
+struck instruments sustain while their key is held (HELD_PROGRAMS). Presets keep their GM
 program numbers. Writes shared/pitchperfect/PitchPerfectInstruments.sf2.
 
     python3 scripts/pitchperfect/subset_soundfont.py [--source GeneralUser-GS.sf2]
@@ -22,7 +23,14 @@ OUTPUT = os.path.join(REPO, "shared", "pitchperfect", "PitchPerfectInstruments.s
 # The GM programs behind the Sound setting; see docs/pitchperfect-note-sounds.md.
 PROGRAMS = [0, 4, 6, 11, 19, 20, 21, 22, 24, 46, 48, 52, 56, 71, 73]
 
+# Plucked and struck instruments fade out even while their key is held. Pitch
+# Perfect holds a note until it's released, so these presets' volume envelopes
+# sustain at full level instead: every sample loops, so the note settles at its
+# loop's level and still plays its release. See docs/pitchperfect-note-sounds.md.
+HELD_PROGRAMS = {0, 4, 6, 11, 24, 46}
+
 GEN_INSTRUMENT = 41
+GEN_SUSTAIN_VOL_ENV = 37
 GEN_SAMPLE_ID = 53
 SAMPLE_PADDING = 46  # zero frames after each sample, as the spec requires
 
@@ -115,6 +123,14 @@ def subset(source):
     out["pmod"].append(b"\0" * 10)
     out["pgen"].append(b"\0" * 4)
 
+    held = set()
+    for p in presets:
+        if phdr[p][1] in HELD_PROGRAMS:
+            for b in range(phdr[p][3], phdr[p + 1][3]):
+                for g in range(pbag[b][0], pbag[b + 1][0]):
+                    if pgen[g][0] == GEN_INSTRUMENT:
+                        held.add(pgen[g][1])
+
     for i in inst_order:
         out["inst"].append(struct.pack("<20sH", inst[i][0], len(out["ibag"])))
         for b in range(inst[i][1], inst[i + 1][1]):
@@ -124,6 +140,8 @@ def subset(source):
                 op, amount = igen[g]
                 if op == GEN_SAMPLE_ID:
                     amount = sample_order.index(amount)
+                elif op == GEN_SUSTAIN_VOL_ENV and i in held:
+                    amount = 0  # hold at full level
                 out["igen"].append(struct.pack("<HH", op, amount))
     out["inst"].append(struct.pack("<20sH", b"EOI", len(out["ibag"])))
     out["ibag"].append(struct.pack("<HH", len(out["igen"]), len(out["imod"])))
