@@ -266,10 +266,16 @@ final class StoreScreenshotTests: XCTestCase {
         let finishedEditing = XCTNSPredicateExpectation(
             predicate: NSPredicate(format: "exists == false"), object: info)
         XCTAssertEqual(XCTWaiter.wait(for: [finishedEditing], timeout: 10), .completed)
+        let remove = app.images["minus.circle.fill"].firstMatch
+        let finishedRemoving = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == false"), object: remove)
+        XCTAssertEqual(XCTWaiter.wait(for: [finishedRemoving], timeout: 10), .completed)
         snap("04-songs")
         edit.tap()
         XCTAssertTrue(app.navigationBars.buttons["Done"].readyForCapture(timeout: 10))
         XCTAssertTrue(info.readyForCapture(timeout: 10))
+        XCTAssertTrue(remove.readyForCapture(timeout: 10))
+        XCTAssertTrue(app.buttons["Reorder Blue Skies"].readyForCapture(timeout: 10))
         snap("05-edit-songs")
         // Each row's detail disclosure opens the actual song editor.
         info.tap()
