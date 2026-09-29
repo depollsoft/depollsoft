@@ -121,6 +121,14 @@ class DialogScreenshotTest {
     }
 
     @Test
+    fun sound() {
+        launch(SettingsActivity::class.java)
+        ScreenshotSupport.compose.onNodeWithTag(TestTags.SOUND).performClick()
+        ScreenshotSupport.settle()
+        captureScreen("dialog_sound")
+    }
+
+    @Test
     @Config(qualifiers = ScreenshotSupport.PHONE_NIGHT)
     fun newSetListNight() {
         val activity = launchMain()

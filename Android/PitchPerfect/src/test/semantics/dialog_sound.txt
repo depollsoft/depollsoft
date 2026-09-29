@@ -27,8 +27,26 @@ window
     Button text="Privacy choices" [click]
 
 window
-  text="Log in to Pitch Perfect"
+  text="Sound"
   group [scroll]
-    text="Back up and sync\nChoose a sign-in method to keep your song list and settings available across your devices. You can keep using Pitch Perfect without an account."
-    Button text="CHOOSE SIGN-IN METHOD" [click]
-  Button text="NOT NOW" [click]
+    RadioButton text="Pitch Perfect (Loud)" selected [click]
+    heading text="WAVES"
+    RadioButton text="Sine" unselected [click]
+    RadioButton text="Triangle" unselected [click]
+    RadioButton text="Square" unselected [click]
+    RadioButton text="Sawtooth" unselected [click]
+    heading text="INSTRUMENTS"
+    RadioButton text="Piano" unselected [click]
+    RadioButton text="Electric Piano" unselected [click]
+    RadioButton text="Harpsichord" unselected [click]
+    RadioButton text="Vibraphone" unselected [click]
+    RadioButton text="Organ" unselected [click]
+    RadioButton text="Accordion" unselected [click]
+    RadioButton text="Guitar" unselected [click]
+    RadioButton text="Harp" unselected [click]
+    RadioButton text="Strings" unselected [click]
+    RadioButton text="Choir" unselected [click]
+    RadioButton text="Trumpet" unselected [click]
+    RadioButton text="Clarinet" unselected [click]
+    RadioButton text="Flute" unselected [click]
+  Button text="CANCEL" [click]

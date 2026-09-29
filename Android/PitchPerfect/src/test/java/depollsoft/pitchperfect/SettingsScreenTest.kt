@@ -21,6 +21,7 @@ import androidx.compose.ui.test.performScrollTo
 import depollsoft.lib.activity.RichApplication
 import depollsoft.pitchperfect.lib.Accidental
 import depollsoft.pitchperfect.lib.Note
+import depollsoft.pitchperfect.lib.sound.NoteSound
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -154,6 +155,136 @@ class SettingsScreenTest {
     fun anUnexpectedStoredTuningReadsAsA440() {
         SettingsModel.referencePitch = 1000
         assertEquals("out-of-range values are refused", 440, SettingsModel.referencePitch)
+    }
+
+    // ==================== Sound ====================
+
+    /** Records what the notes play, so the preview can be checked without audio. */
+    private class RecordingPlayer : Note.NotePlayer {
+        val events = mutableListOf<String>()
+
+        override fun play(n: Note) {
+            events += "play ${n.frequency} in ${Note.getSound().id}"
+        }
+
+        override fun stop(n: Note) {
+            events += "stop ${n.frequency}"
+        }
+    }
+
+    @Test
+    fun soundStartsAsThePitchPipeAndAChoiceVoicesTheNotes() {
+        settings()
+        compose.onNodeWithTag(TestTags.SOUND).assert(hasText("Pitch Perfect (Loud)", substring = true))
+        screens.click(TestTags.SOUND)
+        compose.onNodeWithTag(TestTags.SOUND_CHOICE + "pitchPipe").assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
+        tapScrolled(TestTags.SOUND_CHOICE + "choir")
+
+        assertEquals(NoteSound.CHOIR, SettingsModel.noteSound)
+        assertEquals(NoteSound.CHOIR, Note.getSound())
+        assertFalse("choosing closes the dialog", screens.exists(TestTags.SOUND_CHOICE + "choir"))
+        compose.onNodeWithTag(TestTags.SOUND).assert(hasText("Choir", substring = true))
+    }
+
+    @Test
+    fun theSoundDialogListsTheOriginalVoiceThenWavesThenInstruments() {
+        SettingsModel.noteSound = NoteSound.SAWTOOTH
+        settings()
+        screens.click(TestTags.SOUND)
+        compose.onNodeWithTag(TestTags.SOUND_CHOICE + "sawtooth").assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
+        val tops =
+            listOf("pitchPipe", "sine", "sawtooth", "piano", "flute").map {
+                compose.onNodeWithTag(TestTags.SOUND_CHOICE + it).fetchSemanticsNode().positionInRoot.y
+            }
+        assertEquals("in the contract's order", tops.sorted(), tops)
+        compose.onNodeWithText("WAVES").assertExists()
+        compose.onNodeWithText("INSTRUMENTS").assertExists()
+        assertEquals("no harmonica on Android's synth", 0, compose.onAllNodesWithText("Harmonica").fetchSemanticsNodes().size)
+    }
+
+    /** Chooses a sound without letting the main looper run on, so the preview is still playing. */
+    private fun chooseSound(id: String) {
+        compose.onNodeWithTag(TestTags.SOUND_CHOICE + id).performScrollTo().performClick()
+        compose.waitForIdle()
+    }
+
+    private fun waitMillis(millis: Long) = shadowOf(android.os.Looper.getMainLooper()).idleFor(java.time.Duration.ofMillis(millis))
+
+    @Test
+    fun choosingASoundPlaysC4ForASecond() {
+        val player = RecordingPlayer()
+        Note.setPlayer(player)
+        settings()
+        screens.click(TestTags.SOUND)
+        chooseSound("piano")
+
+        val c4 = Note.getC4().frequency
+        assertEquals(listOf("play $c4 in piano"), player.events)
+        assertFalse("the preview doesn't light C4 elsewhere", Note.getC4().isPlaying)
+        waitMillis(SoundPreview.DURATION_MS - 100)
+        assertEquals(1, player.events.size)
+        waitMillis(200)
+        // Note.stop reaches the player twice (once more as its playing state clears).
+        assertEquals(listOf("play $c4 in piano", "stop $c4"), player.events.distinct())
+    }
+
+    @Test
+    fun leavingSettingsStopsThePreview() {
+        val player = RecordingPlayer()
+        Note.setPlayer(player)
+        val controller = screens.launch(SettingsActivity::class.java)
+        screens.click(TestTags.SOUND)
+        chooseSound("organ")
+        controller.pause()
+        val c4 = Note.getC4().frequency
+        assertEquals(listOf("play $c4 in organ", "stop $c4"), player.events.distinct())
+        val count = player.events.size
+        waitMillis(SoundPreview.DURATION_MS)
+        assertEquals("nothing more once stopped", count, player.events.size)
+    }
+
+    @Test
+    fun cancellingTheSoundDialogKeepsTheSoundAndPlaysNothing() {
+        val player = RecordingPlayer()
+        Note.setPlayer(player)
+        SettingsModel.noteSound = NoteSound.TRUMPET
+        settings()
+        screens.click(TestTags.SOUND)
+        compose.onNodeWithText("CANCEL").performClick()
+        screens.settle()
+        assertEquals(NoteSound.TRUMPET, SettingsModel.noteSound)
+        assertTrue(player.events.isEmpty())
+    }
+
+    @Test
+    fun aSoundSyncedFromAnotherDeviceShowsOnTheOpenScreen() {
+        settings()
+        SettingsModel.applyRemoteNoteSound("vibraphone")
+        screens.settle()
+        compose.onNodeWithTag(TestTags.SOUND).assert(hasText("Vibraphone", substring = true))
+        assertEquals(NoteSound.VIBRAPHONE, Note.getSound())
+    }
+
+    @Test
+    fun aSyncedSoundThisVersionDoesntKnowPlaysThePitchPipe() {
+        SettingsModel.noteSound = NoteSound.GUITAR
+        SettingsModel.applyRemoteNoteSound("theremin")
+        assertEquals(NoteSound.PITCH_PIPE, SettingsModel.noteSound)
+        assertEquals(NoteSound.PITCH_PIPE, Note.getSound())
+    }
+
+    @Test
+    fun anUnknownStoredSoundReadsAsThePitchPipe() {
+        depollsoft.lib.util.Preferences.set("depollsoft.pitchperfect.NoteSound", "harmonica")
+        assertEquals(NoteSound.PITCH_PIPE, SettingsModel.noteSound)
+    }
+
+    @Test
+    fun theSoundSurvivesARestart() {
+        SettingsModel.noteSound = NoteSound.CLARINET
+        Note.setSound(NoteSound.PITCH_PIPE)
+        SettingsModel.applyNoteSound()
+        assertEquals(NoteSound.CLARINET, Note.getSound())
     }
 
     @Test

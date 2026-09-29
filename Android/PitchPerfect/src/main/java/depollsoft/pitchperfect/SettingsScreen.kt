@@ -42,6 +42,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,6 +54,7 @@ import depollsoft.compose.scrollViewScrollbar
 import depollsoft.lib.kotlin.R as LibKotlinR
 import depollsoft.lib.util.appVersionName
 import depollsoft.pitchperfect.lib.Note
+import depollsoft.pitchperfect.lib.sound.NoteSound
 import depollsoft.pitchperfect.ui.AppCompatAlertDialog
 import depollsoft.pitchperfect.ui.DialogButton
 import depollsoft.pitchperfect.ui.PlateBackground
@@ -99,6 +102,15 @@ class SettingsState {
             changed()
         }
 
+    /** The voice notes sound in. */
+    var noteSound: NoteSound
+        // Reads the notes' sound too, which is snapshot state, so a synced change redraws.
+        get() = version.let { Note.getSound().let { SettingsModel.noteSound } }
+        set(value) {
+            SettingsModel.noteSound = value
+            changed()
+        }
+
     var themeMode: Int
         get() = version.let { PitchPerfectApplication.themeMode }
         set(value) {
@@ -120,6 +132,7 @@ class SettingsState {
 /** What the settings screen's controls do; the activity supplies them. */
 class SettingsActions(
     val chooseTuning: () -> Unit,
+    val chooseSound: () -> Unit,
     val clearSongs: () -> Unit,
     val installOnWatch: (WatchNode) -> Unit,
     val logIn: () -> Unit,
@@ -150,7 +163,13 @@ fun SettingsScreen(
             PlateSectionHeader(stringResource(R.string.SectionPitchPipe), Modifier.padding(top = 12.dp))
             SettingSwitch(stringResource(R.string.NotesToggle), state.toggleNotes, TestTags.TOGGLE_NOTES) { state.toggleNotes = it }
             SettingSwitch(stringResource(R.string.WakeLock), state.wakeLock, TestTags.WAKE_LOCK) { state.wakeLock = it }
-            TuningRow(state.referencePitch, actions.chooseTuning)
+            DropDownRow(
+                stringResource(R.string.Tuning),
+                stringResource(R.string.TuningValue, state.referencePitch),
+                TestTags.TUNING,
+                actions.chooseTuning,
+            )
+            DropDownRow(stringResource(R.string.Sound), soundLabel(state.noteSound), TestTags.SOUND, actions.chooseSound)
             PlateSettingsButton(
                 stringResource(R.string.ClearAllSongs),
                 Modifier.padding(top = 8.dp).fillMaxWidth().testTag(TestTags.CLEAR_SONGS),
@@ -270,12 +289,15 @@ private fun SettingSwitch(
 }
 
 /**
- * The tuning row: its label, then the chosen A4 in an outlined field with a drop-down arrow, so it
- * reads as a control; a tap anywhere on the row offers the choices.
+ * A setting with choices, such as the tuning: its label, then the current choice in an outlined
+ * field with a drop-down arrow, so it reads as a control; a tap anywhere on the row offers the
+ * choices.
  */
 @Composable
-private fun TuningRow(
-    referencePitch: Int,
+private fun DropDownRow(
+    label: String,
+    value: String,
+    tag: String,
     onClick: () -> Unit,
 ) {
     val colors = plateColors
@@ -284,11 +306,11 @@ private fun TuningRow(
         Modifier
             .fillMaxWidth()
             .heightIn(min = 56.dp)
-            .testTag(TestTags.TUNING)
+            .testTag(tag)
             .clickable(role = Role.Button, onClick = onClick),
         verticalAlignment = ViewAlign.CenterVertically,
     ) {
-        PlateText(stringResource(R.string.Tuning), style = plateText(16.sp, colors.ink), modifier = Modifier.weight(1f))
+        PlateText(label, style = plateText(16.sp, colors.ink), modifier = Modifier.weight(1f))
         Row(
             Modifier
                 .heightIn(min = 40.dp)
@@ -297,7 +319,7 @@ private fun TuningRow(
                 .padding(start = 12.dp, end = 8.dp),
             verticalAlignment = ViewAlign.CenterVertically,
         ) {
-            PlateText(stringResource(R.string.TuningValue, referencePitch), style = plateText(16.sp, colors.ink))
+            PlateText(value, style = plateText(16.sp, colors.ink))
             // Material's drop-down arrow: a 10x5dp triangle in a 24dp box.
             Box(
                 Modifier
@@ -342,6 +364,69 @@ fun TuningDialog(
         }
     }
 }
+
+/**
+ * The sounds, one radio row each: the original voice first, then the waves and the instruments
+ * under their headings. Choosing one closes the dialog.
+ */
+@Composable
+fun SoundDialog(
+    selected: NoteSound,
+    onDismiss: () -> Unit,
+    onChoose: (NoteSound) -> Unit,
+) {
+    AppCompatAlertDialog(
+        onDismissRequest = onDismiss,
+        title = stringResource(R.string.Sound),
+        buttons = listOf(DialogButton(stringResource(android.R.string.cancel), onDismiss)),
+    ) {
+        val scroll = rememberScrollState()
+        Column(Modifier.verticalScroll(scroll).padding(start = 16.dp, end = 24.dp, top = 8.dp)) {
+            NoteSound.entries.forEachIndexed { index, sound ->
+                val previous = NoteSound.entries.getOrNull(index - 1)
+                if (sound.kind != previous?.kind) {
+                    when (sound.kind) {
+                        NoteSound.Kind.WAVE -> SoundHeading(stringResource(R.string.SoundWaves))
+                        NoteSound.Kind.INSTRUMENT -> SoundHeading(stringResource(R.string.SoundInstruments))
+                        NoteSound.Kind.PITCH_PIPE -> {}
+                    }
+                }
+                RadioChoice(soundLabel(sound), sound == selected, "${TestTags.SOUND_CHOICE}${sound.id}") { onChoose(sound) }
+            }
+        }
+    }
+}
+
+/** A group heading in the sound list, in the settings sections' caps. */
+@Composable
+private fun SoundHeading(text: String) {
+    PlateSectionHeader(text, Modifier.padding(start = 6.dp, top = 12.dp, bottom = 4.dp).semantics { heading() })
+}
+
+@Composable
+fun soundLabel(sound: NoteSound): String =
+    stringResource(
+        when (sound) {
+            NoteSound.PITCH_PIPE -> R.string.SoundPitchPipe
+            NoteSound.SINE -> R.string.SoundSine
+            NoteSound.TRIANGLE -> R.string.SoundTriangle
+            NoteSound.SQUARE -> R.string.SoundSquare
+            NoteSound.SAWTOOTH -> R.string.SoundSawtooth
+            NoteSound.PIANO -> R.string.SoundPiano
+            NoteSound.ELECTRIC_PIANO -> R.string.SoundElectricPiano
+            NoteSound.HARPSICHORD -> R.string.SoundHarpsichord
+            NoteSound.VIBRAPHONE -> R.string.SoundVibraphone
+            NoteSound.ORGAN -> R.string.SoundOrgan
+            NoteSound.ACCORDION -> R.string.SoundAccordion
+            NoteSound.GUITAR -> R.string.SoundGuitar
+            NoteSound.HARP -> R.string.SoundHarp
+            NoteSound.STRINGS -> R.string.SoundStrings
+            NoteSound.CHOIR -> R.string.SoundChoir
+            NoteSound.TRUMPET -> R.string.SoundTrumpet
+            NoteSound.CLARINET -> R.string.SoundClarinet
+            NoteSound.FLUTE -> R.string.SoundFlute
+        },
+    )
 
 @Composable
 private fun tuningLabel(hz: Int): String {

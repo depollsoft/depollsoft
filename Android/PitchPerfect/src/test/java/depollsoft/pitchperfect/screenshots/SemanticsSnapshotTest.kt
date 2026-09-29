@@ -2,6 +2,8 @@ package depollsoft.pitchperfect.screenshots
 
 import android.content.Intent
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import depollsoft.lib.activity.RichApplication
 import depollsoft.lib.testing.SemanticsSnapshot
@@ -10,6 +12,7 @@ import depollsoft.pitchperfect.AddSongsFromListActivity
 import depollsoft.pitchperfect.ManageSetListsActivity
 import depollsoft.pitchperfect.SettingsActivity
 import depollsoft.pitchperfect.SongsModel
+import depollsoft.pitchperfect.TestTags
 import depollsoft.pitchperfect.lib.Key
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.launch
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.launchMain
@@ -162,6 +165,13 @@ class SemanticsSnapshotTest {
     fun settings() {
         launch(SettingsActivity::class.java)
         verify("settings")
+    }
+
+    @Test
+    fun soundDialog() {
+        launch(SettingsActivity::class.java)
+        ScreenshotSupport.compose.onNodeWithTag(TestTags.SOUND).performClick()
+        verify("dialog_sound")
     }
 
     @Test
