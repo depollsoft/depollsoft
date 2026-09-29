@@ -1,5 +1,10 @@
 ## ios: 24f871839a8932678737e032a333f35afec1e173..HEAD
 
+f37b58e2 iOS: center tall rows in scrolling tests
+3d823dc1 ios: wait for tuning menu layout in scrolling tests
+6429cd7d ios: keep song list editing controls in sync
+9991b435 release: wait for Pitch Perfect edit controls before capture
+534eb9c9 Android: separate song titles from their keys
 f3426a3d release: prepare both apps for iOS and Android
 e06d4ad3 Pitch Perfect: choose the note sound (waves and MIDI instruments) (#85)
 32b589cf Pitch Perfect: choose the A4 reference pitch (415–446 Hz) (#84)
@@ -11,6 +16,11 @@ da339db8 Pitch Perfect store capture: wait longer for a typed song title (#77)
 
 ## android: da59d2dae1c61502583da4dfce693ed871dcc104..HEAD
 
+f37b58e2 iOS: center tall rows in scrolling tests
+3d823dc1 ios: wait for tuning menu layout in scrolling tests
+6429cd7d ios: keep song list editing controls in sync
+9991b435 release: wait for Pitch Perfect edit controls before capture
+534eb9c9 Android: separate song titles from their keys
 f3426a3d release: prepare both apps for iOS and Android
 e06d4ad3 Pitch Perfect: choose the note sound (waves and MIDI instruments) (#85)
 32b589cf Pitch Perfect: choose the A4 reference pitch (415–446 Hz) (#84)
