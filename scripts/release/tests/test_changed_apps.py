@@ -24,6 +24,12 @@ class SelectionTests(unittest.TestCase):
         self.assertEqual(select(['Android/PitchPerfectLicense/src/main/AndroidManifest.xml']),
                          apps(android=['pitchperfect']))
 
+    def test_pitch_perfects_shared_sound_files_select_pitch_perfect_on_both_platforms(self):
+        for path in ['shared/pitchperfect/instrument-tuning.json',
+                     'shared/pitchperfect/PitchPerfectInstruments.sf2']:
+            self.assertEqual(select([path]), apps(android=['pitchperfect'], ios=['pitchperfect']), path)
+        self.assertEqual(select(['shared/tagmaster/quartet-loader.json']), apps())
+
     def test_shared_code_selects_every_app_on_its_platform_and_marks_it_shared(self):
         for path in ['Android/PitchPerfectLib/src/main/java/A.java',
                      'Android/DepollSoftCommon/build.gradle', 'Android/build.gradle',
