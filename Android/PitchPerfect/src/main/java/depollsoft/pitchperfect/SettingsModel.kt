@@ -9,12 +9,14 @@ import com.google.firebase.firestore.firestore
 import depollsoft.lib.licensing.LicenseChecker
 import depollsoft.lib.util.preference
 import depollsoft.pitchperfect.lib.Note
+import depollsoft.pitchperfect.lib.sound.NoteSound
 
 object SettingsModel {
     private const val TOGGLE_NOTE_KEY = "depollsoft.pitchperfect.ToggleNote"
     private const val WAKE_LOCK_KEY = "depollsoft.pitchperfect.WakeLock"
     private const val ARE_ADS_REMOVED_KEY = "depollsoft.pitchperfect.AreAdsRemoved"
     private const val REFERENCE_PITCH_KEY = "depollsoft.pitchperfect.ReferencePitch"
+    private const val NOTE_SOUND_KEY = "depollsoft.pitchperfect.NoteSound"
 
     /** The A4 frequencies a stored or synced setting may hold; anything else reads as 440 Hz. */
     val REFERENCE_PITCH_RANGE = 400..480
@@ -61,6 +63,31 @@ object SettingsModel {
         Note.setReferencePitch(referencePitch.toDouble())
     }
 
+    /** The voice notes sound in; a stored id this version doesn't know reads as the pitch pipe. */
+    var noteSound: NoteSound
+        get() = NoteSound.fromId(storedNoteSound)
+        set(value) {
+            storedNoteSound = value.id
+        }
+
+    private var storedNoteSound: String by preference(NOTE_SOUND_KEY, NoteSound.DEFAULT.id) {
+        Note.setSound(noteSound)
+        if (!restoring) {
+            userRef?.set(mapOf("noteSound" to it), SetOptions.merge())
+        }
+    }
+
+    /** Voices the notes in the stored sound; call once at startup. */
+    fun applyNoteSound() {
+        Note.setSound(noteSound)
+    }
+
+    /** Applies the account's sound; one this version doesn't know plays the pitch pipe, and isn't written back. */
+    internal fun applyRemoteNoteSound(remote: String) {
+        val sound = NoteSound.fromId(remote)
+        if (storedNoteSound != sound.id) noteSound = sound
+    }
+
     val licensed: Boolean
         get() = LicenseChecker.isLicensed()
 
@@ -81,6 +108,7 @@ object SettingsModel {
                     wakeLock = data.getBoolean("wakeLock") ?: wakeLock
                     toggleNotes = data.getBoolean("toggleNotes") ?: toggleNotes
                     data.getLong("referencePitch")?.let(::applyRemoteReferencePitch)
+                    data.getString("noteSound")?.let(::applyRemoteNoteSound)
                 } finally {
                     restoring = false
                 }

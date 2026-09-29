@@ -60,6 +60,8 @@ class SettingsActivity(
 
     internal val state = SettingsState()
 
+    private val soundPreview = SoundPreview()
+
     /** Which dialog is up, if any. */
     internal var dialog by mutableStateOf<SettingsDialog?>(null)
 
@@ -73,6 +75,7 @@ class SettingsActivity(
         val actions =
             SettingsActions(
                 chooseTuning = { dialog = SettingsDialog.TUNING },
+                chooseSound = { dialog = SettingsDialog.SOUND },
                 clearSongs = { dialog = SettingsDialog.CLEAR_SONGS },
                 installOnWatch = ::installOnWatch,
                 logIn = { dialog = SettingsDialog.LOG_IN },
@@ -114,6 +117,12 @@ class SettingsActivity(
                 TuningDialog(state.referencePitch, onDismiss = close) {
                     close()
                     state.referencePitch = it
+                }
+            SettingsDialog.SOUND ->
+                // Stays open: each choice plays, so the user can compare sounds, and Done closes it.
+                SoundDialog(state.noteSound, onDismiss = close) {
+                    state.noteSound = it
+                    soundPreview.play()
                 }
             SettingsDialog.CLEAR_SONGS ->
                 ConfirmDialog(
@@ -165,6 +174,7 @@ class SettingsActivity(
     }
 
     override fun onPause() {
+        soundPreview.stop()
         watchResumed = false
         watchRefresh?.cancel()
         val client = watchCapabilityClient
@@ -285,7 +295,7 @@ class SettingsActivity(
 }
 
 /** The settings screen's dialogs. */
-enum class SettingsDialog { LOG_IN, CHANGELOG, CLEAR_SONGS, DELETE_ACCOUNT, TUNING }
+enum class SettingsDialog { LOG_IN, CHANGELOG, CLEAR_SONGS, DELETE_ACCOUNT, TUNING, SOUND }
 
 /** A yes/no question in AppCompat's alert dialog. */
 @androidx.compose.runtime.Composable

@@ -2,6 +2,7 @@ package depollsoft.pitchperfect
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
@@ -11,16 +12,27 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.click
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onChildren
+import androidx.compose.ui.test.filter
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipe
+import androidx.compose.ui.unit.dp
 import depollsoft.lib.activity.RichApplication
 import depollsoft.pitchperfect.lib.Accidental
 import depollsoft.pitchperfect.lib.Note
+import depollsoft.pitchperfect.lib.sound.NoteSound
+import depollsoft.pitchperfect.ui.DialogListMoreBelow
+import depollsoft.pitchperfect.ui.DialogListMoreAbove
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -30,6 +42,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
@@ -100,7 +113,7 @@ class SettingsScreenTest {
     @Test
     fun tuningStartsAtA440AndAChoiceRetunesTheNotes() {
         settings()
-        compose.onNodeWithTag(TestTags.TUNING).assert(hasText("A4 = 440 Hz", substring = true))
+        compose.onNodeWithTag(TestTags.TUNING).assert(hasText("440 Hz", substring = true))
         screens.click(TestTags.TUNING)
         compose.onNodeWithTag(TestTags.TUNING_CHOICE + 440).assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
         tapScrolled(TestTags.TUNING_CHOICE + 442)
@@ -109,7 +122,7 @@ class SettingsScreenTest {
         assertEquals(442.0, Note.findNote("A", Accidental.Natural, 4)!!.tunedFrequency, 1e-9)
         assertEquals("the stored A440 frequency is kept", 440.0, Note.findNote("A", Accidental.Natural, 4)!!.frequency, 1e-9)
         assertFalse("choosing closes the dialog", screens.exists(TestTags.TUNING_CHOICE + 442))
-        compose.onNodeWithTag(TestTags.TUNING).assert(hasText("A4 = 442 Hz", substring = true))
+        compose.onNodeWithTag(TestTags.TUNING).assert(hasText("442 Hz", substring = true))
     }
 
     @Test
@@ -130,7 +143,7 @@ class SettingsScreenTest {
         // Stands in for the account's snapshot listener: nothing on this screen asks to redraw.
         SettingsModel.applyRemoteReferencePitch(443)
         screens.settle()
-        compose.onNodeWithTag(TestTags.TUNING).assert(hasText("A4 = 443 Hz", substring = true))
+        compose.onNodeWithTag(TestTags.TUNING).assert(hasText("443 Hz", substring = true))
     }
 
     @Test
@@ -154,6 +167,208 @@ class SettingsScreenTest {
     fun anUnexpectedStoredTuningReadsAsA440() {
         SettingsModel.referencePitch = 1000
         assertEquals("out-of-range values are refused", 440, SettingsModel.referencePitch)
+    }
+
+    // ==================== Sound ====================
+
+    /** Records what the notes play, so the preview can be checked without audio. */
+    private class RecordingPlayer : Note.NotePlayer {
+        val events = mutableListOf<String>()
+
+        override fun play(n: Note) {
+            events += "play ${n.frequency} in ${Note.getSound().id}"
+        }
+
+        override fun stop(n: Note) {
+            events += "stop ${n.frequency}"
+        }
+    }
+
+    @Test
+    fun soundStartsAsThePitchPipeAndAChoiceVoicesTheNotes() {
+        settings()
+        compose.onNodeWithTag(TestTags.SOUND).assert(hasText("Pitch Perfect (Loud)", substring = true))
+        screens.click(TestTags.SOUND)
+        compose.onNodeWithTag(TestTags.SOUND_CHOICE + "pitchPipe").assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
+        tapScrolled(TestTags.SOUND_CHOICE + "choir")
+
+        assertEquals(NoteSound.CHOIR, SettingsModel.noteSound)
+        assertEquals(NoteSound.CHOIR, Note.getSound())
+        compose.onNodeWithTag(TestTags.SOUND_CHOICE + "choir").assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
+        compose.onNodeWithTag(TestTags.SOUND_CHOICE + "pitchPipe").assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, false))
+        compose.onNodeWithText("DONE").performClick()
+        screens.settle()
+        assertFalse("Done closes the dialog", screens.exists(TestTags.SOUND_CHOICE + "choir"))
+        compose.onNodeWithTag(TestTags.SOUND).assert(hasText("Choir", substring = true))
+    }
+
+    @Test
+    fun theSoundDialogStaysOpenAndPlaysEachChoiceSoTheyCanBeCompared() {
+        val player = RecordingPlayer()
+        Note.setPlayer(player)
+        settings()
+        screens.click(TestTags.SOUND)
+        chooseSound("piano")
+        chooseSound("organ")
+        val c4 = Note.getC4().frequency
+        assertEquals(
+            "a new choice cuts the last preview short and plays its own",
+            listOf("play $c4 in piano", "stop $c4", "play $c4 in organ"),
+            player.events.distinct(),
+        )
+        assertTrue("still open", screens.exists(TestTags.SOUND_CHOICE + "organ"))
+        assertEquals(NoteSound.ORGAN, SettingsModel.noteSound)
+        compose.onNodeWithText("CANCEL").assertDoesNotExist()
+    }
+
+    @Test
+    fun theDialogsOpenOnTheCurrentChoice() {
+        SettingsModel.noteSound = NoteSound.HARP
+        SettingsModel.referencePitch = 446
+        settings()
+        screens.click(TestTags.SOUND)
+        compose.onNodeWithTag(TestTags.SOUND_CHOICE + "harp").assertIsDisplayed()
+        compose.onNodeWithText("DONE").performClick()
+        screens.settle()
+        tapScrolled(TestTags.TUNING)
+        compose.onNodeWithTag(TestTags.TUNING_CHOICE + 446).assertIsDisplayed()
+    }
+
+    @Test
+    fun tuningValuesAreSetInTheMonoFaceAndNamedPitchesReadNaturally() {
+        settings()
+        val field = compose.onNodeWithTag(TestTags.TUNING + FIELD_TAG, useUnmergedTree = true)
+        field.onChildren().filter(hasText("440 Hz")).onFirst().assert(SemanticsMatcher("set in monospace") { it.textStyle()?.fontFamily == androidx.compose.ui.text.font.FontFamily.Monospace })
+        val sound = compose.onNodeWithTag(TestTags.SOUND + FIELD_TAG, useUnmergedTree = true)
+        sound.onChildren().filter(hasText("Pitch Perfect (Loud)")).onFirst().assert(SemanticsMatcher("names stay in the body face") { it.textStyle()?.fontFamily != androidx.compose.ui.text.font.FontFamily.Monospace })
+        screens.click(TestTags.TUNING)
+        compose.onNodeWithTag(TestTags.TUNING_CHOICE + 415).assert(SemanticsMatcher.expectValue(SemanticsProperties.ContentDescription, listOf("415 Hz, Baroque")))
+        compose.onNodeWithTag(TestTags.TUNING_CHOICE + 432).assert(hasText("432 Hz"))
+    }
+
+    @Test
+    fun theTuningAndSoundFieldsLineUpAsOneColumn() {
+        settings()
+        val tuning = compose.onNodeWithTag(TestTags.TUNING + FIELD_TAG, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        val sound = compose.onNodeWithTag(TestTags.SOUND + FIELD_TAG, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        assertEquals(tuning.left, sound.left, 0.5f)
+        assertEquals(tuning.right, sound.right, 0.5f)
+        compose.onNodeWithTag(TestTags.TUNING).assert(hasText("Frequency of A4", substring = true))
+        compose.onNodeWithTag(TestTags.SOUND).assert(hasText("How every note sounds", substring = true))
+    }
+
+    @Test
+    fun theSoundDialogListsTheOriginalVoiceThenSustainedThenWavesThenPluckedAndStruck() {
+        SettingsModel.noteSound = NoteSound.SAWTOOTH
+        settings()
+        screens.click(TestTags.SOUND)
+        compose.onNodeWithTag(TestTags.SOUND_CHOICE + "sawtooth").assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
+        fun top(tag: String) = compose.onNode(hasTestTag(tag) or hasText(tag)).fetchSemanticsNode().positionInRoot.y
+        val tops =
+            listOf(
+                TestTags.SOUND_CHOICE + "pitchPipe",
+                "SUSTAINED",
+                TestTags.SOUND_CHOICE + "organ",
+                TestTags.SOUND_CHOICE + "reedOrgan",
+                TestTags.SOUND_CHOICE + "accordion",
+                TestTags.SOUND_CHOICE + "harmonica",
+                TestTags.SOUND_CHOICE + "flute",
+                "WAVES",
+                TestTags.SOUND_CHOICE + "sine",
+                TestTags.SOUND_CHOICE + "sawtooth",
+                "PLUCKED & STRUCK",
+                TestTags.SOUND_CHOICE + "piano",
+                TestTags.SOUND_CHOICE + "harp",
+            ).map(::top)
+        assertEquals("in the contract's order", tops.sorted(), tops)
+        compose.onNodeWithText("INSTRUMENTS").assertDoesNotExist()
+        compose.onNodeWithText("Reed Organ").assertExists()
+        compose.onNodeWithText("Harmonica").assertExists()
+    }
+
+    /** Chooses a sound without letting the main looper run on, so the preview is still playing. */
+    private fun chooseSound(id: String) {
+        compose.onNodeWithTag(TestTags.SOUND_CHOICE + id).performScrollTo().performClick()
+        compose.waitForIdle()
+    }
+
+    private fun waitMillis(millis: Long) = shadowOf(android.os.Looper.getMainLooper()).idleFor(java.time.Duration.ofMillis(millis))
+
+    @Test
+    fun choosingASoundPlaysC4ForASecond() {
+        val player = RecordingPlayer()
+        Note.setPlayer(player)
+        settings()
+        screens.click(TestTags.SOUND)
+        chooseSound("piano")
+
+        val c4 = Note.getC4().frequency
+        assertEquals(listOf("play $c4 in piano"), player.events)
+        assertFalse("the preview doesn't light C4 elsewhere", Note.getC4().isPlaying)
+        waitMillis(SoundPreview.DURATION_MS - 100)
+        assertEquals(1, player.events.size)
+        waitMillis(200)
+        // Note.stop reaches the player twice (once more as its playing state clears).
+        assertEquals(listOf("play $c4 in piano", "stop $c4"), player.events.distinct())
+    }
+
+    @Test
+    fun leavingSettingsStopsThePreview() {
+        val player = RecordingPlayer()
+        Note.setPlayer(player)
+        val controller = screens.launch(SettingsActivity::class.java)
+        screens.click(TestTags.SOUND)
+        chooseSound("organ")
+        controller.pause()
+        val c4 = Note.getC4().frequency
+        assertEquals(listOf("play $c4 in organ", "stop $c4"), player.events.distinct())
+        val count = player.events.size
+        waitMillis(SoundPreview.DURATION_MS)
+        assertEquals("nothing more once stopped", count, player.events.size)
+    }
+
+    @Test
+    fun closingTheSoundDialogWithoutAChoiceKeepsTheSoundAndPlaysNothing() {
+        val player = RecordingPlayer()
+        Note.setPlayer(player)
+        SettingsModel.noteSound = NoteSound.TRUMPET
+        settings()
+        screens.click(TestTags.SOUND)
+        compose.onNodeWithText("DONE").performClick()
+        screens.settle()
+        assertEquals(NoteSound.TRUMPET, SettingsModel.noteSound)
+        assertTrue(player.events.isEmpty())
+    }
+
+    @Test
+    fun aSoundSyncedFromAnotherDeviceShowsOnTheOpenScreen() {
+        settings()
+        SettingsModel.applyRemoteNoteSound("vibraphone")
+        screens.settle()
+        compose.onNodeWithTag(TestTags.SOUND).assert(hasText("Vibraphone", substring = true))
+        assertEquals(NoteSound.VIBRAPHONE, Note.getSound())
+    }
+
+    @Test
+    fun aSyncedSoundThisVersionDoesntKnowPlaysThePitchPipe() {
+        SettingsModel.noteSound = NoteSound.GUITAR
+        SettingsModel.applyRemoteNoteSound("theremin")
+        assertEquals(NoteSound.PITCH_PIPE, SettingsModel.noteSound)
+        assertEquals(NoteSound.PITCH_PIPE, Note.getSound())
+    }
+
+    @Test
+    fun anUnknownStoredSoundReadsAsThePitchPipe() {
+        depollsoft.lib.util.Preferences.set("depollsoft.pitchperfect.NoteSound", "bagpipes")
+        assertEquals(NoteSound.PITCH_PIPE, SettingsModel.noteSound)
+    }
+
+    @Test
+    fun theSoundSurvivesARestart() {
+        SettingsModel.noteSound = NoteSound.CLARINET
+        Note.setSound(NoteSound.PITCH_PIPE)
+        SettingsModel.applyNoteSound()
+        assertEquals(NoteSound.CLARINET, Note.getSound())
     }
 
     @Test
@@ -234,6 +449,184 @@ class SettingsScreenTest {
         compose.onNodeWithText("NOT NOW").assertIsDisplayed()
         compose.onNodeWithTag(TestTags.LOGIN_BUTTON).performScrollTo().assertIsDisplayed()
     }
+
+    /**
+     * Opens each list dialog and scrolls to its last choice: the choice comes into view, the
+     * Cancel button stays on screen the whole time, and choosing it works. Then the settings
+     * screen itself scrolls to its last row.
+     */
+    private fun everyListScrollsToItsEnd() {
+        val activity = settings()
+        val cancel = activity.getString(android.R.string.cancel)
+        val done = activity.getString(R.string.SoundDone)
+
+        screens.click(TestTags.SOUND)
+        compose.onNodeWithText(done, ignoreCase = true).assertIsDisplayed()
+        compose.onNodeWithTag(TestTags.SOUND_CHOICE + "harp").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText(done, ignoreCase = true).assertIsDisplayed()
+        compose.onNodeWithTag(TestTags.SOUND_CHOICE + "pitchPipe").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag(TestTags.SOUND_CHOICE + "harp").performScrollTo().performClick()
+        screens.settle()
+        assertEquals(NoteSound.HARP, SettingsModel.noteSound)
+        compose.onNodeWithText(done, ignoreCase = true).performClick()
+        screens.settle()
+        Note.setSound(NoteSound.DEFAULT)
+
+        tapScrolled(TestTags.TUNING)
+        compose.onNodeWithText(cancel, ignoreCase = true).assertIsDisplayed()
+        compose.onNodeWithTag(TestTags.TUNING_CHOICE + 446).performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText(cancel, ignoreCase = true).assertIsDisplayed()
+        compose.onNodeWithTag(TestTags.TUNING_CHOICE + 446).performClick()
+        screens.settle()
+        assertEquals(446, SettingsModel.referencePitch)
+        SettingsModel.referencePitch = 440
+
+        compose.onNodeWithTag(TestTags.PRIVACY_CHOICES).performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun onATallPhoneEveryListScrollsToItsEnd() = everyListScrollsToItsEnd()
+
+    /** Where [tag]'s node sits on screen now. */
+    private fun top(tag: String) = compose.onNodeWithTag(tag).fetchSemanticsNode().positionInRoot.y
+
+    /** The dialog card's trailing edge in the dialog window: its button bar ends 12dp past its button (Cancel or Done). */
+    private fun cardRight(): Float {
+        val app = RuntimeEnvironment.getApplication()
+        val button =
+            compose.onNode(
+                hasText(app.getString(android.R.string.cancel), ignoreCase = true) or hasText(app.getString(R.string.SoundDone), ignoreCase = true),
+            )
+        val node = button.fetchSemanticsNode()
+        return node.boundsInRoot.right + with(node.layoutInfo.density) { 12.dp.toPx() }
+    }
+
+    /**
+     * Swipes up [list] with the finger 8dp in from the dialog card's trailing edge, clear of every
+     * label (the user found that only a swipe starting on the text scrolled), and checks [first]
+     * moved up.
+     */
+    private fun aSwipeBesideTheLabelsScrolls(
+        list: String,
+        first: String,
+    ) {
+        val before = top(first)
+        val edge = cardRight()
+        val listNode = compose.onNodeWithTag(list)
+        val left = listNode.fetchSemanticsNode().boundsInRoot.left
+        listNode.performTouchInput {
+            val x = edge - left - 8.dp.toPx()
+            swipe(Offset(x, bottom - 16.dp.toPx()), Offset(x, top + 16.dp.toPx()), durationMillis = 300)
+        }
+        screens.settle()
+        assertTrue("$first moved from $before to ${top(first)}", top(first) < before - 50)
+    }
+
+    /** Taps [choice]'s row 28dp in from the card's trailing edge: past its label, inside its row. */
+    private fun tapBesideTheLabel(choice: String) {
+        val edge = cardRight()
+        val row = compose.onNodeWithTag(choice)
+        val left = row.fetchSemanticsNode().boundsInRoot.left
+        row.performTouchInput { click(Offset(edge - left - 28.dp.toPx(), center.y)) }
+        screens.settle()
+    }
+
+    @Test
+    @Config(qualifiers = "w320dp-h480dp")
+    fun theSoundListScrollsFromASwipeBesideItsLabels() {
+        settings()
+        screens.click(TestTags.SOUND)
+        aSwipeBesideTheLabelsScrolls(TestTags.SOUND_LIST, TestTags.SOUND_CHOICE + "pitchPipe")
+    }
+
+    @Test
+    @Config(qualifiers = "w320dp-h480dp")
+    fun theTuningListScrollsFromASwipeBesideItsLabels() {
+        settings()
+        tapScrolled(TestTags.TUNING)
+        aSwipeBesideTheLabelsScrolls(TestTags.TUNING_LIST, TestTags.TUNING_CHOICE + 415)
+    }
+
+    @Test
+    fun aTapBesideAChoicesLabelChoosesIt() {
+        settings()
+        screens.click(TestTags.SOUND)
+        tapBesideTheLabel(TestTags.SOUND_CHOICE + "organ")
+        assertEquals(NoteSound.ORGAN, SettingsModel.noteSound)
+        compose.onNodeWithText("DONE").performClick()
+        screens.settle()
+        Note.setSound(NoteSound.DEFAULT)
+
+        tapScrolled(TestTags.TUNING)
+        tapBesideTheLabel(TestTags.TUNING_CHOICE + 432)
+        assertEquals(432, SettingsModel.referencePitch)
+    }
+
+    /** Which edges of [list] show there is more past them: (above, below). */
+    private fun edges(list: String): Pair<Boolean?, Boolean?> {
+        val config = compose.onNodeWithTag(list).fetchSemanticsNode().config
+        return config.getOrNull(DialogListMoreAbove) to config.getOrNull(DialogListMoreBelow)
+    }
+
+    @Test
+    @Config(qualifiers = "w320dp-h480dp")
+    fun aListTallerThanTheDialogMarksTheEdgesWithMorePastThem() {
+        settings()
+        screens.click(TestTags.SOUND)
+        assertEquals(false to true, edges(TestTags.SOUND_LIST))
+        compose.onNodeWithTag(TestTags.SOUND_CHOICE + "harp").performScrollTo()
+        screens.settle()
+        assertEquals(true to false, edges(TestTags.SOUND_LIST))
+        compose.onNodeWithTag(TestTags.SOUND_CHOICE + "strings").performScrollTo()
+        screens.settle()
+        assertEquals(true to true, edges(TestTags.SOUND_LIST))
+    }
+
+    @Test
+    fun aListThatFitsMarksNoEdgesAndDoesNotScroll() {
+        settings()
+        tapScrolled(TestTags.TUNING)
+        assertEquals(false to false, edges(TestTags.TUNING_LIST))
+        val range = compose.onNodeWithTag(TestTags.TUNING_LIST).fetchSemanticsNode().config.getOrNull(SemanticsProperties.VerticalScrollAxisRange)
+        assertEquals(0f, range?.maxValue?.invoke() ?: 0f)
+    }
+
+    /** The list's bottom edge cuts through a row, well clear of its top and bottom, so the cut shows. */
+    private fun theListEndsPartwayThroughARow() {
+        settings()
+        screens.click(TestTags.SOUND)
+        val list = compose.onNodeWithTag(TestTags.SOUND_LIST).fetchSemanticsNode()
+        val fold = list.positionInRoot.y + list.size.height
+        val margin = with(list.layoutInfo.density) { 8.dp.toPx() }
+        val cut =
+            NoteSound.entries.map { compose.onNodeWithTag(TestTags.SOUND_CHOICE + it.id).fetchSemanticsNode() }.firstOrNull {
+                it.positionInRoot.y + margin < fold && it.positionInRoot.y + it.size.height - margin > fold
+            }
+        assertTrue("no row is cut at the fold ($fold)", cut != null)
+    }
+
+    @Test
+    @Config(qualifiers = "w320dp-h480dp")
+    fun onASmallPhoneTheSoundListEndsPartwayThroughARow() = theListEndsPartwayThroughARow()
+
+    @Test
+    fun onATallPhoneTheSoundListEndsPartwayThroughARow() = theListEndsPartwayThroughARow()
+
+    @Test
+    @Config(qualifiers = "w640dp-h320dp-land")
+    fun inLandscapeTheSoundListEndsPartwayThroughARow() = theListEndsPartwayThroughARow()
+
+    @Test
+    @Config(qualifiers = "w320dp-h480dp")
+    fun onASmallPhoneEveryListScrollsToItsEnd() = everyListScrollsToItsEnd()
+
+    @Test
+    @Config(qualifiers = "w640dp-h320dp-land")
+    fun onAShortLandscapeScreenEveryListScrollsToItsEnd() = everyListScrollsToItsEnd()
+
+    @Test
+    @Config(qualifiers = "w320dp-h480dp", fontScale = 2f)
+    fun atDoubleTextSizeEveryListScrollsToItsEnd() = everyListScrollsToItsEnd()
 
     @Test
     fun aSignInResultArrivingAfterRecreationReachesThePrompt() {
@@ -342,5 +735,12 @@ class SettingsScreenTest {
         tapScrolled(TestTags.PRIVACY_CHOICES)
         // The consent prompt is the shared library's own dialog.
         assertTrue(org.robolectric.shadows.ShadowDialog.getLatestDialog().isShowing)
+    }
+
+    /** The style a text node was laid out with. */
+    private fun androidx.compose.ui.semantics.SemanticsNode.textStyle(): androidx.compose.ui.text.TextStyle? {
+        val results = mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
+        config.getOrNull(androidx.compose.ui.semantics.SemanticsActions.GetTextLayoutResult)?.action?.invoke(results)
+        return results.firstOrNull()?.layoutInput?.style
     }
 }

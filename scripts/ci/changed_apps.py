@@ -25,11 +25,11 @@ APPS = ('pitchperfect', 'tagmaster')
 OWNED = {
     'android': {
         'pitchperfect': ('Android/PitchPerfect/', 'Android/PitchPerfectWear/',
-                         'Android/PitchPerfectLicense/'),
+                         'Android/PitchPerfectLicense/', 'shared/pitchperfect/'),
         'tagmaster': ('Android/TagMaster/',),
     },
     'ios': {
-        'pitchperfect': ('iOS/pitchperfect/',),
+        'pitchperfect': ('iOS/pitchperfect/', 'shared/pitchperfect/'),
         'tagmaster': ('iOS/tagmaster/',),
     },
 }

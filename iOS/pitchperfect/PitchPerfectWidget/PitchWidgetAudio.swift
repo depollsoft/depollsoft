@@ -104,6 +104,66 @@ enum WidgetTuningState {
     }
 }
 
+/// The sound the app's Settings chose (a DPNoteSound id), shared so the
+/// widget's cells play it too.
+enum WidgetSoundState {
+    private static let key = "noteSound"
+    static let pitchPipe = "pitchPipe"
+
+    static var sound: String {
+        WidgetSharedDefaults.defaults?.string(forKey: key) ?? pitchPipe
+    }
+
+    static func set(_ value: String) {
+        guard let defaults = WidgetSharedDefaults.defaults else { return }
+        defaults.set(value, forKey: key)
+        defaults.synchronize()
+    }
+}
+
+/// Plays a cell in a MIDI instrument through the app's own player. The widget
+/// target doesn't link pitchperfectlib, so the app registers these at launch;
+/// the intent runs in the app process, where they are set.
+@MainActor
+enum WidgetInstrumentHook {
+    /// Starts `sound` at `frequency` (tuned, Hz); nil when `sound` isn't an
+    /// instrument or can't play, and the cell then plays a tone. `ended` is
+    /// called on the main queue if the note falls silent without being
+    /// stopped (its instrument wouldn't load, or another note took its
+    /// sampler), so the cell goes dark.
+    static var start: ((_ sound: String, _ frequency: Double,
+                        _ ended: @escaping @Sendable () -> Void) -> AnyObject?)?
+    static var stop: ((AnyObject) -> Void)?
+    /// Asks the app to give up the audio session once its own sounds stop:
+    /// the widget's last tone stopped while the app was still sounding.
+    static var releaseSessionWhenIdle: (() -> Void)?
+    /// Whether the app is still sounding anything of its own (an instrument
+    /// note or its release, a pitch pipe or wave note), so the widget leaves
+    /// the shared audio session active.
+    static var isSounding: (() -> Bool)?
+}
+
+/// The note a widget cell started, set once `start` returns, for its `ended`
+/// callback to compare against (both run on the main actor).
+private final class StartedNote: @unchecked Sendable {
+    var note: AnyObject?
+}
+
+/// Whether the widget's own tone players are sounding, readable from any
+/// thread (the app's MIDI player checks it before giving up the session).
+enum WidgetToneActivity {
+    private static let lock = NSLock()
+    nonisolated(unsafe) private static var sounding = false
+
+    static var isSounding: Bool {
+        lock.withLock { sounding }
+    }
+
+    static func set(_ value: Bool) {
+        lock.withLock { sounding = value }
+    }
+}
+
 /// Lets a widget-process intent stop a tone the app process owns.
 enum WidgetPlaybackBridge {
     static let stopNotificationName = "depollsoft.pitchperfect.widget.stop"
@@ -146,10 +206,29 @@ final class WidgetTonePlayer {
     static let shared = WidgetTonePlayer()
 
     private var players: [Int: AVAudioPlayer] = [:]
+    /// Gives the audio session back to other apps; tests count the calls.
+    var deactivateSession: () -> Void = {
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+    }
+    /// Cells sounding in a MIDI instrument, by the app player's token.
+    private var instrumentNotes: [Int: AnyObject] = [:]
+
+    /// A wave cell's loop fades in and out over 20 ms, as waves do in the app
+    /// (docs/pitchperfect-note-sounds.md): a square starting at full level, or
+    /// any wave cut mid-cycle, clicks. The pitch pipe's loop starts and stops
+    /// as it always has.
+    static let waveFade: TimeInterval = 0.02
+    private var waveCells: Set<Int> = []
+    /// Wave loops still fading out; the session stays active until they stop.
+    private var fadingOut: [AVAudioPlayer] = []
+    /// Runs work on the main actor after a delay; tests run it when they choose.
+    var later: (TimeInterval, @escaping @MainActor () -> Void) -> Void = { delay, work in
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { MainActor.assumeIsolated(work) }
+    }
 
     /// Read the actual players, not a persisted or optimistically rendered state.
     var activePitches: Set<Int> {
-        Set(players.filter { $0.value.isPlaying }.keys)
+        Set(players.filter { $0.value.isPlaying }.keys).union(instrumentNotes.keys)
     }
 
     /// Each cell owns its loop. Toggling one never stops another sounding cell.
@@ -158,10 +237,29 @@ final class WidgetTonePlayer {
             throw WidgetToneError.invalidPitch
         }
         players = players.filter { $0.value.isPlaying }
+        if let note = instrumentNotes.removeValue(forKey: pitchIndex) {
+            // The app's MIDI player is still playing the release; it gives
+            // up the session itself once it falls silent.
+            WidgetInstrumentHook.stop?(note)
+            return
+        }
         if let playing = players.removeValue(forKey: pitchIndex) {
-            playing.stop()
+            end(playing, cell: pitchIndex)
             balanceVolume()
             deactivateIfSilent()
+            return
+        }
+        let sound = WidgetSoundState.sound
+        let started = StartedNote()
+        let ended: @Sendable () -> Void = { [weak self] in
+            MainActor.assumeIsolated {
+                guard let self, let note = started.note, self.instrumentNotes[pitchIndex] === note else { return }
+                self.instrumentEnded(cell: pitchIndex)
+            }
+        }
+        if let note = WidgetInstrumentHook.start?(sound, frequency, ended) {
+            started.note = note
+            instrumentNotes[pitchIndex] = note
             return
         }
 
@@ -172,16 +270,26 @@ final class WidgetTonePlayer {
                 try session.setActive(true)
             }
             let nextPlayer = try AVAudioPlayer(
-                data: PlayWidgetPitchIntent.loopingTone(frequency: frequency)
+                data: PlayWidgetPitchIntent.loopingTone(frequency: frequency, sound: sound)
             )
             nextPlayer.numberOfLoops = -1
             players[pitchIndex] = nextPlayer
             balanceVolume()
+            let fades = PlayWidgetPitchIntent.waveValue(sound, phase: 0, step: 0) != nil
+            if fades {
+                waveCells.insert(pitchIndex)
+                nextPlayer.volume = 0
+            }
             nextPlayer.prepareToPlay()
             guard nextPlayer.play() else {
                 throw WidgetToneError.playbackDidNotStart
             }
+            if fades {
+                nextPlayer.setVolume(1, fadeDuration: Self.waveFade)
+            }
+            WidgetToneActivity.set(true)
         } catch {
+            waveCells.remove(pitchIndex)
             players.removeValue(forKey: pitchIndex)?.stop()
             balanceVolume()
             deactivateIfSilent()
@@ -190,10 +298,35 @@ final class WidgetTonePlayer {
     }
 
     func stop() {
-        players.values.forEach { $0.stop() }
+        players.forEach { end($0.value, cell: $0.key) }
         players.removeAll()
+        instrumentNotes.values.forEach { WidgetInstrumentHook.stop?($0) }
+        instrumentNotes.removeAll()
         WidgetPitchState.set([])
         deactivateIfSilent()
+    }
+
+    /// A cell's instrument note fell silent on its own: the cell goes dark.
+    private func instrumentEnded(cell: Int) {
+        instrumentNotes.removeValue(forKey: cell)
+        WidgetPitchState.set(activePitches)
+        WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
+        deactivateIfSilent()
+    }
+
+    /// Stops a cell's loop: a wave fades out first, then stops.
+    private func end(_ player: AVAudioPlayer, cell: Int) {
+        guard waveCells.remove(cell) != nil else {
+            player.stop()
+            return
+        }
+        player.setVolume(0, fadeDuration: Self.waveFade)
+        fadingOut.append(player)
+        later(Self.waveFade + 0.01) { [weak self] in
+            player.stop()
+            self?.fadingOut.removeAll { $0 === player }
+            self?.deactivateIfSilent()
+        }
     }
 
     private func balanceVolume() {
@@ -202,9 +335,18 @@ final class WidgetTonePlayer {
         players.values.forEach { $0.volume = 1 }
     }
 
+    /// Gives up the session after the widget's last tone stops, unless the
+    /// app is still sounding something (an instrument's release included).
     private func deactivateIfSilent() {
-        guard players.isEmpty else { return }
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        WidgetToneActivity.set(!players.isEmpty || !fadingOut.isEmpty)
+        guard players.isEmpty, fadingOut.isEmpty, instrumentNotes.isEmpty else { return }
+        guard !(WidgetInstrumentHook.isSounding?() ?? false) else {
+            // The app still sounds: the last of its sounds to stop gives the
+            // session up instead.
+            WidgetInstrumentHook.releaseSessionWhenIdle?()
+            return
+        }
+        deactivateSession()
     }
 }
 
@@ -241,10 +383,10 @@ struct PlayWidgetPitchIntent: AudioPlaybackIntent {
         return .result()
     }
 
-    static func loopingTone(frequency: Double) -> Data {
+    static func loopingTone(frequency: Double, sound: String = WidgetSoundState.pitchPipe) -> Data {
         let cycles = max(1, Int((frequency * loopDuration).rounded()))
         let seamlessFrequency = Double(cycles) / loopDuration
-        return tone(frequency: seamlessFrequency, duration: loopDuration, fadeEdges: false)
+        return tone(frequency: seamlessFrequency, duration: loopDuration, fadeEdges: false, sound: sound)
     }
 
     /// The pitch pipe voice shared by the iOS app (DPAudioSynthesizer) and
@@ -256,17 +398,51 @@ struct PlayWidgetPitchIntent: AudioPlaybackIntent {
         return Int16(clipped * Double(Int16.max))
     }
 
-    static func tone(frequency: Double, duration: Double, fadeEdges: Bool = true) -> Data {
+    /// A wave as DPWaveRender plays it in the app (docs/pitchperfect-note-sounds.md),
+    /// at phase `p` for a step of `dt`, before its level and ramp; nil for a
+    /// sound that isn't a wave.
+    static func waveValue(_ sound: String, phase p: Double, step dt: Double) -> Double? {
+        func polyBlep(_ t: Double) -> Double {
+            if t < dt { let x = t / dt; return x + x - x * x - 1 }
+            if t > 1 - dt { let x = (t - 1) / dt; return x * x + x + x + 1 }
+            return 0
+        }
+        switch sound {
+        case "sine": return sin(2 * .pi * p)
+        case "triangle": return 1 - 4 * abs((p + 0.25).truncatingRemainder(dividingBy: 1) - 0.5)
+        case "square": return (p < 0.5 ? 1 : -1) + polyBlep(p) - polyBlep((p + 0.5).truncatingRemainder(dividingBy: 1))
+        case "sawtooth": return (2 * p - 1) - polyBlep(p)
+        default: return nil
+        }
+    }
+
+    /// The tone's samples: a wave for a wave sound (at -1 dBFS, as in the
+    /// app), otherwise the pitch pipe voice. A whole number of cycles over
+    /// the tone loops seamlessly either way.
+    static func samples(frequency: Double, frames: Int, sampleRate: Int, sound: String) -> [Double] {
+        let dt = frequency / Double(sampleRate)
+        guard waveValue(sound, phase: 0, step: dt) != nil else {
+            return (0..<frames).map {
+                Double(pitchPipeSample(frequency: frequency, time: Double($0) / Double(sampleRate)))
+            }
+        }
+        return (0..<frames).map { frame in
+            let phase = (Double(frame) * dt).truncatingRemainder(dividingBy: 1)
+            return 0.89 * waveValue(sound, phase: phase, step: dt)! * Double(Int16.max)
+        }
+    }
+
+    static func tone(frequency: Double, duration: Double, fadeEdges: Bool = true, sound: String = WidgetSoundState.pitchPipe) -> Data {
         let sampleRate = 44_100
         let frames = Int(Double(sampleRate) * duration)
         var pcm = Data(capacity: frames * 2)
         let fadeFrames = sampleRate / 40
+        let voice = samples(frequency: frequency, frames: frames, sampleRate: sampleRate, sound: sound)
         for frame in 0..<frames {
             let attack = min(1.0, Double(frame) / Double(fadeFrames))
             let release = min(1.0, Double(frames - frame) / Double(fadeFrames))
             let envelope = fadeEdges ? min(attack, release) : 1.0
-            let sample = pitchPipeSample(frequency: frequency, time: Double(frame) / Double(sampleRate))
-            var value = Int16((Double(sample) * envelope).rounded()).littleEndian
+            var value = Int16((voice[frame] * envelope).rounded()).littleEndian
             withUnsafeBytes(of: &value) { pcm.append(contentsOf: $0) }
         }
 

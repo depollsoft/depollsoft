@@ -9,6 +9,7 @@ import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import depollsoft.lib.util.Preferences
 import depollsoft.pitchperfect.lib.Note
+import depollsoft.pitchperfect.lib.sound.NoteSound
 import org.robolectric.Shadows.shadowOf
 
 /** Shared setup and teardown for the Robolectric screen tests. */
@@ -56,6 +57,7 @@ internal object ScreenTestSupport {
         SettingsModel.wakeLock = false
         SettingsModel.areAdsRemoved = false
         SettingsModel.referencePitch = 440
+        SettingsModel.noteSound = NoteSound.PITCH_PIPE
     }
 
     /**

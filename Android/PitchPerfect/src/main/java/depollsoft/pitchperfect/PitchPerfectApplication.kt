@@ -16,6 +16,7 @@ import depollsoft.lib.analytics.Analytics
 import depollsoft.lib.json.JsonSerializer
 import depollsoft.lib.util.Preferences
 import depollsoft.pitchperfect.lib.*
+import depollsoft.pitchperfect.lib.sound.NoteVoices
 
 class PitchPerfectApplication : RichApplication() {
     override fun onCreate() {
@@ -40,6 +41,8 @@ class PitchPerfectApplication : RichApplication() {
         Note.setPlayer(WidgetAwareNotePlayer(Note.DEFAULT_PLAYER) { PitchPipeAppWidget.updateWidgets() })
         registerStorageAliases()
         SettingsModel.applyReferencePitch()
+        SettingsModel.applyNoteSound()
+        NoteVoices.initialize(this)
         AppCompatDelegate.setDefaultNightMode(themeMode)
         extraInit()
         PerformanceDiagnostics.logDuration(

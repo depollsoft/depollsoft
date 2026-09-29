@@ -197,6 +197,61 @@ final class PitchPerfectScreenCatalogTests: PitchPerfectTestCase {
         }
     }
 
+    /// Settings at the largest accessibility text size, where the Tuning
+    /// menu sits under its title.
+    func testSettingsAtTheLargestText() throws {
+        let scene = try XCTUnwrap(ScreenCatalog.scene)
+        defer { scene.traitOverrides.preferredContentSizeCategory = .unspecified }
+        scene.traitOverrides.preferredContentSizeCategory = .accessibilityExtraExtraExtraLarge
+        let app = try launch()
+        app.show(tab: 0)
+        app.openSettings()
+        settle { app.navigationTitles.contains("Settings") }
+        app.revealInSheet(id: "settings.tuning")
+        capture("settings-ax5", app, settle: 0.8)
+        app.tearDown()
+    }
+
+    func testSoundPicker() throws {
+        DPSettingsModel.sharedInstance.noteSound = "choir"
+        for style in [UIUserInterfaceStyle.light, .dark] {
+            let app = try launch(style)
+            app.show(tab: 0)
+            app.openSettings()
+            app.sheet.tap(id: "settings.sound")
+            settle { app.navigationTitles.contains("Sound") && app.sheet.exists(id: "sound.organ") }
+            capture("settings-sound\(style == .dark ? "-dark" : "")", app, settle: 0.8)
+            app.resetSettings()
+            app.tearDown()
+        }
+    }
+
+    /// The Sound list at its end, and at the largest accessibility text size.
+    func testSoundPickerScrolledAndAtTheLargestText() throws {
+        DPSettingsModel.sharedInstance.noteSound = "harp"
+        defer { DPSettingsModel.sharedInstance.noteSound = DPNoteSoundPitchPipe }
+        let scene = try XCTUnwrap(ScreenCatalog.scene)
+        defer { scene.traitOverrides.preferredContentSizeCategory = .unspecified }
+        for largest in [false, true] {
+            scene.traitOverrides.preferredContentSizeCategory = largest ? .accessibilityExtraExtraExtraLarge : .unspecified
+            let app = try launch()
+            app.show(tab: 0)
+            app.openSettings()
+            settle { app.navigationTitles.contains("Settings") }
+            app.revealInSheet(id: "settings.sound")
+            app.sheet.tap(id: "settings.sound")
+            // The list opens on the current choice, the last one here.
+            settle { app.navigationTitles.contains("Sound") && app.sheet.exists(id: "sound.harp") }
+            if largest {
+                capture("settings-sound-ax5", app, settle: 0.8)
+            }
+            scrollListsToBottom(in: app.topPresented.view)
+            capture(largest ? "settings-sound-ax5-end" : "settings-sound-end", app, settle: 0.8)
+            app.resetSettings()
+            app.tearDown()
+        }
+    }
+
     func testLogin() throws {
         let app = try launch()
         app.show(tab: 0)

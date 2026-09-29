@@ -64,6 +64,38 @@ final class HostedApp {
 
     var ui: UIDriver { UIDriver(window) }
 
+    /// Scrolls the sheet's list down until the row `id` exists: a list only
+    /// makes rows near the screen, and a small phone or large text puts
+    /// Settings' later rows below the fold.
+    func revealInSheet(id: String) {
+        guard let list = descendants(of: UICollectionView.self, in: topPresented.view).last(where: { $0.window != nil }) else { return }
+        for _ in 0..<30 where !sheet.exists(id: id) {
+            let bottom = list.contentSize.height - list.bounds.height + list.adjustedContentInset.bottom
+            let next = min(list.contentOffset.y + list.bounds.height / 3, bottom)
+            list.setContentOffset(CGPoint(x: 0, y: next), animated: false)
+            ScreenCatalog.settle(0.05)
+        }
+    }
+
+    /// Leaves the presented Settings as a test found it: Settings is one
+    /// controller for the app's life, so a pushed Sound list or a scrolled
+    /// list would otherwise greet the next test.
+    func resetSettings() {
+        guard topPresented !== host else { return }
+        var navigations: [UINavigationController] = []
+        func visit(_ controller: UIViewController) {
+            if let navigation = controller as? UINavigationController { navigations.append(navigation) }
+            controller.children.forEach(visit)
+        }
+        visit(topPresented)
+        navigations.forEach { $0.popToRootViewController(animated: false) }
+        ScreenCatalog.settle(0.2)
+        for list in descendants(of: UICollectionView.self, in: topPresented.view) where list.window != nil {
+            list.setContentOffset(CGPoint(x: 0, y: -list.adjustedContentInset.top), animated: false)
+        }
+        ScreenCatalog.settle(0.1)
+    }
+
     var topPresented: UIViewController {
         var top = host
         while let next = top.presentedViewController { top = next }
@@ -72,6 +104,20 @@ final class HostedApp {
 
     /// The frontmost sheet's own controls.
     var sheet: UIDriver { UIDriver(topPresented.view) }
+
+    /// Scrolls the presented sheet's list to its end: SwiftUI builds rows (and
+    /// their accessibility elements) only as they come on screen, and on a
+    /// small phone Settings' last rows start below the fold.
+    func scrollSheetToBottom() {
+        guard let list = descendants(of: UICollectionView.self, in: topPresented.view).last(where: { $0.window != nil }) else { return }
+        for _ in 0..<8 {
+            list.layoutIfNeeded()
+            let bottom = max(-list.adjustedContentInset.top,
+                             list.contentSize.height - list.bounds.height + list.adjustedContentInset.bottom)
+            list.setContentOffset(CGPoint(x: list.contentOffset.x, y: bottom), animated: false)
+            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+        }
+    }
 
     func show(tab index: Int) {
         models.tab = [.pitchPipe, .notes, .keys, .songs][index]
@@ -195,6 +241,7 @@ class PitchPerfectTestCase: XCTestCase {
             DPSettingsModel.sharedInstance.toggleNotes = false
             DPSettingsModel.sharedInstance.wakeLock = false
             DPSettingsModel.sharedInstance.referencePitch = DPSettingsModel.standardReferencePitch
+            DPSettingsModel.sharedInstance.noteSound = DPNoteSoundPitchPipe
             DPPitchPipeModel().isFromFToF = false
             stopAll()
             DPSongsModel.sharedInstance.songLists = ["default": DPSongList(id: "default")]
@@ -215,6 +262,11 @@ class PitchPerfectTestCase: XCTestCase {
             DPSongsModel.sharedInstance.songLists = savedLists
             // The test host never applies the stored tuning at launch; leave it at A440.
             DPNote.referencePitch = Double(DPSettingsModel.standardReferencePitch)
+            DPNote.sound = DPNoteSoundPitchPipe
+            DPNote.instrumentPlayer = nil
+            WidgetInstrumentHook.start = nil
+            WidgetInstrumentHook.stop = nil
+            WidgetInstrumentHook.releaseSessionWhenIdle = nil
             NotificationCenter.default.post(name: .settingsChanged, object: DPSettingsModel.sharedInstance)
             UIView.setAnimationsEnabled(true)
             unsetenv("STORE_SCREENSHOTS")

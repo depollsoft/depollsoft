@@ -14,6 +14,7 @@ import WidgetKit
 let wakeLockKey = "depollsoft.pitchperfect.WakeLock"
 let toggleNoteKey = "depollsoft.pitchperfect.ToggleNote"
 let referencePitchKey = "depollsoft.pitchperfect.ReferencePitch"
+let noteSoundKey = "depollsoft.pitchperfect.NoteSound"
 
 public extension Notification.Name {
     static let settingsChanged = Notification.Name("pitchPerfect.settingsChanged")
@@ -24,6 +25,21 @@ public extension Notification.Name {
     private var userRef: DocumentReference?
     
     @objc public static let settingsChangedNotificationName = Notification.Name.settingsChanged
+
+    /// Posts settingsChanged on the main thread. Its observers run on the main
+    /// queue (SwiftUI models, NotePlayer, the wake lock), and NotificationCenter
+    /// makes a background poster wait for each of them: a setting changed off
+    /// the main thread would then hang for as long as the main thread is busy.
+    /// Changes made on the main thread still notify at once.
+    private func announceChange() {
+        if Thread.isMainThread {
+            NotificationCenter.default.post(name: .settingsChanged, object: self)
+        } else {
+            DispatchQueue.main.async { [self] in
+                NotificationCenter.default.post(name: .settingsChanged, object: self)
+            }
+        }
+    }
     
     @objc public func attachToFirestore() {
         guard let user = Auth.auth().currentUser else {
@@ -44,11 +60,12 @@ public extension Notification.Name {
             guard let self, error == nil, let snapshot else { return }
             self.applyRemote(wakeLock: snapshot.get("wakeLock") as? Bool,
                              toggleNotes: snapshot.get("toggleNotes") as? Bool,
-                             referencePitch: (snapshot.get("referencePitch") as? NSNumber)?.intValue)
+                             referencePitch: (snapshot.get("referencePitch") as? NSNumber)?.intValue,
+                             noteSound: snapshot.get("noteSound") as? String)
         }
     }
 
-    func applyRemote(wakeLock: Bool?, toggleNotes: Bool?, referencePitch: Int?) {
+    func applyRemote(wakeLock: Bool?, toggleNotes: Bool?, referencePitch: Int?, noteSound: String? = nil) {
         let defaults = UserDefaults.standard
         var changed = false
         if let wakeLock, wakeLock != self.wakeLock {
@@ -68,7 +85,17 @@ public extension Notification.Name {
                 changed = true
             }
         }
-        if changed { NotificationCenter.default.post(name: .settingsChanged, object: self) }
+        // A sound this version doesn't know plays the pitch pipe here, and the
+        // account keeps the other device's choice.
+        if let remote = noteSound {
+            let sound = DPNoteSound.validated(remote)
+            if sound != self.noteSound {
+                defaults.set(sound, forKey: noteSoundKey)
+                applyNoteSound()
+                changed = true
+            }
+        }
+        if changed { announceChange() }
     }
 
     @objc public func detachFromFirestore() {
@@ -113,7 +140,7 @@ public extension Notification.Name {
             if userRef != nil {
                 userRef?.setData(["wakeLock": newValue], merge: true)
             }
-            NotificationCenter.default.post(name: .settingsChanged, object: self)
+            announceChange()
         }
     }
     
@@ -126,7 +153,7 @@ public extension Notification.Name {
             if userRef != nil {
                 userRef?.setData(["toggleNotes": newValue], merge: true)
             }
-            NotificationCenter.default.post(name: .settingsChanged, object: self)
+            announceChange()
         }
     }
     
@@ -149,7 +176,7 @@ public extension Notification.Name {
             if userRef != nil {
                 userRef?.setData(["referencePitch": newValue], merge: true)
             }
-            NotificationCenter.default.post(name: .settingsChanged, object: self)
+            announceChange()
         }
     }
 
@@ -165,6 +192,67 @@ public extension Notification.Name {
         DPNote.referencePitch = Double(pitch)
         guard WidgetTuningState.referencePitch != Double(pitch) else { return }
         WidgetTuningState.set(Double(pitch))
+        WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
+    }
+
+    /// The voice notes play in: a DPNoteSound id. Anything this version doesn't
+    /// know reads as the pitch pipe.
+    @objc public var noteSound: String {
+        get { DPNoteSound.validated(UserDefaults.standard.string(forKey: noteSoundKey)) }
+        set {
+            guard DPNoteSound.isKnown(newValue) else { return }
+            UserDefaults.standard.set(newValue, forKey: noteSoundKey)
+            applyNoteSound()
+            if userRef != nil {
+                userRef?.setData(["noteSound": newValue], merge: true)
+            }
+            announceChange()
+        }
+    }
+
+    /// The picker's sections: the default alone, then the waves, then the instruments.
+    static let noteSoundSections: [(title: String?, sounds: [String])] = [
+        (nil, [DPNoteSoundPitchPipe]),
+        ("Sustained", DPNoteSound.sustainedInstruments()),
+        ("Waves", DPNoteSound.waves()),
+        ("Plucked & Struck", DPNoteSound.pluckedInstruments()),
+    ]
+
+    /// A sound as the picker names it.
+    static func noteSoundLabel(_ sound: String) -> String {
+        switch sound {
+        case DPNoteSoundPitchPipe: "Pitch Perfect (Loud)"
+        case "sine": "Sine"
+        case "triangle": "Triangle"
+        case "square": "Square"
+        case "sawtooth": "Sawtooth"
+        case "piano": "Piano"
+        case "electricPiano": "Electric Piano"
+        case "harpsichord": "Harpsichord"
+        case "vibraphone": "Vibraphone"
+        case "organ": "Organ"
+        case "reedOrgan": "Reed Organ"
+        case "accordion": "Accordion"
+        case "harmonica": "Harmonica"
+        case "guitar": "Guitar"
+        case "harp": "Harp"
+        case "strings": "Strings"
+        case "choir": "Choir"
+        case "trumpet": "Trumpet"
+        case "clarinet": "Clarinet"
+        case "flute": "Flute"
+        default: sound
+        }
+    }
+
+    /// Plays notes, and the widget in its own process, in the stored sound, and
+    /// loads its instrument ahead of the first note.
+    @objc public func applyNoteSound() {
+        let sound = noteSound
+        DPNote.sound = sound
+        MIDINotePlayer.shared.prepare(sound: sound)
+        guard WidgetSoundState.sound != sound else { return }
+        WidgetSoundState.set(sound)
         WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
     }
 

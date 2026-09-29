@@ -36,7 +36,9 @@ final class DPAppDelegate: UIResponder, UIApplicationDelegate {
         // A fresh process cannot be sounding a widget pitch; never leave a cell lit.
         configureWidgetPlayback()
         guard !Self.isRunningTests else { return true }
+        MIDINotePlayer.install()
         DPSettingsModel.sharedInstance.applyReferencePitch()
+        DPSettingsModel.sharedInstance.applyNoteSound()
         // Models made before launch (NotePlayer) pick up the stored tuning.
         NotificationCenter.default.post(name: .settingsChanged, object: DPSettingsModel.sharedInstance)
 

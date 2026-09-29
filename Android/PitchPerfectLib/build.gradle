@@ -23,3 +23,33 @@ android {
         minSdk 23
     }
 }
+
+// Ships shared/pitchperfect/instrument-tuning.json as an asset (docs/pitchperfect-note-sounds.md).
+// Only that file: the phone app ships the SoundFont itself, so Wear, which uses this library but
+// never plays instruments, doesn't carry 8.8 MB it can't use.
+abstract class InstrumentTuningAsset extends DefaultTask {
+    @InputFile
+    abstract RegularFileProperty getSource()
+
+    @OutputDirectory
+    abstract DirectoryProperty getOutputDir()
+
+    @TaskAction
+    void copy() {
+        def target = outputDir.get().file('instrument-tuning.json').asFile
+        target.parentFile.mkdirs()
+        target.bytes = source.get().asFile.bytes
+    }
+}
+
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        // One task per variant, writing to its own directory under build/, which AGP then adds to
+        // that variant's assets.
+        def copyTask = tasks.register("instrumentTuningAsset${variant.name.capitalize()}", InstrumentTuningAsset) {
+            source = rootProject.file('../shared/pitchperfect/instrument-tuning.json')
+            outputDir = layout.buildDirectory.dir("generated/instrumentTuningAsset/${variant.name}")
+        }
+        variant.sources.assets?.addGeneratedSourceDirectory(copyTask) { it.outputDir }
+    }
+}

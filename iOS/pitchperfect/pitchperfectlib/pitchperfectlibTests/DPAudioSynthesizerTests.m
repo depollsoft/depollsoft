@@ -6,7 +6,18 @@
 //
 
 #import <XCTest/XCTest.h>
+#import <AudioUnit/AudioUnit.h>
 #import "DPAudioSynthesizer.h"
+
+@interface DPAudioSynthesizer (CommandTesting)
++ (void)setTestingUnitStart:(OSStatus (^)(AudioUnit))start stop:(OSStatus (^)(AudioUnit))stop;
+- (void)stopUnit;
+- (int)renderAudioWithFlags:(AudioUnitRenderActionFlags *)actionFlags
+                  timeStamp:(const AudioTimeStamp *)timeStamp
+                  busNumber:(UInt32)busNumber
+               numberFrames:(UInt32)numberFrames
+                       data:(AudioBufferList *)data;
+@end
 
 @interface DPAudioSynthesizerTests : XCTestCase
 @end
@@ -267,6 +278,104 @@
         // synth will be deallocated when pool drains, triggering dealloc which calls stop
     }
     // If we reach here without crash, dealloc worked correctly
+}
+
+#pragma mark - Wave commands and failed starts (PR #85 review)
+
+/// Replaces the audio unit's start and stop so the test alone drives the
+/// render callback; `startStatus` is what a start returns.
+- (void)useFakeUnitStarting:(OSStatus)startStatus {
+    [DPAudioSynthesizer setTestingUnitStart:^OSStatus(AudioUnit unit) { return startStatus; }
+                                       stop:^OSStatus(AudioUnit unit) { return noErr; }];
+    [self addTeardownBlock:^{
+        [DPAudioSynthesizer setTestingUnitStart:nil stop:nil];
+        [DPAudioSynthesizer setOnLastStopped:nil];
+    }];
+}
+
+/// Renders `frames` stereo frames and returns the left channel's peak over
+/// the last `tail` of them.
+- (double)peakOf:(DPAudioSynthesizer *)synth frames:(UInt32)frames lastFrames:(UInt32)tail {
+    UInt32 *samples = calloc(frames, sizeof(UInt32));
+    AudioBufferList list;
+    list.mNumberBuffers = 1;
+    list.mBuffers[0].mNumberChannels = 2;
+    list.mBuffers[0].mDataByteSize = frames * 4;
+    list.mBuffers[0].mData = samples;
+    AudioUnitRenderActionFlags flags = 0;
+    AudioTimeStamp stamp;
+    memset(&stamp, 0, sizeof(stamp));
+    [synth renderAudioWithFlags:&flags timeStamp:&stamp busNumber:0 numberFrames:frames data:&list];
+    double peak = 0;
+    for (UInt32 i = frames - tail; i < frames; i++) {
+        peak = MAX(peak, fabs((double)(short)(samples[i] & 0xFFFF) / SHRT_MAX));
+    }
+    free(samples);
+    return peak;
+}
+
+- (void)testAStopThatFollowsARestartIsNeverLost {
+    [self useFakeUnitStarting:noErr];
+    DPAudioSynthesizer *synth = [[DPAudioSynthesizer alloc] initWithFrequency:441 sampleRate:44100 sound:@"sine"];
+    [synth start];
+    [synth stop];
+    // Pressed again while fading out, then released before the render thread ran.
+    [synth start];
+    [synth stop];
+    XCTAssertEqualWithAccuracy([self peakOf:synth frames:4096 lastFrames:1000], 0, 1e-6,
+                               @"the last command was the stop: the wave fades out");
+}
+
+- (void)testARestartThatFollowsAStopPlays {
+    [self useFakeUnitStarting:noErr];
+    DPAudioSynthesizer *synth = [[DPAudioSynthesizer alloc] initWithFrequency:441 sampleRate:44100 sound:@"sine"];
+    [synth start];
+    [synth stop];
+    [synth start];
+    XCTAssertGreaterThan([self peakOf:synth frames:4096 lastFrames:1000], 0.8);
+}
+
+- (void)testAStaleReleaseDoesNotSilenceTheNextNote {
+    [self useFakeUnitStarting:noErr];
+    DPAudioSynthesizer *synth = [[DPAudioSynthesizer alloc] initWithFrequency:441 sampleRate:44100 sound:@"sine"];
+    [synth start];
+    [synth stop];
+    // The unit stops before the render thread took the release (an interruption).
+    [synth stopUnit];
+    [synth start];
+    XCTAssertTrue(synth.isPlaying);
+    XCTAssertGreaterThan([self peakOf:synth frames:4096 lastFrames:1000], 0.8,
+                         @"the new note plays; the old release was dropped");
+}
+
+- (void)testAUnitThatWontStartLeavesTheNoteStopped {
+    [self useFakeUnitStarting:-50];
+    NSInteger before = [DPAudioSynthesizer runningCount];
+    DPAudioSynthesizer *synth = [[DPAudioSynthesizer alloc] initWithFrequency:440 sampleRate:44100 sound:@"square"];
+    [synth start];
+    XCTAssertFalse(synth.isPlaying);
+    XCTAssertEqual([DPAudioSynthesizer runningCount], before, @"a unit that never started doesn't count as running");
+    [synth stop];
+    XCTAssertEqual([DPAudioSynthesizer runningCount], before);
+}
+
+- (void)testTheLastSynthesizerToStopCallsBackOnTheMainQueue {
+    [self useFakeUnitStarting:noErr];
+    XCTestExpectation *called = [self expectationWithDescription:@"last stopped"];
+    [DPAudioSynthesizer setOnLastStopped:^{
+        XCTAssertTrue(NSThread.isMainThread);
+        [called fulfill];
+    }];
+    NSInteger before = [DPAudioSynthesizer runningCount];
+    DPAudioSynthesizer *synth = [[DPAudioSynthesizer alloc] initWithFrequency:440 sampleRate:44100];
+    [synth start];
+    XCTAssertEqual([DPAudioSynthesizer runningCount], before + 1);
+    [synth stop];
+    if (before > 0) {
+        // Another synthesizer is still running, so this isn't the last one.
+        [called fulfill];
+    }
+    [self waitForExpectationsWithTimeout:2 handler:nil];
 }
 
 @end

@@ -30,6 +30,46 @@ struct AccountService {
     )
 }
 
+/// Plays a sound briefly when it's chosen; tests swap in a fake.
+struct SoundPreview {
+    var play: @MainActor (_ sound: String) -> Void
+    var stop: @MainActor () -> Void
+
+    /// C4 at the current tuning, in the chosen sound, for a second.
+    @MainActor static let live: SoundPreview = {
+        let previewer = LiveSoundPreviewer()
+        return SoundPreview(play: { previewer.play($0) }, stop: { previewer.stop() })
+    }()
+}
+
+@MainActor
+private final class LiveSoundPreviewer {
+    static let duration: TimeInterval = 1
+    private var note: DPNote?
+    private var pending: DispatchWorkItem?
+
+    func play(_ sound: String) {
+        stop()
+        // A note of its own, so a lit C4 elsewhere is left alone. DPNote plays
+        // in DPNote.sound, which choosing the sound has just set.
+        guard let c4 = DPNote.c4(),
+              let note = DPNote(friendlyName: c4.friendlyName, octave: c4.octave,
+                                accidental: c4.accidental, frequency: c4.frequency) else { return }
+        note.play()
+        self.note = note
+        let work = DispatchWorkItem { [weak self] in self?.stop() }
+        pending = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.duration, execute: work)
+    }
+
+    func stop() {
+        pending?.cancel()
+        pending = nil
+        note?.stop()
+        note = nil
+    }
+}
+
 @Observable
 @MainActor
 final class SettingsModel {
@@ -37,11 +77,15 @@ final class SettingsModel {
     private let songs: DPSongsModel
     private let account: AccountService
     private let bundle: Bundle
+    private let preview: SoundPreview
     @ObservationIgnored private var settingsObserver: NSObjectProtocol?
 
     private(set) var toggleNotes = false
     private(set) var wakeLock = false
     private(set) var referencePitch = DPSettingsModel.standardReferencePitch
+    private(set) var noteSound = DPNoteSoundPitchPipe
+    /// The sound list is pushed.
+    var showingSoundPicker = false
     private(set) var theme = 0
     private(set) var isSignedIn = false
 
@@ -60,11 +104,13 @@ final class SettingsModel {
     init(settings: DPSettingsModel = .sharedInstance,
          songs: DPSongsModel = .sharedInstance,
          account: AccountService = .firebase,
-         bundle: Bundle = .main) {
+         bundle: Bundle = .main,
+         preview: SoundPreview? = nil) {
         self.settings = settings
         self.songs = songs
         self.account = account
         self.bundle = bundle
+        self.preview = preview ?? .live
         reload()
         settingsObserver = NotificationCenter.default.addObserver(
             forName: .settingsChanged, object: settings, queue: .main
@@ -81,6 +127,7 @@ final class SettingsModel {
         toggleNotes = settings.toggleNotes
         wakeLock = settings.wakeLock
         referencePitch = settings.referencePitch
+        noteSound = settings.noteSound
         theme = DPTheme.storedTheme
         isSignedIn = account.isSignedIn()
     }
@@ -89,12 +136,36 @@ final class SettingsModel {
     func setWakeLock(_ on: Bool) { settings.wakeLock = on }
     func setReferencePitch(_ hz: Int) { settings.referencePitch = hz }
 
+    /// Chooses the sound and plays a short preview of it.
+    func chooseNoteSound(_ sound: String) {
+        settings.noteSound = sound
+        preview.play(settings.noteSound)
+    }
+
+    func stopPreview() { preview.stop() }
+
     /// A choice as the tuning menu names it.
     static func tuningLabel(_ hz: Int) -> String {
         switch hz {
         case 415: "\(hz) Hz (Baroque)"
         case 430: "\(hz) Hz (Classical)"
         case 440: "\(hz) Hz (Standard)"
+        default: "\(hz) Hz"
+        }
+    }
+
+    /// The Sound row's detail, the same words as Android's.
+    static let soundDetail = "How every note sounds"
+
+    /// The value the Tuning row shows: the frequency alone, as a measurement.
+    static func tuningValue(_ hz: Int) -> String { "\(hz) Hz" }
+
+    /// What VoiceOver reads for the Tuning row: "440 Hz, Standard".
+    static func tuningAccessibilityValue(_ hz: Int) -> String {
+        switch hz {
+        case 415: "\(hz) Hz, Baroque"
+        case 430: "\(hz) Hz, Classical"
+        case 440: "\(hz) Hz, Standard"
         default: "\(hz) Hz"
         }
     }
@@ -195,6 +266,7 @@ struct SettingsScreen: View {
                     SwitchRow(title: "Wake Lock", detail: "Prevent device from sleeping",
                               isOn: Binding(get: { model.wakeLock }, set: model.setWakeLock))
                     TuningRow(selection: Binding(get: { model.referencePitch }, set: model.setReferencePitch))
+                    SoundRow(sound: model.noteSound) { model.showingSoundPicker = true }
                     HStack {
                         Text("Theme")
                         Spacer(minLength: 16)
@@ -274,6 +346,9 @@ struct SettingsScreen: View {
             }
         }
         .onAppear { model.reload() }
+        .navigationDestination(isPresented: $model.showingSoundPicker) {
+            SoundPickerScreen(model: model)
+        }
         .alert(model.deleteTitle, isPresented: $model.confirmingDelete) {
             Button("Cancel", role: .cancel) { model.cancelDelete() }
             Button("Yes", role: .destructive) { model.confirmDelete() }
@@ -349,29 +424,189 @@ private struct TuningRow: View {
     @Binding var selection: Int
     @Environment(\.settingsCellHeights) private var heights
 
+    @Environment(\.dynamicTypeSize) private var typeSize
+
     var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: SettingsMetrics.subtitleSpacing) {
-                Text("Tuning")
-                Text("Frequency of A4")
-                    .font(.subheadline)
-                    .foregroundStyle(Color(uiColor: .secondaryLabel))
+        // Side by side as UIKit had it; at accessibility text sizes the value
+        // and its chevrons can crowd a small phone's row, so they go under
+        // the title there and keep to the row's width.
+        if typeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: 4) {
+                title
+                picker
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(.top, SettingsMetrics.subtitleTop)
-            .padding(.bottom, SettingsMetrics.subtitleBottom)
-            Spacer(minLength: 16)
+            .padding(.vertical, SettingsMetrics.subtitleTop)
+            .settingsRow()
+        } else {
+            HStack {
+                title
+                    .padding(.top, SettingsMetrics.subtitleTop)
+                    .padding(.bottom, SettingsMetrics.subtitleBottom)
+                Spacer(minLength: 16)
+                picker.fixedSize()
+            }
+            .frame(height: heights?.subtitle)
+            .settingsRow()
+        }
+    }
+
+    private var title: some View {
+        VStack(alignment: .leading, spacing: SettingsMetrics.subtitleSpacing) {
+            Text("Tuning")
+            Text("Frequency of A4")
+                .font(.subheadline)
+                .foregroundStyle(Color(uiColor: .secondaryLabel))
+        }
+    }
+
+    /// The system menu of choices (checked, with the historical names), under
+    /// a label drawn to the plate's rules: the frequency is a measurement, so
+    /// it is set in the mono face, in the secondary ink the Sound row's value and
+    /// both rows' details use.
+    private var picker: some View {
+        Menu {
             Picker("Tuning", selection: $selection) {
                 ForEach(DPSettingsModel.referencePitchChoices(current: selection), id: \.self) { hz in
                     Text(SettingsModel.tuningLabel(hz)).tag(hz)
                 }
             }
-            .pickerStyle(.menu)
-            .labelsHidden()
-            .fixedSize()
-            .accessibilityIdentifier("settings.tuning")
+        } label: {
+            HStack(spacing: 6) {
+                Text(SettingsModel.tuningValue(selection))
+                    .font(.system(.body, design: .monospaced))
+                    .lineLimit(1)
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.footnote.weight(.semibold))
+                    .imageScale(.small)
+            }
+            .foregroundStyle(Color(uiColor: .secondaryLabel))
+            .contentShape(Rectangle())
         }
-        .frame(height: heights?.subtitle)
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .accessibilityLabel("Tuning")
+        .accessibilityValue(SettingsModel.tuningAccessibilityValue(selection))
+        .accessibilityIdentifier("settings.tuning")
+    }
+}
+
+/// The sound: a title and detail as the switch rows have, then the chosen
+/// sound and a disclosure indicator; it pushes the list of sounds.
+private struct SoundRow: View {
+    let sound: String
+    let action: () -> Void
+    @Environment(\.settingsCellHeights) private var heights
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    var body: some View {
+        Button(action: action) {
+            // As the Tuning row: at accessibility text sizes the choice goes
+            // under the title instead of squeezing it to a sliver.
+            if typeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: 4) {
+                    title
+                    HStack {
+                        choice
+                        Spacer(minLength: 8)
+                        DisclosureIndicator()
+                            .accessibilityHidden(true)
+                    }
+                }
+                .padding(.vertical, SettingsMetrics.subtitleTop)
+                .contentShape(Rectangle())
+            } else {
+                HStack {
+                    title
+                        .padding(.top, SettingsMetrics.subtitleTop)
+                        .padding(.bottom, SettingsMetrics.subtitleBottom)
+                    Spacer(minLength: 16)
+                    choice
+                        .lineLimit(1)
+                        .layoutPriority(1)
+                    DisclosureIndicator()
+                        .accessibilityHidden(true)
+                }
+                .frame(minHeight: heights?.subtitle)
+                .contentShape(Rectangle())
+            }
+        }
+        .buttonStyle(UnhighlightedRowStyle())
+        .accessibilityLabel("Sound")
+        .accessibilityValue(DPSettingsModel.noteSoundLabel(sound))
+        .accessibilityIdentifier("settings.sound")
         .settingsRow()
+    }
+
+    private var title: some View {
+        VStack(alignment: .leading, spacing: SettingsMetrics.subtitleSpacing) {
+            Text("Sound").foregroundStyle(Color(uiColor: .label))
+            // Beside a long choice on a narrow phone the detail wraps rather
+            // than cutting off; the choice is what matters here.
+            Text(SettingsModel.soundDetail)
+                .font(.subheadline)
+                .foregroundStyle(Color(uiColor: .secondaryLabel))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private var choice: some View {
+        Text(DPSettingsModel.noteSoundLabel(sound))
+            .foregroundStyle(Color(uiColor: .secondaryLabel))
+    }
+}
+
+/// Every sound, in sections, the chosen one checked. Choosing one plays a
+/// short preview and stays on the list, so sounds can be compared.
+struct SoundPickerScreen: View {
+    let model: SettingsModel
+    @Environment(\.settingsCellHeights) private var heights
+
+    var body: some View {
+        ScrollViewReader { proxy in
+            List {
+                ForEach(Array(DPSettingsModel.noteSoundSections.enumerated()), id: \.offset) { _, section in
+                    Section {
+                        ForEach(section.sounds, id: \.self) { sound in
+                            Button { model.chooseNoteSound(sound) } label: {
+                                HStack {
+                                    Text(DPSettingsModel.noteSoundLabel(sound))
+                                        .foregroundStyle(Color(uiColor: .label))
+                                    Spacer()
+                                    if sound == model.noteSound {
+                                        Image(systemName: "checkmark")
+                                            .font(.body.weight(.semibold))
+                                            .foregroundStyle(Plate.ink)
+                                    }
+                                }
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(UnhighlightedRowStyle())
+                            .accessibilityAddTraits(sound == model.noteSound ? [.isSelected] : [])
+                            .accessibilityIdentifier("sound.\(sound)")
+                            .settingsRow(height: heights?.plain ?? 51)
+                            .id(sound)
+                        }
+                    } header: {
+                        if let title = section.title {
+                            PlateHeader(title).settingsHeader()
+                        }
+                    }
+                }
+            }
+            .listStyle(.grouped)
+            .scrollContentBackground(.hidden)
+            .background(StaffBackground())
+            .staffScreenBackground()
+            .tableMargins(style: .grouped)
+            // Open on the current choice, wherever it is in the list, without
+            // animating: the list simply arrives there.
+            .onAppear { proxy.scrollTo(model.noteSound, anchor: .center) }
+        }
+        .navigationTitle("Sound")
+        .navigationBarTitleDisplayMode(.inline)
+        .instrumentChrome()
+        .onDisappear { model.stopPreview() }
     }
 }
 
