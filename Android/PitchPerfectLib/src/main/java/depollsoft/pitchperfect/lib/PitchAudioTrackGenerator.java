@@ -1,7 +1,10 @@
 package depollsoft.pitchperfect.lib;
 
+import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Queue;
+import java.util.WeakHashMap;
 
 import android.media.AudioFormat;
 import android.media.AudioManager;
@@ -10,14 +13,31 @@ import android.media.AudioTrack;
 import depollsoft.lib.util.Action;
 
 import depollsoft.lib.audio.StreamingAudioTrack;
+import depollsoft.pitchperfect.lib.sound.WaveSource;
 
 public class PitchAudioTrackGenerator {
   private static final double TwoPi = Math.PI * 2;
-  private static Queue<StreamingAudioTrack> trackPool;
 
-  static {
-    PitchAudioTrackGenerator.trackPool = new LinkedList<StreamingAudioTrack>();
+  /** The rate and buffer a track was made with: a drained track is only reused for a note that needs both. */
+  private static final class TrackShape {
+    final int sampleRate;
+    final int channelConfig;
+    final int bufferSizeInBytes;
+
+    TrackShape(int sampleRate, int channelConfig, int bufferSizeInBytes) {
+      this.sampleRate = sampleRate;
+      this.channelConfig = channelConfig;
+      this.bufferSizeInBytes = bufferSizeInBytes;
+    }
+
+    boolean matches(int sampleRate, int channelConfig, int bufferSizeInBytes) {
+      return this.sampleRate == sampleRate && this.channelConfig == channelConfig
+          && this.bufferSizeInBytes == bufferSizeInBytes;
+    }
   }
+
+  private static final Queue<StreamingAudioTrack> trackPool = new LinkedList<StreamingAudioTrack>();
+  private static final Map<StreamingAudioTrack, TrackShape> trackShapes = new WeakHashMap<StreamingAudioTrack, TrackShape>();
 
   private static short getAmplitude(double frequency, double time,
       double scaleFactor) {
@@ -66,21 +86,56 @@ public class PitchAudioTrackGenerator {
     return track;
   }
 
+  /** A track that plays {@code source}'s wave, filled as the pitch pipe's track is. */
+  public static AudioTrack getWaveAudioTrack(final WaveSource source,
+      final int sampleRate, final int channelConfig, final int bufferTime) {
+    final int numChannels = (channelConfig == AudioFormat.CHANNEL_CONFIGURATION_STEREO ? 2
+        : 1);
+    final int bufferSizeInBytes = Math.max(AudioTrack.getMinBufferSize(
+        sampleRate, channelConfig, AudioFormat.ENCODING_PCM_16BIT), sampleRate
+        * bufferTime / 1000);
+    final short[] samples = new short[bufferSizeInBytes / 2];
+    final StreamingAudioTrack track = PitchAudioTrackGenerator.getTrack(
+        channelConfig, sampleRate, bufferSizeInBytes);
+    track.setBufferFiller(new Action<Integer>() {
+      public void invoke(Integer value) {
+        try {
+          for (int x = 0; x < samples.length; x += numChannels) {
+            short result = source.nextSample();
+            samples[x] = result;
+            if (numChannels == 2)
+              samples[x + 1] = result;
+          }
+          track.write(samples, 0, samples.length);
+        }
+        catch (Exception e) {
+        }
+      }
+    });
+    return track;
+  }
+
   private static StreamingAudioTrack getTrack(int channelConfig,
       int sampleRate, int bufferSizeInBytes) {
     synchronized (PitchAudioTrackGenerator.trackPool) {
-      if (!PitchAudioTrackGenerator.trackPool.isEmpty()
-          && PitchAudioTrackGenerator.trackPool.peek().getPlayState() == AudioTrack.PLAYSTATE_PAUSED) {
-        StreamingAudioTrack track = PitchAudioTrackGenerator.trackPool.poll();
-        track.setPlaybackRate(sampleRate);
-        track.setStereoVolume(1, 1);
-        return track;
+      Iterator<StreamingAudioTrack> pooled = PitchAudioTrackGenerator.trackPool.iterator();
+      while (pooled.hasNext()) {
+        StreamingAudioTrack candidate = pooled.next();
+        TrackShape shape = PitchAudioTrackGenerator.trackShapes.get(candidate);
+        if (shape != null && shape.matches(sampleRate, channelConfig, bufferSizeInBytes)
+            && candidate.getPlayState() == AudioTrack.PLAYSTATE_PAUSED) {
+          pooled.remove();
+          candidate.setPlaybackRate(sampleRate);
+          candidate.setStereoVolume(1, 1);
+          return candidate;
+        }
       }
-      else {
-        return new StreamingAudioTrack(AudioManager.STREAM_MUSIC, sampleRate,
-            channelConfig, AudioFormat.ENCODING_PCM_16BIT, bufferSizeInBytes,
-            AudioTrack.MODE_STREAM);
-      }
+      StreamingAudioTrack track = new StreamingAudioTrack(AudioManager.STREAM_MUSIC, sampleRate,
+          channelConfig, AudioFormat.ENCODING_PCM_16BIT, bufferSizeInBytes,
+          AudioTrack.MODE_STREAM);
+      PitchAudioTrackGenerator.trackShapes.put(track,
+          new TrackShape(sampleRate, channelConfig, bufferSizeInBytes));
+      return track;
     }
   }
 

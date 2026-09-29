@@ -23,3 +23,30 @@ android {
         minSdk 23
     }
 }
+
+// Ships shared/pitchperfect/instrument-tuning.json as an asset (docs/pitchperfect-note-sounds.md).
+// Only that file: the SoundFont beside it is for iOS, since Android plays its own MIDI synth.
+abstract class InstrumentTuningAsset extends DefaultTask {
+    @InputFile
+    abstract RegularFileProperty getSource()
+
+    @OutputDirectory
+    abstract DirectoryProperty getOutputDir()
+
+    @TaskAction
+    void copy() {
+        def target = outputDir.get().file('instrument-tuning.json').asFile
+        target.parentFile.mkdirs()
+        target.bytes = source.get().asFile.bytes
+    }
+}
+
+def instrumentTuningAsset = tasks.register('instrumentTuningAsset', InstrumentTuningAsset) {
+    source = rootProject.file('../shared/pitchperfect/instrument-tuning.json')
+}
+
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        variant.sources.assets?.addGeneratedSourceDirectory(instrumentTuningAsset) { it.outputDir }
+    }
+}

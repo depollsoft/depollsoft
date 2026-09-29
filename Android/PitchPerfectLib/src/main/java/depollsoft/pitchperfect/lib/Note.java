@@ -1,10 +1,10 @@
 package depollsoft.pitchperfect.lib;
 
-import android.media.AudioFormat;
-import android.media.AudioTrack;
-
 import depollsoft.lib.json.NotStored;
 import depollsoft.lib.state.StateField;
+import depollsoft.pitchperfect.lib.sound.NoteSound;
+import depollsoft.pitchperfect.lib.sound.NoteVoices;
+import depollsoft.pitchperfect.lib.sound.SoundingNote;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,26 +24,24 @@ public class Note {
   private static Note c4;
 
   public static final NotePlayer DEFAULT_PLAYER = new NotePlayer() {
-    private WeakHashMap<Note, AudioTrack> tracks = new WeakHashMap<Note, AudioTrack>();
+    private WeakHashMap<Note, SoundingNote> voices = new WeakHashMap<Note, SoundingNote>();
 
     @Override
     public void play(Note n) {
-      AudioTrack track = tracks.get(n);
-      if (track == null) {
-        track = PitchAudioTrackGenerator.getPitchAudioTrack(n.getTunedFrequency(), 8000,
-            AudioFormat.CHANNEL_CONFIGURATION_MONO, 2000);
-        tracks.put(n, track);
+      SoundingNote voice = voices.get(n);
+      if (voice == null) {
+        voice = NoteVoices.create(Note.getSound(), n.getFrequency(), Note.getReferencePitch());
+        voices.put(n, voice);
       }
-      track.play();
+      voice.play();
     }
 
     @Override
     public void stop(Note n) {
-      AudioTrack track = tracks.get(n);
-      if (track != null && !n.isAttemptingToPlay
-          && track.getPlayState() == AudioTrack.PLAYSTATE_PLAYING) {
-        PitchAudioTrackGenerator.stop(track);
-        tracks.remove(n);
+      SoundingNote voice = voices.get(n);
+      if (voice != null && !n.isAttemptingToPlay && voice.isSounding()) {
+        voice.stop();
+        voices.remove(n);
       }
     }
   };
@@ -67,6 +65,19 @@ public class Note {
   /** Tunes every note to {@code value} Hz for A4; a note already sounding keeps its pitch until played again. */
   public static void setReferencePitch(double value) {
     Note.referencePitch.set(value);
+  }
+
+  // Snapshot state, so a screen showing the chosen sound redraws when it changes.
+  private static final StateField<NoteSound> sound = new StateField<>(NoteSound.DEFAULT);
+
+  /** The voice notes sound in. */
+  public static NoteSound getSound() {
+    return Note.sound.get();
+  }
+
+  /** Voices every note in {@code value}; a note already sounding keeps its voice until played again. */
+  public static void setSound(NoteSound value) {
+    Note.sound.set(value);
   }
 
   public static void setPlayer(NotePlayer player) {
