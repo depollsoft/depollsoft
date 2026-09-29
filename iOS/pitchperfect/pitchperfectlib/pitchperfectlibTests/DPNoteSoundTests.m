@@ -127,6 +127,30 @@
     free(sine);
 }
 
+- (void)testAReleasedWaveRampsOutOver5msThenStaysSilent {
+    DPWaveShape shape;
+    DPWaveShapeForSound(@"square", &shape);
+    DPWaveState state = DPWaveStateMake(shape, 441, 44100);
+    float held[520]; // mid-cycle, away from the square's edge
+    DPWaveRender(&state, held, 520);
+    XCTAssertFalse(DPWaveIsSilent(&state));
+    DPWaveRelease(&state);
+    DPWaveRelease(&state); // a second release doesn't restart the ramp
+    float out[300];
+    DPWaveRender(&state, out, 300);
+    for (int i = 0; i < 220; i++) {
+        double limit = 0.89 * 1.2 * (1 - i / 220.0) + 1e-6; // PolyBLEP may overshoot a little
+        XCTAssertLessThanOrEqual(fabsf(out[i]), limit, @"sample %d is within the closing ramp", i);
+    }
+    XCTAssertEqualWithAccuracy(fabsf(out[0]), 0.89, 0.2, @"the ramp starts from full level");
+    for (int i = 220; i < 300; i++) {
+        XCTAssertEqual(out[i], 0, @"silent after the ramp");
+    }
+    XCTAssertTrue(DPWaveIsSilent(&state));
+    DPWaveState fresh = DPWaveStateMake(shape, 441, 44100);
+    XCTAssertFalse(DPWaveIsSilent(&fresh), @"a new note starts held");
+}
+
 - (void)testTheTriangleStartsAtZeroRisingLikeTheSine {
     float *triangle = [self render:@"triangle" frequency:441 count:1000];
     XCTAssertEqualWithAccuracy(triangle[300], 0, 1e-6);

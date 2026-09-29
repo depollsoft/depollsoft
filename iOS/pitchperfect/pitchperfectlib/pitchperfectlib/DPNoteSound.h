@@ -50,6 +50,8 @@ typedef struct {
     double step;
     /// Samples since the note started, for the opening ramp.
     long elapsed;
+    /// Samples since the note was released, for the closing ramp; -1 while held.
+    long released;
 } DPWaveState;
 
 /// The shape for a wave id; NO for anything else.
@@ -60,7 +62,14 @@ DPWaveState DPWaveStateMake(DPWaveShape shape, double frequency, double sampleRa
 
 /// The next `count` samples, in [-1, 1]: 0.89 of full scale, ramped in over
 /// the first 220 samples, square and sawtooth band-limited with PolyBLEP.
+/// After DPWaveRelease it ramps out over 220 samples, then stays silent.
 void DPWaveRender(DPWaveState *state, float *buffer, NSUInteger count);
+
+/// Starts the wave's closing ramp, so stopping it doesn't click.
+void DPWaveRelease(DPWaveState *state);
+
+/// Whether a released wave has finished its closing ramp.
+BOOL DPWaveIsSilent(const DPWaveState *state);
 
 /// PolyBLEP's correction at phase `t` for a step of `dt`.
 double DPPolyBlep(double t, double dt);

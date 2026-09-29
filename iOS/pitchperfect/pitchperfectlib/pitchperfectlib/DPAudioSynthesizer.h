@@ -21,6 +21,12 @@
                   sound:(NSString *)sound;
 
 - (void)start;
+/// Stops the note. A wave ramps out over 5 ms first, so it doesn't click;
+/// the pitch pipe stops at once, as it always has.
 - (void)stop;
+
+/// How many synthesizers have their audio unit running (including a wave
+/// still ramping out), so other players know whether the app is sounding.
++ (NSInteger)runningCount;
 
 @end

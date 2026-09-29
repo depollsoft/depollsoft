@@ -77,7 +77,7 @@ BOOL DPWaveShapeForSound(NSString *sound, DPWaveShape *shape) {
 }
 
 DPWaveState DPWaveStateMake(DPWaveShape shape, double frequency, double sampleRate) {
-    DPWaveState state = { shape, 0, frequency / sampleRate, 0 };
+    DPWaveState state = { shape, 0, frequency / sampleRate, 0, -1 };
     return state;
 }
 
@@ -116,6 +116,10 @@ void DPWaveRender(DPWaveState *state, float *buffer, NSUInteger count) {
                 break;
         }
         double ramp = state->elapsed < kRampSamples ? (double)state->elapsed / kRampSamples : 1;
+        if (state->released >= 0) {
+            ramp *= state->released < kRampSamples ? 1 - (double)state->released / kRampSamples : 0;
+            state->released++;
+        }
         buffer[i] = (float)(kWaveLevel * value * ramp);
         state->elapsed++;
         p += dt;
@@ -124,4 +128,14 @@ void DPWaveRender(DPWaveState *state, float *buffer, NSUInteger count) {
         }
     }
     state->phase = p;
+}
+
+void DPWaveRelease(DPWaveState *state) {
+    if (state->released < 0) {
+        state->released = 0;
+    }
+}
+
+BOOL DPWaveIsSilent(const DPWaveState *state) {
+    return state->released >= kRampSamples;
 }

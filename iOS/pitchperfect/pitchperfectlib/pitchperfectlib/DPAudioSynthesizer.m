@@ -7,6 +7,7 @@
 //
 
 #include <AudioUnit/AudioUnit.h>
+#include <stdatomic.h>
 #import "DPAudioSynthesizer.h"
 #import "DPNoteSound.h"
 
@@ -34,9 +35,23 @@
 @interface DPAudioSynthesizer () {
     DPWaveState wave;
     DPWaveShape waveShape;
+    /// Whether the audio unit is running (it keeps running while a wave ramps out).
+    BOOL unitRunning;
+    /// Set by start/stop on the caller's thread, applied by the render thread,
+    /// which alone touches `wave` while the unit runs.
+    atomic_int restartRequested;
+    atomic_int releaseRequested;
+    /// Bumped by every start, so a stop scheduled before it does nothing.
+    NSUInteger generation;
 }
 
 @end
+
+static atomic_long sRunningCount = 0;
+
+/// How long a wave's unit keeps running after stop: its 220-sample ramp at
+/// 44.1 kHz, plus a buffer or two.
+static const double kWaveStopDelay = 0.03;
 
 const double TWO_PI = M_PI * 2;
 
@@ -184,14 +199,40 @@ OSStatus renderAudio (void *inRefCon,
     return self;
 }
 
++ (NSInteger)runningCount {
+    return atomic_load(&sRunningCount);
+}
+
+- (void)startUnit {
+    if (!unitRunning) {
+        unitRunning = YES;
+        atomic_fetch_add(&sRunningCount, 1);
+        AudioOutputUnitStart(audioUnit);
+    }
+}
+
+- (void)stopUnit {
+    if (unitRunning) {
+        AudioOutputUnitStop(audioUnit);
+        unitRunning = NO;
+        atomic_fetch_sub(&sRunningCount, 1);
+    }
+}
+
 - (void)start {
     if (isPlaying) {
         return;
     }
-    // A wave starts again from its beginning, ramp and all.
-    wave = DPWaveStateMake(waveShape, frequency, sampleRate);
+    generation++;
+    if (unitRunning) {
+        // Still ramping out: the render thread starts the wave again.
+        atomic_store(&restartRequested, 1);
+    } else {
+        // A wave starts again from its beginning, ramp and all.
+        wave = DPWaveStateMake(waveShape, frequency, sampleRate);
+    }
     isPlaying = YES;
-    AudioOutputUnitStart(audioUnit);
+    [self startUnit];
     time = 0;
 }
 
@@ -199,8 +240,20 @@ OSStatus renderAudio (void *inRefCon,
     if (!isPlaying) {
         return;
     }
-    AudioOutputUnitStop(audioUnit);
     isPlaying = NO;
+    if (!playsWave) {
+        [self stopUnit];
+        return;
+    }
+    atomic_store(&releaseRequested, 1);
+    NSUInteger stopping = generation;
+    // The block keeps the synthesizer alive until the ramp has played.
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kWaveStopDelay * NSEC_PER_SEC)),
+                   dispatch_get_main_queue(), ^{
+        if (self->generation == stopping && !self->isPlaying) {
+            [self stopUnit];
+        }
+    });
 }
 
 - (OSStatus)renderAudioWithFlags:(AudioUnitRenderActionFlags *)actionFlags
@@ -229,6 +282,13 @@ OSStatus renderAudio (void *inRefCon,
 
 /// A wave's samples, in both channels.
 - (OSStatus)renderWaveInto:(AudioBufferList *)data {
+    if (atomic_exchange(&restartRequested, 0)) {
+        atomic_store(&releaseRequested, 0);
+        wave = DPWaveStateMake(waveShape, frequency, sampleRate);
+    }
+    if (atomic_exchange(&releaseRequested, 0)) {
+        DPWaveRelease(&wave);
+    }
     float scratch[512];
     for (UInt32 i = 0; i < data->mNumberBuffers; i++) {
         UInt32 numSamples = data->mBuffers[i].mDataByteSize / 4;
@@ -251,7 +311,8 @@ OSStatus renderAudio (void *inRefCon,
 }
 
 - (void)dealloc {
-    [self stop];
+    isPlaying = NO;
+    [self stopUnit];
     [super dealloc];
 }
 
