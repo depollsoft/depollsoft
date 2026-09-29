@@ -18,12 +18,15 @@ interface SoundingNote {
 }
 
 /** A note streamed through an [AudioTrack]: the original pitch pipe, or a wave. */
-private class TrackVoice(private val track: AudioTrack) : SoundingNote {
+private class TrackVoice(
+    private val track: AudioTrack,
+    private val stopTrack: (AudioTrack) -> Unit,
+) : SoundingNote {
     override val isSounding: Boolean get() = track.playState == AudioTrack.PLAYSTATE_PLAYING
 
     override fun play() = track.play()
 
-    override fun stop() = PitchAudioTrackGenerator.stop(track)
+    override fun stop() = stopTrack(track)
 }
 
 /**
@@ -68,7 +71,10 @@ object NoteVoices {
         val tuned = storedFrequency * referencePitch / 440
         return when (sound.kind) {
             NoteSound.Kind.PITCH_PIPE ->
-                TrackVoice(PitchAudioTrackGenerator.getPitchAudioTrack(tuned, 8000, AudioFormat.CHANNEL_CONFIGURATION_MONO, 2000))
+                TrackVoice(
+                    PitchAudioTrackGenerator.getPitchAudioTrack(tuned, 8000, AudioFormat.CHANNEL_CONFIGURATION_MONO, 2000),
+                    PitchAudioTrackGenerator::stop,
+                )
             NoteSound.Kind.WAVE ->
                 TrackVoice(
                     PitchAudioTrackGenerator.getWaveAudioTrack(
@@ -77,6 +83,7 @@ object NoteVoices {
                         AudioFormat.CHANNEL_CONFIGURATION_MONO,
                         2000,
                     ),
+                    PitchAudioTrackGenerator::stopWave,
                 )
             NoteSound.Kind.INSTRUMENT -> MidiVoice(MidiNote.plan(sound, storedFrequency, referencePitch, instrumentTuning))
         }
