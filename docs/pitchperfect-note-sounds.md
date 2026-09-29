@@ -172,14 +172,34 @@ the clarinet is darker, for one.
   instrument's release plays. A channel is reused only once its release has
   finished, so a new note's tuning never bends a ringing tail. Past 32
   channels, the release that has played longest is cut short (10 ms).
+- **Every note sounds at least 150 ms.** A tap's note-off can reach the synth
+  before any of the note has been rendered. TinySoundFont would then release
+  it from an envelope still at zero, and the tap would be silent (on the
+  emulator, most of a run of quick taps were). The engine holds such a
+  note-off until the note has rendered 150 ms, splitting the render at that
+  frame. A tap on the original voice likewise plays out its queued buffer.
 - **One track.** `InstrumentPlayer` streams the synth at 44.1 kHz, mono, into
-  one `StreamingAudioTrack` that holds at least 2048 frames, about 46 ms.
-  Like a wave's track, it fills its whole buffer before `play()`, then writes
-  only what the buffer has room for, in chunks of at least 256 frames. So a
-  note played while others sound is heard within about 46 ms. Half a second
-  after the last release dies away, the track fades out, pauses and flushes.
-  The next note starts it again. A note played while it's stopping starts
-  when the restart primes the buffer.
+  one `StreamingAudioTrack`. The buffer is the platform's minimum, but at
+  least 4096 frames. Like a wave's track, it fills that buffer before
+  `play()`. After that it renders only 2048 frames (about 46 ms, two typical
+  mixer periods) ahead of playback, in chunks of at least 256. So a note
+  played while others sound waits at most that, plus the output's own
+  latency. Rendering the whole buffer ahead cost 35 ms more on the emulator,
+  whose minimum is 4012 frames. Half a second after the last release dies
+  away, the track fades out, pauses and flushes. The next note starts it
+  again. A note played while it's stopping starts when the restart primes the
+  buffer.
+- **Measured on the API 36 emulator.** Notes were timed with
+  `AudioTrack.getTimestamp`, and the output was recorded through QEMU's WAV
+  audio backend.
+  - A note that starts the track is presented 2–27 ms after it's played.
+  - A note played while the track runs takes 110–135 ms. The emulator's HAL
+    alone reports about 80 ms of write latency.
+  - No underruns.
+  - A held piano holds for 5 s.
+  - A three-note chord sounds each note at its pitch.
+  - Organ, harmonica and strings play A4 within 1 cent; the choir within 7.
+  - The app used about 5–8% of the CPU while notes sounded.
 - **The bank.** The phone app ships the SoundFont as an uncompressed asset
   (`noCompress 'sf2'`). `InstrumentPlayer` memory-maps it, so the 8.8 MB stay
   off the heap, and reads samples straight from the mapping. It maps the bank

@@ -116,6 +116,34 @@ class InstrumentEngineTest {
     }
 
     @Test
+    fun aTapStoppedBeforeAnythingRendersStillSoundsForItsMinimumThenReleases() {
+        // A tap's note-off can reach the engine before any of the note is rendered; released then,
+        // TinySoundFont's envelope would release from silence.
+        val note = engine.start(plan(0, 64, gain = -4.6))
+        engine.stop(note)
+        assertEquals(0, engine.heldCount)
+        assertFalse(engine.isIdle)
+        val out = render(3.0)
+        val min = InstrumentEngine.MIN_NOTE_FRAMES
+        assertTrue("sounds through its minimum", rms(out, min - rate / 50, min) > 1000)
+        assertTrue("then releases", rms(out, min + rate / 2, min + rate) < rms(out, min - rate / 50, min) / 4)
+        render(3.0)
+        assertTrue(engine.isIdle)
+    }
+
+    @Test
+    fun aNoteHeldPastItsMinimumStopsAtOnce() {
+        val held = engine.start(plan(0, 64, gain = -4.6))
+        render(0.5)
+        engine.stop(held)
+        val alone = InstrumentEngine(SoundFontBanks.shared())
+        val same = alone.start(plan(0, 64, gain = -4.6))
+        ShortArray(rate / 2).also { alone.render(it, it.size) }
+        alone.stop(same)
+        assertEquals(render(0.5).toList(), ShortArray(rate / 2).also { alone.render(it, it.size) }.toList())
+    }
+
+    @Test
     fun aChordSoundsEveryNote() {
         val single = InstrumentEngine(SoundFontBanks.shared())
         single.start(plan(19, 60, gain = -12.0))

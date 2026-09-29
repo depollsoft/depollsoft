@@ -29,8 +29,11 @@ object InstrumentPlayer {
     /** The phone app's asset; Wear doesn't ship it and never plays instruments. */
     const val BANK_ASSET = "PitchPerfectInstruments.sf2"
 
-    /** The buffer holds at least this much, about 46 ms: a note played while others sound waits at most that long. */
-    private const val TARGET_BUFFER_FRAMES = 2048
+    /**
+     * How far ahead of playback the synth renders, about 46 ms (two of a typical mixer's periods):
+     * a note played while others sound is heard after at most this much more.
+     */
+    private const val QUEUE_FRAMES = 2048
 
     /** The fewest frames the filler renders at once. */
     private const val MIN_WRITE_FRAMES = 256
@@ -138,7 +141,7 @@ object InstrumentPlayer {
     private fun createTrack(): StreamingAudioTrack {
         val rate = InstrumentEngine.SAMPLE_RATE
         val minBytes = AudioTrack.getMinBufferSize(rate, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT)
-        val bytes = maxOf(minBytes, TARGET_BUFFER_FRAMES * 2)
+        val bytes = maxOf(minBytes, QUEUE_FRAMES * 2 * 2)
         val capacity = bytes / 2
         buffer = ShortArray(capacity)
         return StreamingAudioTrack(
@@ -148,7 +151,8 @@ object InstrumentPlayer {
             AudioFormat.ENCODING_PCM_16BIT,
             bytes,
             AudioTrack.MODE_STREAM,
-            capacity - MIN_WRITE_FRAMES,
+            // The watcher keeps only this much queued, however big the buffer the platform asks for.
+            QUEUE_FRAMES,
         ).apply {
             setBufferFiller(filler)
             setPrimesBeforePlay(true)
