@@ -106,13 +106,15 @@ abstract class InstrumentBankAsset extends DefaultTask {
     }
 }
 
-def instrumentBankAsset = tasks.register('instrumentBankAsset', InstrumentBankAsset) {
-    source = rootProject.file('../shared/pitchperfect/PitchPerfectInstruments.sf2')
-}
-
 androidComponents {
     onVariants(selector().all()) { variant ->
-        variant.sources.assets?.addGeneratedSourceDirectory(instrumentBankAsset) { it.outputDir }
+        // One task per variant, writing to its own directory under build/, which AGP then adds to
+        // that variant's assets.
+        def copyTask = tasks.register("instrumentBankAsset${variant.name.capitalize()}", InstrumentBankAsset) {
+            source = rootProject.file('../shared/pitchperfect/PitchPerfectInstruments.sf2')
+            outputDir = layout.buildDirectory.dir("generated/instrumentBankAsset/${variant.name}")
+        }
+        variant.sources.assets?.addGeneratedSourceDirectory(copyTask) { it.outputDir }
     }
 }
 
