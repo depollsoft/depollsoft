@@ -548,20 +548,21 @@ final class NoteSoundSettingTests: PitchPerfectTestCase {
         XCTAssertEqual(app.sheet.label(id: "settings.sound"), "Sound")
         XCTAssertEqual(app.sheet.value(id: "settings.sound"), "Organ")
         app.sheet.tap(id: "settings.sound")
-        settle { app.navigationTitles.contains("Sound") && app.sheet.exists(id: "sound.sine") }
+        settle { app.navigationTitles.contains("Sound") && app.sheet.exists(id: "sound.strings") }
         XCTAssertTrue(app.sheet.isSelected(id: "sound.organ"))
         XCTAssertFalse(app.sheet.isSelected(id: "sound.pitchPipe"))
-        // The last heading is below the fold; PitchPerfectListScrollingTests
-        // scrolls there.
-        for header in ["Sustained", "Waves"] {
+        // The later headings can be below the fold on a small phone;
+        // PitchPerfectListScrollingTests scrolls there.
+        for header in ["Sustained"] {
             XCTAssertTrue(app.sheet.exists(label: header), header)
         }
         XCTAssertEqual(app.sheet.label(id: "sound.pitchPipe"), "Pitch Perfect (Loud)")
-        app.sheet.tap(id: "sound.sine")
-        settle { app.sheet.isSelected(id: "sound.sine") }
-        XCTAssertEqual(DPSettingsModel.sharedInstance.noteSound, "sine")
+        app.sheet.tap(id: "sound.strings")
+        settle { app.sheet.isSelected(id: "sound.strings") }
+        XCTAssertEqual(DPSettingsModel.sharedInstance.noteSound, "strings")
         XCTAssertFalse(app.sheet.isSelected(id: "sound.organ"))
         XCTAssertTrue(app.navigationTitles.contains("Sound"), "choosing stays on the list")
+        app.resetSettings()
     }
 }
 

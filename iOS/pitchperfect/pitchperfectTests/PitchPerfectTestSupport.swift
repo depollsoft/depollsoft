@@ -64,6 +64,38 @@ final class HostedApp {
 
     var ui: UIDriver { UIDriver(window) }
 
+    /// Scrolls the sheet's list down until the row `id` exists: a list only
+    /// makes rows near the screen, and a small phone or large text puts
+    /// Settings' later rows below the fold.
+    func revealInSheet(id: String) {
+        guard let list = descendants(of: UICollectionView.self, in: topPresented.view).last(where: { $0.window != nil }) else { return }
+        for _ in 0..<30 where !sheet.exists(id: id) {
+            let bottom = list.contentSize.height - list.bounds.height + list.adjustedContentInset.bottom
+            let next = min(list.contentOffset.y + list.bounds.height / 3, bottom)
+            list.setContentOffset(CGPoint(x: 0, y: next), animated: false)
+            ScreenCatalog.settle(0.05)
+        }
+    }
+
+    /// Leaves the presented Settings as a test found it: Settings is one
+    /// controller for the app's life, so a pushed Sound list or a scrolled
+    /// list would otherwise greet the next test.
+    func resetSettings() {
+        guard topPresented !== host else { return }
+        var navigations: [UINavigationController] = []
+        func visit(_ controller: UIViewController) {
+            if let navigation = controller as? UINavigationController { navigations.append(navigation) }
+            controller.children.forEach(visit)
+        }
+        visit(topPresented)
+        navigations.forEach { $0.popToRootViewController(animated: false) }
+        ScreenCatalog.settle(0.2)
+        for list in descendants(of: UICollectionView.self, in: topPresented.view) where list.window != nil {
+            list.setContentOffset(CGPoint(x: 0, y: -list.adjustedContentInset.top), animated: false)
+        }
+        ScreenCatalog.settle(0.1)
+    }
+
     var topPresented: UIViewController {
         var top = host
         while let next = top.presentedViewController { top = next }

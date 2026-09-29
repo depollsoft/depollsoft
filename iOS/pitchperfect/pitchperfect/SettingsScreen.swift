@@ -408,29 +408,51 @@ private struct TuningRow: View {
     @Binding var selection: Int
     @Environment(\.settingsCellHeights) private var heights
 
+    @Environment(\.dynamicTypeSize) private var typeSize
+
     var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: SettingsMetrics.subtitleSpacing) {
-                Text("Tuning")
-                Text("Frequency of A4")
-                    .font(.subheadline)
-                    .foregroundStyle(Color(uiColor: .secondaryLabel))
+        // Side by side as UIKit had it; at accessibility text sizes the choice
+        // ("440 Hz (Standard)") alone can be wider than a small phone, so it
+        // goes under the title there and keeps to the row's width.
+        if typeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: 4) {
+                title
+                picker
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(.top, SettingsMetrics.subtitleTop)
-            .padding(.bottom, SettingsMetrics.subtitleBottom)
-            Spacer(minLength: 16)
-            Picker("Tuning", selection: $selection) {
-                ForEach(DPSettingsModel.referencePitchChoices(current: selection), id: \.self) { hz in
-                    Text(SettingsModel.tuningLabel(hz)).tag(hz)
-                }
+            .padding(.vertical, SettingsMetrics.subtitleTop)
+            .settingsRow()
+        } else {
+            HStack {
+                title
+                    .padding(.top, SettingsMetrics.subtitleTop)
+                    .padding(.bottom, SettingsMetrics.subtitleBottom)
+                Spacer(minLength: 16)
+                picker.fixedSize()
             }
-            .pickerStyle(.menu)
-            .labelsHidden()
-            .fixedSize()
-            .accessibilityIdentifier("settings.tuning")
+            .frame(height: heights?.subtitle)
+            .settingsRow()
         }
-        .frame(height: heights?.subtitle)
-        .settingsRow()
+    }
+
+    private var title: some View {
+        VStack(alignment: .leading, spacing: SettingsMetrics.subtitleSpacing) {
+            Text("Tuning")
+            Text("Frequency of A4")
+                .font(.subheadline)
+                .foregroundStyle(Color(uiColor: .secondaryLabel))
+        }
+    }
+
+    private var picker: some View {
+        Picker("Tuning", selection: $selection) {
+            ForEach(DPSettingsModel.referencePitchChoices(current: selection), id: \.self) { hz in
+                Text(SettingsModel.tuningLabel(hz)).tag(hz)
+            }
+        }
+        .pickerStyle(.menu)
+        .labelsHidden()
+        .accessibilityIdentifier("settings.tuning")
     }
 }
 
