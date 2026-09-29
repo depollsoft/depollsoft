@@ -19,6 +19,9 @@ import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onChildren
+import androidx.compose.ui.test.filter
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
@@ -110,7 +113,7 @@ class SettingsScreenTest {
     @Test
     fun tuningStartsAtA440AndAChoiceRetunesTheNotes() {
         settings()
-        compose.onNodeWithTag(TestTags.TUNING).assert(hasText("A4 = 440 Hz", substring = true))
+        compose.onNodeWithTag(TestTags.TUNING).assert(hasText("440 Hz", substring = true))
         screens.click(TestTags.TUNING)
         compose.onNodeWithTag(TestTags.TUNING_CHOICE + 440).assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
         tapScrolled(TestTags.TUNING_CHOICE + 442)
@@ -119,7 +122,7 @@ class SettingsScreenTest {
         assertEquals(442.0, Note.findNote("A", Accidental.Natural, 4)!!.tunedFrequency, 1e-9)
         assertEquals("the stored A440 frequency is kept", 440.0, Note.findNote("A", Accidental.Natural, 4)!!.frequency, 1e-9)
         assertFalse("choosing closes the dialog", screens.exists(TestTags.TUNING_CHOICE + 442))
-        compose.onNodeWithTag(TestTags.TUNING).assert(hasText("A4 = 442 Hz", substring = true))
+        compose.onNodeWithTag(TestTags.TUNING).assert(hasText("442 Hz", substring = true))
     }
 
     @Test
@@ -140,7 +143,7 @@ class SettingsScreenTest {
         // Stands in for the account's snapshot listener: nothing on this screen asks to redraw.
         SettingsModel.applyRemoteReferencePitch(443)
         screens.settle()
-        compose.onNodeWithTag(TestTags.TUNING).assert(hasText("A4 = 443 Hz", substring = true))
+        compose.onNodeWithTag(TestTags.TUNING).assert(hasText("443 Hz", substring = true))
     }
 
     @Test
@@ -191,8 +194,67 @@ class SettingsScreenTest {
 
         assertEquals(NoteSound.CHOIR, SettingsModel.noteSound)
         assertEquals(NoteSound.CHOIR, Note.getSound())
-        assertFalse("choosing closes the dialog", screens.exists(TestTags.SOUND_CHOICE + "choir"))
+        compose.onNodeWithTag(TestTags.SOUND_CHOICE + "choir").assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
+        compose.onNodeWithTag(TestTags.SOUND_CHOICE + "pitchPipe").assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, false))
+        compose.onNodeWithText("DONE").performClick()
+        screens.settle()
+        assertFalse("Done closes the dialog", screens.exists(TestTags.SOUND_CHOICE + "choir"))
         compose.onNodeWithTag(TestTags.SOUND).assert(hasText("Choir", substring = true))
+    }
+
+    @Test
+    fun theSoundDialogStaysOpenAndPlaysEachChoiceSoTheyCanBeCompared() {
+        val player = RecordingPlayer()
+        Note.setPlayer(player)
+        settings()
+        screens.click(TestTags.SOUND)
+        chooseSound("piano")
+        chooseSound("organ")
+        val c4 = Note.getC4().frequency
+        assertEquals(
+            "a new choice cuts the last preview short and plays its own",
+            listOf("play $c4 in piano", "stop $c4", "play $c4 in organ"),
+            player.events.distinct(),
+        )
+        assertTrue("still open", screens.exists(TestTags.SOUND_CHOICE + "organ"))
+        assertEquals(NoteSound.ORGAN, SettingsModel.noteSound)
+        compose.onNodeWithText("CANCEL").assertDoesNotExist()
+    }
+
+    @Test
+    fun theDialogsOpenOnTheCurrentChoice() {
+        SettingsModel.noteSound = NoteSound.HARP
+        SettingsModel.referencePitch = 446
+        settings()
+        screens.click(TestTags.SOUND)
+        compose.onNodeWithTag(TestTags.SOUND_CHOICE + "harp").assertIsDisplayed()
+        compose.onNodeWithText("DONE").performClick()
+        screens.settle()
+        tapScrolled(TestTags.TUNING)
+        compose.onNodeWithTag(TestTags.TUNING_CHOICE + 446).assertIsDisplayed()
+    }
+
+    @Test
+    fun tuningValuesAreSetInTheMonoFaceAndNamedPitchesReadNaturally() {
+        settings()
+        val field = compose.onNodeWithTag(TestTags.TUNING + FIELD_TAG, useUnmergedTree = true)
+        field.onChildren().filter(hasText("440 Hz")).onFirst().assert(SemanticsMatcher("set in monospace") { it.textStyle()?.fontFamily == androidx.compose.ui.text.font.FontFamily.Monospace })
+        val sound = compose.onNodeWithTag(TestTags.SOUND + FIELD_TAG, useUnmergedTree = true)
+        sound.onChildren().filter(hasText("Pitch Perfect (Loud)")).onFirst().assert(SemanticsMatcher("names stay in the body face") { it.textStyle()?.fontFamily != androidx.compose.ui.text.font.FontFamily.Monospace })
+        screens.click(TestTags.TUNING)
+        compose.onNodeWithTag(TestTags.TUNING_CHOICE + 415).assert(SemanticsMatcher.expectValue(SemanticsProperties.ContentDescription, listOf("415 Hz, Baroque")))
+        compose.onNodeWithTag(TestTags.TUNING_CHOICE + 432).assert(hasText("432 Hz"))
+    }
+
+    @Test
+    fun theTuningAndSoundFieldsLineUpAsOneColumn() {
+        settings()
+        val tuning = compose.onNodeWithTag(TestTags.TUNING + FIELD_TAG, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        val sound = compose.onNodeWithTag(TestTags.SOUND + FIELD_TAG, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        assertEquals(tuning.left, sound.left, 0.5f)
+        assertEquals(tuning.right, sound.right, 0.5f)
+        compose.onNodeWithTag(TestTags.TUNING).assert(hasText("Frequency of A4", substring = true))
+        compose.onNodeWithTag(TestTags.SOUND).assert(hasText("What every note sounds like", substring = true))
     }
 
     @Test
@@ -266,13 +328,13 @@ class SettingsScreenTest {
     }
 
     @Test
-    fun cancellingTheSoundDialogKeepsTheSoundAndPlaysNothing() {
+    fun closingTheSoundDialogWithoutAChoiceKeepsTheSoundAndPlaysNothing() {
         val player = RecordingPlayer()
         Note.setPlayer(player)
         SettingsModel.noteSound = NoteSound.TRUMPET
         settings()
         screens.click(TestTags.SOUND)
-        compose.onNodeWithText("CANCEL").performClick()
+        compose.onNodeWithText("DONE").performClick()
         screens.settle()
         assertEquals(NoteSound.TRUMPET, SettingsModel.noteSound)
         assertTrue(player.events.isEmpty())
@@ -396,15 +458,18 @@ class SettingsScreenTest {
     private fun everyListScrollsToItsEnd() {
         val activity = settings()
         val cancel = activity.getString(android.R.string.cancel)
+        val done = activity.getString(R.string.SoundDone)
 
         screens.click(TestTags.SOUND)
-        compose.onNodeWithText(cancel, ignoreCase = true).assertIsDisplayed()
+        compose.onNodeWithText(done, ignoreCase = true).assertIsDisplayed()
         compose.onNodeWithTag(TestTags.SOUND_CHOICE + "harp").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText(cancel, ignoreCase = true).assertIsDisplayed()
+        compose.onNodeWithText(done, ignoreCase = true).assertIsDisplayed()
         compose.onNodeWithTag(TestTags.SOUND_CHOICE + "pitchPipe").performScrollTo().assertIsDisplayed()
         compose.onNodeWithTag(TestTags.SOUND_CHOICE + "harp").performScrollTo().performClick()
         screens.settle()
         assertEquals(NoteSound.HARP, SettingsModel.noteSound)
+        compose.onNodeWithText(done, ignoreCase = true).performClick()
+        screens.settle()
         Note.setSound(NoteSound.DEFAULT)
 
         tapScrolled(TestTags.TUNING)
@@ -425,10 +490,14 @@ class SettingsScreenTest {
     /** Where [tag]'s node sits on screen now. */
     private fun top(tag: String) = compose.onNodeWithTag(tag).fetchSemanticsNode().positionInRoot.y
 
-    /** The dialog card's trailing edge in the dialog window: its button bar ends 12dp past Cancel. */
+    /** The dialog card's trailing edge in the dialog window: its button bar ends 12dp past its button (Cancel or Done). */
     private fun cardRight(): Float {
-        val cancel = compose.onNodeWithText(RuntimeEnvironment.getApplication().getString(android.R.string.cancel), ignoreCase = true)
-        val node = cancel.fetchSemanticsNode()
+        val app = RuntimeEnvironment.getApplication()
+        val button =
+            compose.onNode(
+                hasText(app.getString(android.R.string.cancel), ignoreCase = true) or hasText(app.getString(R.string.SoundDone), ignoreCase = true),
+            )
+        val node = button.fetchSemanticsNode()
         return node.boundsInRoot.right + with(node.layoutInfo.density) { 12.dp.toPx() }
     }
 
@@ -484,6 +553,8 @@ class SettingsScreenTest {
         screens.click(TestTags.SOUND)
         tapBesideTheLabel(TestTags.SOUND_CHOICE + "organ")
         assertEquals(NoteSound.ORGAN, SettingsModel.noteSound)
+        compose.onNodeWithText("DONE").performClick()
+        screens.settle()
         Note.setSound(NoteSound.DEFAULT)
 
         tapScrolled(TestTags.TUNING)
@@ -664,5 +735,12 @@ class SettingsScreenTest {
         tapScrolled(TestTags.PRIVACY_CHOICES)
         // The consent prompt is the shared library's own dialog.
         assertTrue(org.robolectric.shadows.ShadowDialog.getLatestDialog().isShowing)
+    }
+
+    /** The style a text node was laid out with. */
+    private fun androidx.compose.ui.semantics.SemanticsNode.textStyle(): androidx.compose.ui.text.TextStyle? {
+        val results = mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
+        config.getOrNull(androidx.compose.ui.semantics.SemanticsActions.GetTextLayoutResult)?.action?.invoke(results)
+        return results.firstOrNull()?.layoutInput?.style
     }
 }

@@ -1,6 +1,18 @@
 package depollsoft.pitchperfect
 
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.LineBreak
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import depollsoft.pitchperfect.ui.PlateFonts
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -164,13 +176,26 @@ fun SettingsScreen(
             PlateSectionHeader(stringResource(R.string.SectionPitchPipe), Modifier.padding(top = 12.dp))
             SettingSwitch(stringResource(R.string.NotesToggle), state.toggleNotes, TestTags.TOGGLE_NOTES) { state.toggleNotes = it }
             SettingSwitch(stringResource(R.string.WakeLock), state.wakeLock, TestTags.WAKE_LOCK) { state.wakeLock = it }
-            DropDownRow(
-                stringResource(R.string.Tuning),
-                stringResource(R.string.TuningValue, state.referencePitch),
-                TestTags.TUNING,
-                actions.chooseTuning,
+            DropDownRows(
+                listOf(
+                    DropDown(
+                        stringResource(R.string.Tuning),
+                        stringResource(R.string.TuningSupport),
+                        stringResource(R.string.TuningValue, state.referencePitch),
+                        measured = true,
+                        TestTags.TUNING,
+                        actions.chooseTuning,
+                    ),
+                    DropDown(
+                        stringResource(R.string.Sound),
+                        stringResource(R.string.SoundSupport),
+                        soundLabel(state.noteSound),
+                        measured = false,
+                        TestTags.SOUND,
+                        actions.chooseSound,
+                    ),
+                ),
             )
-            DropDownRow(stringResource(R.string.Sound), soundLabel(state.noteSound), TestTags.SOUND, actions.chooseSound)
             PlateSettingsButton(
                 stringResource(R.string.ClearAllSongs),
                 Modifier.padding(top = 8.dp).fillMaxWidth().testTag(TestTags.CLEAR_SONGS),
@@ -289,63 +314,140 @@ private fun SettingSwitch(
     }
 }
 
+/** A setting with choices: its label and what it sets, and the current [value] (in the mono face when [measured]). */
+private class DropDown(
+    val label: String,
+    val support: String,
+    val value: String,
+    val measured: Boolean,
+    val tag: String,
+    val onClick: () -> Unit,
+)
+
 /**
- * A setting with choices, such as the tuning: its label, then the current choice in an outlined
- * field with a drop-down arrow, so it reads as a control; a tap anywhere on the row offers the
- * choices.
+ * Settings with choices, such as the tuning: each label with a line saying what it sets, then the
+ * current choice in an outlined field with a drop-down arrow, so it reads as a control; a tap
+ * anywhere on a row offers the choices. The fields share one width, as wide as the widest value,
+ * so they line up as one column. When that column would squeeze the labels (large text, a narrow
+ * screen), each field goes under its label instead.
  */
 @Composable
-private fun DropDownRow(
-    label: String,
-    value: String,
-    tag: String,
-    onClick: () -> Unit,
-) {
+private fun DropDownRows(rows: List<DropDown>) {
     val colors = plateColors
-    val shape = RoundedCornerShape(2.dp)
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .heightIn(min = 56.dp)
-            .testTag(tag)
-            .clickable(role = Role.Button, onClick = onClick),
-        verticalAlignment = ViewAlign.CenterVertically,
-    ) {
-        PlateText(label, style = plateText(16.sp, colors.ink), modifier = Modifier.weight(1f))
-        Row(
-            Modifier
-                .heightIn(min = 40.dp)
-                .background(colors.surface, shape)
-                .border(1.dp, colors.hairline, shape)
-                .padding(start = 12.dp, end = 8.dp),
-            verticalAlignment = ViewAlign.CenterVertically,
-        ) {
-            PlateText(value, style = plateText(16.sp, colors.ink))
-            // Material's drop-down arrow: a 10x5dp triangle in a 24dp box.
-            Box(
-                Modifier
-                    .padding(start = 4.dp)
-                    .size(24.dp)
-                    .drawBehind {
-                        val w = 10.dp.toPx()
-                        val h = 5.dp.toPx()
-                        val left = (size.width - w) / 2f
-                        val top = (size.height - h) / 2f
-                        val arrow =
-                            Path().apply {
-                                moveTo(left, top)
-                                lineTo(left + w, top)
-                                lineTo(left + w / 2f, top + h)
-                                close()
-                            }
-                        drawPath(arrow, colors.inkSecondary)
-                    },
-            )
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    val valueStyles = rows.map { dropDownValueStyle(it.measured, colors.ink) }
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val maxWidth = maxWidth
+        val widest = rows.zip(valueStyles).maxOf { (row, style) -> measurer.measure(row.value, style, maxLines = 1).size.width }
+        val fieldWidth = with(density) { widest.toDp() } + FIELD_CHROME
+        val stacked = fieldWidth > maxWidth * STACK_BEYOND
+        Column(Modifier.fillMaxWidth()) {
+            rows.zip(valueStyles).forEach { (row, style) ->
+                DropDownRow(row, style, if (stacked) minOf(fieldWidth, maxWidth) else fieldWidth, stacked)
+            }
         }
     }
 }
 
-/** The choices for A4, one radio row each; choosing one closes the dialog. */
+@Composable
+@ReadOnlyComposable
+private fun dropDownValueStyle(
+    measured: Boolean,
+    ink: Color,
+): TextStyle = if (measured) plateText(16.sp, ink, PlateFonts.mono, letterSpacing = 0.04f) else plateText(16.sp, ink)
+
+@Composable
+private fun DropDownRow(
+    row: DropDown,
+    valueStyle: TextStyle,
+    fieldWidth: Dp,
+    stacked: Boolean,
+) {
+    val colors = plateColors
+    val labels =
+        @Composable { modifier: Modifier ->
+            Column(modifier) {
+                PlateText(row.label, style = plateText(16.sp, colors.ink))
+                // Balanced, so a line that wraps beside the field never leaves one word alone.
+                PlateText(row.support, style = plateText(14.sp, colors.inkSecondary).copy(lineBreak = LineBreak.Heading))
+            }
+        }
+    val rowModifier =
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 64.dp)
+            .testTag(row.tag)
+            .clickable(role = Role.Button, onClick = row.onClick)
+    if (stacked) {
+        Column(rowModifier.padding(vertical = 8.dp)) {
+            labels(Modifier.fillMaxWidth())
+            DropDownField(row.value, valueStyle, Modifier.padding(top = 8.dp).width(fieldWidth).testTag(row.tag + FIELD_TAG))
+        }
+    } else {
+        Row(rowModifier, verticalAlignment = ViewAlign.CenterVertically) {
+            labels(Modifier.weight(1f).padding(end = 12.dp))
+            DropDownField(row.value, valueStyle, Modifier.width(fieldWidth).testTag(row.tag + FIELD_TAG))
+        }
+    }
+}
+
+/** The current choice in an outlined field with Material's drop-down arrow. */
+@Composable
+private fun DropDownField(
+    value: String,
+    style: TextStyle,
+    modifier: Modifier,
+) {
+    val colors = plateColors
+    val shape = RoundedCornerShape(2.dp)
+    Row(
+        modifier
+            .heightIn(min = 40.dp)
+            .background(colors.surface, shape)
+            .border(1.dp, colors.hairline, shape)
+            .padding(start = FIELD_START, end = FIELD_END),
+        verticalAlignment = ViewAlign.CenterVertically,
+    ) {
+        PlateText(value, style = style, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        // Material's drop-down arrow: a 10x5dp triangle in a 24dp box.
+        Box(
+            Modifier
+                .padding(start = ARROW_GAP)
+                .size(ARROW_BOX)
+                .drawBehind {
+                    val w = 10.dp.toPx()
+                    val h = 5.dp.toPx()
+                    val left = (size.width - w) / 2f
+                    val top = (size.height - h) / 2f
+                    val arrow =
+                        Path().apply {
+                            moveTo(left, top)
+                            lineTo(left + w, top)
+                            lineTo(left + w / 2f, top + h)
+                            close()
+                        }
+                    drawPath(arrow, colors.inkSecondary)
+                },
+        )
+    }
+}
+
+/** Tags a row's field, after the row's own tag. */
+const val FIELD_TAG = ".field"
+
+private val FIELD_START = 12.dp
+private val FIELD_END = 8.dp
+private val ARROW_GAP = 4.dp
+private val ARROW_BOX = 24.dp
+
+/** Everything in a field but its value, plus a pixel of slack for rounding. */
+private val FIELD_CHROME = FIELD_START + FIELD_END + ARROW_GAP + ARROW_BOX + 1.dp
+
+/** The share of the row the fields may take before they move under their labels. */
+private const val STACK_BEYOND = 0.55f
+
+/** The choices for A4, one radio row each, opened on the current one; choosing one closes the dialog. */
 @Composable
 fun TuningDialog(
     selected: Int,
@@ -359,17 +461,27 @@ fun TuningDialog(
     ) {
         // Each row is tappable across the whole width: a drag that starts beside a short label must
         // still land on the list, not the dialog behind it.
-        DialogChoiceList(TestTags.TUNING_LIST) {
-            SettingsModel.referencePitchChoices(selected).forEach { hz ->
-                RadioChoice(tuningLabel(hz), hz == selected, "${TestTags.TUNING_CHOICE}$hz", Modifier.fillMaxWidth()) { onChoose(hz) }
+        val choices = SettingsModel.referencePitchChoices(selected)
+        DialogChoiceList(TestTags.TUNING_LIST, reveal = choices.indexOf(selected)) {
+            val measured = plateText(16.sp, plateColors.ink, PlateFonts.mono, letterSpacing = 0.04f)
+            choices.forEach { hz ->
+                RadioChoice(
+                    stringResource(R.string.TuningValue, hz),
+                    hz == selected,
+                    "${TestTags.TUNING_CHOICE}$hz",
+                    Modifier.fillMaxWidth(),
+                    labelStyle = measured,
+                    detail = tuningName(hz),
+                ) { onChoose(hz) }
             }
         }
     }
 }
 
 /**
- * The sounds, one radio row each: the original voice first, then the waves and the instruments
- * under their headings. Choosing one closes the dialog.
+ * The sounds, one radio row each: the original voice first, then the sections under their
+ * headings, opened on the current one. Choosing a sound plays it and leaves the dialog open, so
+ * the user can try another; Done closes it. Nothing is pending, so there is nothing to cancel.
  */
 @Composable
 fun SoundDialog(
@@ -380,10 +492,18 @@ fun SoundDialog(
     AppCompatAlertDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.Sound),
-        buttons = listOf(DialogButton(stringResource(android.R.string.cancel), onDismiss)),
+        buttons = listOf(DialogButton(stringResource(R.string.SoundDone), onDismiss)),
     ) {
+        // Each heading is a child of the list too, so count it when finding the chosen row.
+        var children = 0
+        var chosen = 0
+        NoteSound.entries.forEachIndexed { index, sound ->
+            if (sound.section != NoteSound.entries.getOrNull(index - 1)?.section && sound.section != NoteSound.Section.DEFAULT) children++
+            if (sound == selected) chosen = children
+            children++
+        }
         // As the tuning list: a row is tappable across the whole width.
-        DialogChoiceList(TestTags.SOUND_LIST) {
+        DialogChoiceList(TestTags.SOUND_LIST, reveal = chosen) {
             NoteSound.entries.forEachIndexed { index, sound ->
                 val previous = NoteSound.entries.getOrNull(index - 1)
                 if (sound.section != previous?.section) {
@@ -433,17 +553,15 @@ fun soundLabel(sound: NoteSound): String =
         },
     )
 
+/** The name of a historical or standard A4, if it has one. */
 @Composable
-private fun tuningLabel(hz: Int): String {
-    val name =
-        when (hz) {
-            415 -> R.string.TuningBaroque
-            430 -> R.string.TuningClassical
-            440 -> R.string.TuningStandard
-            else -> null
-        }
-    return if (name == null) stringResource(R.string.TuningChoice, hz) else stringResource(R.string.TuningChoiceNamed, hz, stringResource(name))
-}
+private fun tuningName(hz: Int): String? =
+    when (hz) {
+        415 -> R.string.TuningBaroque
+        430 -> R.string.TuningClassical
+        440 -> R.string.TuningStandard
+        else -> null
+    }?.let { stringResource(it) }
 
 /** One appearance choice. */
 @Composable
@@ -466,6 +584,8 @@ private fun RadioChoice(
     selected: Boolean,
     tag: String,
     modifier: Modifier = Modifier,
+    labelStyle: TextStyle? = null,
+    detail: String? = null,
     onSelect: () -> Unit,
 ) {
     val colors = plateColors
@@ -476,11 +596,13 @@ private fun RadioChoice(
         label = "ring",
     )
     val dot by animateFloatAsState(if (selected) 1f else 0f, tween(RADIO_MS, easing = FastOutSlowInEasing), label = "dot")
+    val spoken = detail?.let { stringResource(R.string.TuningChoiceSpoken, label, it) }.orEmpty()
     Row(
         modifier
             .height(48.dp)
             .testTag(tag)
-            .selectable(selected, role = Role.RadioButton, onClick = onSelect),
+            .selectable(selected, role = Role.RadioButton, onClick = onSelect)
+            .then(if (detail == null) Modifier else Modifier.semantics { contentDescription = spoken }),
         verticalAlignment = ViewAlign.CenterVertically,
     ) {
         Box(
@@ -493,7 +615,11 @@ private fun RadioChoice(
                     if (dot > 0f) drawCircle(ring, radius = 5.dp.toPx() * dot)
                 },
         )
-        PlateText(label, style = plateText(16.sp, colors.ink))
+        val shown = if (detail == null) Modifier else Modifier.clearAndSetSemantics {}
+        PlateText(label, style = labelStyle ?: plateText(16.sp, colors.ink), modifier = shown)
+        if (detail != null) {
+            PlateText(detail, style = plateText(16.sp, colors.inkSecondary, PlateFonts.condensed), modifier = shown.padding(start = 12.dp))
+        }
     }
 }
 

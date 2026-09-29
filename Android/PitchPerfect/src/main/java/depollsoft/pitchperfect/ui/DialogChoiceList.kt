@@ -5,6 +5,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.first
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -43,16 +46,27 @@ var SemanticsPropertyReceiver.dialogListMoreBelow by DialogListMoreBelow
  * them), the rows fade into it, and the scrollbar stays in view. When the list is taller than the
  * dialog, its height is trimmed so the last visible row is cut partway, never on a row's edge.
  * Each child (row or heading) should fill the width, so a drag or tap anywhere across it lands.
+ * The list opens scrolled so the child at [reveal] (the current choice) sits a third of the way
+ * down, or as near as the list's ends allow.
  */
 @Composable
 fun DialogChoiceList(
     tag: String,
     modifier: Modifier = Modifier,
+    reveal: Int? = null,
     content: @Composable () -> Unit,
 ) {
     val colors = plateColors
     val scroll = rememberScrollState()
     val bottoms = remember { mutableStateListOf<Int>() }
+    if (reveal != null && reveal >= 0) {
+        LaunchedEffect(Unit) {
+            // Once the rows are laid out and the list knows how far it scrolls.
+            snapshotFlow { bottoms.size > reveal && scroll.viewportSize > 0 }.first { it }
+            val top = if (reveal == 0) 0 else bottoms[reveal - 1]
+            scroll.scrollTo((top - scroll.viewportSize / 3).coerceIn(0, scroll.maxValue))
+        }
+    }
     val moreAbove by remember { derivedStateOf { scroll.value > 0 } }
     val moreBelow by remember { derivedStateOf { scroll.value < scroll.maxValue } }
     // Read here so the semantics follow them.

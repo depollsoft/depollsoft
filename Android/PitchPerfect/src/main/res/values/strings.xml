@@ -32,14 +32,16 @@
     <string name="SortAll">Sort all songs by title</string>
     <string name="WakeLock">Prevent screen from turning off or locking while Pitch Perfect is in use</string>
     <string name="Tuning">Tuning</string>
-    <string name="TuningTitle">Tuning (A4)</string>
-    <string name="TuningValue">A4 = %1$d Hz</string>
-    <string name="TuningChoice">%1$d Hz</string>
-    <string name="TuningChoiceNamed">%1$d Hz (%2$s)</string>
+    <string name="TuningTitle">Tuning</string>
+    <string name="TuningSupport">Frequency of A4</string>
+    <string name="TuningValue">%1$d Hz</string>
+    <string name="TuningChoiceSpoken">%1$s, %2$s</string>
     <string name="TuningBaroque">Baroque</string>
     <string name="TuningClassical">Classical</string>
     <string name="TuningStandard">Standard</string>
     <string name="Sound">Sound</string>
+    <string name="SoundSupport">What every note sounds like</string>
+    <string name="SoundDone">Done</string>
     <string name="SoundWaves">Waves</string>
     <string name="SoundSustained">Sustained</string>
     <string name="SoundPluckedAndStruck">Plucked &amp; Struck</string>

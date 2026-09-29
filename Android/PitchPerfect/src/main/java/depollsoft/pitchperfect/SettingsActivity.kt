@@ -119,8 +119,8 @@ class SettingsActivity(
                     state.referencePitch = it
                 }
             SettingsDialog.SOUND ->
+                // Stays open: each choice plays, so the user can compare sounds, and Done closes it.
                 SoundDialog(state.noteSound, onDismiss = close) {
-                    close()
                     state.noteSound = it
                     soundPreview.play()
                 }
