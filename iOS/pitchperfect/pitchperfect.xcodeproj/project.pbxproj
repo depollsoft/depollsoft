@@ -140,6 +140,7 @@
 		3FA984DCB4689A7F95CD5B73 /* PitchPerfectFinalReviewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD05A18482DA75F31160AFC7 /* PitchPerfectFinalReviewTests.swift */; };
 		3D8A074948AF161868C698E6 /* TestRendering.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50DB0DAA70B62F167F2D7815 /* TestRendering.swift */; };
 		AA6CC793372CEFE5EE2AAF4F /* TestKeyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1095E291DED0DAAC7410D3B /* TestKeyboard.swift */; };
+		A130958F168AE0846420AE2D /* InstrumentRealAudioTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 752FECB8F6E22E2770D906A3 /* InstrumentRealAudioTests.swift */; };
 		ADEF10F26910267DFAD30C0D /* PitchPerfectNoteSoundTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0045E70110B1D76029B45C07 /* PitchPerfectNoteSoundTests.swift */; };
 		1F162A3E6D015D56AB99FD87 /* PitchPerfectSongManagementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5965ABAE6CDE569D817AF0A5 /* PitchPerfectSongManagementTests.swift */; };
 		319BAFA3CDBA97E6CCDAEBAD /* FirebaseAnalyticsCore in Frameworks */ = {isa = PBXBuildFile; productRef = 02C2927DF115B8E67AFA6F59 /* FirebaseAnalyticsCore */; };
@@ -355,6 +356,7 @@
 		3AFEF38D07E60E290D1530BF /* PitchPerfectRound2Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectRound2Tests.swift; sourceTree = "<group>"; };
 		0349F38E16D7E5FC08B30A3D /* UIKitSetListSelectorReference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIKitSetListSelectorReference.swift; sourceTree = "<group>"; };
 		CD05A18482DA75F31160AFC7 /* PitchPerfectFinalReviewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectFinalReviewTests.swift; sourceTree = "<group>"; };
+		752FECB8F6E22E2770D906A3 /* InstrumentRealAudioTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstrumentRealAudioTests.swift; sourceTree = "<group>"; };
 		0045E70110B1D76029B45C07 /* PitchPerfectNoteSoundTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectNoteSoundTests.swift; sourceTree = "<group>"; };
 		5965ABAE6CDE569D817AF0A5 /* PitchPerfectSongManagementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectSongManagementTests.swift; sourceTree = "<group>"; };
 		BD8765116ED3097D4A35113F /* AdConsent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AdConsent.swift; path = pitchperfect/AdConsent.swift; sourceTree = "<group>"; };
@@ -645,6 +647,7 @@
 				C0NEWF0050000000000000F5 /* PitchChordTests.swift */,
 				5965ABAE6CDE569D817AF0A5 /* PitchPerfectSongManagementTests.swift */,
 				0045E70110B1D76029B45C07 /* PitchPerfectNoteSoundTests.swift */,
+				752FECB8F6E22E2770D906A3 /* InstrumentRealAudioTests.swift */,
 				CD05A18482DA75F31160AFC7 /* PitchPerfectFinalReviewTests.swift */,
 				0349F38E16D7E5FC08B30A3D /* UIKitSetListSelectorReference.swift */,
 				3AFEF38D07E60E290D1530BF /* PitchPerfectRound2Tests.swift */,
@@ -1007,6 +1010,7 @@
 				C0NEWT0050000000000000F5 /* PitchChordTests.swift in Sources */,
 				1F162A3E6D015D56AB99FD87 /* PitchPerfectSongManagementTests.swift in Sources */,
 				ADEF10F26910267DFAD30C0D /* PitchPerfectNoteSoundTests.swift in Sources */,
+				A130958F168AE0846420AE2D /* InstrumentRealAudioTests.swift in Sources */,
 				AA6CC793372CEFE5EE2AAF4F /* TestKeyboard.swift in Sources */,
 				3D8A074948AF161868C698E6 /* TestRendering.swift in Sources */,
 				3FA984DCB4689A7F95CD5B73 /* PitchPerfectFinalReviewTests.swift in Sources */,

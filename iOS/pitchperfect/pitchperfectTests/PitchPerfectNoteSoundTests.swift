@@ -22,6 +22,8 @@ private final class FakeSampler: NoteSampler {
     /// What happened, in order: "load", "start", "stop", "silence".
     var events: [String] = []
     var failsToLoad = false
+    /// Advanced by the test, as the render thread would.
+    var renderCount = 0
     init(index: Int) { self.index = index }
 
     func load(program: Int) throws {
@@ -38,6 +40,7 @@ private final class FakeHost: NoteSamplerHost {
     var samplers: [FakeSampler] = []
     var runs = 0
     var stops = 0
+    var isRunning = false
     var onNeedsRestart: (() -> Void)?
 
     func makeSampler() -> NoteSampler? {
@@ -331,6 +334,81 @@ final class MIDINotePlayerTests: XCTestCase {
         XCTAssertFalse(player.isSounding)
         _ = player.start(sound: "piano", a440Frequency: frequency(24))
         XCTAssertEqual(host.runs, 2, "the next note starts the output again")
+    }
+
+    /// The first-tap bug: a note on a sampler whose instrument loaded while the
+    /// output was rendering was silent, because AUSampler drops a note-on that
+    /// arrives before its next render. The note now waits for two renders.
+    func testANoteOnASamplerLoadedWhileTheOutputRunsWaitsForItToRender() throws {
+        var later: [(TimeInterval, () -> Void)] = []
+        player = MIDINotePlayer(host: host, tuning: try InstrumentTuning(data: Data(tableJSON.utf8)),
+                                perform: { $0() }, performAfter: { later.append(($0, $1)) },
+                                now: { [unowned self] in clock })
+        host.isRunning = true
+        _ = try XCTUnwrap(player.start(sound: "organ", a440Frequency: frequency(24)))
+        let sampler = host.samplers[0]
+        XCTAssertEqual(sampler.events, ["load"], "no note-on yet")
+        XCTAssertEqual(later.map(\.0), [MIDINotePlayer.renderPollInterval])
+        sampler.renderCount = 1
+        later.removeFirst().1()
+        XCTAssertEqual(sampler.events, ["load"], "one render isn't enough")
+        sampler.renderCount = 2
+        later.removeFirst().1()
+        XCTAssertEqual(sampler.events, ["load", "start"])
+        XCTAssertTrue(later.isEmpty)
+
+        // Once it has rendered, the loaded sampler's next note starts at once.
+        clock += 10
+        _ = player.start(sound: "organ", a440Frequency: frequency(26))
+        XCTAssertEqual(host.samplers.count, 2)
+        XCTAssertEqual(host.samplers[1].events, ["load"], "a new sampler loaded while running waits too")
+    }
+
+    func testASamplerLoadedWhileTheOutputIsStoppedStartsItsNoteAtOnce() throws {
+        host.isRunning = false
+        _ = try XCTUnwrap(player.start(sound: "organ", a440Frequency: frequency(24)))
+        XCTAssertEqual(host.samplers[0].events, ["load", "start"])
+    }
+
+    func testAPreparedSamplerThatHasRenderedPlaysItsFirstNoteAtOnce() throws {
+        host.isRunning = true
+        player.prepare(sound: "organ")
+        host.samplers.forEach { $0.renderCount = 5 }
+        _ = try XCTUnwrap(player.start(sound: "organ", a440Frequency: frequency(24)))
+        XCTAssertEqual(host.samplers[0].events, ["load", "start"])
+    }
+
+    func testANoteReleasedWhileWaitingToRenderStillSoundsThenStops() throws {
+        var later: [(TimeInterval, () -> Void)] = []
+        player = MIDINotePlayer(host: host, tuning: try InstrumentTuning(data: Data(tableJSON.utf8)),
+                                perform: { $0() }, performAfter: { later.append(($0, $1)) },
+                                now: { [unowned self] in clock })
+        host.isRunning = true
+        let note = try XCTUnwrap(player.start(sound: "organ", a440Frequency: frequency(24)))
+        player.stopNote(note)
+        let sampler = host.samplers[0]
+        XCTAssertTrue(sampler.stopped.isEmpty)
+        clock += 0.02
+        sampler.renderCount = 2
+        later.removeFirst().1()
+        XCTAssertEqual(sampler.events, ["load", "start", "stop"],
+                       "a quick tap is heard: it starts, then its stop applies")
+    }
+
+    func testAWaitingNoteStartsAnywayIfTheSamplerNeverRenders() throws {
+        var later: [(TimeInterval, () -> Void)] = []
+        player = MIDINotePlayer(host: host, tuning: try InstrumentTuning(data: Data(tableJSON.utf8)),
+                                perform: { $0() }, performAfter: { later.append(($0, $1)) },
+                                now: { [unowned self] in clock })
+        host.isRunning = true
+        _ = try XCTUnwrap(player.start(sound: "organ", a440Frequency: frequency(24)))
+        var checks = 0
+        while !later.isEmpty, checks < 100 {
+            later.removeFirst().1()
+            checks += 1
+        }
+        XCTAssertEqual(checks, MIDINotePlayer.renderPollLimit)
+        XCTAssertEqual(host.samplers[0].events, ["load", "start"])
     }
 
     func testANoteThatStartedLateIsStoppedAsLateSoATimedNoteKeepsItsLength() throws {

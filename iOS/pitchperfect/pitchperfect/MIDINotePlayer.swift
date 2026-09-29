@@ -99,6 +99,10 @@ struct InstrumentTuning {
 
 /// A sampler the pool can hand a note: AVAudioUnitSampler, or a fake in tests.
 protocol NoteSampler: AnyObject {
+    /// How many times the sampler has rendered: a note-on sent right after an
+    /// instrument loads into a running sampler is lost unless the sampler has
+    /// rendered since (see MIDINotePlayer.renderCyclesAfterLoad).
+    var renderCount: Int { get }
     func load(program: Int) throws
     func start(_ note: InstrumentNote)
     func stop(key: Int)
@@ -109,6 +113,8 @@ protocol NoteSampler: AnyObject {
 /// Where samplers come from, and the output they play through.
 protocol NoteSamplerHost: AnyObject {
     func makeSampler() -> NoteSampler?
+    /// Whether the output is rendering now.
+    var isRunning: Bool { get }
     /// Starts (or restarts, after an interruption or route change) the output.
     func ensureRunning()
     /// Stops the output once nothing is sounding, so the app can suspend.
@@ -137,6 +143,18 @@ final class MIDINotePlayer: NSObject, DPNoteInstrumentPlayer {
     /// Samplers kept loaded with the chosen instrument, so a quick second tap
     /// doesn't wait for a load either.
     static let warmVoices = 2
+    /// AUSampler drops a note-on that reaches it after an instrument loaded
+    /// while the engine was rendering but before its next render: loading
+    /// swaps the instrument in on the render thread and discards the events
+    /// queued meanwhile. So a note on a sampler loaded while running waits
+    /// until the sampler has rendered this many times since the load (about
+    /// 10–20 ms). Measured on macOS's real output: the first note after such
+    /// a load peaked at 0.000–0.08 against 0.15–0.30 after waiting.
+    static let renderCyclesAfterLoad = 2
+    /// How often, and how many times, a waiting note checks the render count
+    /// before it starts anyway (the output may have failed to start).
+    static let renderPollInterval: TimeInterval = 0.004
+    static let renderPollLimit = 60
 
     /// A note the player gave out: DPNote holds it until it stops the note.
     final class Token: NSObject {
@@ -146,6 +164,11 @@ final class MIDINotePlayer: NSObject, DPNoteInstrumentPlayer {
         /// off by as long, so a timed note (the Settings preview) isn't cut short.
         fileprivate var requestedAt: TimeInterval = 0
         fileprivate var delayedStop = false
+        /// Whether the sampler has been sent the note-on yet: it may be
+        /// waiting for its sampler to render after a load.
+        fileprivate var started = false
+        /// Stopped before it started: it stops once it has.
+        fileprivate var stopRequested = false
         init(note: InstrumentNote) { self.note = note }
     }
 
@@ -156,6 +179,9 @@ final class MIDINotePlayer: NSObject, DPNoteInstrumentPlayer {
         var token: Token?
         var startedAt: TimeInterval = 0
         var releasedAt: TimeInterval = -.infinity
+        /// The sampler's render count when an instrument last loaded into it
+        /// while the output was running; nil once it has rendered since.
+        var renderCountAtLoad: Int?
         init(sampler: NoteSampler) { self.sampler = sampler }
     }
 
@@ -282,14 +308,36 @@ final class MIDINotePlayer: NSObject, DPNoteInstrumentPlayer {
         }
         setSounding(true)
         host?.ensureRunning()
-        voice.sampler.start(token.note)
         voice.token = token
         voice.startedAt = now()
         token.voice = voice
+        startWhenRendered(token, on: voice, attempt: 0)
+    }
+
+    /// Sends the note-on once the sampler has rendered since its last load
+    /// (renderCyclesAfterLoad), or after renderPollLimit checks regardless.
+    private func startWhenRendered(_ token: Token, on voice: Voice, attempt: Int) {
+        guard voice.token === token, !token.started else { return }
+        if let mark = voice.renderCountAtLoad {
+            if voice.sampler.renderCount < mark + Self.renderCyclesAfterLoad, attempt < Self.renderPollLimit {
+                performAfter(Self.renderPollInterval) { [self] in startWhenRendered(token, on: voice, attempt: attempt + 1) }
+                return
+            }
+            voice.renderCountAtLoad = nil
+        }
+        voice.sampler.start(token.note)
+        voice.startedAt = now()
+        token.started = true
+        if token.stopRequested { end(token) }
     }
 
     private func end(_ token: Token) {
         guard let voice = token.voice, voice.token === token else { return }
+        guard token.started else {
+            // Still waiting for its sampler to render: it plays, then stops.
+            token.stopRequested = true
+            return
+        }
         let lag = voice.startedAt - token.requestedAt
         if lag > 0.05, !token.delayedStop {
             token.delayedStop = true
@@ -344,6 +392,7 @@ final class MIDINotePlayer: NSObject, DPNoteInstrumentPlayer {
         do {
             try voice.sampler.load(program: program)
             voice.program = program
+            voice.renderCountAtLoad = host?.isRunning == true ? voice.sampler.renderCount : nil
         } catch {
             voice.program = nil
             DPAppLog.log("MIDI: couldn't load program \(program): \(error)")
@@ -366,6 +415,8 @@ final class SamplerEngine: NoteSamplerHost {
     /// preloading must not do.
     private let samplerMix = AVAudioMixerNode()
     private(set) var outputConnected = false
+    /// Tests that listen to the real output tap the sampler mix here.
+    var onOutputConnected: ((AVAudioMixerNode) -> Void)?
     /// Whether anything else in the app is sounding (the pitch pipe and wave
     /// synths, the widget's tones), so stopping here leaves the session alone.
     var othersSounding: () -> Bool = { false }
@@ -397,6 +448,8 @@ final class SamplerEngine: NoteSamplerHost {
         onNeedsRestart?()
     }
 
+    var isRunning: Bool { engine.isRunning }
+
     func makeSampler() -> NoteSampler? {
         guard let soundBank else { return nil }
         let sampler = AVAudioUnitSampler()
@@ -411,6 +464,7 @@ final class SamplerEngine: NoteSamplerHost {
         if !outputConnected {
             engine.connect(samplerMix, to: engine.mainMixerNode, format: nil)
             outputConnected = true
+            onOutputConnected?(samplerMix)
         }
         let session = AVAudioSession.sharedInstance()
         try? session.setCategory(.playback)
@@ -435,11 +489,22 @@ final class SamplerEngine: NoteSamplerHost {
 private final class EngineSampler: NoteSampler {
     let sampler: AVAudioUnitSampler
     let soundBank: URL
+    /// Written only by the render thread's notify, read by the player's queue.
+    private let renders = UnsafeMutablePointer<Int>.allocate(capacity: 1)
 
     init(sampler: AVAudioUnitSampler, soundBank: URL) {
         self.sampler = sampler
         self.soundBank = soundBank
+        renders.initialize(to: 0)
+        AudioUnitAddRenderNotify(sampler.audioUnit, engineSamplerRendered, UnsafeMutableRawPointer(renders))
     }
+
+    deinit {
+        AudioUnitRemoveRenderNotify(sampler.audioUnit, engineSamplerRendered, UnsafeMutableRawPointer(renders))
+        renders.deallocate()
+    }
+
+    var renderCount: Int { renders.pointee }
 
     func load(program: Int) throws {
         try sampler.loadSoundBankInstrument(at: soundBank, program: UInt8(program),
@@ -461,6 +526,19 @@ private final class EngineSampler: NoteSampler {
         sampler.sendController(120, withValue: 0, onChannel: 0) // all sound off
         sampler.sendController(123, withValue: 0, onChannel: 0) // all notes off
     }
+}
+
+/// Counts a sampler's renders (after each one), for EngineSampler.renderCount.
+private func engineSamplerRendered(_ refCon: UnsafeMutableRawPointer,
+                                   _ flags: UnsafeMutablePointer<AudioUnitRenderActionFlags>,
+                                   _ timeStamp: UnsafePointer<AudioTimeStamp>,
+                                   _ bus: UInt32,
+                                   _ frames: UInt32,
+                                   _ data: UnsafeMutablePointer<AudioBufferList>?) -> OSStatus {
+    if flags.pointee.contains(.unitRenderAction_PostRender) {
+        refCon.assumingMemoryBound(to: Int.self).pointee &+= 1
+    }
+    return noErr
 }
 
 extension MIDINotePlayer {
