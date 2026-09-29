@@ -33,8 +33,12 @@ struct InstrumentTuning {
     let lastKey: Int
     let instruments: [Int: Instrument]
 
-    /// The GM program a silent key falls back to.
+    /// The GM program a silent key falls back to when its instrument has no
+    /// closer fallback.
     static let fallbackProgram = 0
+    /// Closer fallbacks: the free reeds (harmonica, accordion) fall back to
+    /// the reed organ, the nearest sound to a pitch pipe's reed.
+    static let closerFallbacks: [Int: Int] = [22: 20, 21: 20]
     /// AUSampler's overallGain can't go higher.
     static let maximumGainDb = 12.0
 
@@ -66,17 +70,24 @@ struct InstrumentTuning {
 
     /// How `program` plays MIDI `key` with A4 at `referencePitch` Hz. A key
     /// outside the measured range uses the nearest end's correction; a key the
-    /// instrument is silent at plays the piano. Nil for an unmeasured program.
+    /// instrument is silent at plays its closer fallback if that sounds there,
+    /// else the piano. Nil for an unmeasured program.
     func note(program: Int, key: Int, referencePitch: Double) -> InstrumentNote? {
         guard let instrument = instruments[program] else { return nil }
         let index = min(max(key, firstKey), lastKey) - firstKey
         var program = program
         var chosen = instrument
         var correction = instrument.correctionCents[index]
-        if correction == nil, let fallback = instruments[Self.fallbackProgram] {
-            program = Self.fallbackProgram
-            chosen = fallback
-            correction = fallback.correctionCents[index]
+        if correction == nil {
+            let candidates = [Self.closerFallbacks[program], Self.fallbackProgram].compactMap { $0 }
+            for candidate in candidates {
+                if let fallback = instruments[candidate], let value = fallback.correctionCents[index] {
+                    program = candidate
+                    chosen = fallback
+                    correction = value
+                    break
+                }
+            }
         }
         let tuning = 1200 * log2(referencePitch / 440)
         return InstrumentNote(program: program,

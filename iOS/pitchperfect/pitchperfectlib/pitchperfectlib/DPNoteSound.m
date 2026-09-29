@@ -20,7 +20,8 @@ NSString *const DPNoteSoundPitchPipe = @"pitchPipe";
     dispatch_once(&once, ^{
         programs = @{
             @"piano": @0, @"electricPiano": @4, @"harpsichord": @6, @"vibraphone": @11,
-            @"organ": @19, @"accordion": @21, @"guitar": @24, @"harp": @46,
+            @"organ": @19, @"reedOrgan": @20, @"accordion": @21, @"harmonica": @22,
+            @"guitar": @24, @"harp": @46,
             @"strings": @48, @"choir": @52, @"trumpet": @56, @"clarinet": @71, @"flute": @73,
         };
     });
@@ -28,8 +29,8 @@ NSString *const DPNoteSoundPitchPipe = @"pitchPipe";
 }
 
 + (NSArray<NSString *> *)instruments {
-    return @[@"piano", @"electricPiano", @"harpsichord", @"vibraphone", @"organ", @"accordion",
-             @"guitar", @"harp", @"strings", @"choir", @"trumpet", @"clarinet", @"flute"];
+    return @[@"piano", @"electricPiano", @"harpsichord", @"vibraphone", @"organ", @"reedOrgan",
+             @"accordion", @"harmonica", @"guitar", @"harp", @"strings", @"choir", @"trumpet", @"clarinet", @"flute"];
 }
 
 + (NSArray<NSString *> *)allSounds {

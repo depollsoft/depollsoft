@@ -47,18 +47,21 @@
 
 #pragma mark - Ids
 
-- (void)testTheSoundsAreThePitchPipeThenFourWavesThenThirteenInstruments {
+- (void)testTheSoundsAreThePitchPipeThenFourWavesThenFifteenInstruments {
     NSArray *all = [DPNoteSound allSounds];
     XCTAssertEqualObjects(all.firstObject, @"pitchPipe");
     XCTAssertEqualObjects([DPNoteSound waves], (@[@"sine", @"triangle", @"square", @"sawtooth"]));
-    XCTAssertEqual([DPNoteSound instruments].count, 13u);
-    XCTAssertEqual(all.count, 18u);
-    XCTAssertFalse([all containsObject:@"harmonica"]);
+    XCTAssertEqualObjects([DPNoteSound instruments],
+                          (@[@"piano", @"electricPiano", @"harpsichord", @"vibraphone", @"organ", @"reedOrgan",
+                             @"accordion", @"harmonica", @"guitar", @"harp", @"strings", @"choir", @"trumpet",
+                             @"clarinet", @"flute"]));
+    XCTAssertEqual(all.count, 20u);
 }
 
 - (void)testInstrumentsCarryTheirGeneralMIDIPrograms {
     NSDictionary *expected = @{@"piano": @0, @"electricPiano": @4, @"harpsichord": @6, @"vibraphone": @11,
-                               @"organ": @19, @"accordion": @21, @"guitar": @24, @"harp": @46,
+                               @"organ": @19, @"reedOrgan": @20, @"accordion": @21, @"harmonica": @22,
+                               @"guitar": @24, @"harp": @46,
                                @"strings": @48, @"choir": @52, @"trumpet": @56, @"clarinet": @71, @"flute": @73};
     for (NSString *sound in [DPNoteSound instruments]) {
         XCTAssertEqual([DPNoteSound programForSound:sound], [expected[sound] intValue], @"%@", sound);
@@ -74,7 +77,7 @@
     XCTAssertEqualObjects([DPNoteSound validated:@"theremin"], @"pitchPipe");
     XCTAssertEqualObjects([DPNoteSound validated:nil], @"pitchPipe");
     XCTAssertEqualObjects([DPNoteSound validated:@"choir"], @"choir");
-    DPNote.sound = @"harmonica";
+    DPNote.sound = @"kazoo";
     XCTAssertEqualObjects(DPNote.sound, @"pitchPipe");
     DPNote.sound = @"square";
     XCTAssertEqualObjects(DPNote.sound, @"square");

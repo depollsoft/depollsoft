@@ -55,7 +55,10 @@ private let tableJSON = """
  "ios": {
   "0": {"gainDb": -8.6, "correctionCents": [1.0, 2.0, 3.0, 4.0]},
   "19": {"gainDb": 8.3, "correctionCents": [-5.0, null, 0.5, 7.0]},
-  "11": {"gainDb": 20.0, "correctionCents": [0, 0, 0, 0]}
+  "11": {"gainDb": 20.0, "correctionCents": [0, 0, 0, 0]},
+  "20": {"gainDb": 10.5, "correctionCents": [-1.5, 1.5, 2.5, null]},
+  "21": {"gainDb": 7.4, "correctionCents": [null, 0.0, 0.0, null]},
+  "22": {"gainDb": 11.2, "correctionCents": [null, null, 3.0, null]}
  },
  "android": {}
 }
@@ -87,6 +90,23 @@ final class InstrumentTuningTests: XCTestCase {
     func testASilentKeyPlaysThePiano() throws {
         let note = try XCTUnwrap(table().note(program: 19, key: 25, referencePitch: 440))
         XCTAssertEqual(note, InstrumentNote(program: 0, key: 25, pitchCents: 2, gainDb: -8.6))
+    }
+
+    func testASilentFreeReedKeyPlaysTheReedOrganWhereItSounds() throws {
+        // Harmonica and accordion fall back to the reed organ, the nearest
+        // sound to a pitch pipe's reed.
+        XCTAssertEqual(try table().note(program: 22, key: 24, referencePitch: 440),
+                       InstrumentNote(program: 20, key: 24, pitchCents: -1.5, gainDb: 10.5))
+        XCTAssertEqual(try table().note(program: 21, key: 24, referencePitch: 440)?.program, 20)
+        XCTAssertEqual(try table().note(program: 22, key: 26, referencePitch: 440)?.program, 22)
+    }
+
+    func testAKeyNeitherTheFreeReedNorTheReedOrganSoundsPlaysThePiano() throws {
+        XCTAssertEqual(try table().note(program: 22, key: 27, referencePitch: 440),
+                       InstrumentNote(program: 0, key: 27, pitchCents: 4, gainDb: -8.6))
+        XCTAssertEqual(try table().note(program: 21, key: 27, referencePitch: 440)?.program, 0)
+        XCTAssertEqual(try table().note(program: 20, key: 27, referencePitch: 440)?.program, 0,
+                       "the reed organ's own silent keys play the piano")
     }
 
     func testGainStopsAtTheSamplersLimitAndUnknownProgramsDontPlay() throws {
@@ -401,7 +421,7 @@ final class NoteSoundSettingTests: PitchPerfectTestCase {
 
     func testAnUnknownSoundIsRefusedAndAStoredOneReadsAsThePitchPipe() {
         DPSettingsModel.sharedInstance.noteSound = "square"
-        DPSettingsModel.sharedInstance.noteSound = "harmonica"
+        DPSettingsModel.sharedInstance.noteSound = "theremin"
         XCTAssertEqual(DPSettingsModel.sharedInstance.noteSound, "square")
         UserDefaults.standard.set("kazoo", forKey: "depollsoft.pitchperfect.NoteSound")
         XCTAssertEqual(DPSettingsModel.sharedInstance.noteSound, "pitchPipe")
