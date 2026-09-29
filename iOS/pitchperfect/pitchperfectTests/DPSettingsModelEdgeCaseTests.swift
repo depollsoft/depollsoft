@@ -84,6 +84,36 @@ final class DPSettingsModelEdgeCaseTests: XCTestCase {
         waitForExpectations(timeout: 5.0)
     }
     
+    /// NotificationCenter makes a background poster wait for every main-queue
+    /// observer, so a setting changed off the main thread used to hang for as
+    /// long as the main thread was busy (CI saw 24 s). It now returns at once
+    /// and the change is announced on the main thread.
+    func testASettingChangedOffTheMainThreadDoesntWaitForTheMainThread() {
+        let model = DPSettingsModel.sharedInstance
+        var announcedOnMain: Bool?
+        let token = NotificationCenter.default.addObserver(
+            forName: .settingsChanged, object: model, queue: nil
+        ) { _ in if announcedOnMain == nil { announcedOnMain = Thread.isMainThread } }
+        defer { NotificationCenter.default.removeObserver(token) }
+        let observer = NotificationCenter.default.addObserver(
+            forName: .settingsChanged, object: model, queue: .main
+        ) { _ in }
+        defer { NotificationCenter.default.removeObserver(observer) }
+
+        let done = DispatchSemaphore(value: 0)
+        DispatchQueue.global().async {
+            model.toggleNotes = true
+            done.signal()
+        }
+        // Keep the main thread busy; the background setter must not wait for it.
+        XCTAssertEqual(done.wait(timeout: .now() + 2), .success)
+        let announced = expectation(description: "announced")
+        DispatchQueue.main.async { announced.fulfill() }
+        wait(for: [announced], timeout: 2)
+        XCTAssertEqual(announcedOnMain, true)
+        model.toggleNotes = false
+    }
+
     // MARK: - UserDefaults Key Tests
     
     func testWakeLockUsesCorrectUserDefaultsKey() {

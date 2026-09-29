@@ -26,7 +26,6 @@
 @property (nonatomic, readonly) int sampleRate;
 @property (nonatomic, readonly) double frequency;
 @property (nonatomic, readonly) double time;
-@property (readonly) BOOL isPlaying;
 /// Whether `wave` is the voice; the pitch pipe otherwise.
 @property (nonatomic, readonly) BOOL playsWave;
 
@@ -37,10 +36,11 @@
     DPWaveShape waveShape;
     /// Whether the audio unit is running (it keeps running while a wave fades out).
     BOOL unitRunning;
-    /// Set by start/stop on the caller's thread, applied by the render thread,
-    /// which alone touches `wave` while the unit runs.
-    atomic_int restartRequested;
-    atomic_int releaseRequested;
+    /// The latest start or stop for the render thread, which alone touches
+    /// `wave` while the unit runs (DPWaveCommand). One word, so the render
+    /// thread takes a command and the caller replaces it atomically: a stop
+    /// that follows a restart is never lost.
+    atomic_int pendingCommand;
     /// Set by the render thread once a released wave has faded out.
     atomic_int fadedOut;
     /// Bumped by every start, so a stop scheduled before it does nothing.
@@ -50,6 +50,21 @@
 @end
 
 static atomic_long sRunningCount = 0;
+
+/// Tests replace the audio unit's start and stop, so they can drive the render
+/// callback themselves without the real output also pulling from it, and can
+/// make a start fail. Nil: the real AudioOutputUnitStart/Stop.
+static OSStatus (^sTestingUnitStart)(AudioUnit) = nil;
+static OSStatus (^sTestingUnitStop)(AudioUnit) = nil;
+/// Called on the main queue when the last running synthesizer stops.
+static void (^sOnLastStopped)(void) = nil;
+
+/// What the render thread should do to the wave next.
+typedef NS_ENUM(int, DPWaveCommand) {
+    DPWaveCommandNone = 0,
+    DPWaveCommandRestart = 1,
+    DPWaveCommandRelease = 2,
+};
 
 /// When a stopped wave's unit is first checked for the end of its fade-out
 /// (882 samples, 20 ms at 44.1 kHz, from the next render), then how often
@@ -204,23 +219,52 @@ OSStatus renderAudio (void *inRefCon,
     return self;
 }
 
++ (void)setOnLastStopped:(void (^)(void))block {
+    void (^copied)(void) = [block copy];
+    [sOnLastStopped release];
+    sOnLastStopped = copied;
+}
+
++ (void)setTestingUnitStart:(OSStatus (^)(AudioUnit))start stop:(OSStatus (^)(AudioUnit))stop {
+    [sTestingUnitStart release];
+    [sTestingUnitStop release];
+    sTestingUnitStart = [start copy];
+    sTestingUnitStop = [stop copy];
+}
+
 + (NSInteger)runningCount {
     return atomic_load(&sRunningCount);
 }
 
-- (void)startUnit {
-    if (!unitRunning) {
-        unitRunning = YES;
-        atomic_fetch_add(&sRunningCount, 1);
-        AudioOutputUnitStart(audioUnit);
+/// Starts the audio unit; it counts as running only if it really started.
+- (BOOL)startUnit {
+    if (unitRunning) {
+        return YES;
     }
+    OSStatus status = sTestingUnitStart ? sTestingUnitStart(audioUnit) : AudioOutputUnitStart(audioUnit);
+    if (status != noErr) {
+        NSLog(@"DPAudioSynthesizer: AudioOutputUnitStart failed: %d", (int)status);
+        return NO;
+    }
+    unitRunning = YES;
+    atomic_fetch_add(&sRunningCount, 1);
+    return YES;
 }
 
 - (void)stopUnit {
     if (unitRunning) {
-        AudioOutputUnitStop(audioUnit);
+        if (sTestingUnitStop) {
+            sTestingUnitStop(audioUnit);
+        } else {
+            AudioOutputUnitStop(audioUnit);
+        }
         unitRunning = NO;
-        atomic_fetch_sub(&sRunningCount, 1);
+        if (atomic_fetch_sub(&sRunningCount, 1) == 1) {
+            void (^onLastStopped)(void) = [[sOnLastStopped retain] autorelease];
+            if (onLastStopped) {
+                dispatch_async(dispatch_get_main_queue(), onLastStopped);
+            }
+        }
     }
 }
 
@@ -231,15 +275,17 @@ OSStatus renderAudio (void *inRefCon,
     generation++;
     if (unitRunning) {
         // Still fading out: the render thread starts the wave again.
-        atomic_store(&restartRequested, 1);
+        atomic_store(&pendingCommand, DPWaveCommandRestart);
     } else {
-        // A wave starts again from its beginning, fade-in and all.
+        // A wave starts again from its beginning, fade-in and all. A command
+        // the render thread never took (the unit stopped first, say for an
+        // interruption) is stale now.
+        atomic_store(&pendingCommand, DPWaveCommandNone);
         wave = DPWaveStateMake(waveShape, frequency, sampleRate);
     }
     atomic_store(&fadedOut, 0);
-    isPlaying = YES;
-    [self startUnit];
     time = 0;
+    isPlaying = [self startUnit];
 }
 
 - (void)stop {
@@ -251,7 +297,7 @@ OSStatus renderAudio (void *inRefCon,
         [self stopUnit];
         return;
     }
-    atomic_store(&releaseRequested, 1);
+    atomic_store(&pendingCommand, DPWaveCommandRelease);
     [self stopUnitAfterFadeOut:generation delay:kWaveStopDelay polls:kWaveStopPolls];
 }
 
@@ -297,12 +343,15 @@ OSStatus renderAudio (void *inRefCon,
 
 /// A wave's samples, in both channels.
 - (OSStatus)renderWaveInto:(AudioBufferList *)data {
-    if (atomic_exchange(&restartRequested, 0)) {
-        atomic_store(&releaseRequested, 0);
-        wave = DPWaveStateMake(waveShape, frequency, sampleRate);
-    }
-    if (atomic_exchange(&releaseRequested, 0)) {
-        DPWaveRelease(&wave);
+    switch (atomic_exchange(&pendingCommand, DPWaveCommandNone)) {
+        case DPWaveCommandRestart:
+            wave = DPWaveStateMake(waveShape, frequency, sampleRate);
+            break;
+        case DPWaveCommandRelease:
+            DPWaveRelease(&wave);
+            break;
+        default:
+            break;
     }
     float scratch[512];
     for (UInt32 i = 0; i < data->mNumberBuffers; i++) {

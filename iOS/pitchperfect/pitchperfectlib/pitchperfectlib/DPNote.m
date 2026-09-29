@@ -20,6 +20,8 @@ static double sReferencePitch = standardA4;
 static NSString *sSound = nil;
 static id<DPNoteInstrumentPlayer> sInstrumentPlayer = nil;
 
+NSNotificationName const DPNotePlayingDidChangeNotification = @"DPNotePlayingDidChangeNotification";
+
 @interface DPNote ()
 
 @property (nonatomic, readonly) NSObject *synchronizer;
@@ -235,8 +237,32 @@ static id<DPNoteInstrumentPlayer> sInstrumentPlayer = nil;
             self.synthSound = sound;
         }
         [synth start];
-        self->isPlaying = YES;
+        // An output that won't start leaves the note silent, so it isn't lit.
+        self->isPlaying = synth.isPlaying;
     }
+}
+
+- (void)instrumentNoteEnded:(id)token failed:(BOOL)failed {
+    @synchronized(self.synchronizer) {
+        if (!token || token != self.instrumentToken) {
+            return;
+        }
+        self.instrumentToken = nil;
+        self.tokenPlayer = nil;
+        if (failed && self.isPlaying) {
+            // Couldn't play the instrument: sound the note in the pitch pipe
+            // voice instead, as when the player refuses it up front.
+            double tuned = self.tunedFrequency;
+            synth = [[DPAudioSynthesizer alloc] initWithFrequency:tuned sampleRate:44100 sound:DPNoteSoundPitchPipe];
+            self.synthFrequency = tuned;
+            self.synthSound = DPNoteSoundPitchPipe;
+            [synth start];
+            self->isPlaying = synth.isPlaying;
+        } else {
+            self->isPlaying = NO;
+        }
+    }
+    [[NSNotificationCenter defaultCenter] postNotificationName:DPNotePlayingDidChangeNotification object:self];
 }
 
 - (void)stop {

@@ -11,6 +11,10 @@
 @class DPAccidental;
 @class DPNote;
 
+/// Posted, with the note as the object, when a note stops or changes voice on
+/// its own rather than through play or stop (see instrumentNoteEnded:failed:).
+extern NSNotificationName const DPNotePlayingDidChangeNotification;
+
 /// Plays notes in a MIDI instrument; the app provides one (see DPNote.instrumentPlayer).
 @protocol DPNoteInstrumentPlayer <NSObject>
 /// Starts `note` in the instrument `sound` at the current tuning. Returns a
@@ -44,6 +48,13 @@
 - (id)initWithFriendlyName:(NSString *)friendlyName octave:(int)octave accidental:(DPAccidental *)accidental keyNumber:(int)keyNumber;
 - (void)play;
 - (void)stop;
+
+/// The instrument player calls this (on the main queue) when the note it
+/// gave `token` for ends without being stopped: `failed` if it could never
+/// play (the note then plays in the pitch pipe voice instead), otherwise
+/// because another note took its sampler (the note stops). Posts
+/// DPNotePlayingDidChangeNotification if the note's state changed.
+- (void)instrumentNoteEnded:(id)token failed:(BOOL)failed;
 
 @property (nonatomic, strong) DPAccidental *accidental;
 @property (nonatomic, strong) DPNote *alternate;

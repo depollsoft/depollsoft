@@ -20,13 +20,25 @@
              sampleRate:(int)newSampleRate
                   sound:(NSString *)sound;
 
+/// Starts the note. If the audio unit can't start (no output, a failed
+/// session), the synthesizer stays stopped: isPlaying is NO and it doesn't
+/// count as running.
 - (void)start;
-/// Stops the note. A wave ramps out over 5 ms first, so it doesn't click;
-/// the pitch pipe stops at once, as it always has.
+/// Stops the note. A wave fades out over 20 ms (882 samples at 44.1 kHz, on
+/// a raised cosine) first, so it doesn't click; the pitch pipe stops at once,
+/// as it always has.
 - (void)stop;
+
+/// Whether the note is sounding: started, not yet stopped, and its audio unit
+/// really running.
+@property (readonly) BOOL isPlaying;
 
 /// How many synthesizers have their audio unit running (including a wave
 /// still ramping out), so other players know whether the app is sounding.
 + (NSInteger)runningCount;
+
+/// Called on the main queue whenever the last running synthesizer stops, so
+/// whoever kept the audio session active for it can give it up.
++ (void)setOnLastStopped:(void (^)(void))block;
 
 @end

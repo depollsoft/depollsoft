@@ -105,6 +105,20 @@ final class HostedApp {
     /// The frontmost sheet's own controls.
     var sheet: UIDriver { UIDriver(topPresented.view) }
 
+    /// Scrolls the presented sheet's list to its end: SwiftUI builds rows (and
+    /// their accessibility elements) only as they come on screen, and on a
+    /// small phone Settings' last rows start below the fold.
+    func scrollSheetToBottom() {
+        guard let list = descendants(of: UICollectionView.self, in: topPresented.view).last(where: { $0.window != nil }) else { return }
+        for _ in 0..<8 {
+            list.layoutIfNeeded()
+            let bottom = max(-list.adjustedContentInset.top,
+                             list.contentSize.height - list.bounds.height + list.adjustedContentInset.bottom)
+            list.setContentOffset(CGPoint(x: list.contentOffset.x, y: bottom), animated: false)
+            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+        }
+    }
+
     func show(tab index: Int) {
         models.tab = [.pitchPipe, .notes, .keys, .songs][index]
         ScreenCatalog.settle()
@@ -252,6 +266,7 @@ class PitchPerfectTestCase: XCTestCase {
             DPNote.instrumentPlayer = nil
             WidgetInstrumentHook.start = nil
             WidgetInstrumentHook.stop = nil
+            WidgetInstrumentHook.releaseSessionWhenIdle = nil
             NotificationCenter.default.post(name: .settingsChanged, object: DPSettingsModel.sharedInstance)
             UIView.setAnimationsEnabled(true)
             unsetenv("STORE_SCREENSHOTS")

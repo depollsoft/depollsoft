@@ -25,6 +25,21 @@ public extension Notification.Name {
     private var userRef: DocumentReference?
     
     @objc public static let settingsChangedNotificationName = Notification.Name.settingsChanged
+
+    /// Posts settingsChanged on the main thread. Its observers run on the main
+    /// queue (SwiftUI models, NotePlayer, the wake lock), and NotificationCenter
+    /// makes a background poster wait for each of them: a setting changed off
+    /// the main thread would then hang for as long as the main thread is busy.
+    /// Changes made on the main thread still notify at once.
+    private func announceChange() {
+        if Thread.isMainThread {
+            NotificationCenter.default.post(name: .settingsChanged, object: self)
+        } else {
+            DispatchQueue.main.async { [self] in
+                NotificationCenter.default.post(name: .settingsChanged, object: self)
+            }
+        }
+    }
     
     @objc public func attachToFirestore() {
         guard let user = Auth.auth().currentUser else {
@@ -80,7 +95,7 @@ public extension Notification.Name {
                 changed = true
             }
         }
-        if changed { NotificationCenter.default.post(name: .settingsChanged, object: self) }
+        if changed { announceChange() }
     }
 
     @objc public func detachFromFirestore() {
@@ -125,7 +140,7 @@ public extension Notification.Name {
             if userRef != nil {
                 userRef?.setData(["wakeLock": newValue], merge: true)
             }
-            NotificationCenter.default.post(name: .settingsChanged, object: self)
+            announceChange()
         }
     }
     
@@ -138,7 +153,7 @@ public extension Notification.Name {
             if userRef != nil {
                 userRef?.setData(["toggleNotes": newValue], merge: true)
             }
-            NotificationCenter.default.post(name: .settingsChanged, object: self)
+            announceChange()
         }
     }
     
@@ -161,7 +176,7 @@ public extension Notification.Name {
             if userRef != nil {
                 userRef?.setData(["referencePitch": newValue], merge: true)
             }
-            NotificationCenter.default.post(name: .settingsChanged, object: self)
+            announceChange()
         }
     }
 
@@ -191,7 +206,7 @@ public extension Notification.Name {
             if userRef != nil {
                 userRef?.setData(["noteSound": newValue], merge: true)
             }
-            NotificationCenter.default.post(name: .settingsChanged, object: self)
+            announceChange()
         }
     }
 
