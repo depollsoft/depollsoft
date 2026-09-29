@@ -75,10 +75,14 @@ square   = (p < 0.5 ? 1 : -1) + polyBlep(p, dt) - polyBlep((p + 0.5) mod 1, dt)
 sawtooth = (2p - 1) - polyBlep(p, dt)
 
 sample   = 0.89 · value · min(1, n / 220)   // n = samples since the note started
+                            · max(0, 1 - r / 220)   // iOS: r = samples since it was released
 ```
 
 PolyBLEP keeps the square and sawtooth from aliasing on high notes. The
-5 ms ramp keeps the note's start from clicking. 0.89 is -1 dBFS.
+5 ms ramps keep the note's start and end from clicking. On iOS a released
+wave keeps its audio unit running until the closing ramp has played (about
+30 ms). On Android the track stops through `setStereoVolume(0, 0)`, which
+the mixer ramps. 0.89 is -1 dBFS.
 
 ## Instruments: MIDI
 
@@ -120,10 +124,10 @@ files.
 MThd  format 0, 1 track, 480 ticks per quarter (120 bpm by default: 960 ticks a second)
 MTrk  delta 0  B0 65 00          RPN MSB 0 (pitch bend sensitivity)
       delta 0  B0 64 00          RPN LSB 0
-      delta 0  B0 06 02          ±2 semitones
+      delta 0  B0 06 03          ±3 semitones
       delta 0  B0 26 00
       delta 0  C0 <program>
-      delta 0  E0 <bend LSB> <bend MSB>   bend = clamp(round(8192 + pitchCents / 200 · 8192), 0, 16383)
+      delta 0  E0 <bend LSB> <bend MSB>   bend = clamp(round(8192 + pitchCents / 300 · 8192), 0, 16383)
       delta 0  90 <key> 64       note on, velocity 100
       delta 30 min  80 <key> 00  note off
       delta 0  FF 2F 00
@@ -164,14 +168,25 @@ renders sample-for-sample the same as the full bank in FluidSynth.
   sampler goes back to the pool when the release is over (1.5 s). If all
   13 are busy, the note that has sounded longest stops to make room.
   `overallGain` tops out at +12 dB, so `gainDb` is capped there.
+- A sampler that is still playing a release, or whose note is being stolen,
+  is silenced (MIDI all sound off) before it's retuned for another note, so
+  the old tail doesn't slide to the new tuning.
 - Hold enough samplers for every note the app can sound at once: 13, one for
-  each pitch pipe cell. Create and load them lazily. Load the chosen
-  instrument into the pool when it's chosen and at launch, off the main
-  thread, so the first note doesn't wait.
-- Build the engine's output only when an instrument first plays, never in
-  tests: wiring AVAudioEngine output has deadlocked hosted test runs before
-  (Tag Master's `TMBalanceAudioPlayer.usesAudioHardware` works around it).
-  Tests inject a fake note player.
+  each pitch pipe cell. Create them lazily. When an instrument is chosen,
+  and at launch, load it into two idle samplers (not ones sounding or
+  releasing), one per queued block, off the main thread: the first note and
+  a quick second one don't wait, and a note asked for meanwhile (the Settings
+  preview) starts after the first load. A note that started late because of
+  a load is stopped as late, so a timed note keeps its length.
+- Once no note sounds and every release has played, the engine stops, so
+  the app can suspend in the background. It also gives up the audio session
+  (`notifyOthersOnDeactivation`) unless a pitch pipe or wave note or a widget
+  tone is still sounding. The next note starts the engine again.
+- Samplers mix into a submixer that joins the engine's output only when an
+  instrument first plays, so launch and preloading don't build the output.
+  Tests never start it: wiring AVAudioEngine output has deadlocked hosted
+  test runs before (Tag Master's `TMBalanceAudioPlayer.usesAudioHardware`
+  works around it), so tests inject a fake note player.
 
 ### iOS widget
 
@@ -180,7 +195,10 @@ stay whole-cycle WAV loops played by `AVAudioPlayer`, which are seamless
 because the waves are periodic. For an instrument it uses the app's MIDI
 player instead, so a held widget note sounds exactly like one played in the
 app. The widget target doesn't link pitchperfectlib, so the app registers
-the player at launch through a hook in `PitchWidgetAudio.swift`.
+the player at launch through a hook in `PitchWidgetAudio.swift`. Stopping an
+instrument cell leaves the audio session to the app's player, which gives it
+up after the release. The widget gives the session up itself only when its
+last tone stops and the app is sounding nothing else.
 
 ## Settings UI
 

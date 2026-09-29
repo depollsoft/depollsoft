@@ -60,12 +60,15 @@ class MidiNoteTest {
     }
 
     @Test
-    fun bendCoversTwoSemitonesEachWayAndClamps() {
+    fun bendCoversThreeSemitonesEachWayAndClamps() {
         assertEquals(8192, MidiNote.bend(0.0))
-        assertEquals(12288, MidiNote.bend(100.0))
-        assertEquals(4096, MidiNote.bend(-100.0))
-        assertEquals(6529, MidiNote.bend(-40.6)) // 8192 - 40.6 / 200 · 8192
-        assertEquals(16383, MidiNote.bend(200.0))
+        assertEquals(10923, MidiNote.bend(100.0))
+        assertEquals(5461, MidiNote.bend(-100.0))
+        assertEquals(7083, MidiNote.bend(-40.6)) // 8192 - 40.6 / 300 · 8192
+        // The lowest tuning (400 Hz, -165 cents) with the harp's largest correction still fits.
+        assertEquals(2384, MidiNote.bend(1200 * Math.log(400.0 / 440) / Math.log(2.0) - 47.7))
+        assertEquals(16383, MidiNote.bend(300.0))
+        assertEquals(0, MidiNote.bend(-300.0))
         assertEquals(16383, MidiNote.bend(1000.0))
         assertEquals(0, MidiNote.bend(-1000.0))
     }
@@ -73,16 +76,16 @@ class MidiNoteTest {
     @Test
     fun theFileIsAOneNoteType0MidiFile() {
         val bytes = MidiNote.file(MidiNotePlan(program = 46, key = 60, pitchCents = -19.2, gainDb = 13.1))
-        // bend = round(8192 - 19.2 / 200 · 8192) = 7406 = 0x1CEE: LSB 0x6E, MSB 0x39.
+        // bend = round(8192 - 19.2 / 300 · 8192) = 7668 = 0x1DF4: LSB 0x74, MSB 0x3B.
         // 30 minutes at 960 ticks a second = 1 728 000 = 0x1A5E00 → 0xE9 0xBC 0x00.
         val track =
             intArrayOf(
                 0x00, 0xB0, 0x65, 0x00,
                 0x00, 0xB0, 0x64, 0x00,
-                0x00, 0xB0, 0x06, 0x02,
+                0x00, 0xB0, 0x06, 0x03,
                 0x00, 0xB0, 0x26, 0x00,
                 0x00, 0xC0, 46,
-                0x00, 0xE0, 0x6E, 0x39,
+                0x00, 0xE0, 0x74, 0x3B,
                 0x00, 0x90, 60, 100,
                 0xE9, 0xBC, 0x00, 0x80, 60, 0x00,
                 0x00, 0xFF, 0x2F, 0x00,

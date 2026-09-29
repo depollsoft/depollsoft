@@ -84,9 +84,12 @@ object MidiNote {
         return MidiNotePlan(program, key, tuningCents + correction, tuning.gainDb(program))
     }
 
-    /** The 14-bit pitch bend for [cents], with the bend range at ±2 semitones. */
+    /**
+     * The 14-bit pitch bend for [cents], with the bend range at ±3 semitones:
+     * room for the lowest tuning (400 Hz, -165 cents) plus a key's correction.
+     */
     @JvmStatic
-    fun bend(cents: Double): Int = (8192 + cents / 200 * 8192).roundToInt().coerceIn(0, 16383)
+    fun bend(cents: Double): Int = (8192 + cents / 300 * 8192).roundToInt().coerceIn(0, 16383)
 
     /** A type-0 standard MIDI file that sets the bend range, program and bend, then holds the note. */
     @JvmStatic
@@ -99,7 +102,7 @@ object MidiNote {
         }
         event(0, 0xB0, 0x65, 0x00) // RPN 0, pitch bend sensitivity:
         event(0, 0xB0, 0x64, 0x00)
-        event(0, 0xB0, 0x06, 0x02) // ±2 semitones
+        event(0, 0xB0, 0x06, 0x03) // ±3 semitones
         event(0, 0xB0, 0x26, 0x00)
         event(0, 0xC0, plan.program)
         event(0, 0xE0, bend and 0x7F, bend shr 7)
