@@ -3,9 +3,10 @@ package depollsoft.pitchperfect.lib.sound
 /**
  * The voices a note can sound in (docs/pitchperfect-note-sounds.md). [id] is what is stored and
  * synced, so it never changes; the order is the order the picker lists them in. An instrument's
- * [program] is its General MIDI program.
+ * [program] is its General MIDI program; [fallbackProgram] plays a key the synth's instrument is
+ * silent at (the free reeds fall back to the reed organ, everything else to the piano).
  */
-enum class NoteSound(val id: String, val kind: Kind, val program: Int = -1) {
+enum class NoteSound(val id: String, val kind: Kind, val program: Int = -1, val fallbackProgram: Int = 0) {
     PITCH_PIPE("pitchPipe", Kind.PITCH_PIPE),
     SINE("sine", Kind.WAVE),
     TRIANGLE("triangle", Kind.WAVE),
@@ -16,7 +17,9 @@ enum class NoteSound(val id: String, val kind: Kind, val program: Int = -1) {
     HARPSICHORD("harpsichord", Kind.INSTRUMENT, 6),
     VIBRAPHONE("vibraphone", Kind.INSTRUMENT, 11),
     ORGAN("organ", Kind.INSTRUMENT, 19),
-    ACCORDION("accordion", Kind.INSTRUMENT, 21),
+    REED_ORGAN("reedOrgan", Kind.INSTRUMENT, 20),
+    ACCORDION("accordion", Kind.INSTRUMENT, 21, fallbackProgram = 20),
+    HARMONICA("harmonica", Kind.INSTRUMENT, 22, fallbackProgram = 20),
     GUITAR("guitar", Kind.INSTRUMENT, 24),
     HARP("harp", Kind.INSTRUMENT, 46),
     STRINGS("strings", Kind.INSTRUMENT, 48),

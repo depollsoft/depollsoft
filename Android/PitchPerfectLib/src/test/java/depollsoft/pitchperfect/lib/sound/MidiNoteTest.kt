@@ -49,9 +49,23 @@ class MidiNoteTest {
     fun whereTheInstrumentIsSilentThePianoPlays() {
         val low = MidiNote.plan(NoteSound.VIBRAPHONE, frequency(24), 440.0, table)
         assertEquals(MidiNotePlan(0, 24, table.correction(0, 24)!!, 5.3), low)
-        val accordion = MidiNote.plan(NoteSound.ACCORDION, frequency(100), 440.0, table)
-        assertEquals(0, accordion.program)
+        assertEquals(11, MidiNote.plan(NoteSound.VIBRAPHONE, frequency(60), 440.0, table).program)
+    }
+
+    @Test
+    fun whereAFreeReedIsSilentTheReedOrganPlaysThenThePiano() {
+        // Android's harmonica only sounds from C4 to F#5.
+        assertEquals(22, MidiNote.plan(NoteSound.HARMONICA, frequency(69), 440.0, table).program)
+        val low = MidiNote.plan(NoteSound.HARMONICA, frequency(40), 440.0, table)
+        assertEquals(MidiNotePlan(20, 40, table.correction(20, 40)!!, 10.5), low)
+        // The reed organ is silent above F6 too, so the piano takes over.
+        val high = MidiNote.plan(NoteSound.HARMONICA, frequency(100), 440.0, table)
+        assertEquals(MidiNotePlan(0, 100, table.correction(0, 100)!!, 5.3), high)
+        assertEquals(20, MidiNote.plan(NoteSound.ACCORDION, frequency(40), 440.0, table).program)
+        assertEquals(0, MidiNote.plan(NoteSound.ACCORDION, frequency(100), 440.0, table).program)
         assertEquals(21, MidiNote.plan(NoteSound.ACCORDION, frequency(60), 440.0, table).program)
+        assertEquals(20, MidiNote.plan(NoteSound.REED_ORGAN, frequency(60), 440.0, table).program)
+        assertEquals(0, MidiNote.plan(NoteSound.REED_ORGAN, frequency(100), 440.0, table).program)
     }
 
     @Test
