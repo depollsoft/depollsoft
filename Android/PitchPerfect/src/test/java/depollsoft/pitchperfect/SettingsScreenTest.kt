@@ -199,7 +199,13 @@ class SettingsScreenTest {
         assertEquals("in the contract's order", tops.sorted(), tops)
         compose.onNodeWithText("WAVES").assertExists()
         compose.onNodeWithText("INSTRUMENTS").assertExists()
-        assertEquals("no harmonica on Android's synth", 0, compose.onAllNodesWithText("Harmonica").fetchSemanticsNodes().size)
+        val reeds =
+            listOf("organ", "reedOrgan", "accordion", "harmonica", "guitar").map {
+                compose.onNodeWithTag(TestTags.SOUND_CHOICE + it).fetchSemanticsNode().positionInRoot.y
+            }
+        assertEquals("the free reeds sit with the organs", reeds.sorted(), reeds)
+        compose.onNodeWithText("Reed Organ").assertExists()
+        compose.onNodeWithText("Harmonica").assertExists()
     }
 
     /** Chooses a sound without letting the main looper run on, so the preview is still playing. */
@@ -275,7 +281,7 @@ class SettingsScreenTest {
 
     @Test
     fun anUnknownStoredSoundReadsAsThePitchPipe() {
-        depollsoft.lib.util.Preferences.set("depollsoft.pitchperfect.NoteSound", "harmonica")
+        depollsoft.lib.util.Preferences.set("depollsoft.pitchperfect.NoteSound", "bagpipes")
         assertEquals(NoteSound.PITCH_PIPE, SettingsModel.noteSound)
     }
 
@@ -365,6 +371,52 @@ class SettingsScreenTest {
         compose.onNodeWithText("NOT NOW").assertIsDisplayed()
         compose.onNodeWithTag(TestTags.LOGIN_BUTTON).performScrollTo().assertIsDisplayed()
     }
+
+    /**
+     * Opens each list dialog and scrolls to its last choice: the choice comes into view, the
+     * Cancel button stays on screen the whole time, and choosing it works. Then the settings
+     * screen itself scrolls to its last row.
+     */
+    private fun everyListScrollsToItsEnd() {
+        val activity = settings()
+        val cancel = activity.getString(android.R.string.cancel)
+
+        screens.click(TestTags.SOUND)
+        compose.onNodeWithText(cancel, ignoreCase = true).assertIsDisplayed()
+        compose.onNodeWithTag(TestTags.SOUND_CHOICE + "flute").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText(cancel, ignoreCase = true).assertIsDisplayed()
+        compose.onNodeWithTag(TestTags.SOUND_CHOICE + "pitchPipe").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag(TestTags.SOUND_CHOICE + "flute").performScrollTo().performClick()
+        screens.settle()
+        assertEquals(NoteSound.FLUTE, SettingsModel.noteSound)
+        Note.setSound(NoteSound.DEFAULT)
+
+        tapScrolled(TestTags.TUNING)
+        compose.onNodeWithText(cancel, ignoreCase = true).assertIsDisplayed()
+        compose.onNodeWithTag(TestTags.TUNING_CHOICE + 446).performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText(cancel, ignoreCase = true).assertIsDisplayed()
+        compose.onNodeWithTag(TestTags.TUNING_CHOICE + 446).performClick()
+        screens.settle()
+        assertEquals(446, SettingsModel.referencePitch)
+        SettingsModel.referencePitch = 440
+
+        compose.onNodeWithTag(TestTags.PRIVACY_CHOICES).performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun onATallPhoneEveryListScrollsToItsEnd() = everyListScrollsToItsEnd()
+
+    @Test
+    @Config(qualifiers = "w320dp-h480dp")
+    fun onASmallPhoneEveryListScrollsToItsEnd() = everyListScrollsToItsEnd()
+
+    @Test
+    @Config(qualifiers = "w640dp-h320dp-land")
+    fun onAShortLandscapeScreenEveryListScrollsToItsEnd() = everyListScrollsToItsEnd()
+
+    @Test
+    @Config(qualifiers = "w320dp-h480dp", fontScale = 2f)
+    fun atDoubleTextSizeEveryListScrollsToItsEnd() = everyListScrollsToItsEnd()
 
     @Test
     fun aSignInResultArrivingAfterRecreationReachesThePrompt() {
