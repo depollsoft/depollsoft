@@ -731,6 +731,50 @@ final class WidgetNoteSoundTests: XCTestCase {
 /// The bundled sound bank through a real AVAudioUnitSampler, rendered offline:
 /// no audio hardware is involved.
 final class SoundBankRenderingTests: XCTestCase {
+    /// Peaks of a note held for `seconds`: the first 0.2 s, and the 0.2 s from `probe`.
+    private func heldNotePeaks(program: UInt8, key: UInt8, seconds: Double, probe: Double) throws -> (attack: Float, later: Float) {
+        let bank = try XCTUnwrap(Bundle.main.url(forResource: "PitchPerfectInstruments", withExtension: "sf2"))
+        let engine = AVAudioEngine()
+        let sampler = AVAudioUnitSampler()
+        engine.attach(sampler)
+        let format = try XCTUnwrap(AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 2))
+        try engine.enableManualRenderingMode(.offline, format: format, maximumFrameCount: 4096)
+        engine.connect(sampler, to: engine.mainMixerNode, format: nil)
+        try sampler.loadSoundBankInstrument(at: bank, program: program,
+                                            bankMSB: UInt8(kAUSampler_DefaultMelodicBankMSB),
+                                            bankLSB: UInt8(kAUSampler_DefaultBankLSB))
+        try engine.start()
+        defer { engine.stop() }
+        sampler.startNote(key, withVelocity: 100, onChannel: 0)
+        let buffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: engine.manualRenderingFormat, frameCapacity: 4096))
+        var attack: Float = 0, later: Float = 0
+        var frame = 0
+        while Double(frame) < seconds * 44_100 {
+            XCTAssertEqual(try engine.renderOffline(4096, to: buffer), .success)
+            let left = try XCTUnwrap(buffer.floatChannelData?[0])
+            for i in 0..<Int(buffer.frameLength) {
+                let time = Double(frame + i) / 44_100
+                if time < 0.2 { attack = max(attack, abs(left[i])) }
+                if time >= probe, time < probe + 0.2 { later = max(later, abs(left[i])) }
+            }
+            frame += Int(buffer.frameLength)
+        }
+        return (attack, later)
+    }
+
+    /// The bundled bank's plucked and struck presets sustain while the key is
+    /// down (HELD_PROGRAMS in subset_soundfont.py), so a held piano C4 still
+    /// sounds at 2.5 s, within 20 dB of its attack (piano: about 6), rather
+    /// than dying away.
+    func testAHeldPluckedOrStruckNoteStillSoundsAfterTwoAndAHalfSeconds() throws {
+        for sound in DPNoteSound.pluckedInstruments() {
+            let (attack, later) = try heldNotePeaks(program: UInt8(DPNoteSound.program(forSound: sound)),
+                                                     key: 60, seconds: 2.8, probe: 2.5)
+            XCTAssertGreaterThan(attack, 0.01, sound)
+            XCTAssertGreaterThan(later, attack * 0.1, "\(sound): \(later) at 2.5 s against \(attack) at the start")
+        }
+    }
+
     func testEveryInstrumentLoadsFromTheBundledBankAndSounds() throws {
         let bank = try XCTUnwrap(Bundle.main.url(forResource: "PitchPerfectInstruments", withExtension: "sf2"))
         for sound in DPNoteSound.instruments() {
