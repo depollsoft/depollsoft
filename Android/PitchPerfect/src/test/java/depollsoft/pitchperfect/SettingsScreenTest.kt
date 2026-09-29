@@ -28,6 +28,8 @@ import depollsoft.lib.activity.RichApplication
 import depollsoft.pitchperfect.lib.Accidental
 import depollsoft.pitchperfect.lib.Note
 import depollsoft.pitchperfect.lib.sound.NoteSound
+import depollsoft.pitchperfect.ui.DialogListMoreBelow
+import depollsoft.pitchperfect.ui.DialogListMoreAbove
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -488,6 +490,60 @@ class SettingsScreenTest {
         tapBesideTheLabel(TestTags.TUNING_CHOICE + 432)
         assertEquals(432, SettingsModel.referencePitch)
     }
+
+    /** Which edges of [list] show there is more past them: (above, below). */
+    private fun edges(list: String): Pair<Boolean?, Boolean?> {
+        val config = compose.onNodeWithTag(list).fetchSemanticsNode().config
+        return config.getOrNull(DialogListMoreAbove) to config.getOrNull(DialogListMoreBelow)
+    }
+
+    @Test
+    @Config(qualifiers = "w320dp-h480dp")
+    fun aListTallerThanTheDialogMarksTheEdgesWithMorePastThem() {
+        settings()
+        screens.click(TestTags.SOUND)
+        assertEquals(false to true, edges(TestTags.SOUND_LIST))
+        compose.onNodeWithTag(TestTags.SOUND_CHOICE + "harp").performScrollTo()
+        screens.settle()
+        assertEquals(true to false, edges(TestTags.SOUND_LIST))
+        compose.onNodeWithTag(TestTags.SOUND_CHOICE + "strings").performScrollTo()
+        screens.settle()
+        assertEquals(true to true, edges(TestTags.SOUND_LIST))
+    }
+
+    @Test
+    fun aListThatFitsMarksNoEdgesAndDoesNotScroll() {
+        settings()
+        tapScrolled(TestTags.TUNING)
+        assertEquals(false to false, edges(TestTags.TUNING_LIST))
+        val range = compose.onNodeWithTag(TestTags.TUNING_LIST).fetchSemanticsNode().config.getOrNull(SemanticsProperties.VerticalScrollAxisRange)
+        assertEquals(0f, range?.maxValue?.invoke() ?: 0f)
+    }
+
+    /** The list's bottom edge cuts through a row, well clear of its top and bottom, so the cut shows. */
+    private fun theListEndsPartwayThroughARow() {
+        settings()
+        screens.click(TestTags.SOUND)
+        val list = compose.onNodeWithTag(TestTags.SOUND_LIST).fetchSemanticsNode()
+        val fold = list.positionInRoot.y + list.size.height
+        val margin = with(list.layoutInfo.density) { 8.dp.toPx() }
+        val cut =
+            NoteSound.entries.map { compose.onNodeWithTag(TestTags.SOUND_CHOICE + it.id).fetchSemanticsNode() }.firstOrNull {
+                it.positionInRoot.y + margin < fold && it.positionInRoot.y + it.size.height - margin > fold
+            }
+        assertTrue("no row is cut at the fold ($fold)", cut != null)
+    }
+
+    @Test
+    @Config(qualifiers = "w320dp-h480dp")
+    fun onASmallPhoneTheSoundListEndsPartwayThroughARow() = theListEndsPartwayThroughARow()
+
+    @Test
+    fun onATallPhoneTheSoundListEndsPartwayThroughARow() = theListEndsPartwayThroughARow()
+
+    @Test
+    @Config(qualifiers = "w640dp-h320dp-land")
+    fun inLandscapeTheSoundListEndsPartwayThroughARow() = theListEndsPartwayThroughARow()
 
     @Test
     @Config(qualifiers = "w320dp-h480dp")

@@ -1,5 +1,14 @@
 package depollsoft.pitchperfect.screenshots
 
+import org.robolectric.RuntimeEnvironment
+import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
+import depollsoft.pitchperfect.R
+import androidx.core.content.ContextCompat
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.graphics.asAndroidBitmap
+import android.graphics.Bitmap
 import depollsoft.lib.activity.RichApplication
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -126,6 +135,46 @@ class DialogScreenshotTest {
         ScreenshotSupport.compose.onNodeWithTag(TestTags.SOUND).performClick()
         ScreenshotSupport.settle()
         captureScreen("dialog_sound")
+        // More below: the bottom hairline and the scrollbar show; nothing above yet.
+        val top = listImage(TestTags.SOUND_LIST)
+        assertTrue("bottom hairline", top.hairlineAt(top.height - 1))
+        assertFalse("no top hairline at the top", top.hairlineAt(0))
+        assertTrue("scrollbar thumb", top.thumbShowing())
+
+        ScreenshotSupport.compose.onNodeWithTag(TestTags.SOUND_CHOICE + "harp").performScrollTo()
+        ScreenshotSupport.settle()
+        captureScreen("dialog_sound_bottom")
+        val bottom = listImage(TestTags.SOUND_LIST)
+        assertTrue("top hairline once scrolled", bottom.hairlineAt(0))
+        assertFalse("no bottom hairline at the end", bottom.hairlineAt(bottom.height - 1))
+        assertTrue("scrollbar thumb", bottom.thumbShowing())
+    }
+
+    @Test
+    fun aTuningListThatFitsShowsNoScrollCues() {
+        launch(SettingsActivity::class.java)
+        ScreenshotSupport.compose.onNodeWithTag(TestTags.TUNING).performClick()
+        ScreenshotSupport.settle()
+        val list = listImage(TestTags.TUNING_LIST)
+        assertFalse(list.hairlineAt(0))
+        assertFalse(list.hairlineAt(list.height - 1))
+        assertFalse(list.thumbShowing())
+    }
+
+    private fun listImage(tag: String) = ScreenshotSupport.compose.onNodeWithTag(tag).captureToImage().asAndroidBitmap()
+
+    /** Whether row [y] is the plate's hairline most of the way across (a divider, not a row's ink). */
+    private fun Bitmap.hairlineAt(y: Int): Boolean {
+        val hairline = ContextCompat.getColor(RuntimeEnvironment.getApplication(), R.color.plate_hairline)
+        val xs = (width / 10 until width * 9 / 10)
+        return xs.count { getPixel(it, y) == hairline } > xs.count() * 9 / 10
+    }
+
+    /** Whether the scrollbar's thumb is drawn along the trailing edge: a column that isn't the background. */
+    private fun Bitmap.thumbShowing(): Boolean {
+        // The trailing padding beside the rows, clear of the thumb.
+        val background = getPixel(width - 40, height / 2)
+        return (0 until height).count { getPixel(width - 3, it) != background } > height / 10
     }
 
     @Test

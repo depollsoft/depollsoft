@@ -57,6 +57,7 @@ import depollsoft.pitchperfect.lib.Note
 import depollsoft.pitchperfect.lib.sound.NoteSound
 import depollsoft.pitchperfect.ui.AppCompatAlertDialog
 import depollsoft.pitchperfect.ui.DialogButton
+import depollsoft.pitchperfect.ui.DialogChoiceList
 import depollsoft.pitchperfect.ui.PlateBackground
 import depollsoft.pitchperfect.ui.PlateContainedButton
 import depollsoft.pitchperfect.ui.PlateSectionHeader
@@ -356,10 +357,9 @@ fun TuningDialog(
         title = stringResource(R.string.TuningTitle),
         buttons = listOf(DialogButton(stringResource(android.R.string.cancel), onDismiss)),
     ) {
-        val scroll = rememberScrollState()
-        // The whole width scrolls, and each row is tappable across it: a drag that starts beside a
-        // short label must still land on the list, not the dialog behind it.
-        Column(Modifier.fillMaxWidth().testTag(TestTags.TUNING_LIST).verticalScroll(scroll).padding(start = 16.dp, end = 24.dp, top = 8.dp)) {
+        // Each row is tappable across the whole width: a drag that starts beside a short label must
+        // still land on the list, not the dialog behind it.
+        DialogChoiceList(TestTags.TUNING_LIST) {
             SettingsModel.referencePitchChoices(selected).forEach { hz ->
                 RadioChoice(tuningLabel(hz), hz == selected, "${TestTags.TUNING_CHOICE}$hz", Modifier.fillMaxWidth()) { onChoose(hz) }
             }
@@ -382,9 +382,8 @@ fun SoundDialog(
         title = stringResource(R.string.Sound),
         buttons = listOf(DialogButton(stringResource(android.R.string.cancel), onDismiss)),
     ) {
-        val scroll = rememberScrollState()
-        // As the tuning list: the whole width scrolls, and a row is tappable across it.
-        Column(Modifier.fillMaxWidth().testTag(TestTags.SOUND_LIST).verticalScroll(scroll).padding(start = 16.dp, end = 24.dp, top = 8.dp)) {
+        // As the tuning list: a row is tappable across the whole width.
+        DialogChoiceList(TestTags.SOUND_LIST) {
             NoteSound.entries.forEachIndexed { index, sound ->
                 val previous = NoteSound.entries.getOrNull(index - 1)
                 if (sound.section != previous?.section) {
@@ -404,7 +403,7 @@ fun SoundDialog(
 /** A group heading in the sound list, in the settings sections' caps. */
 @Composable
 private fun SoundHeading(text: String) {
-    PlateSectionHeader(text, Modifier.padding(start = 6.dp, top = 12.dp, bottom = 4.dp).semantics { heading() })
+    PlateSectionHeader(text, Modifier.fillMaxWidth().padding(start = 6.dp, top = 12.dp, bottom = 4.dp).semantics { heading() })
 }
 
 @Composable

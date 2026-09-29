@@ -127,13 +127,15 @@ private class ScrollbarFade {
 /**
  * Draws the platform's vertical scrollbar thumb over this element, inset by the scrolling
  * container's [top], [bottom] and [end] padding, exactly where and how a View with
- * `scrollbarStyle="insideOverlay"` draws it.
+ * `scrollbarStyle="insideOverlay"` draws it. With [alwaysShown] the thumb doesn't fade: it stays
+ * while there is anything to scroll, as `android:fadeScrollbars="false"` keeps it.
  */
 @Composable
 private fun Modifier.viewScrollbar(
     top: Dp,
     bottom: Dp,
     end: Dp = 0.dp,
+    alwaysShown: Boolean = false,
     isScrolling: () -> Boolean,
     measure: () -> ScrollExtent?,
 ): Modifier {
@@ -181,7 +183,7 @@ private fun Modifier.viewScrollbar(
     if (thumb == null) return this
     return drawWithContent {
         drawContent()
-        if (!fade.visible) return@drawWithContent
+        if (!alwaysShown && !fade.visible) return@drawWithContent
         val values = measure() ?: return@drawWithContent
         if (values.extent <= 0 || values.range <= values.extent) return@drawWithContent
         val trackTop = top.roundToPx()
@@ -192,7 +194,7 @@ private fun Modifier.viewScrollbar(
         var offset = ((track - length).toFloat() * values.offset / (values.range - values.extent)).roundToInt()
         if (offset > track - length) offset = track - length
         // ScrollBarDrawable takes the fade as an integer alpha.
-        val shown = (alpha.value * 255).toInt() / 255f
+        val shown = if (alwaysShown) 1f else (alpha.value * 255).toInt() / 255f
         // The thumb sits at the trailing edge: the right, or the left in a right-to-left layout.
         val left =
             if (layoutDirection == LayoutDirection.Rtl) end.roundToPx() else size.width.toInt() - end.roundToPx() - thickness
@@ -227,7 +229,7 @@ fun Modifier.listViewScrollbar(
  * ScrollView's scrollbar, for a [verticalScroll][androidx.compose.foundation.verticalScroll]
  * whose content carries [top], [bottom] and [end] padding (the ScrollView's own padding in the
  * layout it replaces; the thumb sits inside it). The range is the child's bottom edge; the extent
- * is the whole view.
+ * is the whole view. [alwaysShown] keeps the thumb from fading while there is anything to scroll.
  */
 @Composable
 fun Modifier.scrollViewScrollbar(
@@ -235,9 +237,10 @@ fun Modifier.scrollViewScrollbar(
     top: Dp = 0.dp,
     bottom: Dp = 0.dp,
     end: Dp = 0.dp,
+    alwaysShown: Boolean = false,
 ): Modifier {
     val density = LocalDensity.current
-    return viewScrollbar(top, bottom, end, { state.isScrollInProgress }) {
+    return viewScrollbar(top, bottom, end, alwaysShown, { state.isScrollInProgress }) {
         val viewport = state.viewportSize
         if (viewport <= 0) {
             null
