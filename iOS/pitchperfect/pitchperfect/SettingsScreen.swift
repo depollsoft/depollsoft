@@ -154,6 +154,9 @@ final class SettingsModel {
         }
     }
 
+    /// The Sound row's detail, the same words as Android's.
+    static let soundDetail = "How every note sounds"
+
     /// The value the Tuning row shows: the frequency alone, as a measurement.
     static func tuningValue(_ hz: Int) -> String { "\(hz) Hz" }
 
@@ -540,7 +543,7 @@ private struct SoundRow: View {
             Text("Sound").foregroundStyle(Color(uiColor: .label))
             // Beside a long choice on a narrow phone the detail wraps rather
             // than cutting off; the choice is what matters here.
-            Text("What every note sounds like")
+            Text(SettingsModel.soundDetail)
                 .font(.subheadline)
                 .foregroundStyle(Color(uiColor: .secondaryLabel))
                 .fixedSize(horizontal: false, vertical: true)

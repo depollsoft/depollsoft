@@ -547,6 +547,7 @@ final class NoteSoundSettingTests: PitchPerfectTestCase {
         settle { app.sheet.exists(id: "settings.sound") }
         XCTAssertEqual(app.sheet.label(id: "settings.sound"), "Sound")
         XCTAssertEqual(app.sheet.value(id: "settings.sound"), "Organ")
+        XCTAssertEqual(SettingsModel.soundDetail, "How every note sounds", "matches Android's detail")
         app.sheet.tap(id: "settings.sound")
         settle { app.navigationTitles.contains("Sound") && app.sheet.exists(id: "sound.strings") }
         XCTAssertTrue(app.sheet.isSelected(id: "sound.organ"))
