@@ -224,7 +224,13 @@ final class PitchPerfectListScrollingTests: PitchPerfectTestCase {
             // Found by its first choice, which is on screen when it opens.
             settle { menuList = self.menuList(containing: firstLabel); return menuList != nil }
             let menu = try XCTUnwrap(menuList, "the tuning menu, \(layout)")
-            scrollToBottom(menu)
+            // Menu presentation and Dynamic Type can still change row heights
+            // after the first choice appears. Wait for the final row's layout.
+            settle(5) {
+                self.scrollToBottom(menu)
+                guard let item = self.menuItem(labelled: lastLabel, in: menu) else { return false }
+                return self.visibleRect(of: menu).insetBy(dx: -2, dy: -2).contains(item.accessibilityFrame)
+            }
             let item = menuItem(labelled: lastLabel, in: menu)
             assertFullyVisible(item, in: menu, "\(lastLabel), \(layout)")
             dismissMenu(menu)
