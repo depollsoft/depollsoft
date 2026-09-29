@@ -14,6 +14,6 @@
   "notes": "Choose how your notes sound: keep the original Pitch Perfect tone or try piano, organ, strings, choir, other instruments, and four wave sounds. Preview each sound in Settings. Set A4 to a reference pitch from 415 to 446 Hz to match your group. Your sound and tuning choices sync with your account. This update also fixes problems with saved songs, held notes, and settings.",
   "since": {
     "ios": "24f871839a8932678737e032a333f35afec1e173",
-    "android": "24f871839a8932678737e032a333f35afec1e173"
+    "android": "da59d2dae1c61502583da4dfce693ed871dcc104"
   }
 }
