@@ -30,6 +30,46 @@ struct AccountService {
     )
 }
 
+/// Plays a sound briefly when it's chosen; tests swap in a fake.
+struct SoundPreview {
+    var play: @MainActor (_ sound: String) -> Void
+    var stop: @MainActor () -> Void
+
+    /// C4 at the current tuning, in the chosen sound, for a second.
+    @MainActor static let live: SoundPreview = {
+        let previewer = LiveSoundPreviewer()
+        return SoundPreview(play: { previewer.play($0) }, stop: { previewer.stop() })
+    }()
+}
+
+@MainActor
+private final class LiveSoundPreviewer {
+    static let duration: TimeInterval = 1
+    private var note: DPNote?
+    private var pending: DispatchWorkItem?
+
+    func play(_ sound: String) {
+        stop()
+        // A note of its own, so a lit C4 elsewhere is left alone. DPNote plays
+        // in DPNote.sound, which choosing the sound has just set.
+        guard let c4 = DPNote.c4(),
+              let note = DPNote(friendlyName: c4.friendlyName, octave: c4.octave,
+                                accidental: c4.accidental, frequency: c4.frequency) else { return }
+        note.play()
+        self.note = note
+        let work = DispatchWorkItem { [weak self] in self?.stop() }
+        pending = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.duration, execute: work)
+    }
+
+    func stop() {
+        pending?.cancel()
+        pending = nil
+        note?.stop()
+        note = nil
+    }
+}
+
 @Observable
 @MainActor
 final class SettingsModel {
@@ -37,11 +77,15 @@ final class SettingsModel {
     private let songs: DPSongsModel
     private let account: AccountService
     private let bundle: Bundle
+    private let preview: SoundPreview
     @ObservationIgnored private var settingsObserver: NSObjectProtocol?
 
     private(set) var toggleNotes = false
     private(set) var wakeLock = false
     private(set) var referencePitch = DPSettingsModel.standardReferencePitch
+    private(set) var noteSound = DPNoteSoundPitchPipe
+    /// The sound list is pushed.
+    var showingSoundPicker = false
     private(set) var theme = 0
     private(set) var isSignedIn = false
 
@@ -60,11 +104,13 @@ final class SettingsModel {
     init(settings: DPSettingsModel = .sharedInstance,
          songs: DPSongsModel = .sharedInstance,
          account: AccountService = .firebase,
-         bundle: Bundle = .main) {
+         bundle: Bundle = .main,
+         preview: SoundPreview? = nil) {
         self.settings = settings
         self.songs = songs
         self.account = account
         self.bundle = bundle
+        self.preview = preview ?? .live
         reload()
         settingsObserver = NotificationCenter.default.addObserver(
             forName: .settingsChanged, object: settings, queue: .main
@@ -81,6 +127,7 @@ final class SettingsModel {
         toggleNotes = settings.toggleNotes
         wakeLock = settings.wakeLock
         referencePitch = settings.referencePitch
+        noteSound = settings.noteSound
         theme = DPTheme.storedTheme
         isSignedIn = account.isSignedIn()
     }
@@ -88,6 +135,14 @@ final class SettingsModel {
     func setToggleNotes(_ on: Bool) { settings.toggleNotes = on }
     func setWakeLock(_ on: Bool) { settings.wakeLock = on }
     func setReferencePitch(_ hz: Int) { settings.referencePitch = hz }
+
+    /// Chooses the sound and plays a short preview of it.
+    func chooseNoteSound(_ sound: String) {
+        settings.noteSound = sound
+        preview.play(settings.noteSound)
+    }
+
+    func stopPreview() { preview.stop() }
 
     /// A choice as the tuning menu names it.
     static func tuningLabel(_ hz: Int) -> String {
@@ -195,6 +250,7 @@ struct SettingsScreen: View {
                     SwitchRow(title: "Wake Lock", detail: "Prevent device from sleeping",
                               isOn: Binding(get: { model.wakeLock }, set: model.setWakeLock))
                     TuningRow(selection: Binding(get: { model.referencePitch }, set: model.setReferencePitch))
+                    SoundRow(sound: model.noteSound) { model.showingSoundPicker = true }
                     HStack {
                         Text("Theme")
                         Spacer(minLength: 16)
@@ -274,6 +330,9 @@ struct SettingsScreen: View {
             }
         }
         .onAppear { model.reload() }
+        .navigationDestination(isPresented: $model.showingSoundPicker) {
+            SoundPickerScreen(model: model)
+        }
         .alert(model.deleteTitle, isPresented: $model.confirmingDelete) {
             Button("Cancel", role: .cancel) { model.cancelDelete() }
             Button("Yes", role: .destructive) { model.confirmDelete() }
@@ -372,6 +431,90 @@ private struct TuningRow: View {
         }
         .frame(height: heights?.subtitle)
         .settingsRow()
+    }
+}
+
+/// The sound: a title and detail as the switch rows have, then the chosen
+/// sound and a disclosure indicator; it pushes the list of sounds.
+private struct SoundRow: View {
+    let sound: String
+    let action: () -> Void
+    @Environment(\.settingsCellHeights) private var heights
+
+    var body: some View {
+        Button(action: action) {
+            HStack {
+                VStack(alignment: .leading, spacing: SettingsMetrics.subtitleSpacing) {
+                    Text("Sound").foregroundStyle(Color(uiColor: .label))
+                    Text("Voice notes play in")
+                        .font(.subheadline)
+                        .foregroundStyle(Color(uiColor: .secondaryLabel))
+                }
+                .padding(.top, SettingsMetrics.subtitleTop)
+                .padding(.bottom, SettingsMetrics.subtitleBottom)
+                Spacer(minLength: 16)
+                Text(DPSettingsModel.noteSoundLabel(sound))
+                    .foregroundStyle(Color(uiColor: .secondaryLabel))
+                    .lineLimit(1)
+                DisclosureIndicator()
+                    .accessibilityHidden(true)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(UnhighlightedRowStyle())
+        .accessibilityLabel("Sound")
+        .accessibilityValue(DPSettingsModel.noteSoundLabel(sound))
+        .accessibilityIdentifier("settings.sound")
+        .frame(height: heights?.subtitle)
+        .settingsRow()
+    }
+}
+
+/// Every sound, in sections, the chosen one checked. Choosing one plays a
+/// short preview and stays on the list, so sounds can be compared.
+struct SoundPickerScreen: View {
+    let model: SettingsModel
+    @Environment(\.settingsCellHeights) private var heights
+
+    var body: some View {
+        List {
+            ForEach(Array(DPSettingsModel.noteSoundSections.enumerated()), id: \.offset) { _, section in
+                Section {
+                    ForEach(section.sounds, id: \.self) { sound in
+                        Button { model.chooseNoteSound(sound) } label: {
+                            HStack {
+                                Text(DPSettingsModel.noteSoundLabel(sound))
+                                    .foregroundStyle(Color(uiColor: .label))
+                                Spacer()
+                                if sound == model.noteSound {
+                                    Image(systemName: "checkmark")
+                                        .font(.body.weight(.semibold))
+                                        .foregroundStyle(Plate.ink)
+                                }
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(UnhighlightedRowStyle())
+                        .accessibilityAddTraits(sound == model.noteSound ? [.isSelected] : [])
+                        .accessibilityIdentifier("sound.\(sound)")
+                        .settingsRow(height: heights?.plain ?? 51)
+                    }
+                } header: {
+                    if let title = section.title {
+                        PlateHeader(title).settingsHeader()
+                    }
+                }
+            }
+        }
+        .listStyle(.grouped)
+        .scrollContentBackground(.hidden)
+        .background(StaffBackground())
+        .staffScreenBackground()
+        .tableMargins(style: .grouped)
+        .navigationTitle("Sound")
+        .navigationBarTitleDisplayMode(.inline)
+        .instrumentChrome()
+        .onDisappear { model.stopPreview() }
     }
 }
 

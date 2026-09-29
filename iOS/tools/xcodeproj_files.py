@@ -28,6 +28,7 @@ FILE_TYPES = {
     ".h": "sourcecode.c.h",
     ".png": "image.png",
     ".json": "text.json",
+    ".sf2": "file",
 }
 
 
@@ -70,7 +71,7 @@ def add(project: Path, name: str, anchor: str, anchor_build: str | None, path: s
     anchor_build_id = find_build(text, anchor_build)
     if anchor_build_id is None:
         sys.exit(f"anchor {anchor_build} is in no build phase")
-    phase = "Resources" if file_type in ("image.png", "text.json") else "Sources"
+    phase = "Sources" if file_type.startswith("sourcecode") else "Resources"
     build_id = object_id(project.parent.parent.name, name, anchor_build, "build")
     if build_id in text:
         print(f"{name}: already built beside {anchor_build}")

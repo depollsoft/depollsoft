@@ -195,6 +195,7 @@ class PitchPerfectTestCase: XCTestCase {
             DPSettingsModel.sharedInstance.toggleNotes = false
             DPSettingsModel.sharedInstance.wakeLock = false
             DPSettingsModel.sharedInstance.referencePitch = DPSettingsModel.standardReferencePitch
+            DPSettingsModel.sharedInstance.noteSound = DPNoteSoundPitchPipe
             DPPitchPipeModel().isFromFToF = false
             stopAll()
             DPSongsModel.sharedInstance.songLists = ["default": DPSongList(id: "default")]
@@ -215,6 +216,10 @@ class PitchPerfectTestCase: XCTestCase {
             DPSongsModel.sharedInstance.songLists = savedLists
             // The test host never applies the stored tuning at launch; leave it at A440.
             DPNote.referencePitch = Double(DPSettingsModel.standardReferencePitch)
+            DPNote.sound = DPNoteSoundPitchPipe
+            DPNote.instrumentPlayer = nil
+            WidgetInstrumentHook.start = nil
+            WidgetInstrumentHook.stop = nil
             NotificationCenter.default.post(name: .settingsChanged, object: DPSettingsModel.sharedInstance)
             UIView.setAnimationsEnabled(true)
             unsetenv("STORE_SCREENSHOTS")

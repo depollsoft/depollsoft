@@ -1,5 +1,6 @@
 #import "DPPitchPipeModel.h"
 #import "DPNote.h"
+#import "DPNoteSound.h"
 #import "DPKey.h"
 #import "DPKeyType.h"
 #import "DPPitchedSong.h"

@@ -197,6 +197,19 @@ final class PitchPerfectScreenCatalogTests: PitchPerfectTestCase {
         }
     }
 
+    func testSoundPicker() throws {
+        DPSettingsModel.sharedInstance.noteSound = "choir"
+        for style in [UIUserInterfaceStyle.light, .dark] {
+            let app = try launch(style)
+            app.show(tab: 0)
+            app.openSettings()
+            app.sheet.tap(id: "settings.sound")
+            settle { app.navigationTitles.contains("Sound") && app.sheet.exists(id: "sound.sine") }
+            capture("settings-sound\(style == .dark ? "-dark" : "")", app, settle: 0.8)
+            app.tearDown()
+        }
+    }
+
     func testLogin() throws {
         let app = try launch()
         app.show(tab: 0)
