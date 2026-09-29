@@ -5,6 +5,8 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,10 +17,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Switch
 import androidx.compose.material.SwitchDefaults
@@ -32,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -262,13 +267,17 @@ private fun SettingSwitch(
     }
 }
 
-/** The tuning row: its label, then the chosen A4, at least 56dp tall; a tap offers the choices. */
+/**
+ * The tuning row: its label, then the chosen A4 in an outlined field with a drop-down arrow, so it
+ * reads as a control; a tap anywhere on the row offers the choices.
+ */
 @Composable
 private fun TuningRow(
     referencePitch: Int,
     onClick: () -> Unit,
 ) {
     val colors = plateColors
+    val shape = RoundedCornerShape(2.dp)
     Row(
         Modifier
             .fillMaxWidth()
@@ -278,7 +287,36 @@ private fun TuningRow(
         verticalAlignment = ViewAlign.CenterVertically,
     ) {
         PlateText(stringResource(R.string.Tuning), style = plateText(16.sp, colors.ink), modifier = Modifier.weight(1f))
-        PlateText(stringResource(R.string.TuningValue, referencePitch), style = plateText(16.sp, colors.inkSecondary))
+        Row(
+            Modifier
+                .heightIn(min = 40.dp)
+                .background(colors.surface, shape)
+                .border(1.dp, colors.hairline, shape)
+                .padding(start = 12.dp, end = 8.dp),
+            verticalAlignment = ViewAlign.CenterVertically,
+        ) {
+            PlateText(stringResource(R.string.TuningValue, referencePitch), style = plateText(16.sp, colors.ink))
+            // Material's drop-down arrow: a 10x5dp triangle in a 24dp box.
+            Box(
+                Modifier
+                    .padding(start = 4.dp)
+                    .size(24.dp)
+                    .drawBehind {
+                        val w = 10.dp.toPx()
+                        val h = 5.dp.toPx()
+                        val left = (size.width - w) / 2f
+                        val top = (size.height - h) / 2f
+                        val arrow =
+                            Path().apply {
+                                moveTo(left, top)
+                                lineTo(left + w, top)
+                                lineTo(left + w / 2f, top + h)
+                                close()
+                            }
+                        drawPath(arrow, colors.inkSecondary)
+                    },
+            )
+        }
     }
 }
 
