@@ -296,7 +296,10 @@ class TMBehaviorTestCase: XCTestCase {
         CATransaction.begin()
         CATransaction.setCompletionBlock { flushed.fulfill() }
         CATransaction.commit()
-        wait(for: [flushed], timeout: 5)
+        // 15 s, not 5: a CI runner has stalled for more than 10 s at a stretch
+        // (a Search screen that mounts in 0.7 s took 11 s, then its flush 7 s),
+        // and the test's own 30 s budget is the real limit.
+        wait(for: [flushed], timeout: 15)
         window?.layoutIfNeeded()
     }
 
