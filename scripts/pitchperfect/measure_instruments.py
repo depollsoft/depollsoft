@@ -31,7 +31,7 @@ OUTPUT = os.path.join(REPO, "shared", "pitchperfect", "instrument-tuning.json")
 SONIVOX_REPO = "https://github.com/pedrolcl/sonivox"
 SONIVOX_COMMIT = "e3213f76436f4664e2a149c4a451e0df72f4e13e"
 
-PROGRAMS = [0, 4, 6, 11, 19, 21, 24, 46, 48, 52, 56, 71, 73]
+PROGRAMS = [0, 4, 6, 11, 19, 20, 21, 22, 24, 46, 48, 52, 56, 71, 73]
 KEYS = range(24, 108)  # C1 to B7, Pitch Perfect's notes
 RATE = 44100
 VELOCITY = 100

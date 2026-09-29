@@ -24,7 +24,9 @@ the section headings below; the default has no heading and comes first.
 | `harpsichord` | Harpsichord | 6 |
 | `vibraphone` | Vibraphone | 11 |
 | `organ` | Organ | 19 |
+| `reedOrgan` | Reed Organ | 20 |
 | `accordion` | Accordion | 21 |
+| `harmonica` | Harmonica | 22 |
 | `guitar` | Guitar | 24 |
 | `harp` | Harp | 46 |
 | `strings` | Strings | 48 |
@@ -95,7 +97,10 @@ program      = the sound's GM program
 correction   = instrument-tuning.json[platform][program].correctionCents[key - 24]
                // keys outside 24…107 use the nearest end's value
 if correction is null:   // this synth's instrument is silent at this key
-    program = 0 (piano); correction = the piano's value for the key
+    program = the sound's fallback, if it sounds here, else 0 (piano)
+    correction = that program's value for the key
+    // fallbacks: harmonica → reed organ (20); accordion → reed organ (20);
+    // every other instrument → piano
 tuningCents  = 1200 · log2(referencePitch / 440)
 pitchCents   = tuningCents + correction
 velocity     = 100
@@ -110,8 +115,14 @@ pitch reference. The file also holds `gainDb` for each instrument: the gain
 that brings its loudest note in the middle of the range to -4 dBFS. Rerun the
 script if the sound bank or the list of instruments changes.
 
-Android's built-in bank is silent in a few places: vibraphone and flute
-below C2, accordion below C3 and above C7. Those keys play the piano instead.
+Android's built-in bank is silent in a few places. Harmonica only sounds
+from C4 to F♯5, and reed organ only up to F6. Accordion is silent below C3
+and above C7, and vibraphone and flute below C2. The free reeds (harmonica,
+accordion) fall back to the reed organ, which is closest to a pitch pipe's
+reed; any other silent key plays the piano.
+
+Harmonica and reed organ are the instruments closest to a real pitch pipe,
+which is itself a free reed.
 
 ### Android: a generated MIDI file
 
@@ -149,9 +160,9 @@ MTrk  delta 0  B0 65 00          RPN MSB 0 (pitch bend sensitivity)
 ### iOS: AVAudioUnitSampler
 
 iOS has no built-in General MIDI bank, so the app ships
-`shared/pitchperfect/PitchPerfectInstruments.sf2`: the 13 presets taken
+`shared/pitchperfect/PitchPerfectInstruments.sf2`: the 15 presets taken
 unchanged from [GeneralUser GS](https://www.schristiancollins.com/generaluser)
-v2.0.3 by S. Christian Collins, 8.7 MB. See
+v2.0.3 by S. Christian Collins, 8.8 MB. See
 `shared/pitchperfect/GeneralUser-GS-LICENSE.txt`: it is free for use in
 software, and its author notes he cannot vouch for the origin of every
 sample. `scripts/pitchperfect/subset_soundfont.py` builds it. The subset

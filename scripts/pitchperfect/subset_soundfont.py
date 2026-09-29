@@ -20,7 +20,7 @@ REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 OUTPUT = os.path.join(REPO, "shared", "pitchperfect", "PitchPerfectInstruments.sf2")
 
 # The GM programs behind the Sound setting; see docs/pitchperfect-note-sounds.md.
-PROGRAMS = [0, 4, 6, 11, 19, 21, 24, 46, 48, 52, 56, 71, 73]
+PROGRAMS = [0, 4, 6, 11, 19, 20, 21, 22, 24, 46, 48, 52, 56, 71, 73]
 
 GEN_INSTRUMENT = 41
 GEN_SAMPLE_ID = 53
