@@ -290,3 +290,15 @@ picker sits under its row's title, because beside it it ran off a 375 pt
 screen. Choosing a sound plays a short preview: C4 at the
 current tuning for 1 s, or less if the user leaves the screen. The preview
 lets the user hear the sound without leaving Settings.
+
+Both platforms let the user compare sounds: a tap applies the sound, plays
+its preview (cutting off the previous one) and keeps the list open. Android's
+Sound dialog has a single Done button; the iOS list stays pushed until Back.
+Both lists open scrolled to the current choice, and Android's Tuning dialog
+does too. The rows read "Tuning · Frequency of A4" and "Sound · How every
+note sounds". Frequencies follow DESIGN.md's Mono-Measurement rule: the Tuning
+value is "440 Hz" in the mono face. The Android Tuning dialog rows set the Hz
+in mono ink, followed by the name (Baroque, Classical, Standard) in secondary
+ink. On Android the Tuning and Sound fields share one width and left edge, and
+they drop under their labels at large font scales. On iOS both values use
+secondary ink, and at accessibility sizes both drop under their titles.
