@@ -305,7 +305,7 @@ private fun SongRow(
             PlateText(
                 song.name.orEmpty(),
                 style = plateText(20.sp, if (lit) colors.onAccent else colors.ink, PlateFonts.condensed),
-                modifier = Modifier.weight(1f).padding(start = 20.dp, top = 14.dp, bottom = 14.dp),
+                modifier = Modifier.weight(1f).padding(start = 20.dp, end = 12.dp, top = 14.dp, bottom = 14.dp),
             )
             LegacyText(
                 song.key?.let { NoteText.keyName(it) } ?: "",

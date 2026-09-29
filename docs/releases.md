@@ -34,10 +34,10 @@ Update the existing in-app changelog whenever preparing an Android release. `rel
 
 | App | Resource file | Displayed version keys |
 | --- | --- | --- |
-| Pitch Perfect | `Android/PitchPerfect/src/main/res/values/versionstrings.xml` | `app_version` is `X.Y.Z`; `VersionString` is `Version X.Y.Z` |
-| Tag Master | `Android/TagMaster/src/main/res/values/versionStrings.xml` | `VersionNumber` is `X.Y.Z`; `app_version` is `Version X.Y.Z` |
+| Pitch Perfect | `Android/PitchPerfect/src/main/res/values/versionstrings.xml` | `app_version` is `X.Y.Z` |
+| Tag Master | `Android/TagMaster/src/main/res/values/versionStrings.xml` | `VersionNumber` is `X.Y.Z` |
 
-Prepend an HTML entry to the `Changelog` string for the selected Android version, preserve older entries, and update both displayed version keys to match the release plan. Describe user-facing changes with the same facts as the Android store notes, preserving Android string escaping and the surrounding CDATA. These strings appear in the app, so Gradle's production version override alone is insufficient. Build the selected app to validate its resources and check the rendered changelog in the disposable emulator.
+Prepend an HTML entry to the `Changelog` string for the selected Android version, preserve older entries, and update the version key to match the release plan. Describe user-facing changes with the same facts as the Android store notes, preserving Android string escaping and the surrounding CDATA. The Compose port removed the redundant `VersionString` and Tag Master `app_version` resources. Update the remaining version resource and changelog together. Build the selected app to validate its resources and check the rendered changelog in the disposable emulator.
 
 The iOS apps currently have no in-app changelog. Their customer-facing release notes come from the release plan and are exported to App Store metadata; do not add a new changelog screen as part of routine release preparation.
 

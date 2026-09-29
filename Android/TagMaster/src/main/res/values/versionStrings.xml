@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="VersionNumber">6.1.0</string>
+    <string name="VersionNumber">6.1.1</string>
     <string name="Changelog">        <![CDATA[Thank you for using Tag Master!  Here\'s what has changed since you last used the app:
+            <p>
+                    <h5>Version 6.1.1</h5>
+                    - Fixes problems with scrolling and reordering saved tag lists, learning-track playback, and layouts with large text.<br />
+                    - Browsing, search, sheet music, and tag details receive reliability fixes.<br />
+            </p>
             <p>
                     <h5>Version 6.1.0</h5>
                     - Organize tags into your own lists, such as \"Easy tags\" or \"High and lows\", alongside Favorites and Teachable Tags.<br />

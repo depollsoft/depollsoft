@@ -115,7 +115,11 @@ final class PitchPerfectListScrollingTests: PitchPerfectTestCase {
             }
             let step = max(20, (list.bounds.height - list.adjustedContentInset.top - list.adjustedContentInset.bottom) / 3)
             let bottom = list.contentSize.height - list.bounds.height + list.adjustedContentInset.bottom
-            list.setContentOffset(CGPoint(x: 0, y: min(list.contentOffset.y + step, bottom)), animated: false)
+            // A large row can be only a few points shorter than the viewport.
+            // Once found, center it instead of stepping past that narrow range.
+            let delta = frame.map { $0.midY - visibleRect(of: list).midY } ?? step
+            let next = max(-list.adjustedContentInset.top, min(list.contentOffset.y + delta, bottom))
+            list.setContentOffset(CGPoint(x: 0, y: next), animated: false)
         }
         XCTFail("\(id) never came fully into view: last at \(String(describing: app.sheet.element(id: id)?.accessibilityFrame)), visible \(visibleRect(of: list)), offset \(list.contentOffset.y) of \(list.contentSize.height); seen \(seen.joined(separator: " "))")
     }
@@ -224,7 +228,13 @@ final class PitchPerfectListScrollingTests: PitchPerfectTestCase {
             // Found by its first choice, which is on screen when it opens.
             settle { menuList = self.menuList(containing: firstLabel); return menuList != nil }
             let menu = try XCTUnwrap(menuList, "the tuning menu, \(layout)")
-            scrollToBottom(menu)
+            // Menu presentation and Dynamic Type can still change row heights
+            // after the first choice appears. Wait for the final row's layout.
+            settle(5) {
+                self.scrollToBottom(menu)
+                guard let item = self.menuItem(labelled: lastLabel, in: menu) else { return false }
+                return self.visibleRect(of: menu).insetBy(dx: -2, dy: -2).contains(item.accessibilityFrame)
+            }
             let item = menuItem(labelled: lastLabel, in: menu)
             assertFullyVisible(item, in: menu, "\(lastLabel), \(layout)")
             dismissMenu(menu)

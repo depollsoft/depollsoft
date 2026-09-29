@@ -1,11 +1,17 @@
-## ios: 752891caaf56c933bd50aa3f4be7abb2c28aff8c..HEAD
+## ios: 528bbc5f903f58776afed571398f20d19b956f65..HEAD
 
-9aadddc2 Tag Master: user-defined tag lists on Android and iOS (#69)
-a53c649b Android: register beta signing certs for Google and Facebook sign-in (#72)
-de9324b8 release: ship Android Google sign-in fixes (#68)
-fb13cb6f Android: fix Google sign-in crash and stop unit tests reporting to Crashlytics (#67)
+0bf440c7 release: wait for rendered Tag Master screenshot scenes
+f3426a3d release: prepare both apps for iOS and Android
+e06d4ad3 Pitch Perfect: choose the note sound (waves and MIDI instruments) (#85)
+32b589cf Pitch Perfect: choose the A4 reference pitch (415–446 Hz) (#84)
+0509fd8e iOS: port Pitch Perfect and Tag Master to SwiftUI (#82)
+b3e109b6 Android: port Pitch Perfect, Wear and Tag Master to Compose; remove Bindroid (#81)
 
-## android: de9324b8f58ea952f43868a446c07b3ad1ab3bef..HEAD
+## android: 528bbc5f903f58776afed571398f20d19b956f65..HEAD
 
-9aadddc2 Tag Master: user-defined tag lists on Android and iOS (#69)
-a53c649b Android: register beta signing certs for Google and Facebook sign-in (#72)
+0bf440c7 release: wait for rendered Tag Master screenshot scenes
+f3426a3d release: prepare both apps for iOS and Android
+e06d4ad3 Pitch Perfect: choose the note sound (waves and MIDI instruments) (#85)
+32b589cf Pitch Perfect: choose the A4 reference pitch (415–446 Hz) (#84)
+0509fd8e iOS: port Pitch Perfect and Tag Master to SwiftUI (#82)
+b3e109b6 Android: port Pitch Perfect, Wear and Tag Master to Compose; remove Bindroid (#81)

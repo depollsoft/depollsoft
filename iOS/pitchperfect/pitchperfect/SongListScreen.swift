@@ -313,7 +313,6 @@ struct SongListScreen: View {
         .navigationBarTitleDisplayMode(.inline)
         .instrumentChrome()
         .toolbar { toolbar }
-        .environment(\.editMode, .constant(model.isEditing ? .active : .inactive))
         .settingsSheet(isPresented: $model.showingSettings)
         .background(SongEditorPresenter(request: model.editor, didClose: model.editorDidClose).frame(width: 0, height: 0))
         .background(AddSongsPresenter(isPresented: $model.showingAddFrom, target: model.currentList)
@@ -421,6 +420,12 @@ private struct SongRows: View {
                 .onMove(perform: model.moveSongs)
             }
             .plateList()
+            // Scope the binding to the List. An edit-mode value on the page
+            // can leave native row controls out of sync with the toolbar.
+            .environment(\.editMode, Binding(
+                get: { model.isEditing ? .active : .inactive },
+                set: { model.isEditing = $0.isEditing }
+            ))
             .overlay(alignment: .top) {
                 if songs.isEmpty {
                     Text(model.emptyText)

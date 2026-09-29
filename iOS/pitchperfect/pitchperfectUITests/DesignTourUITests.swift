@@ -207,7 +207,9 @@ final class StoreScreenshotTests: XCTestCase {
             item.tap()
         }
         func snap(_ name: String) {
-            Thread.sleep(forTimeInterval: 1)
+            // The native List's edit controls can finish animating after the
+            // SwiftUI toolbar is already hittable on a loaded capture runner.
+            Thread.sleep(forTimeInterval: 3)
             attachStoreScreenshot(name)
         }
         for (title, name) in [("Pitch Pipe", "01-pitch-pipe"), ("Notes", "02-notes"), ("Keys", "03-keys")] {
@@ -259,12 +261,23 @@ final class StoreScreenshotTests: XCTestCase {
         app.navigationBars.buttons["More"].tap()
         app.buttons["Sort Alphabetically"].tap()
         app.navigationBars.buttons["Done"].tap()
+        XCTAssertTrue(edit.readyForCapture(timeout: 10))
+        let info = app.buttons["More Info"].firstMatch
+        let finishedEditing = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == false"), object: info)
+        XCTAssertEqual(XCTWaiter.wait(for: [finishedEditing], timeout: 10), .completed)
+        let remove = app.images["minus.circle.fill"].firstMatch
+        let finishedRemoving = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == false"), object: remove)
+        XCTAssertEqual(XCTWaiter.wait(for: [finishedRemoving], timeout: 10), .completed)
         snap("04-songs")
-        app.navigationBars.buttons["Edit"].tap()
+        edit.tap()
+        XCTAssertTrue(app.navigationBars.buttons["Done"].readyForCapture(timeout: 10))
+        XCTAssertTrue(info.readyForCapture(timeout: 10))
+        XCTAssertTrue(remove.readyForCapture(timeout: 10))
+        XCTAssertTrue(app.buttons["Reorder Blue Skies"].readyForCapture(timeout: 10))
         snap("05-edit-songs")
         // Each row's detail disclosure opens the actual song editor.
-        let info = app.buttons["More Info"].firstMatch
-        XCTAssertTrue(info.readyForCapture(timeout: 10))
         info.tap()
         XCTAssertTrue(app.textFields.firstMatch.readyForCapture(timeout: 10))
         snap("06-song-editor")
