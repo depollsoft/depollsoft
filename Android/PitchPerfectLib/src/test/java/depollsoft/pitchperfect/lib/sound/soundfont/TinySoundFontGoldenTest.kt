@@ -13,7 +13,7 @@ import org.junit.Test
 /**
  * The Kotlin TinySoundFont against the C original: both replay the clips in
  * src/test/resources/soundfont/clips.txt through the shared SoundFont, and golden.raw holds what
- * the C renders (scripts/pitchperfect/tsf-golden/make_golden.sh makes both files).
+ * the C renders (scripts/pitchperfect/tinysoundfont/make_golden.sh makes both files).
  */
 class TinySoundFontGoldenTest {
     private class Clip(val name: String, val samples: Int, val events: List<List<String>>)

@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """Measures Pitch Perfect's MIDI instruments on both platforms' synths.
 
-Every instrument's notes are played through the synth each app uses: iOS's
-AVAudioUnitSampler with shared/pitchperfect/PitchPerfectInstruments.sf2, and
-Android's built-in Sonivox EAS synth (built here from its source, with the
-wavetable Android ships). For each key the script records how far the synth
-lands from the true pitch, and whether the instrument sounds there at all.
-It also records how loud each instrument plays. The apps undo the pitch error
-with pitch bend or tuning, and they skip silent keys.
+Every instrument's notes are played through the synth each app uses, both
+with shared/pitchperfect/PitchPerfectInstruments.sf2: iOS's AVAudioUnitSampler,
+and TinySoundFont for Android (the C original, which the app's Kotlin port
+matches sample for sample; see scripts/pitchperfect/tinysoundfont). For each
+key the script records how far the synth lands from the true pitch, and
+whether the instrument sounds there at all. It also records how loud each
+instrument plays. The apps undo the pitch error with each note's tuning.
 
-Writes shared/pitchperfect/instrument-tuning.json. Needs macOS (swiftc),
-cmake, git and numpy.
+Writes shared/pitchperfect/instrument-tuning.json. Needs macOS (swiftc), a C
+compiler, curl and numpy.
 
     python3 scripts/pitchperfect/measure_instruments.py
 """
@@ -18,7 +18,6 @@ cmake, git and numpy.
 import argparse
 import json
 import os
-import struct
 import subprocess
 import tempfile
 
@@ -28,8 +27,6 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
 SOUNDFONT = os.path.join(REPO, "shared", "pitchperfect", "PitchPerfectInstruments.sf2")
 OUTPUT = os.path.join(REPO, "shared", "pitchperfect", "instrument-tuning.json")
-SONIVOX_REPO = "https://github.com/pedrolcl/sonivox"
-SONIVOX_COMMIT = "e3213f76436f4664e2a149c4a451e0df72f4e13e"
 
 PROGRAMS = [0, 4, 6, 11, 19, 20, 21, 22, 24, 46, 48, 52, 56, 71, 73]
 KEYS = range(24, 108)  # C1 to B7, Pitch Perfect's notes
@@ -42,44 +39,20 @@ def key_frequency(key):
     return 440.0 * 2 ** ((key - 69) / 12)
 
 
-def midi_file(program, key, hold=3.0):
-    """What the Android app plays: program, note on, held, note off."""
-    def vlq(value):
-        out = [value & 0x7F]
-        value >>= 7
-        while value:
-            out.insert(0, (value & 0x7F) | 0x80)
-            value >>= 7
-        return bytes(out)
-    events = (vlq(0) + bytes([0xC0, program]) + vlq(0) + bytes([0x90, key, VELOCITY])
-              + vlq(int(hold * 960)) + bytes([0x80, key, 0]) + vlq(0) + bytes([0xFF, 0x2F, 0]))
-    return (b"MThd" + struct.pack(">IHHH", 6, 0, 1, 480)
-            + b"MTrk" + struct.pack(">I", len(events)) + events)
-
-
-def build_sonivox(cache):
-    source = os.path.join(cache, "sonivox")
-    binary = os.path.join(source, "build", "example", "sonivoxrender")
-    if os.path.exists(binary):
-        return binary
-    if not os.path.exists(source):
-        subprocess.run(["git", "clone", "-q", SONIVOX_REPO, source], check=True)
-    subprocess.run(["git", "-C", source, "checkout", "-q", SONIVOX_COMMIT], check=True)
-    subprocess.run(["cmake", "-S", source, "-B", os.path.join(source, "build"),
-                    "-DCMAKE_BUILD_TYPE=Release", "-DBUILD_TESTING=OFF"],
-                   check=True, stdout=subprocess.DEVNULL)
-    subprocess.run(["cmake", "--build", os.path.join(source, "build"), "-j8"],
-                   check=True, stdout=subprocess.DEVNULL)
+def build_tinysoundfont(cache):
+    """Compiles tsf_note.c, which renders a held note as the Android app plays it."""
+    here = os.path.join(HERE, "tinysoundfont")
+    binary = os.path.join(cache, "tsf-note")
+    subprocess.run([os.path.join(here, "fetch_tsf.sh"), cache], check=True)
+    subprocess.run(["cc", "-O2", "-ffp-contract=off", "-I", cache, os.path.join(here, "tsf_note.c"),
+                    "-o", binary, "-lm"], check=True)
     return binary
 
 
-def render_sonivox(binary, program, key, workdir):
-    path = os.path.join(workdir, "note.mid")
-    with open(path, "wb") as f:
-        f.write(midi_file(program, key))
-    pcm = subprocess.run([binary, "-r", "0", "-c", "0", path],
+def render_tinysoundfont(binary, program, key, seconds=3.0):
+    pcm = subprocess.run([binary, SOUNDFONT, str(program), str(key), str(seconds)],
                          check=True, capture_output=True).stdout
-    return np.frombuffer(pcm, dtype="<i2").astype(np.float64).reshape(-1, 2).mean(axis=1) / 32768
+    return np.frombuffer(pcm, dtype="<f4").astype(np.float64)
 
 
 def render_sampler(cache, workdir):
@@ -139,11 +112,11 @@ def main():
     parser.add_argument("--cache", default=os.path.join(tempfile.gettempdir(), "pitchperfect-instruments"))
     args = parser.parse_args()
     os.makedirs(args.cache, exist_ok=True)
-    sonivox = build_sonivox(args.cache)
+    tinysoundfont = build_tinysoundfont(args.cache)
     with tempfile.TemporaryDirectory() as workdir:
         sampler = render_sampler(args.cache, workdir)
         ios = summarize(sampler, "ios")
-        android = summarize(lambda p, k: render_sonivox(sonivox, p, k, workdir), "android")
+        android = summarize(lambda p, k: render_tinysoundfont(tinysoundfont, p, k), "android")
     data = {
         "about": "Per-key pitch corrections (cents to add; null where the instrument is silent) "
                  "and gains for Pitch Perfect's MIDI instruments. Generated by "
