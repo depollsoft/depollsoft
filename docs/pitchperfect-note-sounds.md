@@ -130,8 +130,11 @@ MTrk  delta 0  B0 65 00          RPN MSB 0 (pitch bend sensitivity)
 ```
 
 - `prepare()` took 3–40 ms on an API 36 emulator and `start()` under 1 ms;
-  four notes can play at once. Prepare off the main thread, then start,
-  unless the note was released first.
+  four notes can play at once. Prepare off the main thread, then start. A
+  note always starts, even if it was released while preparing, and fades
+  out no sooner than 250 ms after it began, so a quick tap is still heard.
+  The first instrument note after launch took 72–105 ms to sound on the
+  emulator, while its player thread started; later ones took 7–30 ms.
 - Gain: attach a `LoudnessEnhancer` to the player's audio session with
   `gainDb · 100` mB when `gainDb` > 0.
 - Stop: ramp `setVolume` from 1 to 0 over about 30 ms, then `stop()` and
