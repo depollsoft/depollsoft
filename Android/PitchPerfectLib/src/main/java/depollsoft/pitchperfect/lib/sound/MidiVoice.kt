@@ -5,19 +5,23 @@ import android.media.MediaPlayer
 import android.media.audiofx.LoudnessEnhancer
 import android.os.Handler
 import android.os.HandlerThread
+import android.os.SystemClock
 import android.util.Log
 import kotlin.math.roundToInt
 
 /**
  * An instrument note played by Android's built-in General MIDI synth: [MidiNote.file] handed to a
- * [MediaPlayer] from memory. The player is prepared off the main thread and starts unless the note
- * was stopped first; stopping fades it out over about 30 ms so a held note doesn't end in a click.
- * Every MediaPlayer call happens on one background thread.
+ * [MediaPlayer] from memory. The player is prepared off the main thread. Stopping fades the note
+ * out over about 30 ms so it doesn't end in a click, but never before it has sounded for
+ * [MIN_SOUNDING_MS]: a quick tap can be released before the player is even prepared, and should
+ * still be heard, as the pitch pipe's track plays out its buffer. Every MediaPlayer call happens on
+ * one background thread.
  */
 class MidiVoice(private val plan: MidiNotePlan) : SoundingNote {
     private var player: MediaPlayer? = null
     private var enhancer: LoudnessEnhancer? = null
     private var prepared = false
+    private var soundingSince = 0L
 
     @Volatile private var stopped = false
 
@@ -29,13 +33,20 @@ class MidiVoice(private val plan: MidiNotePlan) : SoundingNote {
         if (started) return
         started = true
         val bytes = MidiNote.file(plan)
-        handler.post { if (!stopped) prepare(bytes) }
+        handler.post { prepare(bytes) }
     }
 
     override fun stop() {
         if (stopped) return
         stopped = true
-        handler.post { fadeOut(FADE_STEPS) }
+        handler.post { fadeWhenHeard() }
+    }
+
+    /** Fades out once the note has sounded long enough; before it is prepared, onPrepared does this. */
+    private fun fadeWhenHeard() {
+        if (!prepared) return
+        val wait = soundingSince + MIN_SOUNDING_MS - SystemClock.uptimeMillis()
+        handler.postDelayed({ fadeOut(FADE_STEPS) }, wait.coerceAtLeast(0))
     }
 
     private fun prepare(bytes: ByteArray) {
@@ -45,12 +56,10 @@ class MidiVoice(private val plan: MidiNotePlan) : SoundingNote {
             player.setDataSource(MemorySource(bytes))
             player.setOnPreparedListener {
                 prepared = true
-                if (stopped) {
-                    release()
-                    return@setOnPreparedListener
-                }
                 applyGain(it)
                 it.start()
+                soundingSince = SystemClock.uptimeMillis()
+                if (stopped) fadeWhenHeard()
             }
             // The file holds the note for 30 minutes; a note still held then sounds again.
             player.setOnCompletionListener { if (!stopped) it.start() }
@@ -81,8 +90,7 @@ class MidiVoice(private val plan: MidiNotePlan) : SoundingNote {
     }
 
     private fun fadeOut(stepsLeft: Int) {
-        // Not prepared yet: onPrepared sees the note has stopped and releases it.
-        val player = player?.takeIf { prepared } ?: return
+        val player = player ?: return
         if (stepsLeft <= 0) {
             release()
             return
@@ -122,6 +130,7 @@ class MidiVoice(private val plan: MidiNotePlan) : SoundingNote {
         private const val TAG = "MidiVoice"
         private const val FADE_STEPS = 6
         private const val FADE_STEP_MS = 5L
+        private const val MIN_SOUNDING_MS = 250L
 
         private val handler: Handler by lazy {
             Handler(HandlerThread("PitchPerfectMidi").apply { start() }.looper)
