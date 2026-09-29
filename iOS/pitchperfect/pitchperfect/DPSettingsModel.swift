@@ -48,7 +48,7 @@ public extension Notification.Name {
         }
     }
 
-    private func applyRemote(wakeLock: Bool?, toggleNotes: Bool?, referencePitch: Int?) {
+    func applyRemote(wakeLock: Bool?, toggleNotes: Bool?, referencePitch: Int?) {
         let defaults = UserDefaults.standard
         var changed = false
         if let wakeLock, wakeLock != self.wakeLock {
@@ -59,11 +59,14 @@ public extension Notification.Name {
             defaults.set(toggleNotes, forKey: toggleNoteKey)
             changed = true
         }
-        if let referencePitch, DPSettingsModel.referencePitchRange.contains(referencePitch),
-           referencePitch != self.referencePitch {
-            defaults.set(referencePitch, forKey: referencePitchKey)
-            applyReferencePitch()
-            changed = true
+        // A value this version can't use falls back to A440, as a stored one does.
+        if let remote = referencePitch {
+            let pitch = DPSettingsModel.referencePitchRange.contains(remote) ? remote : DPSettingsModel.standardReferencePitch
+            if pitch != self.referencePitch {
+                defaults.set(pitch, forKey: referencePitchKey)
+                applyReferencePitch()
+                changed = true
+            }
         }
         if changed { NotificationCenter.default.post(name: .settingsChanged, object: self) }
     }
@@ -148,6 +151,12 @@ public extension Notification.Name {
             }
             NotificationCenter.default.post(name: .settingsChanged, object: self)
         }
+    }
+
+    /// The choices to offer: the common ones, plus the current one if another
+    /// device chose something else.
+    static func referencePitchChoices(current: Int) -> [Int] {
+        Array(Set(commonReferencePitches + [current])).sorted()
     }
 
     /// Tunes the notes, and the widget in its own process, to the stored A4.

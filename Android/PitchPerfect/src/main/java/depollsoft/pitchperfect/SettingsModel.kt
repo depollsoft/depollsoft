@@ -38,7 +38,7 @@ object SettingsModel {
         }
     }
 
-    /** The A4 the notes are tuned to, in Hz: one of [Note.COMMON_A4_FREQUENCIES]. */
+    /** The A4 the notes are tuned to, in Hz: usually one of [Note.COMMON_A4_FREQUENCIES]. */
     var referencePitch: Int
         get() = storedReferencePitch.takeIf { it in REFERENCE_PITCH_RANGE } ?: Note.STANDARD_A4.toInt()
         set(value) {
@@ -52,6 +52,9 @@ object SettingsModel {
             userRef?.set(mapOf("referencePitch" to it), SetOptions.merge())
         }
     }
+
+    /** The choices to offer: the common ones, plus the current one if another device chose something else. */
+    fun referencePitchChoices(current: Int): List<Int> = (Note.COMMON_A4_FREQUENCIES.toList() + current).distinct().sorted()
 
     /** Tunes the notes to the stored A4; call once at startup. */
     fun applyReferencePitch() {
@@ -77,13 +80,17 @@ object SettingsModel {
                 try {
                     wakeLock = data.getBoolean("wakeLock") ?: wakeLock
                     toggleNotes = data.getBoolean("toggleNotes") ?: toggleNotes
-                    data.getLong("referencePitch")?.toInt()?.let { remote ->
-                        if (remote in REFERENCE_PITCH_RANGE && remote != referencePitch) referencePitch = remote
-                    }
+                    data.getLong("referencePitch")?.let(::applyRemoteReferencePitch)
                 } finally {
                     restoring = false
                 }
             }
+    }
+
+    /** Applies the account's tuning; a value this version can't use falls back to A440, as a stored one does. */
+    internal fun applyRemoteReferencePitch(remote: Long) {
+        val pitch = remote.takeIf { it in REFERENCE_PITCH_RANGE.first..REFERENCE_PITCH_RANGE.last }?.toInt() ?: Note.STANDARD_A4.toInt()
+        if (pitch != referencePitch) referencePitch = pitch
     }
 
     fun detachFromFirestore() {

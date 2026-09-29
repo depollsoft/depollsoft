@@ -361,7 +361,7 @@ private struct TuningRow: View {
             .padding(.bottom, SettingsMetrics.subtitleBottom)
             Spacer(minLength: 16)
             Picker("Tuning", selection: $selection) {
-                ForEach(DPSettingsModel.commonReferencePitches, id: \.self) { hz in
+                ForEach(DPSettingsModel.referencePitchChoices(current: selection), id: \.self) { hz in
                     Text(SettingsModel.tuningLabel(hz)).tag(hz)
                 }
             }

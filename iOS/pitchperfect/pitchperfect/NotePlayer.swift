@@ -27,10 +27,10 @@ final class NotePlayer {
         settingsObserver = NotificationCenter.default.addObserver(
             forName: .settingsChanged, object: nil, queue: .main
         ) { [weak self] _ in
-            MainActor.assumeIsolated {
-                guard let self, self.referencePitch != DPNote.referencePitch else { return }
-                self.referencePitch = DPNote.referencePitch
-            }
+            // Every settings change resyncs (an Observable set notifies even when the
+            // value is equal), so a tuning applied without passing through here, as
+            // at launch, can never leave a stale copy.
+            MainActor.assumeIsolated { self?.referencePitch = DPNote.referencePitch }
         }
     }
 

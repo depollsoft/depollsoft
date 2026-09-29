@@ -37,6 +37,8 @@ final class DPAppDelegate: UIResponder, UIApplicationDelegate {
         configureWidgetPlayback()
         guard !Self.isRunningTests else { return true }
         DPSettingsModel.sharedInstance.applyReferencePitch()
+        // Models made before launch (NotePlayer) pick up the stored tuning.
+        NotificationCenter.default.post(name: .settingsChanged, object: DPSettingsModel.sharedInstance)
 
         DPAppLog.start()
         FirebaseApp.configure()

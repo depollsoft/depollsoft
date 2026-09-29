@@ -58,6 +58,33 @@ final class SettingsModelTests: PitchPerfectTestCase {
         XCTAssertEqual(DPSettingsModel.sharedInstance.referencePitch, 440, "a bad stored value reads as A440")
     }
 
+    func testASyncedTuningThisVersionCannotUseFallsBackToA440() {
+        let settings = DPSettingsModel.sharedInstance
+        settings.referencePitch = 442
+        settings.applyRemote(wakeLock: nil, toggleNotes: nil, referencePitch: 1000)
+        XCTAssertEqual(settings.referencePitch, 440)
+        XCTAssertEqual(DPNote.referencePitch, 440)
+        settings.applyRemote(wakeLock: nil, toggleNotes: nil, referencePitch: 431)
+        XCTAssertEqual(settings.referencePitch, 431, "an uncommon value in range is kept")
+        XCTAssertEqual(NotePlayer.shared.referencePitch, 431)
+    }
+
+    func testAnUncommonTuningIsOfferedAmongTheChoices() {
+        XCTAssertEqual(Array(DPSettingsModel.referencePitchChoices(current: 431).prefix(4)), [415, 430, 431, 432])
+        XCTAssertEqual(DPSettingsModel.referencePitchChoices(current: 440), DPSettingsModel.commonReferencePitches)
+    }
+
+    func testAnySettingsChangeResyncsTheNotePlayersTuning() {
+        // As at launch: the tuning is applied without a notification, then one follows.
+        DPNote.referencePitch = 435
+        XCTAssertEqual(NotePlayer.shared.referencePitch, 440)
+        NotificationCenter.default.post(name: .settingsChanged, object: DPSettingsModel.sharedInstance)
+        XCTAssertEqual(NotePlayer.shared.referencePitch, 435)
+        DPNote.referencePitch = 440
+        NotificationCenter.default.post(name: .settingsChanged, object: DPSettingsModel.sharedInstance)
+        XCTAssertEqual(NotePlayer.shared.referencePitch, 440)
+    }
+
     func testTuningChoicesNameTheHistoricalAndStandardPitches() {
         XCTAssertTrue(DPSettingsModel.commonReferencePitches.contains(440))
         XCTAssertEqual(SettingsModel.tuningLabel(415), "415 Hz (Baroque)")

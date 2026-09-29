@@ -125,6 +125,32 @@ class SettingsScreenTest {
     }
 
     @Test
+    fun aTuningSyncedFromAnotherDeviceShowsOnTheOpenScreen() {
+        settings()
+        // Stands in for the account's snapshot listener: nothing on this screen asks to redraw.
+        SettingsModel.applyRemoteReferencePitch(443)
+        screens.settle()
+        compose.onNodeWithTag(TestTags.TUNING).assert(hasText("A4 = 443 Hz", substring = true))
+    }
+
+    @Test
+    fun aSyncedTuningThisVersionCannotUseFallsBackToA440() {
+        SettingsModel.referencePitch = 442
+        SettingsModel.applyRemoteReferencePitch(1000)
+        assertEquals(440, SettingsModel.referencePitch)
+        assertEquals(440.0, Note.getReferencePitch(), 1e-9)
+    }
+
+    @Test
+    fun anUncommonSyncedTuningIsOfferedAndSelected() {
+        SettingsModel.applyRemoteReferencePitch(431)
+        settings()
+        screens.click(TestTags.TUNING)
+        compose.onNodeWithTag(TestTags.TUNING_CHOICE + 431).assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
+        assertEquals(listOf(415, 430, 431, 432), SettingsModel.referencePitchChoices(431).take(4))
+    }
+
+    @Test
     fun anUnexpectedStoredTuningReadsAsA440() {
         SettingsModel.referencePitch = 1000
         assertEquals("out-of-range values are refused", 440, SettingsModel.referencePitch)

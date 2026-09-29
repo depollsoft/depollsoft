@@ -91,7 +91,9 @@ class SettingsState {
 
     /** The A4 the notes are tuned to, in Hz. */
     var referencePitch: Int
-        get() = version.let { SettingsModel.referencePitch }
+        // Reads the notes' tuning too, which is snapshot state: a change synced from another
+        // device redraws the open screen, not only a change made here.
+        get() = version.let { Note.getReferencePitch().let { SettingsModel.referencePitch } }
         set(value) {
             SettingsModel.referencePitch = value
             changed()
@@ -334,7 +336,7 @@ fun TuningDialog(
     ) {
         val scroll = rememberScrollState()
         Column(Modifier.verticalScroll(scroll).padding(start = 16.dp, end = 24.dp, top = 8.dp)) {
-            Note.COMMON_A4_FREQUENCIES.forEach { hz ->
+            SettingsModel.referencePitchChoices(selected).forEach { hz ->
                 RadioChoice(tuningLabel(hz), hz == selected, "${TestTags.TUNING_CHOICE}$hz") { onChoose(hz) }
             }
         }
