@@ -634,6 +634,45 @@ final class WidgetNoteSoundTests: XCTestCase {
         XCTAssertEqual(deactivations, 1, "with nothing left sounding the widget gives the session back")
     }
 
+    func testAWaveCellFadesOutBeforeTheSessionIsGivenUp() throws {
+        var deactivations = 0
+        var pending: [@MainActor () -> Void] = []
+        let widget = WidgetTonePlayer.shared
+        let original = (widget.deactivateSession, widget.later)
+        widget.deactivateSession = { deactivations += 1 }
+        widget.later = { delay, work in
+            XCTAssertEqual(delay, WidgetTonePlayer.waveFade + 0.01, accuracy: 1e-9)
+            pending.append(work)
+        }
+        defer { (widget.deactivateSession, widget.later) = original }
+        WidgetSoundState.set("square")
+        try widget.toggle(pitchIndex: 2, frequency: 293.66)
+        XCTAssertEqual(widget.activePitches, [2])
+        try widget.toggle(pitchIndex: 2, frequency: 293.66)
+        XCTAssertTrue(widget.activePitches.isEmpty, "the cell is off at once")
+        XCTAssertEqual(deactivations, 0, "the loop is still fading out")
+        XCTAssertTrue(WidgetToneActivity.isSounding)
+        XCTAssertEqual(pending.count, 1)
+        pending.removeFirst()()
+        XCTAssertEqual(deactivations, 1, "once it has faded, the session is given back")
+        XCTAssertFalse(WidgetToneActivity.isSounding)
+    }
+
+    func testThePitchPipeCellStopsAtOnceAsItAlwaysHas() throws {
+        var deactivations = 0
+        var pending: [@MainActor () -> Void] = []
+        let widget = WidgetTonePlayer.shared
+        let original = (widget.deactivateSession, widget.later)
+        widget.deactivateSession = { deactivations += 1 }
+        widget.later = { _, work in pending.append(work) }
+        defer { (widget.deactivateSession, widget.later) = original }
+        WidgetSoundState.set(WidgetSoundState.pitchPipe)
+        try widget.toggle(pitchIndex: 2, frequency: 293.66)
+        try widget.toggle(pitchIndex: 2, frequency: 293.66)
+        XCTAssertTrue(pending.isEmpty, "no fade")
+        XCTAssertEqual(deactivations, 1)
+    }
+
     func testStoppingTheWidgetStopsItsInstrumentNotes() throws {
         var stopped = 0
         WidgetInstrumentHook.start = { _, _ in NSObject() }
@@ -682,7 +721,7 @@ final class WidgetNoteSoundTests: XCTestCase {
             var app = [Float](repeating: 0, count: 2000)
             DPWaveRender(&state, &app, 2000)
             let widget = PlayWidgetPitchIntent.samples(frequency: 440.1, frames: 2000, sampleRate: 44_100, sound: sound)
-            for frame in 220..<2000 {
+            for frame in 882..<2000 {
                 XCTAssertEqual(widget[frame] / Double(Int16.max), Double(app[frame]), accuracy: 1e-5, "\(sound) \(frame)")
             }
         }

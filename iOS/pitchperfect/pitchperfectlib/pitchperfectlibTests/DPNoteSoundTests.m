@@ -125,35 +125,43 @@
     XCTAssertEqual(shape, DPWaveShapeSawtooth);
 }
 
-- (void)testTheSineRampsInOver5msThenHoldsItsLevel {
+/// The fades' raised cosine at `n` of 882 samples.
+static double fadeIn(int n) {
+    return n < 882 ? 0.5 * (1 - cos(M_PI * n / 882.0)) : 1;
+}
+
+- (void)testTheSineFadesInOver20msOnARaisedCosineThenHoldsItsLevel {
     // 441 Hz: a hundred samples a cycle.
-    float *sine = [self render:@"sine" frequency:441 count:1000];
+    float *sine = [self render:@"sine" frequency:441 count:2000];
     XCTAssertEqual(sine[0], 0);
-    XCTAssertEqualWithAccuracy(sine[25], 0.89 * 25 / 220.0, 1e-6, @"a quarter cycle in, ramped");
-    XCTAssertEqualWithAccuracy(sine[125], 0.89 * 125 / 220.0, 1e-6);
-    XCTAssertEqualWithAccuracy(sine[325], 0.89, 1e-6, @"full level, -1 dBFS");
-    XCTAssertEqualWithAccuracy(sine[375], -0.89, 1e-6);
+    XCTAssertEqualWithAccuracy(sine[25], 0.89 * fadeIn(25), 1e-6, @"a quarter cycle in, faded");
+    XCTAssertEqualWithAccuracy(sine[425], 0.89 * fadeIn(425), 1e-6);
+    XCTAssertEqualWithAccuracy(fadeIn(441), 0.5, 1e-12, @"halfway through, half level");
+    XCTAssertEqualWithAccuracy(sine[925], 0.89, 1e-6, @"full level, -1 dBFS");
+    XCTAssertEqualWithAccuracy(sine[975], -0.89, 1e-6);
+    // Flat at the start: the first steps are far smaller than a linear ramp's.
+    XCTAssertLessThan(fadeIn(10), 10 / 882.0 / 10);
     free(sine);
 }
 
-- (void)testAReleasedWaveRampsOutOver5msThenStaysSilent {
+- (void)testAReleasedWaveFadesOutOver20msThenStaysSilent {
     DPWaveShape shape;
-    DPWaveShapeForSound(@"square", &shape);
+    DPWaveShapeForSound(@"sine", &shape);
     DPWaveState state = DPWaveStateMake(shape, 441, 44100);
-    float held[520]; // mid-cycle, away from the square's edge
-    DPWaveRender(&state, held, 520);
+    float held[1025]; // past the fade-in, at a crest
+    DPWaveRender(&state, held, 1025);
     XCTAssertFalse(DPWaveIsSilent(&state));
     DPWaveRelease(&state);
-    DPWaveRelease(&state); // a second release doesn't restart the ramp
-    float out[300];
-    DPWaveRender(&state, out, 300);
-    for (int i = 0; i < 220; i++) {
-        double limit = 0.89 * 1.2 * (1 - i / 220.0) + 1e-6; // PolyBLEP may overshoot a little
-        XCTAssertLessThanOrEqual(fabsf(out[i]), limit, @"sample %d is within the closing ramp", i);
+    DPWaveRelease(&state); // a second release doesn't restart the fade
+    float out[1000];
+    DPWaveRender(&state, out, 1000);
+    for (int i = 0; i < 882; i++) {
+        double expected = 0.89 * sin(2 * M_PI * (1025 + i) / 100.0) * (1 - fadeIn(i));
+        XCTAssertEqualWithAccuracy(out[i], expected, 1e-5, @"sample %d follows the fade-out", i);
     }
-    XCTAssertEqualWithAccuracy(fabsf(out[0]), 0.89, 0.2, @"the ramp starts from full level");
-    for (int i = 220; i < 300; i++) {
-        XCTAssertEqual(out[i], 0, @"silent after the ramp");
+    XCTAssertEqualWithAccuracy(out[0], 0.89, 1e-5, @"the fade starts from full level");
+    for (int i = 882; i < 1000; i++) {
+        XCTAssertEqual(out[i], 0, @"silent after the fade");
     }
     XCTAssertTrue(DPWaveIsSilent(&state));
     DPWaveState fresh = DPWaveStateMake(shape, 441, 44100);
@@ -161,27 +169,27 @@
 }
 
 - (void)testTheTriangleStartsAtZeroRisingLikeTheSine {
-    float *triangle = [self render:@"triangle" frequency:441 count:1000];
-    XCTAssertEqualWithAccuracy(triangle[300], 0, 1e-6);
-    XCTAssertEqualWithAccuracy(triangle[310], 0.89 * 0.4, 1e-6);
-    XCTAssertEqualWithAccuracy(triangle[325], 0.89, 1e-6);
-    XCTAssertEqualWithAccuracy(triangle[350], 0, 1e-6);
-    XCTAssertEqualWithAccuracy(triangle[375], -0.89, 1e-6);
+    float *triangle = [self render:@"triangle" frequency:441 count:2000];
+    XCTAssertEqualWithAccuracy(triangle[1300], 0, 1e-6);
+    XCTAssertEqualWithAccuracy(triangle[1310], 0.89 * 0.4, 1e-6);
+    XCTAssertEqualWithAccuracy(triangle[1325], 0.89, 1e-6);
+    XCTAssertEqualWithAccuracy(triangle[1350], 0, 1e-6);
+    XCTAssertEqualWithAccuracy(triangle[1375], -0.89, 1e-6);
     free(triangle);
 }
 
 - (void)testTheSquareAndSawtoothSmoothTheirEdges {
-    float *square = [self render:@"square" frequency:441 count:1000];
-    XCTAssertEqualWithAccuracy(square[325], 0.89, 1e-6);
-    XCTAssertEqualWithAccuracy(square[375], -0.89, 1e-6);
+    float *square = [self render:@"square" frequency:441 count:2000];
+    XCTAssertEqualWithAccuracy(square[1325], 0.89, 1e-6);
+    XCTAssertEqualWithAccuracy(square[1375], -0.89, 1e-6);
     // At an edge PolyBLEP lands on the midpoint, not a jump: 1 + polyBlep(0, dt) = 0.
-    XCTAssertEqualWithAccuracy(square[300], 0, 1e-6);
-    XCTAssertEqualWithAccuracy(square[350], 0, 1e-6, @"and the falling one");
-    float *saw = [self render:@"sawtooth" frequency:441 count:1000];
-    XCTAssertEqualWithAccuracy(saw[300], 0, 1e-6, @"the reset lands halfway");
-    XCTAssertEqualWithAccuracy(saw[350], 0, 1e-6);
-    XCTAssertEqualWithAccuracy(saw[375], 0.89 * 0.5, 1e-6);
-    for (int i = 220; i < 1000; i++) {
+    XCTAssertEqualWithAccuracy(square[1300], 0, 1e-6);
+    XCTAssertEqualWithAccuracy(square[1350], 0, 1e-6, @"and the falling one");
+    float *saw = [self render:@"sawtooth" frequency:441 count:2000];
+    XCTAssertEqualWithAccuracy(saw[1300], 0, 1e-6, @"the reset lands halfway");
+    XCTAssertEqualWithAccuracy(saw[1350], 0, 1e-6);
+    XCTAssertEqualWithAccuracy(saw[1375], 0.89 * 0.5, 1e-6);
+    for (int i = 0; i < 2000; i++) {
         XCTAssertLessThanOrEqual(fabsf(square[i]), 0.89f + 1e-6f);
         XCTAssertLessThanOrEqual(fabsf(saw[i]), 0.89f + 1e-6f);
     }
@@ -197,7 +205,7 @@
     NSUInteger count = 44100;
     float *square = [self render:@"square" frequency:frequency count:count];
     double naiveI = 0, naiveQ = 0, smoothI = 0, smoothQ = 0;
-    for (NSUInteger n = 220; n < count; n++) {
+    for (NSUInteger n = 882; n < count; n++) {
         double p = fmod(n * frequency / 44100, 1.0);
         double naive = p < 0.5 ? 0.89 : -0.89;
         double w = 2 * M_PI * alias * n / 44100;

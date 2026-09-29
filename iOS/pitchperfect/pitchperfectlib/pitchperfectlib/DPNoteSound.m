@@ -106,7 +106,9 @@ double DPPolyBlep(double t, double dt) {
 }
 
 static const double kWaveLevel = 0.89;
-static const long kRampSamples = 220;
+/// Both fades: 20 ms at 44.1 kHz on a raised cosine, flat at both ends so a
+/// pure tone starts and stops without a tick.
+static const long kFadeSamples = 882;
 
 void DPWaveRender(DPWaveState *state, float *buffer, NSUInteger count) {
     double p = state->phase;
@@ -127,12 +129,14 @@ void DPWaveRender(DPWaveState *state, float *buffer, NSUInteger count) {
                 value = (2 * p - 1) - DPPolyBlep(p, dt);
                 break;
         }
-        double ramp = state->elapsed < kRampSamples ? (double)state->elapsed / kRampSamples : 1;
+        double fade = state->elapsed < kFadeSamples
+            ? 0.5 * (1 - cos(M_PI * state->elapsed / kFadeSamples)) : 1;
         if (state->released >= 0) {
-            ramp *= state->released < kRampSamples ? 1 - (double)state->released / kRampSamples : 0;
+            fade *= state->released < kFadeSamples
+                ? 0.5 * (1 + cos(M_PI * state->released / kFadeSamples)) : 0;
             state->released++;
         }
-        buffer[i] = (float)(kWaveLevel * value * ramp);
+        buffer[i] = (float)(kWaveLevel * value * fade);
         state->elapsed++;
         p += dt;
         if (p >= 1) {
@@ -149,5 +153,5 @@ void DPWaveRelease(DPWaveState *state) {
 }
 
 BOOL DPWaveIsSilent(const DPWaveState *state) {
-    return state->released >= kRampSamples;
+    return state->released >= kFadeSamples;
 }

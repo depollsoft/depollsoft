@@ -35,12 +35,14 @@
 @interface DPAudioSynthesizer () {
     DPWaveState wave;
     DPWaveShape waveShape;
-    /// Whether the audio unit is running (it keeps running while a wave ramps out).
+    /// Whether the audio unit is running (it keeps running while a wave fades out).
     BOOL unitRunning;
     /// Set by start/stop on the caller's thread, applied by the render thread,
     /// which alone touches `wave` while the unit runs.
     atomic_int restartRequested;
     atomic_int releaseRequested;
+    /// Set by the render thread once a released wave has faded out.
+    atomic_int fadedOut;
     /// Bumped by every start, so a stop scheduled before it does nothing.
     NSUInteger generation;
 }
@@ -49,9 +51,12 @@
 
 static atomic_long sRunningCount = 0;
 
-/// How long a wave's unit keeps running after stop: its 220-sample ramp at
-/// 44.1 kHz, plus a buffer or two.
+/// When a stopped wave's unit is first checked for the end of its fade-out
+/// (882 samples, 20 ms at 44.1 kHz, from the next render), then how often
+/// after that, and for how long at most.
 static const double kWaveStopDelay = 0.03;
+static const double kWaveStopPoll = 0.01;
+static const int kWaveStopPolls = 50;
 
 const double TWO_PI = M_PI * 2;
 
@@ -225,12 +230,13 @@ OSStatus renderAudio (void *inRefCon,
     }
     generation++;
     if (unitRunning) {
-        // Still ramping out: the render thread starts the wave again.
+        // Still fading out: the render thread starts the wave again.
         atomic_store(&restartRequested, 1);
     } else {
-        // A wave starts again from its beginning, ramp and all.
+        // A wave starts again from its beginning, fade-in and all.
         wave = DPWaveStateMake(waveShape, frequency, sampleRate);
     }
+    atomic_store(&fadedOut, 0);
     isPlaying = YES;
     [self startUnit];
     time = 0;
@@ -246,12 +252,21 @@ OSStatus renderAudio (void *inRefCon,
         return;
     }
     atomic_store(&releaseRequested, 1);
-    NSUInteger stopping = generation;
-    // The block keeps the synthesizer alive until the ramp has played.
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kWaveStopDelay * NSEC_PER_SEC)),
+    [self stopUnitAfterFadeOut:generation delay:kWaveStopDelay polls:kWaveStopPolls];
+}
+
+/// Stops the unit once the render thread has played the fade-out, unless the
+/// note started again meanwhile. The block keeps the synthesizer alive.
+- (void)stopUnitAfterFadeOut:(NSUInteger)stopping delay:(double)delay polls:(int)polls {
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)),
                    dispatch_get_main_queue(), ^{
-        if (self->generation == stopping && !self->isPlaying) {
+        if (self->generation != stopping || self->isPlaying) {
+            return;
+        }
+        if (atomic_load(&self->fadedOut) || polls <= 0) {
             [self stopUnit];
+        } else {
+            [self stopUnitAfterFadeOut:stopping delay:kWaveStopPoll polls:polls - 1];
         }
     });
 }
@@ -306,6 +321,9 @@ OSStatus renderAudio (void *inRefCon,
             }
             done += chunk;
         }
+    }
+    if (DPWaveIsSilent(&wave)) {
+        atomic_store(&fadedOut, 1);
     }
     return noErr;
 }
