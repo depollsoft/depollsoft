@@ -76,15 +76,36 @@ triangle = 1 - 4 · |((p + 0.25) mod 1) - 0.5|
 square   = (p < 0.5 ? 1 : -1) + polyBlep(p, dt) - polyBlep((p + 0.5) mod 1, dt)
 sawtooth = (2p - 1) - polyBlep(p, dt)
 
-sample   = 0.89 · value · min(1, n / 220)   // n = samples since the note started
-                            · max(0, 1 - r / 220)   // iOS: r = samples since it was released
+sample   = 0.89 · value · fadeIn(n) · fadeOut(r)
+fadeIn(n)  = n < 882 ? ½ · (1 - cos(π · n / 882)) : 1   // n = samples since the note started
+fadeOut(r) = r < 882 ? ½ · (1 + cos(π · r / 882)) : 0   // r = samples since it was released
 ```
 
-PolyBLEP keeps the square and sawtooth from aliasing on high notes. The
-5 ms ramps keep the note's start and end from clicking. On iOS a released
-wave keeps its audio unit running until the closing ramp has played (about
-30 ms). On Android the track stops through `setStereoVolume(0, 0)`, which
-the mixer ramps. 0.89 is -1 dBFS.
+PolyBLEP keeps the square and sawtooth from aliasing on high notes. 0.89 is
+-1 dBFS. Both fades last 20 ms (882 samples) on a raised cosine, which is flat
+at both ends, so a pure tone starts and stops without a tick. The 5 ms linear
+ramp this replaced had a corner at each end, and users heard a click at the
+start.
+
+How each platform plays the fades:
+
+- **Android:** the fade-in is in the samples (`WaveSource`). A released note
+  fades through `setStereoVolume` in 2 ms raised-cosine steps, because the
+  wave already queued (a second at the start, then about 0.2 s) would
+  otherwise play at full level. Its track is then paused and flushed.
+  How a wave track runs:
+  - **Priming:** it writes its whole buffer before `play()`, because a
+    streaming track doesn't start until it holds its start threshold (the
+    whole buffer). Filling from the watcher thread after `play()` raced the
+    start: the first write landed about 40 ms late.
+  - **Refills:** after that it writes only what the buffer has room for, so
+    its filler never blocks inside `write()`. A blocked write could land old
+    audio after the flush.
+  - **Reuse:** a pooled wave track is always flushed, so a note never starts
+    by replaying the tail of the last one.
+  - The pitch pipe's tracks behave exactly as before.
+- **iOS:** both fades are applied to the samples. A released wave keeps its
+  audio unit running until the fade-out has played.
 
 ## Instruments: MIDI
 

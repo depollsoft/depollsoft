@@ -2,7 +2,7 @@ package depollsoft.pitchperfect.lib.sound
 
 import kotlin.math.PI
 import kotlin.math.abs
-import kotlin.math.min
+import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
@@ -10,7 +10,11 @@ import kotlin.math.sin
 const val WAVE_SAMPLE_RATE = 44100
 
 private const val LEVEL = 0.89 // -1 dBFS
-private const val RAMP_SAMPLES = 220 // 5 ms at 44.1 kHz
+/** A wave's fade-in: 20 ms at 44.1 kHz, long enough that a pure tone starts without a tick. */
+internal const val RAMP_SAMPLES = 882
+
+/** The fade-in's gain [n] samples in: a raised cosine, flat at both ends so neither makes a corner. */
+internal fun rampGain(n: Int): Double = if (n >= RAMP_SAMPLES) 1.0 else 0.5 * (1 - cos(PI * n / RAMP_SAMPLES))
 
 /** PolyBLEP: smooths a wave's jump at phase 0 over one sample either side, so it doesn't alias. */
 internal fun polyBlep(t: Double, dt: Double): Double =
@@ -26,7 +30,7 @@ internal fun polyBlep(t: Double, dt: Double): Double =
         else -> 0.0
     }
 
-/** An endless sine, triangle, square or sawtooth at [frequency], ramping in over its first 5 ms. */
+/** An endless sine, triangle, square or sawtooth at [frequency], fading in over its first 20 ms. */
 class WaveSource(
     private val sound: NoteSound,
     frequency: Double,
@@ -50,8 +54,8 @@ class WaveSource(
                 NoteSound.SQUARE -> (if (p < 0.5) 1.0 else -1.0) + polyBlep(p, dt) - polyBlep((p + 0.5) % 1.0, dt)
                 else -> (2 * p - 1) - polyBlep(p, dt)
             }
-        val sample = LEVEL * value * min(1.0, count.toDouble() / RAMP_SAMPLES)
-        count++
+        val sample = LEVEL * value * rampGain(count)
+        if (count < RAMP_SAMPLES) count++
         phase += dt
         if (phase >= 1) phase -= 1
         return sample
