@@ -1,9 +1,11 @@
 # Pitch Perfect note sounds
 
 Settings has a **Sound** choice for the voice every note plays in. The
-original voice stays the default. Waves are generated in code, and
-instruments are played through each platform's MIDI synth. Both platforms
-offer the same sounds and store and sync the choice the same way.
+original voice stays the default. Waves are generated in code. Instruments
+are played live from note-on and note-off through a SoundFont synth, from the
+same bundled SoundFont on both platforms: AVAudioUnitSampler on iOS, and
+TinySoundFont, ported to Kotlin, on Android. Both platforms offer the same
+sounds and store and sync the choice the same way.
 
 ## The sounds
 
@@ -124,11 +126,6 @@ key          = round(69 + 12 · log2(storedFrequency / 440))
 program      = the sound's GM program
 correction   = instrument-tuning.json[platform][program].correctionCents[key - 24]
                // keys outside 24…107 use the nearest end's value
-if correction is null:   // this synth's instrument is silent at this key
-    program = the sound's fallback, if it sounds here, else 0 (piano)
-    correction = that program's value for the key
-    // fallbacks: harmonica → reed organ (20); accordion → reed organ (20);
-    // every other instrument → piano
 tuningCents  = 1200 · log2(referencePitch / 440)
 pitchCents   = tuningCents + correction
 velocity     = 100
@@ -136,54 +133,62 @@ velocity     = 100
 
 `shared/pitchperfect/instrument-tuning.json` comes from
 `scripts/pitchperfect/measure_instruments.py`. The script plays every key of
-every instrument through the synth each platform uses and measures how far it
-lands from true pitch. Sound banks are tuned by ear, and some zones are out
-by 20–35 cents, so the correction is what keeps a MIDI instrument usable as a
-pitch reference. The file also holds `gainDb` for each instrument: the gain
-that brings its loudest note in the middle of the range to -4 dBFS. Rerun the
-script if the sound bank or the list of instruments changes.
+every instrument through the synth each platform uses: AVAudioUnitSampler for
+the `ios` column, and for `android` the C TinySoundFont
+(`scripts/pitchperfect/tinysoundfont/tsf_note.c`), which the Kotlin port
+matches sample for sample. It measures how far each key lands from true pitch.
+The bank's zones are tuned by ear, and some are out by 20–35 cents: the
+choir's worst is 34 cents, and the lowest piano keys' 33. The correction is
+what keeps an instrument usable as a pitch reference. The file also holds
+`gainDb` for each instrument: the gain that brings its loudest note in the
+middle of the range to -4 dBFS. Rerun the script if the sound bank or the
+list of instruments changes.
 
-Android's built-in bank is silent in a few places. Harmonica only sounds
-from C4 to F♯5, and reed organ only up to F6. Accordion is silent below C3
-and above C7, and vibraphone and flute below C2. The free reeds (harmonica,
-accordion) fall back to the reed organ, which is closest to a pitch pipe's
-reed; any other silent key plays the piano.
+The bank sounds every key of every instrument on both synths, so a note
+always plays its own instrument. A `null` correction would mean a silent key;
+none is left, and the apps read one as 0.
 
 Harmonica and reed organ are the instruments closest to a real pitch pipe,
 which is itself a free reed.
 
-### Android: a generated MIDI file
+### Android: TinySoundFont
 
-Android's built-in General MIDI synth (Sonivox EAS) is reached through
-`MediaPlayer`, which plays standard MIDI files. Each note builds a small
-type-0 SMF in memory and plays it through a `MediaDataSource`, with no temp
-files.
+Android plays the same `PitchPerfectInstruments.sf2` as iOS, through a Kotlin
+port of [TinySoundFont](https://github.com/schellingb/TinySoundFont) (MIT,
+`tsf.h` v0.9 at commit 853a0a17) in `PitchPerfectLib`'s
+`lib/sound/soundfont`. The port keeps TinySoundFont's float and double
+arithmetic in the same order. `TinySoundFontGoldenTest` replays 32 clips
+through it and through the C original
+(`scripts/pitchperfect/tinysoundfont/make_golden.sh`): every instrument at
+two keys with a release, a retuned note and a chord. A handful of samples
+differ, by 1 LSB. Like the original, it ignores the SoundFont's modulators,
+chorus and reverb. So a few instruments differ from how AUSampler plays them:
+the clarinet is darker, for one.
 
-```
-MThd  format 0, 1 track, 480 ticks per quarter (120 bpm by default: 960 ticks a second)
-MTrk  delta 0  B0 65 00          RPN MSB 0 (pitch bend sensitivity)
-      delta 0  B0 64 00          RPN LSB 0
-      delta 0  B0 06 03          ±3 semitones
-      delta 0  B0 26 00
-      delta 0  C0 <program>
-      delta 0  E0 <bend LSB> <bend MSB>   bend = clamp(round(8192 + pitchCents / 300 · 8192), 0, 16383)
-      delta 0  90 <key> 64       note on, velocity 100
-      delta 30 min  80 <key> 00  note off
-      delta 0  FF 2F 00
-```
-
-- `prepare()` took 3–40 ms on an API 36 emulator and `start()` under 1 ms;
-  four notes can play at once. Prepare off the main thread, then start. A
-  note always starts, even if it was released while preparing, and fades
-  out no sooner than 250 ms after it began, so a quick tap is still heard.
-  The first instrument note after launch took 72–105 ms to sound on the
-  emulator, while its player thread started; later ones took 7–30 ms.
-- Gain: attach a `LoudnessEnhancer` to the player's audio session with
-  `gainDb · 100` mB when `gainDb` > 0.
-- Stop: ramp `setVolume` from 1 to 0 over about 30 ms, then `stop()` and
-  `release()`, so a held note doesn't end in a click.
-- A `MediaPlayer` lives only while its note sounds. If a note is still held
-  when its 30 minutes run out, play it again.
+- **One synth, a channel per note.** `InstrumentEngine` holds one
+  `TinySoundFont`. A note takes a MIDI channel of its own and sets it to the
+  note's program, to `pitchCents` as its tuning, and to `gainDb` as its
+  volume. Then it plays note-on at velocity 100. Stopping is note-off, so the
+  instrument's release plays. A channel is reused only once its release has
+  finished, so a new note's tuning never bends a ringing tail. Past 32
+  channels, the release that has played longest is cut short (10 ms).
+- **One track.** `InstrumentPlayer` streams the synth at 44.1 kHz, mono, into
+  one `StreamingAudioTrack` that holds at least 2048 frames, about 46 ms.
+  Like a wave's track, it fills its whole buffer before `play()`, then writes
+  only what the buffer has room for, in chunks of at least 256 frames. So a
+  note played while others sound is heard within about 46 ms. Half a second
+  after the last release dies away, the track fades out, pauses and flushes.
+  The next note starts it again. A note played while it's stopping starts
+  when the restart primes the buffer.
+- **The bank.** The phone app ships the SoundFont as an uncompressed asset
+  (`noCompress 'sf2'`). `InstrumentPlayer` memory-maps it, so the 8.8 MB stay
+  off the heap, and reads samples straight from the mapping. It maps the bank
+  and pages in the chosen instrument's samples off the main thread: at launch
+  when the stored sound is an instrument, and whenever one is chosen. Wear
+  doesn't ship the bank.
+- The JVM tests run the real synth over the real bank (`InstrumentEngineTest`):
+  a note's channel, tuning and gain, a piano still sounding when held 3 s, a
+  release that then falls silent, and a chord.
 
 ### iOS: AVAudioUnitSampler
 
@@ -243,7 +248,12 @@ last tone stops and the app is sounding nothing else.
 
 The Sound row sits under Tuning and follows that row's pattern on each
 platform. Android shows an outlined drop-down field that opens a dialog
-listing the sounds, with the section headings. iOS shows a picker row that
+listing the sounds, with the section headings. On Android, the Sound and
+Tuning lists (`DialogChoiceList`) span the dialog, so a drag anywhere across
+them scrolls and a tap anywhere along a row chooses it. While a list has
+choices past an edge, a plate hairline marks that edge and the rows fade into
+it. The scrollbar stays in view, and a list taller than the dialog ends
+halfway through a row. A list that fits shows none of these cues. iOS shows a picker row that
 pushes a list with sections. Choosing a sound plays a short preview: C4 at the
 current tuning for 1 s, or less if the user leaves the screen. The preview
 lets the user hear the sound without leaving Settings.
