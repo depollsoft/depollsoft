@@ -11,12 +11,17 @@ program numbers. Writes shared/pitchperfect/PitchPerfectInstruments.sf2.
 """
 
 import argparse
+import hashlib
 import os
 import struct
 import tempfile
 import urllib.request
 
-SOUNDFONT_URL = "https://github.com/mrbumpy409/GeneralUser-GS/raw/main/GeneralUser-GS.sf2"
+# GeneralUser GS v2.0.3, pinned to the upstream commit that published it and
+# checked by digest, so a rerun can never package different samples.
+SOUNDFONT_COMMIT = "97049183643d5fc5a9322a69c5b09efb667c6c3a"
+SOUNDFONT_URL = f"https://github.com/mrbumpy409/GeneralUser-GS/raw/{SOUNDFONT_COMMIT}/GeneralUser-GS.sf2"
+SOUNDFONT_SHA256 = "9575028c7a1f589f5770fccc8cff2734566af40cd26ed836944e9a5152688cfe"
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 OUTPUT = os.path.join(REPO, "shared", "pitchperfect", "PitchPerfectInstruments.sf2")
 
@@ -178,10 +183,14 @@ def main():
     args = parser.parse_args()
     source = args.source
     if not source:
-        source = os.path.join(tempfile.gettempdir(), "GeneralUser-GS.sf2")
+        source = os.path.join(tempfile.gettempdir(), f"GeneralUser-GS-{SOUNDFONT_COMMIT[:12]}.sf2")
         if not os.path.exists(source):
             print("downloading GeneralUser GS…")
             urllib.request.urlretrieve(SOUNDFONT_URL, source)
+    with open(source, "rb") as f:
+        digest = hashlib.sha256(f.read()).hexdigest()
+    if digest != SOUNDFONT_SHA256:
+        raise SystemExit(f"{source} is not GeneralUser GS v2.0.3 (sha256 {digest}, expected {SOUNDFONT_SHA256})")
     font, names = subset(source)
     os.makedirs(os.path.dirname(OUTPUT), exist_ok=True)
     with open(OUTPUT, "wb") as f:
