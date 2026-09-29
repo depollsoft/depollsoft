@@ -564,6 +564,22 @@ final class NoteSoundSettingTests: PitchPerfectTestCase {
         XCTAssertTrue(app.navigationTitles.contains("Sound"), "choosing stays on the list")
         app.resetSettings()
     }
+
+    /// The Tuning row shows the frequency alone, as a measurement; the
+    /// historical names stay in its menu and in what VoiceOver reads.
+    func testTheTuningRowShowsTheFrequencyAndReadsItsName() throws {
+        XCTAssertEqual(SettingsModel.tuningValue(440), "440 Hz")
+        XCTAssertEqual(SettingsModel.tuningAccessibilityValue(415), "415 Hz, Baroque")
+        XCTAssertEqual(SettingsModel.tuningAccessibilityValue(442), "442 Hz")
+        DPSettingsModel.sharedInstance.referencePitch = 440
+        defer { DPSettingsModel.sharedInstance.referencePitch = 440 }
+        let app = try launch()
+        app.ui.tap(id: "gearshape")
+        settle { app.sheet.exists(id: "settings.tuning") }
+        XCTAssertEqual(app.sheet.label(id: "settings.tuning"), "Tuning")
+        XCTAssertEqual(app.sheet.value(id: "settings.tuning"), "440 Hz, Standard")
+        app.resetSettings()
+    }
 }
 
 @MainActor

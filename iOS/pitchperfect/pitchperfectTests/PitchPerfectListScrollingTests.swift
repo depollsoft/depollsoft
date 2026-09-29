@@ -175,6 +175,25 @@ final class PitchPerfectListScrollingTests: PitchPerfectTestCase {
         DPSettingsModel.sharedInstance.noteSound = DPNoteSoundPitchPipe
     }
 
+    /// The Sound list opens on the current choice, even the last one.
+    func testTheSoundListOpensOnTheCurrentChoice() throws {
+        defer { DPSettingsModel.sharedInstance.noteSound = DPNoteSoundPitchPipe }
+        for sound in ["harp", "choir"] {
+            for layout in [layouts[0], layouts[1]] {
+                DPSettingsModel.sharedInstance.noteSound = sound
+                let app = try settingsRevealing("settings.sound", layout)
+                app.sheet.tap(id: "settings.sound")
+                var list: UIScrollView?
+                settle { list = self.visibleList(app); return app.navigationTitles.contains("Sound") && app.sheet.exists(id: "sound.\(sound)") }
+                let sounds = try XCTUnwrap(list, "\(sound), \(layout)")
+                assertFullyVisible(app.sheet.element(id: "sound.\(sound)"), in: sounds, "\(sound), \(layout)")
+                XCTAssertTrue(app.sheet.isSelected(id: "sound.\(sound)"), "\(sound), \(layout)")
+                app.resetSettings()
+                app.tearDown()
+            }
+        }
+    }
+
     /// The Tuning picker is a system menu; it must scroll to its last choice too.
     func testTheTuningMenuScrollsToItsLastChoice() throws {
         let choices = DPSettingsModel.referencePitchChoices(current: 440)

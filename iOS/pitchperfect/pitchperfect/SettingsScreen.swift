@@ -154,6 +154,19 @@ final class SettingsModel {
         }
     }
 
+    /// The value the Tuning row shows: the frequency alone, as a measurement.
+    static func tuningValue(_ hz: Int) -> String { "\(hz) Hz" }
+
+    /// What VoiceOver reads for the Tuning row: "440 Hz, Standard".
+    static func tuningAccessibilityValue(_ hz: Int) -> String {
+        switch hz {
+        case 415: "\(hz) Hz, Baroque"
+        case 430: "\(hz) Hz, Classical"
+        case 440: "\(hz) Hz, Standard"
+        default: "\(hz) Hz"
+        }
+    }
+
     func setTheme(_ value: Int) {
         DPTheme.storedTheme = value
         theme = value
@@ -411,9 +424,9 @@ private struct TuningRow: View {
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        // Side by side as UIKit had it; at accessibility text sizes the choice
-        // ("440 Hz (Standard)") alone can be wider than a small phone, so it
-        // goes under the title there and keeps to the row's width.
+        // Side by side as UIKit had it; at accessibility text sizes the value
+        // and its chevrons can crowd a small phone's row, so they go under
+        // the title there and keep to the row's width.
         if typeSize.isAccessibilitySize {
             VStack(alignment: .leading, spacing: 4) {
                 title
@@ -444,14 +457,33 @@ private struct TuningRow: View {
         }
     }
 
+    /// The system menu of choices (checked, with the historical names), under
+    /// a label drawn to the plate's rules: the frequency is a measurement, so
+    /// it is set in the mono face, in the secondary ink the Sound row's value and
+    /// both rows' details use.
     private var picker: some View {
-        Picker("Tuning", selection: $selection) {
-            ForEach(DPSettingsModel.referencePitchChoices(current: selection), id: \.self) { hz in
-                Text(SettingsModel.tuningLabel(hz)).tag(hz)
+        Menu {
+            Picker("Tuning", selection: $selection) {
+                ForEach(DPSettingsModel.referencePitchChoices(current: selection), id: \.self) { hz in
+                    Text(SettingsModel.tuningLabel(hz)).tag(hz)
+                }
             }
+        } label: {
+            HStack(spacing: 6) {
+                Text(SettingsModel.tuningValue(selection))
+                    .font(.system(.body, design: .monospaced))
+                    .lineLimit(1)
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.footnote.weight(.semibold))
+                    .imageScale(.small)
+            }
+            .foregroundStyle(Color(uiColor: .secondaryLabel))
+            .contentShape(Rectangle())
         }
-        .pickerStyle(.menu)
-        .labelsHidden()
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .accessibilityLabel("Tuning")
+        .accessibilityValue(SettingsModel.tuningAccessibilityValue(selection))
         .accessibilityIdentifier("settings.tuning")
     }
 }
@@ -462,33 +494,62 @@ private struct SoundRow: View {
     let sound: String
     let action: () -> Void
     @Environment(\.settingsCellHeights) private var heights
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         Button(action: action) {
-            HStack {
-                VStack(alignment: .leading, spacing: SettingsMetrics.subtitleSpacing) {
-                    Text("Sound").foregroundStyle(Color(uiColor: .label))
-                    Text("Voice notes play in")
-                        .font(.subheadline)
-                        .foregroundStyle(Color(uiColor: .secondaryLabel))
+            // As the Tuning row: at accessibility text sizes the choice goes
+            // under the title instead of squeezing it to a sliver.
+            if typeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: 4) {
+                    title
+                    HStack {
+                        choice
+                        Spacer(minLength: 8)
+                        DisclosureIndicator()
+                            .accessibilityHidden(true)
+                    }
                 }
-                .padding(.top, SettingsMetrics.subtitleTop)
-                .padding(.bottom, SettingsMetrics.subtitleBottom)
-                Spacer(minLength: 16)
-                Text(DPSettingsModel.noteSoundLabel(sound))
-                    .foregroundStyle(Color(uiColor: .secondaryLabel))
-                    .lineLimit(1)
-                DisclosureIndicator()
-                    .accessibilityHidden(true)
+                .padding(.vertical, SettingsMetrics.subtitleTop)
+                .contentShape(Rectangle())
+            } else {
+                HStack {
+                    title
+                        .padding(.top, SettingsMetrics.subtitleTop)
+                        .padding(.bottom, SettingsMetrics.subtitleBottom)
+                    Spacer(minLength: 16)
+                    choice
+                        .lineLimit(1)
+                        .layoutPriority(1)
+                    DisclosureIndicator()
+                        .accessibilityHidden(true)
+                }
+                .frame(minHeight: heights?.subtitle)
+                .contentShape(Rectangle())
             }
-            .contentShape(Rectangle())
         }
         .buttonStyle(UnhighlightedRowStyle())
         .accessibilityLabel("Sound")
         .accessibilityValue(DPSettingsModel.noteSoundLabel(sound))
         .accessibilityIdentifier("settings.sound")
-        .frame(height: heights?.subtitle)
         .settingsRow()
+    }
+
+    private var title: some View {
+        VStack(alignment: .leading, spacing: SettingsMetrics.subtitleSpacing) {
+            Text("Sound").foregroundStyle(Color(uiColor: .label))
+            // Beside a long choice on a narrow phone the detail wraps rather
+            // than cutting off; the choice is what matters here.
+            Text("What every note sounds like")
+                .font(.subheadline)
+                .foregroundStyle(Color(uiColor: .secondaryLabel))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private var choice: some View {
+        Text(DPSettingsModel.noteSoundLabel(sound))
+            .foregroundStyle(Color(uiColor: .secondaryLabel))
     }
 }
 
@@ -499,40 +560,46 @@ struct SoundPickerScreen: View {
     @Environment(\.settingsCellHeights) private var heights
 
     var body: some View {
-        List {
-            ForEach(Array(DPSettingsModel.noteSoundSections.enumerated()), id: \.offset) { _, section in
-                Section {
-                    ForEach(section.sounds, id: \.self) { sound in
-                        Button { model.chooseNoteSound(sound) } label: {
-                            HStack {
-                                Text(DPSettingsModel.noteSoundLabel(sound))
-                                    .foregroundStyle(Color(uiColor: .label))
-                                Spacer()
-                                if sound == model.noteSound {
-                                    Image(systemName: "checkmark")
-                                        .font(.body.weight(.semibold))
-                                        .foregroundStyle(Plate.ink)
+        ScrollViewReader { proxy in
+            List {
+                ForEach(Array(DPSettingsModel.noteSoundSections.enumerated()), id: \.offset) { _, section in
+                    Section {
+                        ForEach(section.sounds, id: \.self) { sound in
+                            Button { model.chooseNoteSound(sound) } label: {
+                                HStack {
+                                    Text(DPSettingsModel.noteSoundLabel(sound))
+                                        .foregroundStyle(Color(uiColor: .label))
+                                    Spacer()
+                                    if sound == model.noteSound {
+                                        Image(systemName: "checkmark")
+                                            .font(.body.weight(.semibold))
+                                            .foregroundStyle(Plate.ink)
+                                    }
                                 }
+                                .contentShape(Rectangle())
                             }
-                            .contentShape(Rectangle())
+                            .buttonStyle(UnhighlightedRowStyle())
+                            .accessibilityAddTraits(sound == model.noteSound ? [.isSelected] : [])
+                            .accessibilityIdentifier("sound.\(sound)")
+                            .settingsRow(height: heights?.plain ?? 51)
+                            .id(sound)
                         }
-                        .buttonStyle(UnhighlightedRowStyle())
-                        .accessibilityAddTraits(sound == model.noteSound ? [.isSelected] : [])
-                        .accessibilityIdentifier("sound.\(sound)")
-                        .settingsRow(height: heights?.plain ?? 51)
-                    }
-                } header: {
-                    if let title = section.title {
-                        PlateHeader(title).settingsHeader()
+                    } header: {
+                        if let title = section.title {
+                            PlateHeader(title).settingsHeader()
+                        }
                     }
                 }
             }
+            .listStyle(.grouped)
+            .scrollContentBackground(.hidden)
+            .background(StaffBackground())
+            .staffScreenBackground()
+            .tableMargins(style: .grouped)
+            // Open on the current choice, wherever it is in the list, without
+            // animating: the list simply arrives there.
+            .onAppear { proxy.scrollTo(model.noteSound, anchor: .center) }
         }
-        .listStyle(.grouped)
-        .scrollContentBackground(.hidden)
-        .background(StaffBackground())
-        .staffScreenBackground()
-        .tableMargins(style: .grouped)
         .navigationTitle("Sound")
         .navigationBarTitleDisplayMode(.inline)
         .instrumentChrome()
