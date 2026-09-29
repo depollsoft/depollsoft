@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -107,8 +108,9 @@ fun PlateAlertDialog(
                         if (outer != null && card != null && !outer.localBoundingBoxOf(card).contains(position)) onDismissRequest()
                     }
                 }.padding(horizontal = CARD_INSET, vertical = verticalInset)
-                // The card stays centred in the space the keyboard leaves.
-                .windowInsetsPadding(WindowInsets.ime),
+                // The card stays centred in the space the keyboard and system bars leave, so a tall
+                // one never runs under the status bar or the gesture handle.
+                .windowInsetsPadding(WindowInsets.safeDrawing),
         ) {
             Column(
                 Modifier
@@ -171,7 +173,7 @@ fun AppCompatAlertDialog(
             Modifier
                 .dialogWindowWidth(screenWidth)
                 .padding(16.dp)
-                .windowInsetsPadding(WindowInsets.ime),
+                .windowInsetsPadding(WindowInsets.safeDrawing),
         ) {
             Column(Modifier.dialogEntrance().clip(DialogShape).background(background, DialogShape)) {
                 if (title != null) {

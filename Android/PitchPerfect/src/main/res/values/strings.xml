@@ -52,7 +52,9 @@
     <string name="SoundHarpsichord">Harpsichord</string>
     <string name="SoundVibraphone">Vibraphone</string>
     <string name="SoundOrgan">Organ</string>
+    <string name="SoundReedOrgan">Reed Organ</string>
     <string name="SoundAccordion">Accordion</string>
+    <string name="SoundHarmonica">Harmonica</string>
     <string name="SoundGuitar">Guitar</string>
     <string name="SoundHarp">Harp</string>
     <string name="SoundStrings">Strings</string>

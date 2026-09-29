@@ -417,7 +417,9 @@ fun soundLabel(sound: NoteSound): String =
             NoteSound.HARPSICHORD -> R.string.SoundHarpsichord
             NoteSound.VIBRAPHONE -> R.string.SoundVibraphone
             NoteSound.ORGAN -> R.string.SoundOrgan
+            NoteSound.REED_ORGAN -> R.string.SoundReedOrgan
             NoteSound.ACCORDION -> R.string.SoundAccordion
+            NoteSound.HARMONICA -> R.string.SoundHarmonica
             NoteSound.GUITAR -> R.string.SoundGuitar
             NoteSound.HARP -> R.string.SoundHarp
             NoteSound.STRINGS -> R.string.SoundStrings

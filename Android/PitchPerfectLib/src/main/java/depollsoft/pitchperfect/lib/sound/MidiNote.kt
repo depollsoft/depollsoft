@@ -76,9 +76,14 @@ object MidiNote {
         var program = sound.program
         var correction = tuning.correction(program, key)
         if (correction == null) {
-            // This synth's instrument is silent here: the piano sounds the note instead.
-            program = PIANO
-            correction = tuning.correction(PIANO, key) ?: 0.0
+            // This synth's instrument is silent here: its fallback sounds the note if it can,
+            // otherwise the piano.
+            program = sound.fallbackProgram
+            correction = tuning.correction(program, key)
+            if (correction == null) {
+                program = PIANO
+                correction = tuning.correction(PIANO, key) ?: 0.0
+            }
         }
         val tuningCents = 1200 * ln(referencePitch / 440) / ln(2.0)
         return MidiNotePlan(program, key, tuningCents + correction, tuning.gainDb(program))

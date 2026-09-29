@@ -86,7 +86,17 @@ public class PitchAudioTrackGenerator {
     return track;
   }
 
-  /** A track that plays {@code source}'s wave, filled as the pitch pipe's track is. */
+  /** How long a stopped wave fades out before its track is reset for reuse. */
+  public static final int WAVE_FADE_MILLIS = 20;
+
+  /** The fewest frames a wave writes at once, so the filler doesn't wake for a handful. */
+  private static final int WAVE_MIN_WRITE_FRAMES = 1024;
+
+  /**
+   * A track that plays {@code source}'s wave. Unlike the pitch pipe's, it fills its whole buffer
+   * before it starts, then writes only what the buffer has room for, so its filler never blocks
+   * holding samples a later flush would let in.
+   */
   public static AudioTrack getWaveAudioTrack(final WaveSource source,
       final int sampleRate, final int channelConfig, final int bufferTime) {
     final int numChannels = (channelConfig == AudioFormat.CHANNEL_CONFIGURATION_STEREO ? 2
@@ -94,25 +104,51 @@ public class PitchAudioTrackGenerator {
     final int bufferSizeInBytes = Math.max(AudioTrack.getMinBufferSize(
         sampleRate, channelConfig, AudioFormat.ENCODING_PCM_16BIT), sampleRate
         * bufferTime / 1000);
-    final short[] samples = new short[bufferSizeInBytes / 2];
     final StreamingAudioTrack track = PitchAudioTrackGenerator.getTrack(
         channelConfig, sampleRate, bufferSizeInBytes);
+    if (track.getPlayState() == AudioTrack.PLAYSTATE_PAUSED)
+      track.flush();
+    final short[] samples = new short[track.getCapacityFrames() * numChannels];
     track.setBufferFiller(new Action<Integer>() {
-      public void invoke(Integer value) {
+      public void invoke(Integer requested) {
         try {
-          for (int x = 0; x < samples.length; x += numChannels) {
-            short result = source.nextSample();
-            samples[x] = result;
-            if (numChannels == 2)
-              samples[x + 1] = result;
-          }
-          track.write(samples, 0, samples.length);
+          int room = track.getCapacityFrames() - track.getQueuedFrames();
+          int frames = Math.min(room, Math.max(requested, WAVE_MIN_WRITE_FRAMES));
+          if (requested <= 0 || frames <= 0)
+            return;
+          fillWave(source, samples, frames, numChannels);
+          track.write(samples, 0, frames * numChannels);
         }
         catch (Exception e) {
         }
       }
     });
+    track.setPrimesBeforePlay(true);
     return track;
+  }
+
+  /** Writes {@code frames} frames of {@code source} into {@code samples}, the same on every channel. */
+  static void fillWave(WaveSource source, short[] samples, int frames, int numChannels) {
+    for (int frame = 0; frame < frames; frame++) {
+      short value = source.nextSample();
+      for (int channel = 0; channel < numChannels; channel++)
+        samples[frame * numChannels + channel] = value;
+    }
+  }
+
+  /**
+   * Stops a wave track: fades it out, discards what it had queued and returns it to the pool, so
+   * the next note that takes it starts from silence.
+   */
+  public static void stopWave(AudioTrack track) {
+    final StreamingAudioTrack realTrack = (StreamingAudioTrack) track;
+    realTrack.fadeOutAndReset(WAVE_FADE_MILLIS, new Action<Void>() {
+      public void invoke(Void parameter) {
+        synchronized (PitchAudioTrackGenerator.trackPool) {
+          PitchAudioTrackGenerator.trackPool.add(realTrack);
+        }
+      }
+    });
   }
 
   private static StreamingAudioTrack getTrack(int channelConfig,
