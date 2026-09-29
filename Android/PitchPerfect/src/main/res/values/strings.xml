@@ -40,7 +40,7 @@
     <string name="TuningClassical">Classical</string>
     <string name="TuningStandard">Standard</string>
     <string name="Sound">Sound</string>
-    <string name="SoundSupport">What every note sounds like</string>
+    <string name="SoundSupport">How every note sounds</string>
     <string name="SoundDone">Done</string>
     <string name="SoundWaves">Waves</string>
     <string name="SoundSustained">Sustained</string>

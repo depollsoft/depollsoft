@@ -254,7 +254,7 @@ class SettingsScreenTest {
         assertEquals(tuning.left, sound.left, 0.5f)
         assertEquals(tuning.right, sound.right, 0.5f)
         compose.onNodeWithTag(TestTags.TUNING).assert(hasText("Frequency of A4", substring = true))
-        compose.onNodeWithTag(TestTags.SOUND).assert(hasText("What every note sounds like", substring = true))
+        compose.onNodeWithTag(TestTags.SOUND).assert(hasText("How every note sounds", substring = true))
     }
 
     @Test
