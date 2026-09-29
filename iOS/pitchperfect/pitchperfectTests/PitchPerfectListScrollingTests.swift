@@ -31,13 +31,13 @@ final class PitchPerfectListScrollingTests: PitchPerfectTestCase {
     private static let sePortrait = CGSize(width: 375, height: 667)
     private static let seLandscape = CGSize(width: 667, height: 375)
 
-    private let layouts = [
-        Layout(size: nil, largestText: false),
-        Layout(size: sePortrait, largestText: false),
-        Layout(size: seLandscape, largestText: false),
-        Layout(size: sePortrait, largestText: true),
-        Layout(size: seLandscape, largestText: true),
-    ]
+    // One test per layout: each launch and resize takes seconds on a loaded CI
+    // runner, and five layouts in one test outran its 30 s budget.
+    private static let fullScreen = Layout(size: nil, largestText: false)
+    private static let small = Layout(size: sePortrait, largestText: false)
+    private static let smallLandscape = Layout(size: seLandscape, largestText: false)
+    private static let smallLargestText = Layout(size: sePortrait, largestText: true)
+    private static let smallLandscapeLargestText = Layout(size: seLandscape, largestText: true)
 
     override func tearDown() {
         ScreenCatalog.scene?.traitOverrides.preferredContentSizeCategory = .unspecified
@@ -140,8 +140,14 @@ final class PitchPerfectListScrollingTests: PitchPerfectTestCase {
         return app
     }
 
-    func testSettingsScrollsToItsLastRow() throws {
-        for layout in layouts {
+    func testSettingsScrollsToItsLastRow() throws { try settingsScrollsToItsLastRow(Self.fullScreen) }
+    func testSettingsScrollsToItsLastRowOnASmallPhone() throws { try settingsScrollsToItsLastRow(Self.small) }
+    func testSettingsScrollsToItsLastRowInLandscape() throws { try settingsScrollsToItsLastRow(Self.smallLandscape) }
+    func testSettingsScrollsToItsLastRowAtTheLargestText() throws { try settingsScrollsToItsLastRow(Self.smallLargestText) }
+    func testSettingsScrollsToItsLastRowInLandscapeAtTheLargestText() throws { try settingsScrollsToItsLastRow(Self.smallLandscapeLargestText) }
+
+    private func settingsScrollsToItsLastRow(_ layout: Layout) throws {
+        do {
             let app = try launchSettings(layout)
             var list: UIScrollView?
             settle { list = self.visibleList(app); return list != nil }
@@ -154,9 +160,15 @@ final class PitchPerfectListScrollingTests: PitchPerfectTestCase {
         }
     }
 
-    func testTheSoundListScrollsToItsLastSoundAndChoosesIt() throws {
+    func testTheSoundListScrollsToItsLastSoundAndChoosesIt() throws { try soundListScrollsToItsLastSound(Self.fullScreen) }
+    func testTheSoundListScrollsToItsLastSoundOnASmallPhone() throws { try soundListScrollsToItsLastSound(Self.small) }
+    func testTheSoundListScrollsToItsLastSoundInLandscape() throws { try soundListScrollsToItsLastSound(Self.smallLandscape) }
+    func testTheSoundListScrollsToItsLastSoundAtTheLargestText() throws { try soundListScrollsToItsLastSound(Self.smallLargestText) }
+    func testTheSoundListScrollsToItsLastSoundInLandscapeAtTheLargestText() throws { try soundListScrollsToItsLastSound(Self.smallLandscapeLargestText) }
+
+    private func soundListScrollsToItsLastSound(_ layout: Layout) throws {
         let last = try XCTUnwrap(DPSettingsModel.noteSoundSections.last?.sounds.last)
-        for layout in layouts {
+        do {
             DPSettingsModel.sharedInstance.noteSound = DPNoteSoundPitchPipe
             let app = try settingsRevealing("settings.sound", layout)
             app.sheet.tap(id: "settings.sound")
@@ -179,7 +191,7 @@ final class PitchPerfectListScrollingTests: PitchPerfectTestCase {
     func testTheSoundListOpensOnTheCurrentChoice() throws {
         defer { DPSettingsModel.sharedInstance.noteSound = DPNoteSoundPitchPipe }
         for sound in ["harp", "choir"] {
-            for layout in [layouts[0], layouts[1]] {
+            for layout in [Self.fullScreen, Self.small] {
                 DPSettingsModel.sharedInstance.noteSound = sound
                 let app = try settingsRevealing("settings.sound", layout)
                 app.sheet.tap(id: "settings.sound")
@@ -195,11 +207,17 @@ final class PitchPerfectListScrollingTests: PitchPerfectTestCase {
     }
 
     /// The Tuning picker is a system menu; it must scroll to its last choice too.
-    func testTheTuningMenuScrollsToItsLastChoice() throws {
+    func testTheTuningMenuScrollsToItsLastChoice() throws { try tuningMenuScrollsToItsLastChoice(Self.fullScreen) }
+    func testTheTuningMenuScrollsToItsLastChoiceOnASmallPhone() throws { try tuningMenuScrollsToItsLastChoice(Self.small) }
+    func testTheTuningMenuScrollsToItsLastChoiceInLandscape() throws { try tuningMenuScrollsToItsLastChoice(Self.smallLandscape) }
+    func testTheTuningMenuScrollsToItsLastChoiceAtTheLargestText() throws { try tuningMenuScrollsToItsLastChoice(Self.smallLargestText) }
+    func testTheTuningMenuScrollsToItsLastChoiceInLandscapeAtTheLargestText() throws { try tuningMenuScrollsToItsLastChoice(Self.smallLandscapeLargestText) }
+
+    private func tuningMenuScrollsToItsLastChoice(_ layout: Layout) throws {
         let choices = DPSettingsModel.referencePitchChoices(current: 440)
         let firstLabel = SettingsModel.tuningLabel(try XCTUnwrap(choices.first))
         let lastLabel = SettingsModel.tuningLabel(try XCTUnwrap(choices.last))
-        for layout in layouts {
+        do {
             let app = try settingsRevealing("settings.tuning", layout)
             app.sheet.tap(id: "settings.tuning")
             var menuList: UIScrollView?
