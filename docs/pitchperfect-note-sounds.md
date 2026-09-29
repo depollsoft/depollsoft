@@ -114,7 +114,9 @@ How each platform plays the fades:
     by replaying the tail of the last one.
   - The pitch pipe's tracks behave exactly as before.
 - **iOS:** both fades are applied to the samples. A released wave keeps its
-  audio unit running until the fade-out has played.
+  audio unit running until the fade-out has played. The widget's wave cells
+  fade their `AVAudioPlayer` in and out over 20 ms; its pitch pipe cell
+  doesn't.
 
 ## Instruments: MIDI
 
@@ -246,6 +248,15 @@ renders sample-for-sample the same as the full bank in FluidSynth.
   the app can suspend in the background. It also gives up the audio session
   (`notifyOthersOnDeactivation`) unless a pitch pipe or wave note or a widget
   tone is still sounding. The next note starts the engine again.
+- AUSampler drops a note-on sent after an instrument was loaded into it
+  while the engine was rendering, until that sampler renders again. This
+  made the first tap of most instruments silent on a device. Each sampler
+  counts its renders: a note on a sampler loaded while the output ran waits
+  for two renders (about 10–20 ms), checking every 4 ms, and starts anyway
+  after 60 checks. `InstrumentRealAudioTests` plays every instrument through
+  the real output and checks it sounds. It runs only with
+  `TEST_RUNNER_PP_REAL_AUDIO=1`, because offline rendering can't show the
+  drop.
 - Samplers mix into a submixer that joins the engine's output only when an
   instrument first plays, so launch and preloading don't build the output.
   Tests never start it: wiring AVAudioEngine output has deadlocked hosted
@@ -274,6 +285,8 @@ them scrolls and a tap anywhere along a row chooses it. While a list has
 choices past an edge, a plate hairline marks that edge and the rows fade into
 it. The scrollbar stays in view, and a list taller than the dialog ends
 halfway through a row. A list that fits shows none of these cues. iOS shows a picker row that
-pushes a list with sections. Choosing a sound plays a short preview: C4 at the
+pushes a list with sections. At accessibility text sizes the iOS Tuning
+picker sits under its row's title, because beside it it ran off a 375 pt
+screen. Choosing a sound plays a short preview: C4 at the
 current tuning for 1 s, or less if the user leaves the screen. The preview
 lets the user hear the sound without leaving Settings.
