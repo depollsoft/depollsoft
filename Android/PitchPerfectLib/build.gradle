@@ -42,12 +42,14 @@ abstract class InstrumentTuningAsset extends DefaultTask {
     }
 }
 
-def instrumentTuningAsset = tasks.register('instrumentTuningAsset', InstrumentTuningAsset) {
-    source = rootProject.file('../shared/pitchperfect/instrument-tuning.json')
-}
-
 androidComponents {
     onVariants(selector().all()) { variant ->
-        variant.sources.assets?.addGeneratedSourceDirectory(instrumentTuningAsset) { it.outputDir }
+        // One task per variant, writing to its own directory under build/, which AGP then adds to
+        // that variant's assets.
+        def copyTask = tasks.register("instrumentTuningAsset${variant.name.capitalize()}", InstrumentTuningAsset) {
+            source = rootProject.file('../shared/pitchperfect/instrument-tuning.json')
+            outputDir = layout.buildDirectory.dir("generated/instrumentTuningAsset/${variant.name}")
+        }
+        variant.sources.assets?.addGeneratedSourceDirectory(copyTask) { it.outputDir }
     }
 }

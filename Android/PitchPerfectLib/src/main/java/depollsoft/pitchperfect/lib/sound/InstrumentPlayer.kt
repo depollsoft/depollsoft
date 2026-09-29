@@ -12,6 +12,7 @@ import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.nio.channels.FileChannel
+import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 
 /**
@@ -21,9 +22,11 @@ import java.util.concurrent.Executors
  * last release has died away it stops, and the next note starts it again.
  *
  * The SoundFont is an uncompressed asset of the app, memory-mapped so its 8.8 MB stay off the heap;
- * [prepare] maps it and pages in the chosen instrument off the main thread.
+ * [prepare] maps it and pages in the chosen instrument off the main thread. Notes start on the same
+ * loader thread, so a note played before the bank is ready waits for it there, never on the UI
+ * thread.
  */
-object InstrumentPlayer {
+object InstrumentPlayer : InstrumentStarter {
     private const val TAG = "InstrumentPlayer"
 
     /** The phone app's asset; Wear doesn't ship it and never plays instruments. */
@@ -43,10 +46,13 @@ object InstrumentPlayer {
 
     private enum class State { IDLE, RUNNING, STOPPING }
 
-    private val loader = Executors.newSingleThreadExecutor { Thread(it, "InstrumentBank").apply { isDaemon = true } }
+    /** Maps the bank and starts notes, in order; tests replace it to run work inline. */
+    @Volatile
+    internal var loader: Executor = Executors.newSingleThreadExecutor { Thread(it, "InstrumentBank").apply { isDaemon = true } }
     private val bankLock = Any()
 
-    @Volatile private var context: Context? = null
+    // Set by initialize; tests clear it to stand for a missing bank.
+    @Volatile internal var context: Context? = null
 
     @Volatile private var bank: SoundFontBank? = null
 
@@ -74,26 +80,55 @@ object InstrumentPlayer {
         }
     }
 
-    /** Starts [plan]'s note; returns its id for [stop], or 0 when the bank can't be read. */
-    fun start(plan: InstrumentNotePlan): Long {
-        val bank = bank() ?: return 0L
-        synchronized(filler) {
-            val engine = engine ?: InstrumentEngine(bank).also { engine = it }
-            val note = engine.start(plan)
-            silentFrames = 0
-            when (state) {
-                State.IDLE -> startTrack()
-                State.STOPPING -> restartWhenStopped = true
-                State.RUNNING -> {}
-            }
-            return note
+    /**
+     * Starts the note [plan] describes on the loader thread, once the bank is mapped. [plan] runs
+     * there too, so it can read the tuning table without blocking the caller.
+     */
+    override fun start(
+        plan: () -> InstrumentNotePlan,
+        onStarted: (Long) -> Unit,
+        onFailed: () -> Unit,
+    ) {
+        loader.execute {
+            val note =
+                try {
+                    val bank = bank()
+                    if (bank == null) 0L else startNote(bank, plan())
+                } catch (e: RuntimeException) {
+                    Log.w(TAG, "Couldn't start an instrument note", e)
+                    0L
+                }
+            if (note == 0L) onFailed() else onStarted(note)
         }
     }
 
     /** Releases [note]; the instrument's release plays out. */
-    fun stop(note: Long) {
+    override fun stop(note: Long) {
         synchronized(filler) { engine?.stop(note) }
     }
+
+    // On the loader thread. Returns the note's id, or 0 when there's no track to play it on.
+    private fun startNote(
+        bank: SoundFontBank,
+        plan: InstrumentNotePlan,
+    ): Long =
+        synchronized(filler) {
+            val engine = engine ?: InstrumentEngine(bank).also { engine = it }
+            val note = engine.start(plan)
+            silentFrames = 0
+            val playing =
+                when (state) {
+                    State.IDLE -> startTrack()
+                    State.STOPPING -> true.also { restartWhenStopped = true }
+                    State.RUNNING -> true
+                }
+            if (playing) {
+                note
+            } else {
+                engine.stop(note)
+                0L
+            }
+        }
 
     private fun bank(): SoundFontBank? {
         bank?.let { return it }
@@ -124,17 +159,24 @@ object InstrumentPlayer {
             }
         }
 
-    // Holding filler.
-    private fun startTrack() {
+    // Holding filler. Returns whether the track is now playing.
+    private fun startTrack(): Boolean {
         val track =
             track ?: try {
                 createTrack().also { track = it }
             } catch (e: RuntimeException) {
                 Log.w(TAG, "Couldn't make an audio track for instruments", e)
-                return
+                return false
             }
         state = State.RUNNING
-        track.play() // fills the whole buffer through filler before it starts
+        return try {
+            track.play() // fills the whole buffer through filler before it starts
+            true
+        } catch (e: IllegalStateException) {
+            Log.w(TAG, "Couldn't start the instrument track", e)
+            state = State.IDLE
+            false
+        }
     }
 
     @Suppress("DEPRECATION")
@@ -202,19 +244,88 @@ object InstrumentPlayer {
     }
 }
 
-/** An instrument note: sounding from [play] until [stop], which lets its release play. */
-internal class InstrumentVoice(private val plan: InstrumentNotePlan) : SoundingNote {
-    @Volatile private var note = 0L
+/** Starts and stops instrument notes; [InstrumentPlayer] is the real one. */
+internal interface InstrumentStarter {
+    /**
+     * Starts the note [plan] returns, off the calling thread: [onStarted] gets its id for [stop], or
+     * [onFailed] runs when it can't sound (no bank, no audio track).
+     */
+    fun start(
+        plan: () -> InstrumentNotePlan,
+        onStarted: (Long) -> Unit,
+        onFailed: () -> Unit,
+    )
 
-    override val isSounding: Boolean get() = note != 0L
+    fun stop(note: Long)
+}
+
+/**
+ * An instrument note: sounding from [play] until [stop], which lets its release play. The note
+ * starts asynchronously; a stop that arrives first releases it as soon as it has started, and the
+ * engine's minimum length keeps a quick tap audible. If the instrument can't sound, the note plays
+ * in [fallback] (the original voice) instead of staying lit and silent.
+ */
+internal class InstrumentVoice(
+    internal val plan: () -> InstrumentNotePlan,
+    private val fallback: () -> SoundingNote,
+    private val starter: InstrumentStarter = InstrumentPlayer,
+) : SoundingNote {
+    private val lock = Any()
+    private var held = false
+    private var pending = false
+    private var note = 0L
+    private var fallbackVoice: SoundingNote? = null
+
+    override val isSounding: Boolean get() = synchronized(lock) { held }
 
     override fun play() {
-        if (note == 0L) note = InstrumentPlayer.start(plan)
+        synchronized(lock) {
+            if (held) return
+            held = true
+            fallbackVoice?.let {
+                it.play()
+                return
+            }
+            if (pending || note != 0L) return
+            pending = true
+        }
+        starter.start(plan, ::started, ::failed)
     }
 
     override fun stop() {
-        val playing = note
-        note = 0L
-        if (playing != 0L) InstrumentPlayer.stop(playing)
+        val release: Long
+        val fallbackToStop: SoundingNote?
+        synchronized(lock) {
+            if (!held) return
+            held = false
+            release = note
+            note = 0L
+            fallbackToStop = fallbackVoice
+            fallbackVoice = null
+        }
+        if (release != 0L) starter.stop(release)
+        fallbackToStop?.stop()
+    }
+
+    private fun started(id: Long) {
+        val releaseNow =
+            synchronized(lock) {
+                pending = false
+                if (held) {
+                    note = id
+                    false
+                } else {
+                    true
+                }
+            }
+        if (releaseNow) starter.stop(id)
+    }
+
+    private fun failed() {
+        synchronized(lock) {
+            pending = false
+            if (!held) return
+            fallbackVoice = fallback().also { it.play() }
+        }
     }
 }
