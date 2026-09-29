@@ -25,7 +25,8 @@ android {
 }
 
 // Ships shared/pitchperfect/instrument-tuning.json as an asset (docs/pitchperfect-note-sounds.md).
-// Only that file: the SoundFont beside it is for iOS, since Android plays its own MIDI synth.
+// Only that file: the phone app ships the SoundFont itself, so Wear, which uses this library but
+// never plays instruments, doesn't carry 8.8 MB it can't use.
 abstract class InstrumentTuningAsset extends DefaultTask {
     @InputFile
     abstract RegularFileProperty getSource()

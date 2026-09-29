@@ -88,8 +88,39 @@ dependencies {
     androidTestUtil 'androidx.test:orchestrator:1.6.1'
 }
 
+// Ships shared/pitchperfect/PitchPerfectInstruments.sf2 as an asset for the instrument sounds
+// (docs/pitchperfect-note-sounds.md). It is stored uncompressed (noCompress below), so
+// InstrumentPlayer can memory-map it instead of reading 8.8 MB onto the heap.
+abstract class InstrumentBankAsset extends DefaultTask {
+    @InputFile
+    abstract RegularFileProperty getSource()
+
+    @OutputDirectory
+    abstract DirectoryProperty getOutputDir()
+
+    @TaskAction
+    void copy() {
+        def target = outputDir.get().file('PitchPerfectInstruments.sf2').asFile
+        target.parentFile.mkdirs()
+        target.bytes = source.get().asFile.bytes
+    }
+}
+
+def instrumentBankAsset = tasks.register('instrumentBankAsset', InstrumentBankAsset) {
+    source = rootProject.file('../shared/pitchperfect/PitchPerfectInstruments.sf2')
+}
+
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        variant.sources.assets?.addGeneratedSourceDirectory(instrumentBankAsset) { it.outputDir }
+    }
+}
+
 android {
     sourceSets.androidTest.kotlin.directories.add(rootProject.file('store-screenshot-tests/src').path)
+    androidResources {
+        noCompress += 'sf2'
+    }
     buildFeatures {
         compose = true
         buildConfig = true

@@ -451,6 +451,9 @@ class TinySoundFont(private val bank: SoundFontBank) {
 
     val activeVoiceCount: Int get() = voices.count { it.playingPreset != -1 }
 
+    /** Voices still sounding on [channel], releases included. Not in TinySoundFont; Pitch Perfect's addition. */
+    fun channelActiveVoiceCount(channel: Int): Int = voices.count { it.playingPreset != -1 && it.playingChannel == channel }
+
     /** Renders [samples] mono samples into [buffer] from [offset], replacing or [mixing] into what's there. */
     fun renderFloat(buffer: FloatArray, offset: Int, samples: Int, mixing: Boolean = false) {
         if (!mixing) buffer.fill(0f, offset, offset + samples)

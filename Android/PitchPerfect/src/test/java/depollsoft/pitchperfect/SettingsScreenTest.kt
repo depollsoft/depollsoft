@@ -11,6 +11,7 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -187,23 +188,30 @@ class SettingsScreenTest {
     }
 
     @Test
-    fun theSoundDialogListsTheOriginalVoiceThenWavesThenInstruments() {
+    fun theSoundDialogListsTheOriginalVoiceThenSustainedThenWavesThenPluckedAndStruck() {
         SettingsModel.noteSound = NoteSound.SAWTOOTH
         settings()
         screens.click(TestTags.SOUND)
         compose.onNodeWithTag(TestTags.SOUND_CHOICE + "sawtooth").assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
+        fun top(tag: String) = compose.onNode(hasTestTag(tag) or hasText(tag)).fetchSemanticsNode().positionInRoot.y
         val tops =
-            listOf("pitchPipe", "sine", "sawtooth", "piano", "flute").map {
-                compose.onNodeWithTag(TestTags.SOUND_CHOICE + it).fetchSemanticsNode().positionInRoot.y
-            }
+            listOf(
+                TestTags.SOUND_CHOICE + "pitchPipe",
+                "SUSTAINED",
+                TestTags.SOUND_CHOICE + "organ",
+                TestTags.SOUND_CHOICE + "reedOrgan",
+                TestTags.SOUND_CHOICE + "accordion",
+                TestTags.SOUND_CHOICE + "harmonica",
+                TestTags.SOUND_CHOICE + "flute",
+                "WAVES",
+                TestTags.SOUND_CHOICE + "sine",
+                TestTags.SOUND_CHOICE + "sawtooth",
+                "PLUCKED & STRUCK",
+                TestTags.SOUND_CHOICE + "piano",
+                TestTags.SOUND_CHOICE + "harp",
+            ).map(::top)
         assertEquals("in the contract's order", tops.sorted(), tops)
-        compose.onNodeWithText("WAVES").assertExists()
-        compose.onNodeWithText("INSTRUMENTS").assertExists()
-        val reeds =
-            listOf("organ", "reedOrgan", "accordion", "harmonica", "guitar").map {
-                compose.onNodeWithTag(TestTags.SOUND_CHOICE + it).fetchSemanticsNode().positionInRoot.y
-            }
-        assertEquals("the free reeds sit with the organs", reeds.sorted(), reeds)
+        compose.onNodeWithText("INSTRUMENTS").assertDoesNotExist()
         compose.onNodeWithText("Reed Organ").assertExists()
         compose.onNodeWithText("Harmonica").assertExists()
     }
@@ -383,12 +391,12 @@ class SettingsScreenTest {
 
         screens.click(TestTags.SOUND)
         compose.onNodeWithText(cancel, ignoreCase = true).assertIsDisplayed()
-        compose.onNodeWithTag(TestTags.SOUND_CHOICE + "flute").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag(TestTags.SOUND_CHOICE + "harp").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText(cancel, ignoreCase = true).assertIsDisplayed()
         compose.onNodeWithTag(TestTags.SOUND_CHOICE + "pitchPipe").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithTag(TestTags.SOUND_CHOICE + "flute").performScrollTo().performClick()
+        compose.onNodeWithTag(TestTags.SOUND_CHOICE + "harp").performScrollTo().performClick()
         screens.settle()
-        assertEquals(NoteSound.FLUTE, SettingsModel.noteSound)
+        assertEquals(NoteSound.HARP, SettingsModel.noteSound)
         Note.setSound(NoteSound.DEFAULT)
 
         tapScrolled(TestTags.TUNING)

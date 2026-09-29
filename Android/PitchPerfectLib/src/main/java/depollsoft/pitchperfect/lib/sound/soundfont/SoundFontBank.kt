@@ -307,6 +307,23 @@ class SoundFontBank private constructor(
     internal fun sample(index: Long): Float =
         if (index < sampleCount) (samples.get(index.toInt()).toDouble() / 32767.0).toFloat() else 0f
 
+    /**
+     * Reads one sample in every 2048 of [presetIndex]'s zones, so a memory-mapped bank pages them
+     * in now rather than on the audio thread when a note first plays them. Not in TinySoundFont.
+     */
+    fun warm(presetIndex: Int): Int {
+        var sum = 0
+        for (region in presets.getOrNull(presetIndex)?.regions ?: return 0) {
+            var at = region.offset
+            val end = minOf(region.end, sampleCount.toLong())
+            while (at < end) {
+                sum += samples.get(at.toInt())
+                at += 2048
+            }
+        }
+        return sum
+    }
+
     /** The index into [presets] of GM [program] in [bank], or -1 (tsf_get_presetindex). */
     fun presetIndex(bank: Int, program: Int): Int = presets.indexOfFirst { it.program == program && it.bank == bank }
 
@@ -476,7 +493,7 @@ private class Hydra(
             while (at + 8 <= end) {
                 val id = String(ByteArray(4) { data.get(at + it) }, Charsets.ISO_8859_1)
                 val size = data.getInt(at + 4)
-                chunks.putIfAbsent(id, (at + 8) to size)
+                if (id !in chunks) chunks[id] = (at + 8) to size
                 at += 8 + size
             }
             fun records(id: String, recordSize: Int): Pair<Int, Int> {

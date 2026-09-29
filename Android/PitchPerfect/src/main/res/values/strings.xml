@@ -41,7 +41,8 @@
     <string name="TuningStandard">Standard</string>
     <string name="Sound">Sound</string>
     <string name="SoundWaves">Waves</string>
-    <string name="SoundInstruments">Instruments</string>
+    <string name="SoundSustained">Sustained</string>
+    <string name="SoundPluckedAndStruck">Plucked &amp; Struck</string>
     <string name="SoundPitchPipe">Pitch Perfect (Loud)</string>
     <string name="SoundSine">Sine</string>
     <string name="SoundTriangle">Triangle</string>

@@ -4,6 +4,7 @@ import android.content.Context
 import android.media.AudioFormat
 import android.media.AudioTrack
 import android.util.Log
+import depollsoft.pitchperfect.lib.Note
 import depollsoft.pitchperfect.lib.PitchAudioTrackGenerator
 import java.util.concurrent.Executors
 
@@ -37,10 +38,15 @@ object NoteVoices {
     private const val TAG = "NoteVoices"
     private const val TUNING_ASSET = "instrument-tuning.json"
 
-    /** Reads the instrument tuning table in the background; call once at startup. */
+    /**
+     * Reads the instrument tuning table in the background, and gets the instrument bank ready if the
+     * chosen sound is an instrument; call once at startup.
+     */
     @JvmStatic
     fun initialize(context: Context) {
         val app = context.applicationContext
+        InstrumentPlayer.initialize(app)
+        prepare(Note.getSound())
         Executors.newSingleThreadExecutor().apply {
             execute {
                 try {
@@ -51,6 +57,12 @@ object NoteVoices {
             }
             shutdown()
         }
+    }
+
+    /** Maps the instrument bank and pages in [sound]'s samples off the main thread, when it's an instrument. */
+    @JvmStatic
+    fun prepare(sound: NoteSound) {
+        if (sound.kind == NoteSound.Kind.INSTRUMENT) InstrumentPlayer.prepare(sound.program)
     }
 
     /** The measured instrument errors in use; none until [initialize] has read them. */
@@ -85,7 +97,7 @@ object NoteVoices {
                     ),
                     PitchAudioTrackGenerator::stopWave,
                 )
-            NoteSound.Kind.INSTRUMENT -> MidiVoice(MidiNote.plan(sound, storedFrequency, referencePitch, instrumentTuning))
+            NoteSound.Kind.INSTRUMENT -> InstrumentVoice(InstrumentNote.plan(sound, storedFrequency, referencePitch, instrumentTuning))
         }
     }
 }

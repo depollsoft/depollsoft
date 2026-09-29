@@ -75,9 +75,13 @@ public class Note {
     return Note.sound.get();
   }
 
-  /** Voices every note in {@code value}; a note already sounding keeps its voice until played again. */
+  /**
+   * Voices every note in {@code value}; a note already sounding keeps its voice until played again.
+   * An instrument's samples are made ready in the background.
+   */
   public static void setSound(NoteSound value) {
     Note.sound.set(value);
+    NoteVoices.prepare(value);
   }
 
   public static void setPlayer(NotePlayer player) {

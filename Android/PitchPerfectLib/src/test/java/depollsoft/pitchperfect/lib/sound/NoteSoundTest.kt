@@ -12,18 +12,26 @@ class NoteSoundTest {
     }
 
     @Test
-    fun theIdsOrderAndProgramsAreTheContracts() {
+    fun theIdsOrderSectionsAndProgramsAreTheContracts() {
         assertEquals(
             listOf(
-                "pitchPipe", "sine", "triangle", "square", "sawtooth", "piano", "electricPiano", "harpsichord",
-                "vibraphone", "organ", "reedOrgan", "accordion", "harmonica", "guitar", "harp", "strings", "choir", "trumpet", "clarinet", "flute",
+                "pitchPipe",
+                "organ", "reedOrgan", "accordion", "harmonica", "strings", "choir", "trumpet", "clarinet", "flute",
+                "sine", "triangle", "square", "sawtooth",
+                "piano", "electricPiano", "harpsichord", "vibraphone", "guitar", "harp",
             ),
             NoteSound.entries.map { it.id },
         )
         assertEquals(
-            listOf(0, 4, 6, 11, 19, 20, 21, 22, 24, 46, 48, 52, 56, 71, 73),
+            listOf(NoteSound.Section.DEFAULT) + List(9) { NoteSound.Section.SUSTAINED } +
+                List(4) { NoteSound.Section.WAVES } + List(6) { NoteSound.Section.PLUCKED_AND_STRUCK },
+            NoteSound.entries.map { it.section },
+        )
+        assertEquals(
+            listOf(19, 20, 21, 22, 48, 52, 56, 71, 73, 0, 4, 6, 11, 24, 46),
             NoteSound.entries.filter { it.kind == NoteSound.Kind.INSTRUMENT }.map { it.program },
         )
+        assertEquals(NoteSound.Kind.WAVE, NoteSound.SAWTOOTH.kind)
     }
 
     @Test

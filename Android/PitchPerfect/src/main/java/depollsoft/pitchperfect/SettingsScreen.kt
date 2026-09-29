@@ -384,11 +384,12 @@ fun SoundDialog(
         Column(Modifier.verticalScroll(scroll).padding(start = 16.dp, end = 24.dp, top = 8.dp)) {
             NoteSound.entries.forEachIndexed { index, sound ->
                 val previous = NoteSound.entries.getOrNull(index - 1)
-                if (sound.kind != previous?.kind) {
-                    when (sound.kind) {
-                        NoteSound.Kind.WAVE -> SoundHeading(stringResource(R.string.SoundWaves))
-                        NoteSound.Kind.INSTRUMENT -> SoundHeading(stringResource(R.string.SoundInstruments))
-                        NoteSound.Kind.PITCH_PIPE -> {}
+                if (sound.section != previous?.section) {
+                    when (sound.section) {
+                        NoteSound.Section.SUSTAINED -> SoundHeading(stringResource(R.string.SoundSustained))
+                        NoteSound.Section.WAVES -> SoundHeading(stringResource(R.string.SoundWaves))
+                        NoteSound.Section.PLUCKED_AND_STRUCK -> SoundHeading(stringResource(R.string.SoundPluckedAndStruck))
+                        NoteSound.Section.DEFAULT -> {}
                     }
                 }
                 RadioChoice(soundLabel(sound), sound == selected, "${TestTags.SOUND_CHOICE}${sound.id}") { onChoose(sound) }
