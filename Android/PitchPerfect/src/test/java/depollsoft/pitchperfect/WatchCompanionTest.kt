@@ -24,6 +24,7 @@ import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import org.junit.Before
@@ -232,7 +233,7 @@ class WatchCompanionTest {
             val activity = settings(FakeWatchNodeSource(
                 listOf(WatchNode("watch-1", "Pixel Watch", true), WatchNode("watch-2", "Galaxy Watch", false)),
             ))
-            compose.onAllNodesWithTag(TestTags.WATCH_INSTALL, useUnmergedTree = true)[0].performClick()
+            compose.onAllNodesWithTag(TestTags.WATCH_INSTALL, useUnmergedTree = true)[0].performScrollTo().performClick()
             shadowOf(Looper.getMainLooper()).idle()
 
             val intent = ArgumentCaptor.forClass(Intent::class.java)

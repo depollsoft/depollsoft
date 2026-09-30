@@ -100,14 +100,27 @@ class SettingsScreenTest {
     }
 
     @Test
+    fun classicPitchPipeTogglesTheSetting() {
+        settings()
+        assertEquals(ToggleableState.Off, toggleState(TestTags.CLASSIC_SETTING))
+        screens.click(TestTags.CLASSIC_SETTING)
+        assertTrue(SettingsModel.classicPitchPipe)
+        assertEquals(ToggleableState.On, toggleState(TestTags.CLASSIC_SETTING))
+        screens.click(TestTags.CLASSIC_SETTING)
+        assertFalse(SettingsModel.classicPitchPipe)
+    }
+
+    @Test
     fun theSwitchesShowTheSavedSettingsAfterRecreation() {
         val controller = screens.launch(SettingsActivity::class.java)
         screens.click(TestTags.TOGGLE_NOTES)
         screens.click(TestTags.WAKE_LOCK)
+        screens.click(TestTags.CLASSIC_SETTING)
         controller.recreate()
         screens.settle()
         assertEquals(ToggleableState.On, toggleState(TestTags.TOGGLE_NOTES))
         assertEquals(ToggleableState.On, toggleState(TestTags.WAKE_LOCK))
+        assertEquals(ToggleableState.On, toggleState(TestTags.CLASSIC_SETTING))
     }
 
     @Test
@@ -460,7 +473,7 @@ class SettingsScreenTest {
         val cancel = activity.getString(android.R.string.cancel)
         val done = activity.getString(R.string.SoundDone)
 
-        screens.click(TestTags.SOUND)
+        tapScrolled(TestTags.SOUND)
         compose.onNodeWithText(done, ignoreCase = true).assertIsDisplayed()
         compose.onNodeWithTag(TestTags.SOUND_CHOICE + "harp").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText(done, ignoreCase = true).assertIsDisplayed()
@@ -594,7 +607,7 @@ class SettingsScreenTest {
     /** The list's bottom edge cuts through a row, well clear of its top and bottom, so the cut shows. */
     private fun theListEndsPartwayThroughARow() {
         settings()
-        screens.click(TestTags.SOUND)
+        tapScrolled(TestTags.SOUND)
         val list = compose.onNodeWithTag(TestTags.SOUND_LIST).fetchSemanticsNode()
         val fold = list.positionInRoot.y + list.size.height
         val margin = with(list.layoutInfo.density) { 8.dp.toPx() }

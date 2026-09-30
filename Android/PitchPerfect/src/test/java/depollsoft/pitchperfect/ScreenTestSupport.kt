@@ -55,6 +55,7 @@ internal object ScreenTestSupport {
     fun seedSettingsDefaults() {
         SettingsModel.toggleNotes = false
         SettingsModel.wakeLock = false
+        SettingsModel.classicPitchPipe = false
         SettingsModel.areAdsRemoved = false
         SettingsModel.referencePitch = 440
         SettingsModel.noteSound = NoteSound.PITCH_PIPE

@@ -17,6 +17,7 @@ object SettingsModel {
     private const val ARE_ADS_REMOVED_KEY = "depollsoft.pitchperfect.AreAdsRemoved"
     private const val REFERENCE_PITCH_KEY = "depollsoft.pitchperfect.ReferencePitch"
     private const val NOTE_SOUND_KEY = "depollsoft.pitchperfect.NoteSound"
+    private const val CLASSIC_PITCH_PIPE_KEY = "depollsoft.pitchperfect.ClassicPitchPipe"
 
     /** The A4 frequencies a stored or synced setting may hold; anything else reads as 440 Hz. */
     val REFERENCE_PITCH_RANGE = 400..480
@@ -39,6 +40,12 @@ object SettingsModel {
             userRef?.set(mapOf("wakeLock" to it), SetOptions.merge())
         }
     }
+
+    /**
+     * Whether the Pitch Pipe tab shows the classic grid of big buttons instead of the radial face.
+     * It is how this device lays the tab out, as the appearance is, so it stays off the account.
+     */
+    var classicPitchPipe: Boolean by preference(CLASSIC_PITCH_PIPE_KEY, false)
 
     /** The A4 the notes are tuned to, in Hz: usually one of [Note.COMMON_A4_FREQUENCIES]. */
     var referencePitch: Int
