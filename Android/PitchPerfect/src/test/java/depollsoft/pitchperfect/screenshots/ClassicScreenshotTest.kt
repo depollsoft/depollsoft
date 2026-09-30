@@ -19,7 +19,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
-/** The classic pitch pipe on the main screen: at rest, sounding, in both themes, turned, on a tablet and in large text. */
+/** The classic pitch pipe on the main screen: at rest, sounding (with its readout), in both themes, turned, on a tablet and in large text. */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(application = RichApplication::class, qualifiers = ScreenshotSupport.PHONE)
@@ -71,18 +71,30 @@ class ClassicScreenshotTest {
     }
 
     @Test
-    fun classicFromFToE() {
+    fun classicOneNote() {
+        reduceMotion()
+        play("A", Accidental.Natural, 4)
+        launchMain().capture("main_pitch_pipe_classic_one_note")
+    }
+
+    @Test
+    fun classicFToFOctave() {
         PitchPipeModel().isFromFToF = true
         reduceMotion()
-        play("A", Accidental.Sharp, 4)
-        launchMain().capture("main_pitch_pipe_classic_f_to_e")
+        play("F", Accidental.Natural, 4)
+        play("F", Accidental.Natural, 5)
+        launchMain().capture("main_pitch_pipe_classic_f_to_f")
     }
 
     @Test
     @Config(qualifiers = ScreenshotSupport.PHONE_NIGHT)
-    fun classicChordNight() {
-        chord()
-        launchMain().capture("night_main_pitch_pipe_classic_chord")
+    fun classicBarbershopNight() {
+        reduceMotion()
+        play("C", Accidental.Natural, 4)
+        play("E", Accidental.Natural, 4)
+        play("G", Accidental.Natural, 4)
+        play("A", Accidental.Sharp, 4)
+        launchMain().capture("night_main_pitch_pipe_classic_barbershop")
     }
 
     @Test
@@ -91,7 +103,12 @@ class ClassicScreenshotTest {
 
     @Test
     @Config(qualifiers = "w891dp-h411dp-land-xxhdpi")
-    fun classicLandscape() = launchMain().capture("land_main_pitch_pipe_classic")
+    fun classicLandscape() {
+        // Turned, the well is short, so the readout sits beside the choices.
+        reduceMotion()
+        play("A", Accidental.Natural, 4)
+        launchMain().capture("land_main_pitch_pipe_classic")
+    }
 
     @Test
     @Config(qualifiers = ScreenshotSupport.TABLET)

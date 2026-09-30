@@ -16,8 +16,8 @@ import kotlin.math.sin
 /**
  * Paints the classic pitch pipe: the old grid of big buttons, in the Laboratory Instrument's
  * materials. Resting buttons are surface plates with a hairline rim; a sounding one lights as a
- * radial cell does, with its glow breathing round it. The range choices are radio buttons, drawn
- * as the Settings screen draws its own.
+ * radial cell does, with its glow breathing round it. The well in the middle carries the radial
+ * face's readout and the range choices, radio buttons drawn as the Settings screen draws its own.
  */
 class ClassicPitchPipeRenderer(
     private val context: Context,
@@ -28,23 +28,26 @@ class ClassicPitchPipeRenderer(
     private val hairline = ContextCompat.getColor(context, R.color.plate_hairline)
     private val lit = ContextCompat.getColor(context, R.color.plate_accent)
     private val onLit = ContextCompat.getColor(context, R.color.plate_on_accent)
-    private val lowLabel = context.getString(R.string.ClassicCtoB)
-    private val highLabel = context.getString(R.string.ClassicFtoE)
+    private val rangeLabels = rangeLabels(context)
 
     private val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
     private val strokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
-    private val engravingPaint =
+    private val displayPaint =
         Paint(Paint.ANTI_ALIAS_FLAG).apply {
             textAlign = Paint.Align.CENTER
             typeface = runCatching { PlateFonts.oswaldTypeface(context) }.getOrDefault(Typeface.DEFAULT)
         }
-    private val labelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { textAlign = Paint.Align.LEFT }
+    private val monoPaint =
+        Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            textAlign = Paint.Align.CENTER
+            typeface = Typeface.MONOSPACE
+        }
+    private val labelPaint = rangeLabelPaint(context)
     private val bounds = RectF()
 
     private fun dp(value: Float): Float = value * context.resources.displayMetrics.density
 
-    private fun sp(value: Float): Float =
-        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, value, context.resources.displayMetrics)
+    private fun sp(value: Float): Float = sp(context, value)
 
     fun draw(
         canvas: Canvas,
@@ -60,10 +63,14 @@ class ClassicPitchPipeRenderer(
         for (i in 0 until cells) {
             if (notes[i].isPlaying) drawGlow(canvas, geometry.button(i), breath)
         }
-        for (i in 0 until cells) drawButton(canvas, geometry.button(i), notes[i], breathePhase)
+        // One size for every label, from a single-slot button, so the wide cell's matches.
+        val single = geometry.singleButton
+        val naturalSize = maxOf(sp(NATURAL_SP), minOf(single.width(), single.height()) * NATURAL_OF_BUTTON)
+        for (i in 0 until cells) drawButton(canvas, geometry.button(i), notes[i], naturalSize, breathePhase)
 
-        drawRangeChoice(canvas, geometry.rangeRow(0), lowLabel, selected = !isFromFToF)
-        drawRangeChoice(canvas, geometry.rangeRow(1), highLabel, selected = isFromFToF)
+        drawReadout(canvas, geometry.readout, notes.take(cells))
+        drawRangeChoice(canvas, geometry.rangeRow(0), rangeLabels.first, selected = !isFromFToF)
+        drawRangeChoice(canvas, geometry.rangeRow(1), rangeLabels.second, selected = isFromFToF)
     }
 
     /** Light leaking round a sounding button: stacked, widening plates, each a little fainter. */
@@ -86,6 +93,7 @@ class ClassicPitchPipeRenderer(
         canvas: Canvas,
         button: RectF,
         note: Note,
+        naturalSize: Float,
         breathePhase: Float,
     ) {
         val playing = note.isPlaying
@@ -97,18 +105,68 @@ class ClassicPitchPipeRenderer(
         canvas.drawRoundRect(button, corner, corner, strokePaint)
 
         val natural = note.accidental == Accidental.Natural
-        engravingPaint.color =
+        displayPaint.color =
             when {
                 playing -> onLit
                 natural -> ink
                 else -> inkSecondary
             }
         val label = NoteNames.engraved(note)
-        // At least the phone's size, and in proportion on a tablet's bigger buttons.
-        val size = maxOf(sp(NATURAL_SP), minOf(button.width(), button.height()) * NATURAL_OF_BUTTON)
-        engravingPaint.textSize = if (natural) size else size * ACCIDENTAL_OF_NATURAL
-        fitWithin(engravingPaint, label, button.width() * 0.8f, button.height() * 0.6f)
-        canvas.drawText(label, button.centerX(), button.centerY() + engravingPaint.textSize * 0.35f, engravingPaint)
+        displayPaint.textSize = if (natural) naturalSize else naturalSize * ACCIDENTAL_OF_NATURAL
+        fitWithin(displayPaint, label, button.width() * 0.8f, button.height() * 0.6f)
+        canvas.drawText(label, button.centerX(), button.centerY() + displayPaint.textSize * 0.35f, displayPaint)
+    }
+
+    /**
+     * The radial face's readout, as one block centred in [area]: the sounding notes' names, then
+     * a frequency, an interval, a chord's name or a count. Idle, a dimmed "— Hz".
+     */
+    private fun drawReadout(
+        canvas: Canvas,
+        area: RectF,
+        notes: List<Note>,
+    ) {
+        if (area.width() <= 0f || area.height() <= 0f) return
+        val nameSize = minOf(area.height() * 0.46f, area.width() * 0.22f)
+        val detailSize = nameSize * 0.5f
+        val maxWidth = area.width() * 0.92f
+        val playing = notes.withIndex().filter { it.value.isPlaying }
+        if (playing.isEmpty()) {
+            monoPaint.color = withAlpha(inkSecondary, 140)
+            monoPaint.textSize = detailSize
+            fitWithin(monoPaint, IDLE, maxWidth, area.height())
+            canvas.drawText(IDLE, area.centerX(), area.centerY() + centreOffset(monoPaint), monoPaint)
+            return
+        }
+
+        displayPaint.color = ink
+        displayPaint.textSize = nameSize
+        val names = playing.joinToString(" ") { NoteNames.readout(it.value) }
+        fitWithin(displayPaint, names, maxWidth, area.height())
+
+        val chord = if (playing.size > 2) PitchChord.name(playing.map { it.index }) else null
+        // A chord has a name, not a measurement: it is engraved in the display face.
+        val detailPaint = if (chord != null) displayPaint else monoPaint
+        val detail =
+            chord ?: when (playing.size) {
+                1 -> String.format("%.1f Hz", playing[0].value.tunedFrequency)
+                2 -> PitchInterval.name(playing[0].index, playing[1].index)
+                else -> "${playing.size} NOTES"
+            }
+
+        // Names and detail as one block, centred in the area.
+        val nameHeight = displayPaint.textSize
+        val gap = nameSize * 0.15f
+        val detailHeight = if (chord != null) nameSize * CHORD_OF_NAME else detailSize
+        val top = area.centerY() - (nameHeight + gap + detailHeight) / 2f
+        canvas.drawText(names, area.centerX(), top + nameHeight * 0.85f, displayPaint)
+
+        detailPaint.color = ink
+        detailPaint.textSize = detailHeight
+        if (chord != null) displayPaint.letterSpacing = 0.12f
+        fitWithin(detailPaint, detail, maxWidth, detailHeight)
+        canvas.drawText(detail, area.centerX(), top + nameHeight + gap + detailPaint.textSize * 0.85f, detailPaint)
+        displayPaint.letterSpacing = 0f
     }
 
     /** A radio button: its 20dp ring (with a dot when chosen) in a 32dp column, then the label. */
@@ -118,7 +176,7 @@ class ClassicPitchPipeRenderer(
         label: String,
         selected: Boolean,
     ) {
-        val cx = row.left + dp(16f)
+        val cx = row.left + dp(ClassicPitchPipeGeometry.RADIO_DP / 2f)
         val cy = row.centerY()
         val stroke = dp(2f)
         val ring = if (selected) lit else withAlpha(ink, (255 * UNSELECTED_RING_ALPHA).toInt())
@@ -132,11 +190,13 @@ class ClassicPitchPipeRenderer(
 
         labelPaint.color = ink
         labelPaint.textSize = sp(LABEL_SP)
-        val start = row.left + dp(32f)
-        fitWithin(labelPaint, label, row.right - start - dp(8f), row.height())
-        val metrics = labelPaint.fontMetrics
-        canvas.drawText(label, start, cy - (metrics.ascent + metrics.descent) / 2f, labelPaint)
+        val start = row.left + dp(ClassicPitchPipeGeometry.RADIO_DP)
+        fitWithin(labelPaint, label, row.right - start, row.height())
+        canvas.drawText(label, start, cy + centreOffset(labelPaint), labelPaint)
     }
+
+    /** How far below a line's centre its baseline sits. */
+    private fun centreOffset(paint: Paint): Float = paint.fontMetrics.let { -(it.ascent + it.descent) / 2f }
 
     /** Shrinks [paint]'s text until [text] fits [maxWidth] by [maxHeight]: very large font scales. */
     private fun fitWithin(
@@ -159,12 +219,36 @@ class ClassicPitchPipeRenderer(
     companion object {
         const val CORNER_DP = 2f
         const val NATURAL_SP = 28f
+        const val LABEL_SP = 16f
         private const val NATURAL_OF_BUTTON = 0.3f
         private const val ACCIDENTAL_OF_NATURAL = 20f / 28f
-        const val LABEL_SP = 16f
+        private const val CHORD_OF_NAME = 0.62f
         private const val GLOW_DP = 14f
         private const val GLOW_STEPS = 10
         private const val GLOW_ALPHA = 22
         private const val UNSELECTED_RING_ALPHA = 0.51f
+        private const val IDLE = "— Hz"
+
+        private fun sp(
+            context: Context,
+            value: Float,
+        ): Float = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, value, context.resources.displayMetrics)
+
+        /** The range choices' labels: C to C, then F to F. */
+        fun rangeLabels(context: Context): Pair<String, String> =
+            context.getString(R.string.CtoC) to context.getString(R.string.FtoF)
+
+        /** The paint the range labels are drawn with. */
+        fun rangeLabelPaint(context: Context): Paint =
+            Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                textAlign = Paint.Align.LEFT
+                textSize = sp(context, LABEL_SP)
+            }
+
+        /** The range labels' widths in pixels, which the geometry lays the choices out by. */
+        fun rangeLabelWidths(context: Context): FloatArray {
+            val paint = rangeLabelPaint(context)
+            return rangeLabels(context).toList().map { paint.measureText(it) }.toFloatArray()
+        }
     }
 }

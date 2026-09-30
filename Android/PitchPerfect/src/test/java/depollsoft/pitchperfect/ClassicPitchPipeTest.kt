@@ -9,7 +9,6 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.junit4.v2.createComposeRule
-import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performSemanticsAction
@@ -59,7 +58,7 @@ class ClassicPitchPipeTest {
         widgets = Mockito.mockStatic(PitchPipeAppWidget::class.java)
         Note.setPlayer(ScreenTestSupport.silentPlayer)
         model = PitchPipeModel()
-        state = ClassicPitchPipeState(model, RichApplication.getAppContext().resources.displayMetrics.density, haptic = { haptics += it })
+        state = ClassicPitchPipeState(model, RichApplication.getAppContext(), haptic = { haptics += it })
         compose.setContent {
             PlateTheme { ClassicPitchPipe(state, Modifier.size(411.dp, 700.dp)) }
         }
@@ -82,15 +81,18 @@ class ClassicPitchPipeTest {
 
     private fun face() = compose.onNodeWithTag(TestTags.CLASSIC_PITCH_PIPE)
 
+    /** The middle of the readout: bare panel in the well. */
+    private fun readout(): Offset = geometry.readout.let { Offset(it.centerX(), it.centerY()) }
+
     private fun playing(): List<Int> = state.notes.indices.filter { state.notes[it].isPlaying }
 
     private fun names(): List<String> = state.notes.map { "${it.friendlyName}${if (it.accidental == Accidental.Sharp) "#" else ""}${it.octave}" }
 
     @Test
-    fun theGridHoldsOneOctaveClockwiseFromTheTopLeft() {
+    fun theGridHoldsTheOctaveClockwiseFromTheTopLeftWithItsUpperNoteInTheMiddle() {
         assertEquals(
-            "C to B, as the old grid had it: the pipe's upper C is not on it",
-            listOf("C4", "C#4", "D4", "D#4", "E4", "F4", "F#4", "G4", "G#4", "A4", "A#4", "B4"),
+            "C to C, as the radial face has it",
+            listOf("C4", "C#4", "D4", "D#4", "E4", "F4", "F#4", "G4", "G#4", "A4", "A#4", "B4", "C5"),
             names(),
         )
         val quarterWidth = geometry.width / 4f
@@ -101,13 +103,54 @@ class ClassicPitchPipeTest {
         assertEquals("E and F down the right", listOf(3 to 1, 3 to 2), (4..5).map(::slotOf))
         assertEquals("F sharp to A back along the bottom", listOf(3 to 3, 2 to 3, 1 to 3, 0 to 3), (6..9).map(::slotOf))
         assertEquals("A sharp and B up the left", listOf(0 to 2, 0 to 1), (10..11).map(::slotOf))
+
+        val upper = geometry.slot(12)
+        assertEquals("the upper C spans the middle two columns", quarterWidth, upper.left, 1f)
+        assertEquals(quarterWidth * 3, upper.right, 1f)
+        assertEquals("across the top of the middle", quarterHeight, upper.top, 1f)
+        assertEquals(quarterHeight * 2, upper.bottom, 1f)
+        assertEquals(12, geometry.cellAt(quarterWidth * 1.1f, quarterHeight * 1.5f))
+        assertEquals(12, geometry.cellAt(quarterWidth * 2.9f, quarterHeight * 1.5f))
     }
 
     @Test
-    fun theHighRangeRunsFromFToE() {
+    fun theHighRangeRunsFromFToF() {
         state.selectRange(high = true)
         compose.waitForIdle()
-        assertEquals(listOf("F4", "F#4", "G4", "G#4", "A4", "A#4", "B4", "C5", "C#5", "D5", "D#5", "E5"), names())
+        assertEquals(listOf("F4", "F#4", "G4", "G#4", "A4", "A#4", "B4", "C5", "C#5", "D5", "D#5", "E5", "F5"), names())
+    }
+
+    @Test
+    fun onATallFaceTheChoicesSitInARowUnderTheReadout() {
+        val tall = ClassicPitchPipeGeometry(1080, 2000, 13, 2.625f, floatArrayOf(90f, 90f))
+        assertTrue(tall.stacked)
+        assertTrue(tall.choicesInARow)
+        val low = tall.rangeRow(0)
+        val high = tall.rangeRow(1)
+        assertEquals("side by side", low.top, high.top)
+        assertTrue(high.left > low.right)
+        assertEquals("at the bottom of the well", tall.well.bottom, low.bottom, 0.5f)
+        assertEquals("centred in it", tall.well.centerX(), (low.left + high.right) / 2f, 0.5f)
+        assertTrue("the readout is above them", tall.readout.bottom < low.top)
+        assertEquals(tall.well.top, tall.readout.top)
+    }
+
+    @Test
+    fun onAShortFaceTheChoicesSitBesideTheReadout() {
+        val short = ClassicPitchPipeGeometry(2400, 800, 13, 2.625f, floatArrayOf(90f, 90f))
+        assertFalse(short.stacked)
+        val low = short.rangeRow(0)
+        val high = short.rangeRow(1)
+        assertEquals("at the right of the well", short.well.right, maxOf(low.right, high.right), 0.5f)
+        assertTrue("the readout is to their left", short.readout.right < minOf(low.left, high.left))
+        assertEquals(short.well.centerY(), (minOf(low.top, high.top) + maxOf(low.bottom, high.bottom)) / 2f, 0.5f)
+    }
+
+    @Test
+    fun choicesTooWideForARowStack() {
+        val wideLabels = ClassicPitchPipeGeometry(1080, 2000, 13, 2.625f, floatArrayOf(400f, 400f))
+        assertFalse(wideLabels.choicesInARow)
+        assertEquals(wideLabels.rangeRow(0).bottom, wideLabels.rangeRow(1).top)
     }
 
     @Test
@@ -163,15 +206,15 @@ class ClassicPitchPipeTest {
         compose.waitForIdle()
         assertEquals(listOf(2), playing())
 
-        face().performTouchInput { moveTo(Offset(geometry.width / 2f, geometry.height / 2f)) }
+        face().performTouchInput { moveTo(readout()) }
         compose.waitForIdle()
-        assertEquals("in the middle nothing sounds", emptyList<Int>(), playing())
+        assertEquals("over the readout nothing sounds", emptyList<Int>(), playing())
         face().performTouchInput { up() }
     }
 
     @Test
-    fun theMiddleOffTheRangeChoicesIsBarePanel() {
-        val middle = Offset(geometry.width / 2f, geometry.height / 2f)
+    fun theReadoutIsBarePanel() {
+        val middle = readout()
         assertEquals(-1, geometry.cellAt(middle.x, middle.y))
         assertEquals(-1, geometry.rangeRowAt(middle.x, middle.y))
         assertFalse("the panel does not take the finger, so a swipe there still pages", state.down(0, middle.x, middle.y, firstFinger = true))
@@ -194,8 +237,8 @@ class ClassicPitchPipeTest {
             up()
         }
         compose.waitForIdle()
-        assertTrue("the lower choice selects F to E", model.isFromFToF)
-        assertFalse("C4 is not on the F-to-E grid, so it must not keep sounding", c4.isPlaying)
+        assertTrue("the second choice selects F to F", model.isFromFToF)
+        assertFalse("C4 is not on the F-to-F grid, so it must not keep sounding", c4.isPlaying)
         assertTrue(haptics.contains(HapticFeedbackConstants.CLOCK_TICK))
 
         face().performTouchInput {
@@ -203,7 +246,7 @@ class ClassicPitchPipeTest {
             up()
         }
         compose.waitForIdle()
-        assertFalse("the upper choice selects C to B again", model.isFromFToF)
+        assertFalse("the first choice selects C to C again", model.isFromFToF)
     }
 
     @Test
@@ -230,14 +273,14 @@ class ClassicPitchPipeTest {
     }
 
     @Test
-    fun aScreenReaderFindsTwelveCellsAndTheRangeChoices() {
+    fun aScreenReaderFindsEveryCellAndTheRangeChoices() {
         compose.onNodeWithContentDescription("C, octave 4").assertExists()
         compose.onNodeWithContentDescription("B, octave 4").assertExists()
         compose.onNodeWithContentDescription("C sharp, D flat, octave 4").assertExists()
-        assertEquals("no upper C", 0, compose.onAllNodesWithContentDescription("C, octave 5").fetchSemanticsNodes().size)
+        compose.onNodeWithContentDescription("C, octave 5").assertExists()
 
         val context = RichApplication.getAppContext()
-        val low = compose.onNodeWithContentDescription(context.getString(R.string.ClassicCtoB))
+        val low = compose.onNodeWithContentDescription(context.getString(R.string.RangeLowDescription))
         assertEquals(true, low.fetchSemanticsNode().config.getOrNull(SemanticsProperties.Selected))
 
         compose.onNodeWithContentDescription("A, octave 4").performSemanticsAction(SemanticsActions.OnClick)
@@ -247,7 +290,7 @@ class ClassicPitchPipeTest {
         compose.waitForIdle()
         assertEquals(emptyList<Int>(), playing())
 
-        compose.onNodeWithContentDescription(context.getString(R.string.ClassicFtoE)).performSemanticsAction(SemanticsActions.OnClick)
+        compose.onNodeWithContentDescription(context.getString(R.string.RangeHighDescription)).performSemanticsAction(SemanticsActions.OnClick)
         compose.waitForIdle()
         assertTrue(model.isFromFToF)
     }

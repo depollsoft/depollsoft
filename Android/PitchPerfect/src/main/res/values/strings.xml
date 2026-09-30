@@ -106,8 +106,6 @@
     <string name="SectionPitchPipe">Pitch Pipe</string>
     <string name="ClassicPitchPipe">Classic pitch pipe</string>
     <string name="ClassicPitchPipeSupport">The original grid of big buttons</string>
-    <string name="ClassicCtoB">From C to B</string>
-    <string name="ClassicFtoE">From F to E</string>
     <string name="SectionWatch">Watch</string>
     <string name="WatchInstalledOn">Installed on %1$s</string>
     <string name="WatchNotInstalledOn">Pitch Perfect is not on %1$s yet.</string>

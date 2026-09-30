@@ -69,7 +69,7 @@ class PitchPipeScreenTest {
     fun theClassicSettingSwapsTheFaceAndSilencesTheOneItReplaces() {
         val model = PitchPipeModel()
         val state = PitchInstrumentState(model, haptic = {})
-        val classic = ClassicPitchPipeState(model, density = 2f, haptic = {})
+        val classic = ClassicPitchPipeState(model, RichApplication.getAppContext(), haptic = {})
         SettingsModel.toggleNotes = true
         compose.setContent { PlateTheme { PitchPipeScreen(model, true, state, classic) } }
         compose.waitForIdle()
