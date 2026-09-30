@@ -17,8 +17,18 @@ import UIKit
 
 // MARK: - Geometry
 
+/// What a face's touch surface asks of its layout. The radial face and the
+/// classic grid each answer it, so the one model drives either.
+protocol PitchFaceLayout {
+    /// The cell under `point`; -1 for none.
+    func cellIndex(at point: CGPoint) -> Int
+    /// The range position under `point`: false for C to C, true for F to F,
+    /// nil for neither.
+    func range(at point: CGPoint) -> Bool?
+}
+
 /// Where everything sits on a face of `size` holding `count` cells.
-struct InstrumentGeometry: Equatable {
+struct InstrumentGeometry: Equatable, PitchFaceLayout {
     let size: CGSize
     let faceCenter: CGPoint
     let ringRadius: CGFloat
@@ -68,6 +78,12 @@ struct InstrumentGeometry: Equatable {
         }
         return -1
     }
+
+    func range(at point: CGPoint) -> Bool? {
+        if rangeLowRect.contains(point) { return false }
+        if rangeHighRect.contains(point) { return true }
+        return nil
+    }
 }
 
 // MARK: - Model
@@ -82,9 +98,16 @@ final class PitchPipeModel {
     private(set) var notes: [DPNote] = []
     private(set) var naturals: [Bool] = []
     private(set) var isHighRange = false
+    /// The classic grid of big buttons shows in place of the radial face (a
+    /// Settings choice).
+    private(set) var isClassic = false
     /// Touch id → the cell it holds.
     private(set) var activeTouches: [Int: Int] = [:]
     var geometry = InstrumentGeometry(size: .zero, count: 13)
+    var classicGeometry = ClassicGeometry(size: .zero, count: 13)
+
+    /// The layout fingers are hit-tested against: whichever face shows.
+    var layout: any PitchFaceLayout { isClassic ? classicGeometry : geometry }
 
     private let noteFeedback = UIImpactFeedbackGenerator(style: .rigid)
     private let rangeFeedback = UISelectionFeedbackGenerator()
@@ -113,11 +136,17 @@ final class PitchPipeModel {
 
     var toggleMode: Bool { settings.toggleNotes }
 
-    /// Reloads the range's notes (and which are naturals) from the stored range.
+    /// Reloads the range's notes (and which are naturals) from the stored range,
+    /// and which face shows. Changing face silences the instrument.
     func refresh() {
         isHighRange = pipe.isFromFToF
         notes = pipe.notes as? [DPNote] ?? []
         naturals = notes.map { Int($0.accidental.get()) == Int(Natural.rawValue) }
+        let classic = settings.classicPitchPipe
+        if classic != isClassic {
+            stopAll()
+            isClassic = classic
+        }
     }
 
     func isPlaying(_ index: Int) -> Bool {
@@ -130,15 +159,12 @@ final class PitchPipeModel {
     // MARK: Touch
 
     func touchBegan(id: Int, at point: CGPoint) {
-        if activeTouches.isEmpty, geometry.rangeLowRect.contains(point) {
-            selectRange(high: false)
+        let layout = layout
+        if activeTouches.isEmpty, let high = layout.range(at: point) {
+            selectRange(high: high)
             return
         }
-        if activeTouches.isEmpty, geometry.rangeHighRect.contains(point) {
-            selectRange(high: true)
-            return
-        }
-        let index = geometry.cellIndex(at: point)
+        let index = layout.cellIndex(at: point)
         guard index >= 0, index < notes.count else { return }
         if toggleMode {
             let note = notes[index]
@@ -152,7 +178,7 @@ final class PitchPipeModel {
 
     func touchMoved(id: Int, to point: CGPoint) {
         guard !toggleMode, let currentCell = activeTouches[id] else { return }
-        let newCell = geometry.cellIndex(at: point)
+        let newCell = layout.cellIndex(at: point)
         guard newCell != currentCell else { return }
         activeTouches[id] = nil
         if currentCell < notes.count, !activeTouches.values.contains(currentCell) {
@@ -188,6 +214,13 @@ final class PitchPipeModel {
         pipe.isFromFToF = high
         refresh()
         UIAccessibility.post(notification: .layoutChanged, argument: nil)
+    }
+
+    /// The classic grid's range control chose `high`. As on the radial face, a
+    /// second finger cannot yank the range from under a held note.
+    func pickRange(high: Bool) {
+        guard activeTouches.isEmpty else { return }
+        selectRange(high: high)
     }
 
     /// VoiceOver's activation: toggled notes flip; momentary ones sound for 1.5 s.
@@ -296,7 +329,7 @@ struct InstrumentRenderer {
         let bounds = CGRect(origin: .zero, size: geometry.size)
         let cellRadius = geometry.cellRadius
 
-        drawPanel(context: context, bounds: bounds, ground: ground, hairline: hairline, markColor: inkSecondary)
+        Self.drawPanel(context: context, bounds: bounds, ground: ground, hairline: hairline, markColor: inkSecondary)
 
         let breath = 0.82 + 0.18 * sin(breathePhase)
 
@@ -331,7 +364,7 @@ struct InstrumentRenderer {
                 label = NSAttributedString(string: note.friendlyName ?? "",
                                            attributes: [.font: DPTheme.condensedFont(size: cellRadius * 0.9), .foregroundColor: textColor])
             } else {
-                label = glyphLabel(size: cellRadius * 0.5, color: textColor)
+                label = Self.glyphLabel(size: cellRadius * 0.5, color: textColor)
             }
             let size = label.size()
             label.draw(at: CGPoint(x: center.x - size.width / 2, y: center.y - size.height / 2))
@@ -369,7 +402,8 @@ struct InstrumentRenderer {
         nameplate.draw(at: CGPoint(x: bounds.midX - nameplateSize.width / 2, y: bounds.height - nameplateSize.height * 2.2))
     }
 
-    private func glyphLabel(size: CGFloat, color: UIColor) -> NSAttributedString {
+    /// The accidental cells' engraving: the NoteHedz sharp and flat either side of a slash.
+    static func glyphLabel(size: CGFloat, color: UIColor) -> NSAttributedString {
         if let noteHedz = UIFont(name: "NoteHedz", size: size * 1.2) {
             let label = NSMutableAttributedString()
             label.append(NSAttributedString(string: Plate.sharpGlyph, attributes: [.font: noteHedz, .foregroundColor: color]))
@@ -380,7 +414,8 @@ struct InstrumentRenderer {
         return NSAttributedString(string: "\u{266F}/\u{266D}", attributes: [.font: DPTheme.condensedFont(size: size * 0.9), .foregroundColor: color])
     }
 
-    private func drawPanel(context: CGContext, bounds: CGRect, ground: UIColor, hairline: UIColor, markColor: UIColor) {
+    /// The panel under a face: plate ground, brushed grain and the engraved score.
+    static func drawPanel(context: CGContext, bounds: CGRect, ground: UIColor, hairline: UIColor, markColor: UIColor) {
         ground.setFill()
         context.fill(bounds)
 

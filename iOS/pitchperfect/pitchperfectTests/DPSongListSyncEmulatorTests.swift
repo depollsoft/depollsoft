@@ -272,7 +272,8 @@ final class DPSongListSyncEmulatorTests: XCTestCase {
     // MARK: - Settings
 
     /// Toggle Notes and Wake Lock follow the account both ways, and a value that
-    /// arrives from the account is not written back to it.
+    /// arrives from the account is not written back to it. The classic pitch pipe
+    /// is how this device lays out the tab, and never reaches the account.
     func testSettingsFollowTheAccountBothWays() {
         let settings = DPSettingsModel()
         settings.attachToFirestore(userDoc: localDoc)
@@ -291,6 +292,8 @@ final class DPSongListSyncEmulatorTests: XCTestCase {
         XCTAssertNil(afterRead?.get("wakeLock"), "a value read from the account is not echoed, nor others filled in")
 
         // This device turns Wake Lock on; the account has it.
+        settings.classicPitchPipe = true
+        defer { settings.classicPitchPipe = false }
         settings.wakeLock = true
         var afterWrite: DocumentSnapshot?
         let deadline = Date(timeIntervalSinceNow: 30)
@@ -300,6 +303,7 @@ final class DPSongListSyncEmulatorTests: XCTestCase {
         } while afterWrite?.get("wakeLock") as? Bool != true && Date() < deadline
         XCTAssertEqual(afterWrite?.get("wakeLock") as? Bool, true)
         XCTAssertEqual(afterWrite?.get("toggleNotes") as? Bool, true)
+        XCTAssertNil(afterWrite?.get("classicPitchPipe"), "the classic pitch pipe stays on this device")
     }
 
     // MARK: - Reading and writing from the second client

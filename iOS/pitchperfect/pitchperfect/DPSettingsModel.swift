@@ -15,6 +15,7 @@ let wakeLockKey = "depollsoft.pitchperfect.WakeLock"
 let toggleNoteKey = "depollsoft.pitchperfect.ToggleNote"
 let referencePitchKey = "depollsoft.pitchperfect.ReferencePitch"
 let noteSoundKey = "depollsoft.pitchperfect.NoteSound"
+let classicPitchPipeKey = "depollsoft.pitchperfect.ClassicPitchPipe"
 
 public extension Notification.Name {
     static let settingsChanged = Notification.Name("pitchPerfect.settingsChanged")
@@ -157,6 +158,19 @@ public extension Notification.Name {
         }
     }
     
+    /// Whether the Pitch Pipe tab shows the classic grid of big buttons instead
+    /// of the radial face. It is how this device lays the tab out, as the theme
+    /// is, so it stays off the account.
+    @objc public var classicPitchPipe: Bool {
+        get {
+            UserDefaults.standard.bool(forKey: classicPitchPipeKey)
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: classicPitchPipeKey)
+            announceChange()
+        }
+    }
+
     /// Common choices for A4, in Hz: historical, standard and orchestral pitches.
     public static let commonReferencePitches = [415, 430, 432, 435, 438, 440, 441, 442, 443, 444, 446]
     public static let standardReferencePitch = 440

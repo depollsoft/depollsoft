@@ -240,6 +240,7 @@ class PitchPerfectTestCase: XCTestCase {
             DPSettingsModel.sharedInstance.detachFromFirestore()
             DPSettingsModel.sharedInstance.toggleNotes = false
             DPSettingsModel.sharedInstance.wakeLock = false
+            DPSettingsModel.sharedInstance.classicPitchPipe = false
             DPSettingsModel.sharedInstance.referencePitch = DPSettingsModel.standardReferencePitch
             DPSettingsModel.sharedInstance.noteSound = DPNoteSoundPitchPipe
             DPPitchPipeModel().isFromFToF = false
