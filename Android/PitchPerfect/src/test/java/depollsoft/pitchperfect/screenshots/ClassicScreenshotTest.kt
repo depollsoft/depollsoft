@@ -111,6 +111,14 @@ class ClassicScreenshotTest {
     }
 
     @Test
+    @Config(qualifiers = "w640dp-h360dp-land-xxhdpi")
+    fun classicSmallLandscapeChord() {
+        // On a small turned phone the readout is too short for two lines, so it takes one.
+        chord()
+        launchMain().capture("land_small_main_pitch_pipe_classic_chord")
+    }
+
+    @Test
     @Config(qualifiers = ScreenshotSupport.TABLET)
     fun classicTablet() = launchMain().capture("tablet_main_pitch_pipe_classic")
 

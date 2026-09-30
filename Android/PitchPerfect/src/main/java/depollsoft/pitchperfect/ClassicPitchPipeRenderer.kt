@@ -127,6 +127,10 @@ class ClassicPitchPipeRenderer(
         notes: List<Note>,
     ) {
         if (area.width() <= 0f || area.height() <= 0f) return
+        if (area.height() < dp(TWO_LINE_MIN_DP)) {
+            drawReadoutLine(canvas, area, notes)
+            return
+        }
         val nameSize = minOf(area.height() * 0.46f, area.width() * 0.22f)
         val detailSize = nameSize * 0.5f
         val maxWidth = area.width() * 0.92f
@@ -144,15 +148,10 @@ class ClassicPitchPipeRenderer(
         val names = playing.joinToString(" ") { NoteNames.readout(it.value) }
         fitWithin(displayPaint, names, maxWidth, area.height())
 
-        val chord = if (playing.size > 2) PitchChord.name(playing.map { it.index }) else null
+        val chord = chordName(playing)
         // A chord has a name, not a measurement: it is engraved in the display face.
         val detailPaint = if (chord != null) displayPaint else monoPaint
-        val detail =
-            chord ?: when (playing.size) {
-                1 -> String.format("%.1f Hz", playing[0].value.tunedFrequency)
-                2 -> PitchInterval.name(playing[0].index, playing[1].index)
-                else -> "${playing.size} NOTES"
-            }
+        val detail = chord ?: measurement(playing)
 
         // Names and detail as one block, centred in the area.
         val nameHeight = displayPaint.textSize
@@ -168,6 +167,63 @@ class ClassicPitchPipeRenderer(
         canvas.drawText(detail, area.centerX(), top + nameHeight + gap + detailPaint.textSize * 0.85f, detailPaint)
         displayPaint.letterSpacing = 0f
     }
+
+    /**
+     * The readout on one line, for a well too short for two (a turned phone): the names, then
+     * the detail beside them, centred in [area].
+     */
+    private fun drawReadoutLine(
+        canvas: Canvas,
+        area: RectF,
+        notes: List<Note>,
+    ) {
+        val lineSize = area.height() * 0.6f
+        val maxWidth = area.width() * 0.92f
+        val playing = notes.withIndex().filter { it.value.isPlaying }
+        if (playing.isEmpty()) {
+            monoPaint.color = withAlpha(inkSecondary, 140)
+            monoPaint.textSize = lineSize * 0.7f
+            fitWithin(monoPaint, IDLE, maxWidth, area.height())
+            canvas.drawText(IDLE, area.centerX(), area.centerY() + centreOffset(monoPaint), monoPaint)
+            return
+        }
+        val names = playing.joinToString(" ") { NoteNames.readout(it.value) } + "  "
+        val chord = chordName(playing)
+        val detail = chord ?: measurement(playing)
+        val detailPaint = if (chord != null) Paint(displayPaint).apply { letterSpacing = 0.12f } else monoPaint
+        displayPaint.color = ink
+        displayPaint.textSize = lineSize
+        detailPaint.color = ink
+        detailPaint.textSize = lineSize * if (chord != null) 0.8f else 0.7f
+        // Both parts shrink together until the line fits.
+        val width = displayPaint.measureText(names) + detailPaint.measureText(detail)
+        if (width > maxWidth) {
+            val scale = maxWidth / width
+            displayPaint.textSize *= scale
+            detailPaint.textSize *= scale
+        }
+        val namesWidth = displayPaint.measureText(names)
+        val start = area.centerX() - (namesWidth + detailPaint.measureText(detail)) / 2f
+        val baseline = area.centerY() + centreOffset(displayPaint)
+        displayPaint.textAlign = Paint.Align.LEFT
+        detailPaint.textAlign = Paint.Align.LEFT
+        canvas.drawText(names, start, baseline, displayPaint)
+        canvas.drawText(detail, start + namesWidth, baseline, detailPaint)
+        displayPaint.textAlign = Paint.Align.CENTER
+        monoPaint.textAlign = Paint.Align.CENTER
+    }
+
+    /** The name of the chord [playing] sounds, when it has one. */
+    private fun chordName(playing: List<IndexedValue<Note>>): String? =
+        if (playing.size > 2) PitchChord.name(playing.map { it.index }) else null
+
+    /** What the readout measures: a frequency, an interval or a count. */
+    private fun measurement(playing: List<IndexedValue<Note>>): String =
+        when (playing.size) {
+            1 -> String.format("%.1f Hz", playing[0].value.tunedFrequency)
+            2 -> PitchInterval.name(playing[0].index, playing[1].index)
+            else -> "${playing.size} NOTES"
+        }
 
     /** A radio button: its 20dp ring (with a dot when chosen) in a 32dp column, then the label. */
     private fun drawRangeChoice(
@@ -228,6 +284,9 @@ class ClassicPitchPipeRenderer(
         private const val GLOW_ALPHA = 22
         private const val UNSELECTED_RING_ALPHA = 0.51f
         private const val IDLE = "— Hz"
+
+        /** Below this height the readout goes on one line. */
+        private const val TWO_LINE_MIN_DP = 56f
 
         private fun sp(
             context: Context,
