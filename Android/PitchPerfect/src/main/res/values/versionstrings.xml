@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="Copyright">© 2022</string>
-    <string name="app_version">5.2.0</string>
+    <string name="app_version">5.2.1</string>
     <string name="Changelog"><![CDATA[Thank you for using Pitch Perfect!  Here\'s what has changed since you last used the app:
+            <p>
+                    <h5>Version 5.2.1</h5>
+                    - Switch to Classic Pitch Pipe in Settings for the original grid of big note buttons.<br />
+                    - Choose C to B or F to E. The classic layout uses your selected sound and reference pitch.<br />
+            </p>
             <p>
                     <h5>Version 5.2.0</h5>
                     - Choose the original pitch-pipe tone, four wave sounds, or instruments such as piano, organ, strings and choir. Preview sounds in Settings.<br />

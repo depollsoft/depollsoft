@@ -281,6 +281,21 @@ final class StoreScreenshotTests: XCTestCase {
         info.tap()
         XCTAssertTrue(app.textFields.firstMatch.readyForCapture(timeout: 10))
         snap("06-song-editor")
+        // Relaunch the native app with the classic layout and a latched note.
+        app.terminate()
+        app.launchArguments += ["-depollsoft.pitchperfect.ClassicPitchPipe", "YES",
+                                "-depollsoft.pitchperfect.ToggleNote", "YES"]
+        app.launch()
+        tab("Pitch Pipe")
+        let range = app.segmentedControls["pitchpipe.range"]
+        XCTAssertTrue(range.readyForCapture(timeout: 15))
+        if range.buttons["F to E"].isSelected { range.buttons["C to B"].tap() }
+        let note = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "label == %@", "A, octave 4")).firstMatch
+        XCTAssertTrue(note.readyForCapture(timeout: 10))
+        XCTAssertTrue(note.isHittable)
+        note.tap()
+        snap("07-classic-pitch-pipe")
     }
 }
 

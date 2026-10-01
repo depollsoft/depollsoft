@@ -1,28 +1,13 @@
-## ios: 24f871839a8932678737e032a333f35afec1e173..HEAD
+## ios: c36d60085a9a02c669a5a480c9308153796114f6..HEAD
 
-f37b58e2 iOS: center tall rows in scrolling tests
-3d823dc1 ios: wait for tuning menu layout in scrolling tests
-6429cd7d ios: keep song list editing controls in sync
-9991b435 release: wait for Pitch Perfect edit controls before capture
-534eb9c9 Android: separate song titles from their keys
-f3426a3d release: prepare both apps for iOS and Android
-e06d4ad3 Pitch Perfect: choose the note sound (waves and MIDI instruments) (#85)
-32b589cf Pitch Perfect: choose the A4 reference pitch (415–446 Hz) (#84)
-0509fd8e iOS: port Pitch Perfect and Tag Master to SwiftUI (#82)
-b3e109b6 Android: port Pitch Perfect, Wear and Tag Master to Compose; remove Bindroid (#81)
-014df805 release: ship Pitch Perfect 5.1.1 for Android with the Wear splash fix (#79)
-40b5178f Wear: show the app icon on Pitch Perfect's splash screen (#78)
-da339db8 Pitch Perfect store capture: wait longer for a typed song title (#77)
+9168b949 release: find Compose controls in the accessibility tree
+39698a91 release: dismiss startup prompts before Android captures
+8deee7f2 release: prepare Pitch Perfect 3.2.1 and 5.2.1
+f3ab9a09 Pitch Perfect: classic pitch pipe setting (the old grid of big buttons) on Android and iOS (#87)
 
-## android: da59d2dae1c61502583da4dfce693ed871dcc104..HEAD
+## android: c36d60085a9a02c669a5a480c9308153796114f6..HEAD
 
-f37b58e2 iOS: center tall rows in scrolling tests
-3d823dc1 ios: wait for tuning menu layout in scrolling tests
-6429cd7d ios: keep song list editing controls in sync
-9991b435 release: wait for Pitch Perfect edit controls before capture
-534eb9c9 Android: separate song titles from their keys
-f3426a3d release: prepare both apps for iOS and Android
-e06d4ad3 Pitch Perfect: choose the note sound (waves and MIDI instruments) (#85)
-32b589cf Pitch Perfect: choose the A4 reference pitch (415–446 Hz) (#84)
-0509fd8e iOS: port Pitch Perfect and Tag Master to SwiftUI (#82)
-b3e109b6 Android: port Pitch Perfect, Wear and Tag Master to Compose; remove Bindroid (#81)
+9168b949 release: find Compose controls in the accessibility tree
+39698a91 release: dismiss startup prompts before Android captures
+8deee7f2 release: prepare Pitch Perfect 3.2.1 and 5.2.1
+f3ab9a09 Pitch Perfect: classic pitch pipe setting (the old grid of big buttons) on Android and iOS (#87)

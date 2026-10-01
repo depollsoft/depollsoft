@@ -1,6 +1,9 @@
 package depollsoft.pitchperfect
 
 import depollsoft.testing.StoreScreenshots
+import android.app.Instrumentation
+import android.os.SystemClock
+import android.view.accessibility.AccessibilityNodeInfo
 import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -17,6 +20,28 @@ class StoreScreenshotTest {
         StoreScreenshots.capture(instrumentation, name)
     }
 
+    private fun waitForNode(
+        instrumentation: Instrumentation,
+        matches: (AccessibilityNodeInfo) -> Boolean,
+    ): AccessibilityNodeInfo {
+        fun find(node: AccessibilityNodeInfo): AccessibilityNodeInfo? {
+            if (node.isVisibleToUser && matches(node)) return node
+            for (index in 0 until node.childCount) {
+                val child = node.getChild(index) ?: continue
+                find(child)?.let { return it }
+            }
+            return null
+        }
+        val deadline = SystemClock.uptimeMillis() + 10000
+        while (SystemClock.uptimeMillis() < deadline) {
+            instrumentation.uiAutomation.rootInActiveWindow?.let { root ->
+                find(root)?.let { return it }
+            }
+            SystemClock.sleep(100)
+        }
+        error("The expected native control did not load")
+    }
+
     @Test fun captureStoreScreenshots() {
         assumeTrue(InstrumentationRegistry.getArguments().getString("storeScreenshots") == "true")
         // Capture the real ad-free state; never show a debug test advertisement.
@@ -26,6 +51,11 @@ class StoreScreenshotTest {
         depollsoft.lib.privacy.PrivacyChoices(instrumentation.targetContext)
             .save(analytics = false, crashes = false)
         instrumentation.runOnMainSync {
+            // The library belongs to a returning user who dismissed startup prompts.
+            // Record both prompts before either session can cover a capture.
+            depollsoft.lib.util.RunUtils.runOnce("firstLaunch")
+            depollsoft.lib.util.RunUtils.runOnce("loginDialog")
+            Changelog.shouldShow()
             val list = SongsModel.get().defaultSongList
             list.resetSongs()
             listOf("Blue Skies", "Down Our Way", "Heart of My Heart", "Shenandoah", "Sweet Adeline", "The Old Songs", "When You Were Sweet Sixteen", "You Are My Sunshine").forEachIndexed { index, title ->
@@ -52,6 +82,29 @@ class StoreScreenshotTest {
                 .putExtra(AddSongActivity.ID_EXTRA, SongsModel.get().defaultSongList.songs[0].id)
             ActivityScenario.launch<AddSongActivity>(intent).use {
                 capture("06-song-editor")
+            }
+        }
+        // Open the real classic face with a latched note for the listing.
+        SettingsModel.classicPitchPipe = true
+        SettingsModel.toggleNotes = true
+        try {
+            ActivityScenario.launch(PitchPerfectActivity::class.java).use {
+                val note = waitForNode(instrumentation) {
+                    it.contentDescription?.toString() == "A, octave 4"
+                }
+                check(note.performAction(AccessibilityNodeInfo.ACTION_CLICK))
+                capture("07-classic-pitch-pipe")
+            }
+        } finally {
+            SettingsModel.classicPitchPipe = false
+            SettingsModel.toggleNotes = false
+        }
+        // Check that the new resource entry is rendered in the native dialog.
+        ActivityScenario.launch(SettingsActivity::class.java).use { scenario ->
+            scenario.onActivity { it.dialog = SettingsDialog.CHANGELOG }
+            val heading = "Version ${instrumentation.targetContext.getString(R.string.app_version)}"
+            waitForNode(instrumentation) {
+                it.text?.contains(heading) == true
             }
         }
     }

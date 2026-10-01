@@ -6,7 +6,7 @@
     "wear": {
       "module": "PitchPerfectWear",
       "track": "wear:production",
-      "notes": "Fixes note touch handling and keeps the watch screen from dismissing while you hold a note. The watch continues to use the original Pitch Perfect sound at A440."
+      "notes": "This companion update accompanies the new Classic Pitch Pipe setting in the phone app."
     },
     "ios_scheme": "pitchperfectUITests",
     "scenes": [
@@ -15,7 +15,8 @@
       "03-keys",
       "04-songs",
       "05-edit-songs",
-      "06-song-editor"
+      "06-song-editor",
+      "07-classic-pitch-pipe"
     ],
     "paths": [
       "iOS/pitchperfect",
@@ -30,6 +31,7 @@
     "store_scenes": {
       "ios": [
         "01-pitch-pipe-light",
+        "07-classic-pitch-pipe-light",
         "02-notes-light",
         "03-keys-light",
         "04-songs-light",
@@ -37,17 +39,16 @@
         "06-song-editor-light",
         "01-pitch-pipe-dark",
         "04-songs-dark",
-        "05-edit-songs-dark",
-        "06-song-editor-dark"
+        "05-edit-songs-dark"
       ],
       "android": [
         "01-pitch-pipe-light",
+        "07-classic-pitch-pipe-light",
         "02-notes-light",
         "03-keys-light",
         "04-songs-light",
         "05-edit-songs-light",
         "06-song-editor-light",
-        "01-pitch-pipe-dark",
         "04-songs-dark"
       ]
     }
