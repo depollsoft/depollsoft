@@ -1,6 +1,9 @@
 package depollsoft.pitchperfect
 
 import depollsoft.testing.StoreScreenshots
+import android.app.Instrumentation
+import android.os.SystemClock
+import android.view.accessibility.AccessibilityNodeInfo
 import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -15,6 +18,28 @@ class StoreScreenshotTest {
         instrumentation.waitForIdleSync()
         Thread.sleep(1000)
         StoreScreenshots.capture(instrumentation, name)
+    }
+
+    private fun waitForNode(
+        instrumentation: Instrumentation,
+        matches: (AccessibilityNodeInfo) -> Boolean,
+    ): AccessibilityNodeInfo {
+        fun find(node: AccessibilityNodeInfo): AccessibilityNodeInfo? {
+            if (node.isVisibleToUser && matches(node)) return node
+            for (index in 0 until node.childCount) {
+                val child = node.getChild(index) ?: continue
+                find(child)?.let { return it }
+            }
+            return null
+        }
+        val deadline = SystemClock.uptimeMillis() + 10000
+        while (SystemClock.uptimeMillis() < deadline) {
+            instrumentation.uiAutomation.rootInActiveWindow?.let { root ->
+                find(root)?.let { return it }
+            }
+            SystemClock.sleep(100)
+        }
+        error("The expected native control did not load")
     }
 
     @Test fun captureStoreScreenshots() {
@@ -64,16 +89,10 @@ class StoreScreenshotTest {
         SettingsModel.toggleNotes = true
         try {
             ActivityScenario.launch(PitchPerfectActivity::class.java).use {
-                val deadline = android.os.SystemClock.uptimeMillis() + 10000
-                var note: android.view.accessibility.AccessibilityNodeInfo? = null
-                while (note == null && android.os.SystemClock.uptimeMillis() < deadline) {
-                    note = instrumentation.uiAutomation.rootInActiveWindow
-                        ?.findAccessibilityNodeInfosByText("A, octave 4")
-                        ?.firstOrNull { it.contentDescription?.toString() == "A, octave 4" }
-                    if (note == null) android.os.SystemClock.sleep(100)
+                val note = waitForNode(instrumentation) {
+                    it.contentDescription?.toString() == "A, octave 4"
                 }
-                checkNotNull(note) { "The classic grid's A4 button did not load" }
-                check(note.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK))
+                check(note.performAction(AccessibilityNodeInfo.ACTION_CLICK))
                 capture("07-classic-pitch-pipe")
             }
         } finally {
@@ -84,15 +103,9 @@ class StoreScreenshotTest {
         ActivityScenario.launch(SettingsActivity::class.java).use { scenario ->
             scenario.onActivity { it.dialog = SettingsDialog.CHANGELOG }
             val heading = "Version ${instrumentation.targetContext.getString(R.string.app_version)}"
-            val deadline = android.os.SystemClock.uptimeMillis() + 10000
-            var rendered = false
-            while (!rendered && android.os.SystemClock.uptimeMillis() < deadline) {
-                rendered = instrumentation.uiAutomation.rootInActiveWindow
-                    ?.findAccessibilityNodeInfosByText(heading)
-                    ?.any { it.isVisibleToUser } == true
-                if (!rendered) android.os.SystemClock.sleep(100)
+            waitForNode(instrumentation) {
+                it.text?.contains(heading) == true
             }
-            check(rendered) { "The current version's changelog did not render" }
         }
     }
 }
