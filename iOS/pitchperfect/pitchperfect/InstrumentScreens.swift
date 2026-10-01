@@ -28,7 +28,11 @@ struct PitchPipeScreen: View {
 
     var body: some View {
         InstrumentPage {
-            PitchInstrumentView(model: model)
+            if model.isClassic {
+                ClassicPitchPipeView(model: model)
+            } else {
+                PitchInstrumentView(model: model)
+            }
         }
         .navigationTitle("Pitch Pipe")
         .navigationBarTitleDisplayMode(.inline)

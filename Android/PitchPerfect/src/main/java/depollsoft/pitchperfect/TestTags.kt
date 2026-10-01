@@ -3,6 +3,7 @@ package depollsoft.pitchperfect
 /** Tags the screen tests and store captures find controls by; exposed as resource ids. */
 object TestTags {
     const val PITCH_INSTRUMENT = "pitchInstrument"
+    const val CLASSIC_PITCH_PIPE = "classicPitchPipe"
     const val TAB_PITCH_PIPE = "pitchpipe_item"
     const val TAB_NOTES = "notes_item"
     const val TAB_KEYS = "keys_item"
@@ -47,6 +48,7 @@ object TestTags {
     const val ROW_OVERFLOW = "setListRowOverflow"
     const val TOGGLE_NOTES = "toggleNoteCheckBox"
     const val WAKE_LOCK = "wakeLockCheckBox"
+    const val CLASSIC_SETTING = "classicPitchPipeSwitch"
     const val TUNING = "tuningButton"
     const val TUNING_CHOICE = "tuningChoice"
     const val TUNING_LIST = "tuningList"

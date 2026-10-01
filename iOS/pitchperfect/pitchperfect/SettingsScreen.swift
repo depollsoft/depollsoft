@@ -82,6 +82,7 @@ final class SettingsModel {
 
     private(set) var toggleNotes = false
     private(set) var wakeLock = false
+    private(set) var classicPitchPipe = false
     private(set) var referencePitch = DPSettingsModel.standardReferencePitch
     private(set) var noteSound = DPNoteSoundPitchPipe
     /// The sound list is pushed.
@@ -126,6 +127,7 @@ final class SettingsModel {
     func reload() {
         toggleNotes = settings.toggleNotes
         wakeLock = settings.wakeLock
+        classicPitchPipe = settings.classicPitchPipe
         referencePitch = settings.referencePitch
         noteSound = settings.noteSound
         theme = DPTheme.storedTheme
@@ -134,6 +136,7 @@ final class SettingsModel {
 
     func setToggleNotes(_ on: Bool) { settings.toggleNotes = on }
     func setWakeLock(_ on: Bool) { settings.wakeLock = on }
+    func setClassicPitchPipe(_ on: Bool) { settings.classicPitchPipe = on }
     func setReferencePitch(_ hz: Int) { settings.referencePitch = hz }
 
     /// Chooses the sound and plays a short preview of it.
@@ -265,6 +268,8 @@ struct SettingsScreen: View {
                               isOn: Binding(get: { model.toggleNotes }, set: model.setToggleNotes))
                     SwitchRow(title: "Wake Lock", detail: "Prevent device from sleeping",
                               isOn: Binding(get: { model.wakeLock }, set: model.setWakeLock))
+                    SwitchRow(title: "Classic Pitch Pipe", detail: "The original grid of big buttons",
+                              isOn: Binding(get: { model.classicPitchPipe }, set: model.setClassicPitchPipe))
                     TuningRow(selection: Binding(get: { model.referencePitch }, set: model.setReferencePitch))
                     SoundRow(sound: model.noteSound) { model.showingSoundPicker = true }
                     HStack {

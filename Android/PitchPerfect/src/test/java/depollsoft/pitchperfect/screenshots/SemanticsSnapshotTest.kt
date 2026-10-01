@@ -11,6 +11,7 @@ import depollsoft.pitchperfect.AddSongActivity
 import depollsoft.pitchperfect.AddSongsFromListActivity
 import depollsoft.pitchperfect.ManageSetListsActivity
 import depollsoft.pitchperfect.SettingsActivity
+import depollsoft.pitchperfect.SettingsModel
 import depollsoft.pitchperfect.SongsModel
 import depollsoft.pitchperfect.TestTags
 import depollsoft.pitchperfect.lib.Key
@@ -63,6 +64,13 @@ class SemanticsSnapshotTest {
     fun pitchPipe() {
         launchMain()
         verify("main_pitch_pipe")
+    }
+
+    @Test
+    fun pitchPipeClassic() {
+        SettingsModel.classicPitchPipe = true
+        launchMain()
+        verify("main_pitch_pipe_classic")
     }
 
     @Test

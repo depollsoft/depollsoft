@@ -105,6 +105,14 @@ class SettingsState {
             changed()
         }
 
+    /** The classic grid of big buttons in place of the radial pitch pipe. */
+    var classicPitchPipe: Boolean
+        get() = version.let { SettingsModel.classicPitchPipe }
+        set(value) {
+            SettingsModel.classicPitchPipe = value
+            changed()
+        }
+
     /** The A4 the notes are tuned to, in Hz. */
     var referencePitch: Int
         // Reads the notes' tuning too, which is snapshot state: a change synced from another
@@ -176,6 +184,12 @@ fun SettingsScreen(
             PlateSectionHeader(stringResource(R.string.SectionPitchPipe), Modifier.padding(top = 12.dp))
             SettingSwitch(stringResource(R.string.NotesToggle), state.toggleNotes, TestTags.TOGGLE_NOTES) { state.toggleNotes = it }
             SettingSwitch(stringResource(R.string.WakeLock), state.wakeLock, TestTags.WAKE_LOCK) { state.wakeLock = it }
+            SettingSwitch(
+                stringResource(R.string.ClassicPitchPipe),
+                state.classicPitchPipe,
+                TestTags.CLASSIC_SETTING,
+                support = stringResource(R.string.ClassicPitchPipeSupport),
+            ) { state.classicPitchPipe = it }
             DropDownRows(
                 listOf(
                     DropDown(
@@ -282,12 +296,13 @@ fun SettingsScreen(
     }
 }
 
-/** A switch row: its label, then the switch, at least 56dp tall. */
+/** A switch row: its label (and a line saying what it does, if any), then the switch, at least 56dp tall. */
 @Composable
 private fun SettingSwitch(
     label: String,
     checked: Boolean,
     tag: String,
+    support: String? = null,
     onChange: (Boolean) -> Unit,
 ) {
     val colors = plateColors
@@ -299,7 +314,14 @@ private fun SettingSwitch(
             .toggleable(checked, role = Role.Switch, onValueChange = onChange),
         verticalAlignment = ViewAlign.CenterVertically,
     ) {
-        PlateText(label, style = plateText(16.sp, colors.ink), modifier = Modifier.weight(1f))
+        if (support == null) {
+            PlateText(label, style = plateText(16.sp, colors.ink), modifier = Modifier.weight(1f))
+        } else {
+            Column(Modifier.weight(1f).padding(vertical = 8.dp)) {
+                PlateText(label, style = plateText(16.sp, colors.ink))
+                PlateText(support, style = plateText(14.sp, colors.inkSecondary))
+            }
+        }
         Switch(
             checked,
             onCheckedChange = null,

@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import depollsoft.lib.activity.RichApplication
 import depollsoft.lib.util.Preferences
 import depollsoft.pitchperfect.lib.Note
@@ -20,7 +21,7 @@ import org.mockito.Mockito
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** The Pitch Pipe tab around its face: when it re-reads the toggle setting. */
+/** The Pitch Pipe tab around its face: when it re-reads the toggle setting, and which face it shows. */
 @RunWith(RobolectricTestRunner::class)
 @Config(application = RichApplication::class, qualifiers = "w411dp-h891dp")
 class PitchPipeScreenTest {
@@ -62,5 +63,30 @@ class PitchPipeScreenTest {
         current = true
         compose.waitForIdle()
         assertTrue("the fragment's onResume re-read it on every visit", state.toggleMode)
+    }
+
+    @Test
+    fun theClassicSettingSwapsTheFaceAndSilencesTheOneItReplaces() {
+        val model = PitchPipeModel()
+        val state = PitchInstrumentState(model, haptic = {})
+        val classic = ClassicPitchPipeState(model, RichApplication.getAppContext(), haptic = {})
+        SettingsModel.toggleNotes = true
+        compose.setContent { PlateTheme { PitchPipeScreen(model, true, state, classic) } }
+        compose.waitForIdle()
+        compose.onNodeWithTag(TestTags.PITCH_INSTRUMENT).assertExists()
+        compose.onNodeWithTag(TestTags.CLASSIC_PITCH_PIPE).assertDoesNotExist()
+
+        // A note latched on the radial face.
+        model.notes[4].isPlaying = true
+        SettingsModel.classicPitchPipe = true
+        compose.waitForIdle()
+        compose.onNodeWithTag(TestTags.CLASSIC_PITCH_PIPE).assertExists()
+        compose.onNodeWithTag(TestTags.PITCH_INSTRUMENT).assertDoesNotExist()
+        assertFalse("changing face silences the old one", model.notes[4].isPlaying)
+        assertTrue("the grid takes the toggle setting too", classic.toggleMode)
+
+        SettingsModel.classicPitchPipe = false
+        compose.waitForIdle()
+        compose.onNodeWithTag(TestTags.PITCH_INSTRUMENT).assertExists()
     }
 }
