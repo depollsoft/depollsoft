@@ -54,5 +54,40 @@ class StoreScreenshotTest {
                 capture("06-song-editor")
             }
         }
+        // Open the real classic face with a latched note for the listing.
+        SettingsModel.classicPitchPipe = true
+        SettingsModel.toggleNotes = true
+        try {
+            ActivityScenario.launch(PitchPerfectActivity::class.java).use {
+                val deadline = android.os.SystemClock.uptimeMillis() + 10000
+                var note: android.view.accessibility.AccessibilityNodeInfo? = null
+                while (note == null && android.os.SystemClock.uptimeMillis() < deadline) {
+                    note = instrumentation.uiAutomation.rootInActiveWindow
+                        ?.findAccessibilityNodeInfosByText("A, octave 4")
+                        ?.firstOrNull { it.contentDescription?.toString() == "A, octave 4" }
+                    if (note == null) android.os.SystemClock.sleep(100)
+                }
+                checkNotNull(note) { "The classic grid's A4 button did not load" }
+                check(note.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK))
+                capture("07-classic-pitch-pipe")
+            }
+        } finally {
+            SettingsModel.classicPitchPipe = false
+            SettingsModel.toggleNotes = false
+        }
+        // Check that the new resource entry is rendered in the native dialog.
+        ActivityScenario.launch(SettingsActivity::class.java).use { scenario ->
+            scenario.onActivity { it.dialog = SettingsDialog.CHANGELOG }
+            val heading = "Version ${instrumentation.targetContext.getString(R.string.app_version)}"
+            val deadline = android.os.SystemClock.uptimeMillis() + 10000
+            var rendered = false
+            while (!rendered && android.os.SystemClock.uptimeMillis() < deadline) {
+                rendered = instrumentation.uiAutomation.rootInActiveWindow
+                    ?.findAccessibilityNodeInfosByText(heading)
+                    ?.any { it.isVisibleToUser } == true
+                if (!rendered) android.os.SystemClock.sleep(100)
+            }
+            check(rendered) { "The current version's changelog did not render" }
+        }
     }
 }

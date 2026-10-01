@@ -3,17 +3,17 @@
   "app": "pitchperfect",
   "platforms": {
     "ios": {
-      "version": "3.2.0",
-      "build": 1790690751
+      "version": "3.2.1",
+      "build": 1790821193
     },
     "android": {
-      "version": "5.2.0",
-      "build": 1790690751
+      "version": "5.2.1",
+      "build": 1790821193
     }
   },
-  "notes": "Choose how your notes sound: keep the original Pitch Perfect tone or try piano, organ, strings, choir, other instruments, and four wave sounds. Preview each sound in Settings. Set A4 to a reference pitch from 415 to 446 Hz to match your group. Your sound and tuning choices sync with your account. This update also fixes problems with saved songs, held notes, and settings.",
+  "notes": "Classic Pitch Pipe is back as an option in Settings. Switch to the original grid of big note buttons, choose C to B or F to E, and press notes to play them. The classic layout works with your selected sound and reference pitch.",
   "since": {
-    "ios": "24f871839a8932678737e032a333f35afec1e173",
-    "android": "da59d2dae1c61502583da4dfce693ed871dcc104"
+    "ios": "c36d60085a9a02c669a5a480c9308153796114f6",
+    "android": "c36d60085a9a02c669a5a480c9308153796114f6"
   }
 }

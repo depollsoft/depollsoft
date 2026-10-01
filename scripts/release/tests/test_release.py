@@ -247,7 +247,7 @@ class CaptureTests(unittest.TestCase):
             image = Image.new('RGB', (1320, 2868), 'white')
             ImageDraw.Draw(image).rectangle((0, 0, 800, 1000), fill='black')
             image.save(path)
-            image.save(path.with_name('iphone-02-notes-light.png'))
+            image.save(dest / capture.screenshot_path('pitchperfect', 'ios', 'iphone', '02-notes-light'))
             with self.assertRaisesRegex(ValueError, 'Duplicate'):
                 capture.validate('pitchperfect', 'ios', dest)
 
@@ -278,7 +278,8 @@ class ExpandedCaptureTests(unittest.TestCase):
                     ImageDraw.Draw(image).rectangle((0, 0, 12, 12+i), fill=(10*i, 0, 0))
                     image.save(path)
                     i += 1
-            self.assertEqual(len(capture.validate('pitchperfect', 'ios', dest)), 12)
+            self.assertEqual(len(capture.validate('pitchperfect', 'ios', dest)),
+                             2 * len(release.APPS['pitchperfect']['scenes']))
             (dest / capture.screenshot_path('pitchperfect', 'ios', 'iphone', '02-notes-dark')).unlink()
             with self.assertRaises(FileNotFoundError):
                 capture.validate('pitchperfect', 'ios', dest)
