@@ -7,22 +7,21 @@ import XCTest
 final class ClassicGeometryTests: XCTestCase {
     /// An iPhone 17's pitch pipe, between its bars.
     private let phone = ClassicGeometry(size: CGSize(width: 402, height: 640), count: 13)
+    /// The same phone turned on its side.
+    private let turned = ClassicGeometry(size: CGSize(width: 750, height: 200), count: 13)
 
-    private func slot(_ geometry: ClassicGeometry, _ index: Int) -> (column: Int, row: Int, columns: Int) {
+    private func slot(_ geometry: ClassicGeometry, _ index: Int) -> (column: Int, row: Int) {
         let rect = geometry.slots[index]
-        let column = geometry.size.width / 4
-        let row = geometry.size.height / 4
-        return (Int((rect.minX / column).rounded()), Int((rect.minY / row).rounded()), Int((rect.width / column).rounded()))
+        return (Int((rect.minX / (geometry.size.width / 4)).rounded()), Int((rect.minY / (geometry.size.height / 4)).rounded()))
     }
 
-    func testTwelveCellsRunClockwiseRoundTheEdgeAndTheUpperNoteSpansTheMiddle() {
-        XCTAssertEqual(phone.slots.count, 13)
-        let expected: [(Int, Int, Int)] = [
-            (0, 0, 1), (1, 0, 1), (2, 0, 1), (3, 0, 1), // C C♯ D D♯ across the top
-            (3, 1, 1), (3, 2, 1), // E F down the right
-            (3, 3, 1), (2, 3, 1), (1, 3, 1), (0, 3, 1), // F♯ G G♯ A back along the bottom
-            (0, 2, 1), (0, 1, 1), // A♯ B up the left
-            (1, 1, 2), // the upper C, across the top of the middle
+    func testOneOctaveRunsClockwiseRoundTheEdge() {
+        XCTAssertEqual(phone.slots.count, 12, "the radial face's thirteenth note is not on the grid")
+        let expected: [(Int, Int)] = [
+            (0, 0), (1, 0), (2, 0), (3, 0), // C C♯ D D♯ across the top
+            (3, 1), (3, 2), // E F down the right
+            (3, 3), (2, 3), (1, 3), (0, 3), // F♯ G G♯ A back along the bottom
+            (0, 2), (0, 1), // A♯ B up the left
         ]
         for (index, place) in expected.enumerated() {
             let actual = slot(phone, index)
@@ -39,50 +38,60 @@ final class ClassicGeometryTests: XCTestCase {
 
     func testAFingerInAButtonsMarginStillPlaysIt() {
         XCTAssertEqual(phone.cellIndex(at: CGPoint(x: 1, y: 1)), 0, "outside the drawn C, inside its slot")
-        let wide = phone.slots[12]
-        XCTAssertEqual(phone.cellIndex(at: CGPoint(x: wide.minX + 1, y: wide.maxY - 1)), 12)
         XCTAssertEqual(phone.cellIndex(at: CGPoint(x: -1, y: 10)), -1)
     }
 
-    func testTheWellIsNoCellAndTheRangeControlTakesItsOwnTouches() {
-        let well = phone.well
-        XCTAssertEqual(phone.cellIndex(at: CGPoint(x: well.midX, y: well.midY)), -1)
-        XCTAssertNil(phone.range(at: CGPoint(x: phone.selectorRect.midX, y: phone.selectorRect.midY)))
+    func testTheWellIsTheWholeMiddleAndNoCell() {
+        let column = phone.size.width / 4
+        let row = phone.size.height / 4
+        XCTAssertEqual(phone.well, CGRect(x: column, y: row, width: column * 2, height: row * 2).insetBy(dx: 4, dy: 6))
+        for point in [CGPoint(x: column * 1.5, y: row * 1.5), CGPoint(x: column * 2.5, y: row * 2.5),
+                      CGPoint(x: phone.well.midX, y: phone.well.midY)] {
+            XCTAssertEqual(phone.cellIndex(at: point), -1, "\(point)")
+        }
+        XCTAssertNil(phone.range(at: CGPoint(x: phone.selectorRect.midX, y: phone.selectorRect.midY)),
+                     "the range control takes its own touches")
     }
 
-    func testATallWellStacksTheReadoutOverTheRangeControl() {
+    func testATallWellPutsTheReadoutInItsTopHalfAndTheRangeControlInItsBottomHalf() {
         XCTAssertTrue(phone.stacked)
-        XCTAssertEqual(phone.selectorRect.midX, phone.well.midX, accuracy: 0.001)
-        XCTAssertLessThanOrEqual(phone.selectorRect.maxY, phone.well.maxY)
-        XCTAssertGreaterThan(phone.selectorRect.minY, phone.well.maxY - ClassicGeometry.selectorBand)
-        XCTAssertEqual(phone.readoutRect.minY, phone.well.minY)
-        XCTAssertEqual(phone.readoutRect.maxY, phone.well.maxY - ClassicGeometry.selectorBand - ClassicGeometry.gap, accuracy: 0.001)
-        XCTAssertEqual(phone.readoutRect.width, phone.well.width)
+        let well = phone.well
+        XCTAssertEqual(phone.readoutRect, CGRect(x: well.minX, y: well.minY, width: well.width, height: well.height / 2))
+        XCTAssertEqual(phone.selectorRect.midX, well.midX, accuracy: 0.001)
+        XCTAssertEqual(phone.selectorRect.midY, well.midY + well.height / 4, accuracy: 0.001,
+                       "centred in the bottom half")
     }
 
     func testAShortWellPutsTheRangeControlBesideTheReadout() {
-        // A phone turned on its side.
-        let turned = ClassicGeometry(size: CGSize(width: 874, height: 300), count: 13)
-        XCTAssertFalse(turned.stacked)
-        XCTAssertEqual(turned.selectorRect.maxX, turned.well.maxX, accuracy: 0.001)
-        XCTAssertEqual(turned.selectorRect.midY, turned.well.midY, accuracy: 0.001)
-        XCTAssertEqual(turned.readoutRect.minX, turned.well.minX)
+        XCTAssertFalse(turned.stacked, "half the well is under 56")
+        let well = turned.well
+        XCTAssertEqual(turned.selectorRect.maxX, well.maxX, accuracy: 0.001)
+        XCTAssertEqual(turned.selectorRect.midY, well.midY, accuracy: 0.001)
+        XCTAssertEqual(turned.readoutRect.minX, well.minX)
         XCTAssertEqual(turned.readoutRect.maxX, turned.selectorRect.minX - ClassicGeometry.gap, accuracy: 0.001)
-        XCTAssertEqual(turned.readoutRect.height, turned.well.height)
+        XCTAssertEqual(turned.readoutRect.height, well.height)
+        XCTAssertGreaterThanOrEqual(turned.readoutRect.height, ClassicGeometry.minReadout, "so it keeps two lines")
     }
 
-    func testATurnedPhonesReadoutIsTooShortForTwoLines() {
-        // An iPhone 17 on its side, between its bars and the tab bar.
-        let turned = ClassicGeometry(size: CGSize(width: 750, height: 200), count: 13)
-        XCTAssertFalse(turned.stacked)
-        XCTAssertLessThan(turned.readoutRect.height, ClassicGeometry.minReadout, "so the readout reads as one line")
-        XCTAssertGreaterThanOrEqual(phone.readoutRect.height, ClassicGeometry.minReadout, "portrait keeps two")
+    func testATallRangeControlMovesBesideTheReadout() {
+        // Half this well (69) holds the readout's 56, but not an 80-high control.
+        let tall = ClassicGeometry(size: CGSize(width: 402, height: 300), count: 12,
+                                   selectorSize: CGSize(width: 150, height: 80))
+        XCTAssertFalse(tall.stacked)
+        let fits = ClassicGeometry(size: CGSize(width: 402, height: 300), count: 12)
+        XCTAssertTrue(fits.stacked)
+    }
+
+    func testAVeryShortFacesReadoutReadsAsOneLine() {
+        let squat = ClassicGeometry(size: CGSize(width: 600, height: 120), count: 13)
+        XCTAssertFalse(squat.stacked)
+        XCTAssertLessThan(squat.readoutRect.height, ClassicGeometry.minReadout)
     }
 
     func testAWideRangeControlTakesAtMostHalfAShortWell() {
-        let turned = ClassicGeometry(size: CGSize(width: 874, height: 300), count: 13,
-                                     selectorSize: CGSize(width: 900, height: 32))
-        XCTAssertEqual(turned.selectorRect.width, turned.well.width / 2, accuracy: 0.001)
+        let wide = ClassicGeometry(size: CGSize(width: 750, height: 200), count: 13,
+                                   selectorSize: CGSize(width: 900, height: 32))
+        XCTAssertEqual(wide.selectorRect.width, wide.well.width / 2, accuracy: 0.001)
     }
 }
 
@@ -114,24 +123,36 @@ final class ClassicPitchPipeModelTests: PitchPerfectTestCase {
 
     func testTheSettingShowsTheClassicFace() {
         XCTAssertTrue(model.isClassic)
-        XCTAssertEqual(notes.count, 13, "the whole inclusive octave")
+        XCTAssertEqual(model.classicGeometry.slots.count, 12, "one octave; the model keeps its thirteenth for the radial face")
     }
 
-    func testEveryCellSoundsWhileHeldTheUpperNoteIncluded() {
-        for index in notes.indices {
+    func testEveryCellSoundsWhileHeld() {
+        for index in 0..<12 {
             model.touchBegan(id: 1, at: center(index))
             XCTAssertEqual(model.playingIndices, [index], "cell \(index)")
             model.touchEnded(id: 1)
             XCTAssertFalse(model.anyPlaying, "cell \(index)")
         }
-        XCTAssertEqual(model.spokenName(at: 12), "C, octave 5")
+    }
+
+    func testTheUpperNoteCannotBeReached() {
+        let geometry = model.classicGeometry
+        var point = CGPoint.zero
+        while point.y < geometry.size.height {
+            point.x = 0
+            while point.x < geometry.size.width {
+                XCTAssertNotEqual(geometry.cellIndex(at: point), 12)
+                point.x += 10
+            }
+            point.y += 10
+        }
     }
 
     func testAChordOfFingersSoundsTogether() {
-        for (id, index) in [0, 4, 7, 12].enumerated() { model.touchBegan(id: id, at: center(index)) }
-        XCTAssertEqual(model.playingIndices, [0, 4, 7, 12])
+        for (id, index) in [0, 4, 7, 11].enumerated() { model.touchBegan(id: id, at: center(index)) }
+        XCTAssertEqual(model.playingIndices, [0, 4, 7, 11])
         model.touchEnded(id: 1)
-        XCTAssertEqual(model.playingIndices, [0, 7, 12], "lifting one finger stops only its note")
+        XCTAssertEqual(model.playingIndices, [0, 7, 11], "lifting one finger stops only its note")
         for id in [0, 2, 3] { model.touchEnded(id: id) }
         XCTAssertFalse(model.anyPlaying)
     }
@@ -150,12 +171,12 @@ final class ClassicPitchPipeModelTests: PitchPerfectTestCase {
         DPSettingsModel.sharedInstance.toggleNotes = true
         model.touchBegan(id: 1, at: center(5))
         model.touchEnded(id: 1)
-        model.touchBegan(id: 2, at: center(12))
+        model.touchBegan(id: 2, at: center(11))
         model.touchEnded(id: 2)
-        XCTAssertEqual(model.playingIndices, [5, 12])
+        XCTAssertEqual(model.playingIndices, [5, 11])
         model.touchBegan(id: 3, at: center(5))
         model.touchEnded(id: 3)
-        XCTAssertEqual(model.playingIndices, [12])
+        XCTAssertEqual(model.playingIndices, [11])
     }
 
     func testTheWellIsNotTheInstruments() {
@@ -172,7 +193,7 @@ final class ClassicPitchPipeModelTests: PitchPerfectTestCase {
         XCTAssertTrue(model.anyPlaying)
         model.selectRange(high: true)
         XCTAssertFalse(model.anyPlaying)
-        XCTAssertEqual(notes.last.map { "\($0.friendlyName!)\($0.octave)" }, "F5")
+        XCTAssertEqual("\(notes[11].friendlyName!)\(notes[11].octave)", "E5", "the grid runs F to E")
     }
 
     func testTheRangeControlIgnoresAChoiceWhileAFingerHoldsANote() {
@@ -226,11 +247,14 @@ final class ClassicPitchPipeScreenTests: PitchPerfectTestCase {
         XCTAssertTrue(app.ui.exists(label: "Octave range C to C"), "the radial face by default")
         DPSettingsModel.sharedInstance.classicPitchPipe = true
         app.ui.wait { !app.ui.exists(label: "Octave range C to C") && self.rangeControl(app) != nil }
-        let upper = try XCTUnwrap(app.ui.element(label: "C, octave 5"))
-        let lower = try XCTUnwrap(app.ui.element(label: "C, octave 4"))
-        XCTAssertTrue(upper.accessibilityTraits.contains(.button))
-        XCTAssertEqual(upper.accessibilityFrame.width, lower.accessibilityFrame.width * 2, accuracy: 1,
-                       "the upper note spans the middle two columns")
+        for label in ["C, octave 4", "C sharp, D flat, octave 4", "B, octave 4"] {
+            let cell = try XCTUnwrap(app.ui.element(label: label), label)
+            XCTAssertTrue(cell.accessibilityTraits.contains(.button), label)
+        }
+        XCTAssertFalse(app.ui.exists(label: "C, octave 5"), "one octave, C to B")
+        let control = try XCTUnwrap(rangeControl(app))
+        XCTAssertEqual(control.titleForSegment(at: 0), "C to B")
+        XCTAssertEqual(control.titleForSegment(at: 1), "F to E")
         DPSettingsModel.sharedInstance.classicPitchPipe = false
         app.ui.wait { app.ui.exists(label: "Octave range C to C") && self.rangeControl(app) == nil }
     }
@@ -249,7 +273,9 @@ final class ClassicPitchPipeScreenTests: PitchPerfectTestCase {
         ScreenCatalog.settle(0.2)
         XCTAssertTrue(app.models.pitchPipe.isHighRange)
         XCTAssertFalse(DPNote.c4().isPlaying)
-        XCTAssertTrue(app.ui.exists(label: "F, octave 5"))
+        XCTAssertTrue(app.ui.exists(label: "F, octave 4"))
+        XCTAssertTrue(app.ui.exists(label: "E, octave 5"))
+        XCTAssertFalse(app.ui.exists(label: "F, octave 5"), "F to E")
     }
 
     func testSettingsOffersTheClassicPitchPipe() {

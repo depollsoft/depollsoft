@@ -3,11 +3,12 @@
 //  pitchperfect
 //
 //  The classic pitch pipe: the grid of big buttons the app had before the
-//  Laboratory Instrument, with its middle put to use. Twelve cells run round
-//  the edge of a four-by-four grid, clockwise from C at the top left; the
-//  octave's upper note is one wide cell across the top of the middle; below it
-//  a well holds the readout and the range control. Settings switches it on in
-//  place of the radial face; the same PitchPipeModel drives both.
+//  Laboratory Instrument, with its middle put to use. One octave of twelve
+//  cells runs round the edge of a four-by-four grid, clockwise from C at the
+//  top left, as the old app had it (the radial face's upper note is not on it);
+//  the middle is a well holding the readout and the range control. Settings
+//  switches it on in place of the radial face; the same PitchPipeModel drives
+//  both.
 //
 
 import SwiftUI
@@ -18,46 +19,41 @@ import UIKit
 /// Where the classic grid's parts sit on a face of `size`, for a range control
 /// of `selectorSize`.
 struct ClassicGeometry: Equatable, PitchFaceLayout {
-    /// A cell's place: `columns` wide from (`column`, `row`).
+    /// A cell's place in the grid.
     struct Place: Equatable {
         let column: Int
         let row: Int
-        var columns = 1
-
-        func contains(column: Int, row: Int) -> Bool {
-            row == self.row && column >= self.column && column < self.column + columns
-        }
     }
 
-    /// Along the top, down the right, back along the bottom, up the left, then
-    /// the octave's upper note across the top of the middle.
+    /// One octave, along the top, down the right, back along the bottom and up the left.
     static let places: [Place] = [
         Place(column: 0, row: 0), Place(column: 1, row: 0), Place(column: 2, row: 0), Place(column: 3, row: 0),
         Place(column: 3, row: 1), Place(column: 3, row: 2),
         Place(column: 3, row: 3), Place(column: 2, row: 3), Place(column: 1, row: 3), Place(column: 0, row: 3),
         Place(column: 0, row: 2), Place(column: 0, row: 1),
-        Place(column: 1, row: 1, columns: 2),
     ]
+
+    /// The cells the grid shows: the pipe's first twelve notes, C to B or F to E.
+    static var cellCount: Int { places.count }
 
     /// A Material button's background inset, which the Android grid kept.
     static let buttonInset = CGSize(width: 4, height: 6)
-    /// The band the range control is given, whatever its own height.
-    static let selectorBand: CGFloat = 48
-    /// Between the readout and the range control.
+    /// Between the readout and the range control when they sit side by side.
     static let gap: CGFloat = 8
-    /// The least room the readout gets above the range control; below this
-    /// height it reads as one line.
+    /// The least room the readout takes in half the well; below this height
+    /// it reads as one line.
     static let minReadout: CGFloat = 56
 
     let size: CGSize
     let places: [Place]
     let slots: [CGRect]
     let buttons: [CGRect]
-    /// A button in a single slot: every label is sized from it, the wide cell's included.
+    /// A button in a single slot: every label is sized from it.
     let singleButton: CGRect
-    /// The bare panel under the wide cell.
+    /// The bare middle of the grid, holding the readout and the range control.
     let well: CGRect
-    /// The range control sits under the readout (a tall well) or beside it (a short one).
+    /// The readout fills the well's top half and the range control its bottom
+    /// half (a tall well), or the control sits beside the readout (a short one).
     let stacked: Bool
     let selectorRect: CGRect
     let readoutRect: CGRect
@@ -66,28 +62,25 @@ struct ClassicGeometry: Equatable, PitchFaceLayout {
         self.size = size
         let columnWidth = size.width / 4
         let rowHeight = size.height / 4
-        func rect(_ place: Place) -> CGRect {
-            CGRect(x: CGFloat(place.column) * columnWidth, y: CGFloat(place.row) * rowHeight,
-                   width: CGFloat(place.columns) * columnWidth, height: rowHeight)
-        }
         func inset(_ rect: CGRect) -> CGRect {
             rect.insetBy(dx: Self.buttonInset.width, dy: Self.buttonInset.height)
         }
         places = Array(Self.places.prefix(max(0, min(count, Self.places.count))))
-        slots = places.map(rect)
+        slots = places.map {
+            CGRect(x: CGFloat($0.column) * columnWidth, y: CGFloat($0.row) * rowHeight, width: columnWidth, height: rowHeight)
+        }
         buttons = slots.map(inset)
-        singleButton = inset(rect(Place(column: 0, row: 0)))
-        well = inset(rect(Place(column: 1, row: 2, columns: 2)))
+        singleButton = inset(CGRect(x: 0, y: 0, width: columnWidth, height: rowHeight))
+        well = inset(CGRect(x: columnWidth, y: rowHeight, width: columnWidth * 2, height: rowHeight * 2))
 
-        stacked = well.height >= Self.selectorBand + Self.gap + Self.minReadout
+        let half = well.height / 2
+        stacked = half >= max(selectorSize.height, Self.minReadout)
         let height = min(selectorSize.height, well.height)
         if stacked {
             let width = min(selectorSize.width, well.width)
-            let bandTop = well.maxY - Self.selectorBand
-            selectorRect = CGRect(x: well.midX - width / 2, y: bandTop + (Self.selectorBand - height) / 2,
+            selectorRect = CGRect(x: well.midX - width / 2, y: well.midY + (half - height) / 2,
                                   width: width, height: height)
-            readoutRect = CGRect(x: well.minX, y: well.minY, width: well.width,
-                                 height: max(0, bandTop - Self.gap - well.minY))
+            readoutRect = CGRect(x: well.minX, y: well.minY, width: well.width, height: half)
         } else {
             let width = min(selectorSize.width, well.width / 2)
             selectorRect = CGRect(x: well.maxX - width, y: well.midY - height / 2, width: width, height: height)
@@ -103,7 +96,7 @@ struct ClassicGeometry: Equatable, PitchFaceLayout {
               point.x >= 0, point.y >= 0, point.x < size.width, point.y < size.height else { return -1 }
         let column = min(Int(point.x / (size.width / 4)), 3)
         let row = min(Int(point.y / (size.height / 4)), 3)
-        return places.firstIndex { $0.contains(column: column, row: row) } ?? -1
+        return places.firstIndex { $0.column == column && $0.row == row } ?? -1
     }
 
     /// The range control is a real segmented control and takes its own touches.
@@ -316,11 +309,11 @@ struct ClassicPitchPipeView: View {
         }
     }
 
-    /// The old app's segmented control, now for the inclusive octave.
+    /// The old app's segmented control.
     private var rangePicker: some View {
         Picker("Octave range", selection: Binding(get: { model.isHighRange }, set: { model.pickRange(high: $0) })) {
-            Text("C to C").tag(false)
-            Text("F to F").tag(true)
+            Text("C to B").tag(false)
+            Text("F to E").tag(true)
         }
         .pickerStyle(.segmented)
         // A regular width (an iPad) has room for the larger control; the measured copy takes it too.
