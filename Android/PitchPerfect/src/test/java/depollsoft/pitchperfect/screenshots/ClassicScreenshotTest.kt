@@ -78,12 +78,12 @@ class ClassicScreenshotTest {
     }
 
     @Test
-    fun classicFToFOctave() {
+    fun classicFToEFifth() {
         PitchPipeModel().isFromFToF = true
         reduceMotion()
         play("F", Accidental.Natural, 4)
-        play("F", Accidental.Natural, 5)
-        launchMain().capture("main_pitch_pipe_classic_f_to_f")
+        play("C", Accidental.Natural, 5)
+        launchMain().capture("main_pitch_pipe_classic_f_to_e")
     }
 
     @Test
@@ -104,7 +104,7 @@ class ClassicScreenshotTest {
     @Test
     @Config(qualifiers = "w891dp-h411dp-land-xxhdpi")
     fun classicLandscape() {
-        // Turned, the well is short, so the readout sits beside the choices.
+        // Turned, the readout still sits over the choices.
         reduceMotion()
         play("A", Accidental.Natural, 4)
         launchMain().capture("land_main_pitch_pipe_classic")
@@ -113,7 +113,7 @@ class ClassicScreenshotTest {
     @Test
     @Config(qualifiers = "w640dp-h360dp-land-xxhdpi")
     fun classicSmallLandscapeChord() {
-        // On a small turned phone the readout is too short for two lines, so it takes one.
+        // A small turned phone: the smallest middle that still stacks the readout over the choices.
         chord()
         launchMain().capture("land_small_main_pitch_pipe_classic_chord")
     }

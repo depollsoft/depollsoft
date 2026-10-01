@@ -16,8 +16,8 @@ import kotlin.math.sin
 /**
  * Paints the classic pitch pipe: the old grid of big buttons, in the Laboratory Instrument's
  * materials. Resting buttons are surface plates with a hairline rim; a sounding one lights as a
- * radial cell does, with its glow breathing round it. The well in the middle carries the radial
- * face's readout and the range choices, radio buttons drawn as the Settings screen draws its own.
+ * radial cell does, with its glow breathing round it. The middle carries the radial face's
+ * readout above the range choices, radio buttons drawn as the Settings screen draws its own.
  */
 class ClassicPitchPipeRenderer(
     private val context: Context,
@@ -293,9 +293,9 @@ class ClassicPitchPipeRenderer(
             value: Float,
         ): Float = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, value, context.resources.displayMetrics)
 
-        /** The range choices' labels: C to C, then F to F. */
+        /** The range choices' labels: C to B, then F to E. */
         fun rangeLabels(context: Context): Pair<String, String> =
-            context.getString(R.string.CtoC) to context.getString(R.string.FtoF)
+            context.getString(R.string.ClassicCtoB) to context.getString(R.string.ClassicFtoE)
 
         /** The paint the range labels are drawn with. */
         fun rangeLabelPaint(context: Context): Paint =

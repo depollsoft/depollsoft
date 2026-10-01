@@ -8,6 +8,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import depollsoft.pitchperfect.lib.Note
+
+/**
+ * The pitch pipe as the classic grid shows it: one octave, the pipe's first twelve notes (C to B,
+ * or F to E), as the app had before the inclusive octave. The range is the pipe's own.
+ */
+class ClassicOctave(
+    private val pipe: PitchPipe,
+) : PitchPipe by pipe {
+    override val notes: List<Note>
+        get() = pipe.notes.let { it.subList(0, minOf(it.size, ClassicPitchPipeGeometry.CELLS)) }
+}
 
 /**
  * The classic grid's interaction state. Fingers, chords, slides, toggle mode and the screen reader
@@ -20,7 +32,7 @@ class ClassicPitchPipeState(
     haptic: (Int) -> Unit = {},
     reduceMotion: () -> Boolean = { false },
 ) : InstrumentState<ClassicPitchPipeGeometry>(
-        model,
+        ClassicOctave(model),
         classicGeometry(context),
         haptic,
         reduceMotion,
@@ -51,8 +63,8 @@ fun rememberClassicPitchPipeState(model: PitchPipeModel): ClassicPitchPipeState 
 
 /**
  * The classic pitch pipe: the old grid of big buttons, twelve round the edge of a four-by-four
- * grid, with the octave's upper note, the readout and the range choices in the middle. Settings
- * switches it on in place of the radial face.
+ * grid, with the readout and the range choices in the middle. Settings switches it on in place of
+ * the radial face.
  */
 @Composable
 fun ClassicPitchPipe(
@@ -63,7 +75,7 @@ fun ClassicPitchPipe(
     val renderer = remember(context) { ClassicPitchPipeRenderer(context) }
     PitchInstrumentFace(
         state,
-        rangeLabels = stringResource(R.string.RangeLowDescription) to stringResource(R.string.RangeHighDescription),
+        rangeLabels = stringResource(R.string.ClassicRangeLowDescription) to stringResource(R.string.ClassicRangeHighDescription),
         draw = renderer::draw,
         modifier = modifier.testTag(TestTags.CLASSIC_PITCH_PIPE),
     )
