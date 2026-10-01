@@ -26,6 +26,11 @@ class StoreScreenshotTest {
         depollsoft.lib.privacy.PrivacyChoices(instrumentation.targetContext)
             .save(analytics = false, crashes = false)
         instrumentation.runOnMainSync {
+            // The library belongs to a returning user who dismissed startup prompts.
+            // Record both prompts before either session can cover a capture.
+            depollsoft.lib.util.RunUtils.runOnce("firstLaunch")
+            depollsoft.lib.util.RunUtils.runOnce("loginDialog")
+            Changelog.shouldShow()
             val list = SongsModel.get().defaultSongList
             list.resetSongs()
             listOf("Blue Skies", "Down Our Way", "Heart of My Heart", "Shenandoah", "Sweet Adeline", "The Old Songs", "When You Were Sweet Sixteen", "You Are My Sunshine").forEachIndexed { index, title ->
