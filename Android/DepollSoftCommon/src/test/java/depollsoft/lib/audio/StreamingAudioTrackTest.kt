@@ -7,9 +7,11 @@ import depollsoft.lib.util.Action
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -106,5 +108,84 @@ class StreamingAudioTrackTest {
         track.play()
 
         assertEquals(44100, fills.first().requested)
+    }
+
+    @Test
+    fun aTrackThePlatformCouldNotMakeRefusesToPlayWithoutStartingAWatcher() {
+        // Samsung, Android 8: a new AudioTrack can come back uninitialized when the app holds
+        // too many. play() used to start the watcher first, which then crashed the app polling
+        // the track from its own thread.
+        val broken =
+            @Suppress("DEPRECATION")
+            object : StreamingAudioTrack(
+                AudioManager.STREAM_MUSIC,
+                8000,
+                AudioFormat.CHANNEL_CONFIGURATION_MONO,
+                AudioFormat.ENCODING_PCM_16BIT,
+                16000,
+                AudioTrack.MODE_STREAM,
+            ) {
+                override fun getState() = AudioTrack.STATE_UNINITIALIZED
+            }
+        broken.setBufferFiller(Action { fills += Fill(it, broken.playState, Thread.currentThread()) })
+
+        try {
+            assertThrows(IllegalStateException::class.java) { broken.play() }
+            Thread.sleep(50)
+            assertTrue("nothing fills a track that can't play", fills.isEmpty())
+            assertTrue("no watcher is left polling it", awaitNoWatchers())
+        } finally {
+            broken.release()
+        }
+    }
+
+    @Test
+    fun aWatcherWhoseTrackLosesItsNativeTrackStopsQuietly() {
+        val lost = AtomicBoolean(false)
+        val failing =
+            @Suppress("DEPRECATION")
+            object : StreamingAudioTrack(
+                AudioManager.STREAM_MUSIC,
+                8000,
+                AudioFormat.CHANNEL_CONFIGURATION_MONO,
+                AudioFormat.ENCODING_PCM_16BIT,
+                16000,
+                AudioTrack.MODE_STREAM,
+            ) {
+                override fun getPlaybackHeadPosition(): Int {
+                    // What AudioTrack throws once its native track is gone.
+                    if (lost.get()) throw IllegalStateException("Unable to retrieve AudioTrack pointer for getPosition()")
+                    return super.getPlaybackHeadPosition()
+                }
+            }
+        failing.setBufferFiller(Action { requested ->
+            val frames = minOf(requested, failing.capacityFrames - failing.queuedFrames)
+            if (frames > 0) failing.write(samples, 0, frames)
+        })
+        val uncaught = CopyOnWriteArrayList<Throwable>()
+        val previous = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { _, e -> uncaught += e }
+        try {
+            failing.play()
+            lost.set(true)
+
+            assertTrue("the watcher ends", awaitNoWatchers())
+            assertTrue("and nothing escapes it: $uncaught", uncaught.isEmpty())
+        } finally {
+            Thread.setDefaultUncaughtExceptionHandler(previous)
+            lost.set(false)
+            failing.pause()
+            failing.release()
+        }
+    }
+
+    /** Whether every buffer-filling thread has ended within a second. */
+    private fun awaitNoWatchers(): Boolean {
+        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(1)
+        while (System.nanoTime() < deadline) {
+            if (Thread.getAllStackTraces().keys.none { it.name == StreamingAudioTrack.WATCHER_THREAD_NAME && it.isAlive }) return true
+            Thread.sleep(10)
+        }
+        return false
     }
 }

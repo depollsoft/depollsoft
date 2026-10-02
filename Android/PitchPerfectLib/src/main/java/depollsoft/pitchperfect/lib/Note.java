@@ -1,5 +1,7 @@
 package depollsoft.pitchperfect.lib;
 
+import android.util.Log;
+
 import depollsoft.lib.json.NotStored;
 import depollsoft.lib.state.StateField;
 import depollsoft.pitchperfect.lib.sound.NoteSound;
@@ -33,7 +35,14 @@ public class Note {
         voice = NoteVoices.create(Note.getSound(), n.getFrequency(), Note.getReferencePitch());
         voices.put(n, voice);
       }
-      voice.play();
+      try {
+        voice.play();
+      } catch (IllegalStateException e) {
+        // No audio track to be had right now (see PitchAudioTrackGenerator): the note stays
+        // silent, and the next press asks for a new voice.
+        voices.remove(n);
+        Log.w("Note", "Couldn't play " + n, e);
+      }
     }
 
     @Override

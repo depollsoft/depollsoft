@@ -175,6 +175,11 @@ object InstrumentPlayer : InstrumentStarter {
         } catch (e: IllegalStateException) {
             Log.w(TAG, "Couldn't start the instrument track", e)
             state = State.IDLE
+            if (track.state != AudioTrack.STATE_INITIALIZED) {
+                // The platform never made this track: ask for a new one next time.
+                track.release()
+                this.track = null
+            }
             false
         }
     }

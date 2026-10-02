@@ -2,34 +2,51 @@ package depollsoft.lib.audio;
 
 import android.media.AudioFormat;
 import android.media.AudioTrack;
+import android.util.Log;
 
 import depollsoft.lib.util.Action;
 
 public class StreamingAudioTrack extends AudioTrack {
+  private static final String TAG = "StreamingAudioTrack";
+
+  /** The name of the thread that keeps a playing track's buffer full. */
+  static final String WATCHER_THREAD_NAME = "StreamingAudioTrack watcher";
+
   private class TrackWatcherThread extends Thread {
-    private boolean keepGoing = true;
+    private volatile boolean keepGoing = true;
+
+    TrackWatcherThread() {
+      super(WATCHER_THREAD_NAME);
+    }
 
     @Override
     public void run() {
-      while (this.keepGoing) {
-        int playbackHeadPosition = StreamingAudioTrack.this
-            .getPlaybackHeadPosition();
-        do {
-          int requestedAmount = StreamingAudioTrack.this.bufferFrameThreshold
-              - (StreamingAudioTrack.this.writtenFrames - playbackHeadPosition);
-          Action<Integer> filler = StreamingAudioTrack.this.bufferFiller;
-          if (filler != null) {
-            synchronized (filler) {
-              filler.invoke(requestedAmount);
+      try {
+        while (this.keepGoing) {
+          int playbackHeadPosition = StreamingAudioTrack.this
+              .getPlaybackHeadPosition();
+          do {
+            int requestedAmount = StreamingAudioTrack.this.bufferFrameThreshold
+                - (StreamingAudioTrack.this.writtenFrames - playbackHeadPosition);
+            Action<Integer> filler = StreamingAudioTrack.this.bufferFiller;
+            if (filler != null) {
+              synchronized (filler) {
+                filler.invoke(requestedAmount);
+              }
             }
+          } while (StreamingAudioTrack.this.writtenFrames - playbackHeadPosition < StreamingAudioTrack.this.bufferFrameThreshold);
+          try {
+            Thread.sleep(1);
           }
-        } while (StreamingAudioTrack.this.writtenFrames - playbackHeadPosition < StreamingAudioTrack.this.bufferFrameThreshold);
-        try {
-          Thread.sleep(1);
+          catch (InterruptedException e) {
+            e.printStackTrace();
+          }
         }
-        catch (InterruptedException e) {
-          e.printStackTrace();
-        }
+      }
+      catch (IllegalStateException e) {
+        // The platform dropped the native track (released, or never made): there's nothing
+        // left to fill, and an exception escaping this thread would end the app.
+        Log.w(TAG, "Stopped filling a track that can no longer play", e);
       }
     }
 
@@ -178,6 +195,10 @@ public class StreamingAudioTrack extends AudioTrack {
   @Override
   public void play() throws IllegalStateException {
     synchronized (this.threadLock) {
+      // The platform can fail to make a track (too many open, the audio server busy). Such a
+      // track can't play, and a watcher polling it would throw on its own thread.
+      if (this.getState() != STATE_INITIALIZED)
+        throw new IllegalStateException("play() called on uninitialized AudioTrack.");
       Action<Integer> filler = this.bufferFiller;
       if (this.primesBeforePlay && filler != null && this.getPlayState() != PLAYSTATE_PLAYING) {
         synchronized (filler) {
@@ -188,7 +209,14 @@ public class StreamingAudioTrack extends AudioTrack {
         this.trackWatcherThread.stopRunning();
       this.trackWatcherThread = new TrackWatcherThread();
       this.trackWatcherThread.start();
-      super.play();
+      try {
+        super.play();
+      }
+      catch (IllegalStateException e) {
+        this.trackWatcherThread.stopRunning();
+        this.trackWatcherThread = null;
+        throw e;
+      }
     }
   }
 

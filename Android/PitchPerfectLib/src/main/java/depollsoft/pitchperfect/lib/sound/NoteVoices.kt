@@ -25,7 +25,15 @@ private class TrackVoice(
 ) : SoundingNote {
     override val isSounding: Boolean get() = track.playState == AudioTrack.PLAYSTATE_PLAYING
 
-    override fun play() = track.play()
+    override fun play() {
+        try {
+            track.play()
+        } catch (e: IllegalStateException) {
+            // The platform couldn't make this track; it never will play, so don't keep it.
+            track.release()
+            throw e
+        }
+    }
 
     override fun stop() = stopTrack(track)
 }
