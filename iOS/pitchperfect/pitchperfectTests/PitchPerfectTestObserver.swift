@@ -5,6 +5,9 @@
 //  The bundle's principal class: runs once before any test.
 //
 
+import FirebaseAuth
+import FirebaseCore
+import FirebaseInstallations
 import Foundation
 import SwiftUI
 import XCTest
@@ -24,6 +27,31 @@ final class PitchPerfectTestObserver: NSObject, XCTestObservation {
         // The first Canvas and alert pay their one-off rendering cost here, not in a test; see TestRendering.
         MainActor.assumeIsolated {
             TestRendering.warmUp([AnyView(PitchInstrumentView(model: PitchPipeModel()).frame(width: 360, height: 360))])
+            Self.startFirebase()
         }
+    }
+
+    /// Hosted tests use Firebase (PitchPerfectTestCase configures it). Its first
+    /// start loads a saved user and an installation ID from the keychain, which
+    /// the unsigned test host can't read (-34018). On CI that start once blocked
+    /// the main thread for 30 s inside a test and spent its whole budget
+    /// (CleanupHelperTests, on main and on PR #89); tests running alongside it
+    /// in other runs took 6 and 11 s instead of 1 or 2. Starting it here, and
+    /// waiting until Auth has reported its user and an installation ID has been
+    /// asked for, pays that once under the run's startup allowance.
+    @MainActor
+    private static func startFirebase() {
+        if FirebaseApp.app() == nil { FirebaseApp.configure() }
+        var authStarted = false
+        var installationAnswered = false
+        let listener = Auth.auth().addStateDidChangeListener { _, _ in authStarted = true }
+        Installations.installations().installationID { _, _ in
+            DispatchQueue.main.async { installationAnswered = true }
+        }
+        let deadline = Date(timeIntervalSinceNow: 120)
+        while !(authStarted && installationAnswered), Date() < deadline {
+            RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.05))
+        }
+        Auth.auth().removeStateDidChangeListener(listener)
     }
 }
