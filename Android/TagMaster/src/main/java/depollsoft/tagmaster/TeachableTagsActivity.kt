@@ -20,7 +20,7 @@ class TeachableTagsActivity : SavedListActivity() {
                 listedIds = { TeachableTagsModel.teachableTagIds.toList() },
             )
         listEditor = SavedListEditor(wasEditing(savedInstanceState), { ListModel(TagLists.TEACHABLE) })
-        setTagMasterContent {
+        setTagMasterContent(TagMasterAnalytics.SCREEN_TEACHABLE_TAGS) {
             SavedListScreen(
                 model = ListModel(TagLists.TEACHABLE),
                 editor = listEditor,

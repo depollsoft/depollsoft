@@ -47,7 +47,7 @@ class TagSearchResultsActivity : TagPaneActivity() {
                 hasMoreResults = { model.hasMoreResults },
                 fetchMore = { model.fetchResults() },
             )
-        setTagMasterContent { ResultsScreen() }
+        setTagMasterContent(TagMasterAnalytics.SCREEN_SEARCH_RESULTS) { ResultsScreen() }
         tagPane.restore(savedInstanceState)
         if (fresh) model.refresh()
     }

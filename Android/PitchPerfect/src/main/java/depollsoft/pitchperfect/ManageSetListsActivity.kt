@@ -43,6 +43,7 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import depollsoft.compose.ReorderState
+import depollsoft.compose.ScreenView
 import depollsoft.compose.ViewAlign
 import depollsoft.compose.listItemMotion
 import depollsoft.compose.rememberReorderState
@@ -123,6 +124,7 @@ class ManageSetListsActivity : AppCompatActivity() {
         keepSetListPromptsOpen(state)
         setContent {
             PlateTheme {
+                ScreenView(PitchPerfectAnalytics.SCREEN_SET_LISTS)
                 Column(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
                     PlateTopBar(stringResource(R.string.ManageSetListsTitle), navigationUp = ::finish)
                     ManageSetListsScreen(state, onSwitch = ::switchTo)

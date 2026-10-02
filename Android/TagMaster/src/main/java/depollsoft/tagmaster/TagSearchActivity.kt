@@ -70,7 +70,9 @@ class TagSearchActivity : AppCompatActivity() {
         savedInstanceState?.getString(TagSearchResultsActivity.QUERY_MODEL)?.let { saved ->
             model = JsonSerializer.deserialize(org.json.JSONObject(saved)) as QueryModel
         }
-        setTagMasterContent { SearchScreen(model, onSearch = ::search, onNavigateUp = { navigateUpOrHome() }) }
+        setTagMasterContent(TagMasterAnalytics.SCREEN_SEARCH) {
+            SearchScreen(model, onSearch = ::search, onNavigateUp = { navigateUpOrHome() })
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

@@ -57,6 +57,7 @@ import depollsoft.compose.PlatformIcon
 import depollsoft.compose.ViewAlign
 import depollsoft.compose.drawPlatform
 import depollsoft.tagmaster.R
+import depollsoft.tagmaster.TagMasterAnalytics
 import depollsoft.tagmaster.barbershop.RemoteLocation
 import depollsoft.tagmaster.barbershop.Tag
 import depollsoft.tagmaster.ui.CompactBarberPole
@@ -135,7 +136,7 @@ fun TracksPage(
     val location = available.getOrNull(selected)?.second
     LaunchedEffect(selected, location) {
         if (selected >= 0 && location == null) selected = -1
-        if (location != player.location) player.select(location)
+        if (location != player.location) player.select(location, TagMasterAnalytics.trackPart(selected))
     }
     val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 

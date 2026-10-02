@@ -18,6 +18,7 @@ fun rememberPitchInstrumentState(model: PitchPipeModel): PitchInstrumentState {
             model,
             haptic = { view.performHapticFeedback(it) },
             reduceMotion = { systemAnimationsOff(context) },
+            onNoteStarted = { PitchPerfectAnalytics.pitchPlayed(PitchPerfectAnalytics.Source.PITCH_PIPE) },
         )
     }
 }

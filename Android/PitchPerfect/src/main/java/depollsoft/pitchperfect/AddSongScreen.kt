@@ -151,6 +151,7 @@ class SongEditorState(
                     it.key = key
                 },
             )
+            if (editing == null) PitchPerfectAnalytics.songAdded()
         }
         return true
     }

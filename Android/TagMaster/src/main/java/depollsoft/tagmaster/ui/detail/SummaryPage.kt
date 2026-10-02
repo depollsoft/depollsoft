@@ -74,6 +74,7 @@ import depollsoft.tagmaster.RatingsModel
 import depollsoft.tagmaster.SheetMusicActivity
 import depollsoft.tagmaster.TagListActivity
 import depollsoft.tagmaster.TagLists
+import depollsoft.tagmaster.TagMasterAnalytics
 import depollsoft.tagmaster.TeachableTagsActivity
 import depollsoft.tagmaster.barbershop.Tag
 import depollsoft.tagmaster.ui.CompactBarberPole
@@ -355,7 +356,7 @@ private fun textPair(
 @Composable
 private fun KeyNoteButton(tag: Tag) {
     val colors = TagMasterTheme.colors
-    val player = rememberNotePlayer()
+    val player = rememberNotePlayer { TagMasterAnalytics.keyNotePlayed(TagMasterAnalytics.SOURCE_TAG) }
     val note = tag.keyNote
     val playing = note?.isPlaying == true
     val shape = RoundedCornerShape(8.dp)

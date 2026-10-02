@@ -64,7 +64,12 @@ class PitchPipeAppWidget : AppWidgetProvider() {
                         intent.getIntExtra(EXTRA_OCTAVE, 4),
                     )
                 val startedAt = SystemClock.elapsedRealtime()
-                if (note.isPlaying) note.stop() else note.play()
+                if (note.isPlaying) {
+                    note.stop()
+                } else {
+                    note.play()
+                    PitchPerfectAnalytics.pitchPlayed(PitchPerfectAnalytics.Source.WIDGET)
+                }
                 PerformanceDiagnostics.logDuration("Widget note toggled", startedAt, "playing=${note.isPlaying}")
                 mainHandler.removeCallbacks(pendingUpdate)
                 val manager = AppWidgetManager.getInstance(context)

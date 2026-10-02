@@ -53,6 +53,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import depollsoft.compose.ViewAlign
 import depollsoft.compose.scrollViewScrollbar
+import depollsoft.lib.analytics.UsageAnalytics
 import depollsoft.lib.auth.SignInOutcome
 import depollsoft.lib.kotlin.R as LibKotlinR
 import depollsoft.lib.privacy.TelemetryConsent
@@ -124,6 +125,7 @@ class SettingsActivity : AppCompatActivity() {
                     hasError = response?.error != null,
                 )
             AuthState.notifyChanged()
+            if (outcome == SignInOutcome.SIGNED_IN) UsageAnalytics.login(response?.providerType)
             showMessage(
                 when (outcome) {
                     SignInOutcome.SIGNED_IN -> R.string.forms_signed_in
@@ -135,7 +137,7 @@ class SettingsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setTagMasterContent { SettingsScreen(this) }
+        setTagMasterContent(TagMasterAnalytics.SCREEN_SETTINGS) { SettingsScreen(this) }
         refreshCacheSize()
     }
 

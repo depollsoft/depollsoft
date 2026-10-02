@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import depollsoft.tagmaster.ListModel
 import depollsoft.tagmaster.R
 import depollsoft.tagmaster.TagLists
+import depollsoft.tagmaster.TagMasterAnalytics
 
 /** The icon that stands for a list everywhere it is named: Home, the chips, and the picker. */
 internal fun listIconRes(key: String): Int =
@@ -144,6 +145,7 @@ fun ListDialogsHost(
                 if (request.key != null) onRenamed(key)
                 request.addTagId?.let { tagId ->
                     ListModel(key).add(tagId)
+                    TagMasterAnalytics.tagAddedToList(key)
                     Toast.makeText(context, context.getString(R.string.list_added_to, TagLists.name(key)), Toast.LENGTH_SHORT).show()
                 }
             },
@@ -191,7 +193,7 @@ fun ListNameDialog(
                 TagLists.rename(key!!, name)
                 key
             } else {
-                TagLists.create(name)
+                TagLists.create(name).also { TagMasterAnalytics.tagListCreated() }
             }
         onNamed(result)
     }
@@ -307,7 +309,12 @@ fun ListPickerDialog(
                                 // The list may have been deleted since this row was drawn; adding
                                 // to it here would resurrect it under its raw slug.
                                 if (key !in TagLists.allKeys()) return@clickable
-                                if (model.contains(tagId)) model.remove(tagId) else model.add(tagId)
+                                if (model.contains(tagId)) {
+                                    model.remove(tagId)
+                                } else {
+                                    model.add(tagId)
+                                    TagMasterAnalytics.tagAddedToList(key)
+                                }
                             }.semantics(mergeDescendants = true) {
                                 contentDescription = label
                                 stateDescription = state

@@ -152,6 +152,7 @@ class SongListState(
     fun play(song: PitchedSong) {
         stopPlaying()
         song.play()
+        PitchPerfectAnalytics.pitchPlayed(PitchPerfectAnalytics.Source.SONG)
     }
 
     fun stopPlaying() {

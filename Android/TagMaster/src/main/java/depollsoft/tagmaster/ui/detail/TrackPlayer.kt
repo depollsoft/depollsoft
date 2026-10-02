@@ -10,6 +10,8 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import depollsoft.lib.util.ContentCache
+import depollsoft.tagmaster.Sounding
+import depollsoft.tagmaster.TagMasterAnalytics
 import depollsoft.tagmaster.barbershop.RemoteLocation
 import java.io.FileInputStream
 import java.util.Locale
@@ -35,6 +37,9 @@ class TrackPlayer(
 
     var location: RemoteLocation? by mutableStateOf(null)
         private set
+
+    /** The part [location] is a track for, as analytics names it ("tenor"). */
+    private var part: String? = null
 
     var isPlaying by mutableStateOf(false)
         private set
@@ -79,6 +84,7 @@ class TrackPlayer(
                 isLoading = false
                 mp.start()
                 updatePlaying(true)
+                part?.let(TagMasterAnalytics::learningTrackPlayed)
             }
             created.setOnCompletionListener { mp ->
                 if (mp !== player || !prepared) return@setOnCompletionListener
@@ -92,9 +98,13 @@ class TrackPlayer(
             applyBalance()
         }
 
-    /** Chooses the track to play (null for none); whatever was playing stops. */
-    fun select(value: RemoteLocation?) {
+    /** Chooses the track to play (null for none), the [part]'s; whatever was playing stops. */
+    fun select(
+        value: RemoteLocation?,
+        part: String? = null,
+    ) {
         location = value
+        this.part = part
         stop()
     }
 
@@ -177,6 +187,7 @@ class TrackPlayer(
 
     private fun updatePlaying(value: Boolean) {
         isPlaying = value
+        if (value) Sounding.started(this) else Sounding.stopped(this)
         handler.removeCallbacks(updatePosition)
         if (value) handler.post(updatePosition)
     }

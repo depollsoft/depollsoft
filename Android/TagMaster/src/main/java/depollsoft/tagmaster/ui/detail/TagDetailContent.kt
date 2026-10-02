@@ -37,11 +37,14 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ShareCompat
+import depollsoft.compose.ScreenView
 import depollsoft.compose.ViewAlign
 import depollsoft.compose.scrollViewScrollbar
 import depollsoft.tagmaster.FavoritesModel
 import depollsoft.tagmaster.R
 import depollsoft.tagmaster.TagDetailState
+import depollsoft.tagmaster.TagLists
+import depollsoft.tagmaster.TagMasterAnalytics
 import depollsoft.tagmaster.TeachableTagsModel
 import depollsoft.tagmaster.barbershop.Tag
 import depollsoft.tagmaster.ui.BarAction
@@ -108,6 +111,8 @@ fun TagDetailContent(
             if (tag != null) {
                 if (!inPane) BarberPoleWatermark()
                 DetailPages(state, tag, dialogs, pager)
+                // Another tag in the same pane is another visit to the page.
+                ScreenView(TagMasterAnalytics.tagPageScreen(state.page), key = state.tagId)
             }
             if (state.isLoading && !loaded) LoadingState(state.tagId)
             if (state.loadFailed && !loaded && !state.isLoading) ErrorState(state)
@@ -275,7 +280,10 @@ fun tagActions(
         if (favorite) {
             BarAction("removeFavorite", stringResource(R.string.RemoveFavorite), R.drawable.ic_favorite) { FavoritesModel.removeFavorite(tag.id) }
         } else {
-            BarAction("addFavorite", stringResource(R.string.AddFavorite), R.drawable.ic_favorite_border) { FavoritesModel.addFavorite(tag.id) }
+            BarAction("addFavorite", stringResource(R.string.AddFavorite), R.drawable.ic_favorite_border) {
+                FavoritesModel.addFavorite(tag.id)
+                TagMasterAnalytics.tagAddedToList(TagLists.FAVORITE)
+            }
         },
         if (teachable) {
             BarAction("removeTeachable", stringResource(R.string.RemoveTeachableTag), R.drawable.ic_people) {
@@ -284,6 +292,7 @@ fun tagActions(
         } else {
             BarAction("addTeachable", stringResource(R.string.AddTeachableTag), R.drawable.ic_people_border) {
                 TeachableTagsModel.addTeachableTag(tag.id)
+                TagMasterAnalytics.tagAddedToList(TagLists.TEACHABLE)
             }
         },
         BarAction("addToList", stringResource(R.string.list_add_to_list), R.drawable.ic_playlist_add) { dialogs.pick(tag.id) },

@@ -11,9 +11,19 @@ internal class WidgetAwareNotePlayer(
     private val delegate: Note.NotePlayer,
     private val onSoundingChanged: () -> Unit,
 ) : Note.NotePlayer {
+    private val started = mutableSetOf<Note>()
+
+    /** Whether any note this player started is still sounding, wherever it was played from. */
+    val isSounding: Boolean
+        get() {
+            started.retainAll { it.isPlaying }
+            return started.isNotEmpty()
+        }
+
     override fun play(n: Note) {
         val wasSounding = n.isPlaying
         delegate.play(n)
+        started.add(n)
         if (!wasSounding) onSoundingChanged()
     }
 

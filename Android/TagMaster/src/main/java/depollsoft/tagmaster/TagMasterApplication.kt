@@ -5,12 +5,15 @@ import depollsoft.lib.privacy.TelemetryConsent
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 
+import android.os.Bundle
 import androidx.appcompat.app.AppCompatDelegate
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import depollsoft.lib.activity.RichApplication
 import depollsoft.lib.analytics.Analytics
+import depollsoft.lib.analytics.UsageAnalytics
 import depollsoft.lib.json.JsonSerializer
+import depollsoft.lib.review.ReviewPrompt
 import depollsoft.lib.state.StateList
 import depollsoft.lib.util.Preferences
 
@@ -30,12 +33,17 @@ class TagMasterApplication : RichApplication() {
             if (!analytics) sdk.resetAnalyticsData()
             FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(crashes)
             if (!crashes) FirebaseCrashlytics.getInstance().deleteUnsentReports()
+            if (analytics) UsageAnalytics.signedIn(Firebase.auth.currentUser != null)
         }
+        UsageAnalytics.sink = firebaseSink(FirebaseAnalytics.getInstance(this))
+        ReviewPrompt.install(this)
+        ReviewPrompt.isBusy = { Sounding.any }
         TelemetryConsent.applyChoices(choices.analytics, choices.crashes)
         registerStorageAliases()
         Firebase.auth.addAuthStateListener {
             AuthState.notifyChanged()
             ListModel.connectToFirestore()
+            UsageAnalytics.signedIn(it.currentUser != null)
         }
         AppCompatDelegate.setDefaultNightMode(themeMode)
 
@@ -44,6 +52,26 @@ class TagMasterApplication : RichApplication() {
             tags = setOfNotNull(if (Firebase.auth.currentUser != null) "logged_in" else null),
         )
     }
+
+    /** Sends [UsageAnalytics] to Firebase, while the person allows usage analytics. */
+    private fun firebaseSink(sdk: FirebaseAnalytics) =
+        object : UsageAnalytics.Sink {
+            override fun logEvent(
+                name: String,
+                params: Map<String, String>,
+            ) {
+                if (!PrivacyChoices(this@TagMasterApplication).analytics) return
+                sdk.logEvent(name, Bundle().apply { params.forEach { (key, value) -> putString(key, value) } })
+            }
+
+            override fun setUserProperty(
+                name: String,
+                value: String,
+            ) {
+                if (!PrivacyChoices(this@TagMasterApplication).analytics) return
+                sdk.setUserProperty(name, value)
+            }
+        }
 
     companion object {
         /**

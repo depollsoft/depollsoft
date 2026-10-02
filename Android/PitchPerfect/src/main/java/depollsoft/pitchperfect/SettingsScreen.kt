@@ -111,6 +111,7 @@ class SettingsState {
         set(value) {
             SettingsModel.classicPitchPipe = value
             changed()
+            PitchPerfectAnalytics.reportSettings()
         }
 
     /** The A4 the notes are tuned to, in Hz. */
@@ -121,6 +122,7 @@ class SettingsState {
         set(value) {
             SettingsModel.referencePitch = value
             changed()
+            PitchPerfectAnalytics.reportSettings()
         }
 
     /** The voice notes sound in. */
@@ -130,6 +132,7 @@ class SettingsState {
         set(value) {
             SettingsModel.noteSound = value
             changed()
+            PitchPerfectAnalytics.reportSettings()
         }
 
     var themeMode: Int

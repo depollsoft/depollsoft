@@ -31,6 +31,7 @@ class ClassicPitchPipeState(
     context: Context,
     haptic: (Int) -> Unit = {},
     reduceMotion: () -> Boolean = { false },
+    onNoteStarted: () -> Unit = {},
 ) : InstrumentState<ClassicPitchPipeGeometry>(
         ClassicOctave(model),
         classicGeometry(context),
@@ -38,6 +39,7 @@ class ClassicPitchPipeState(
         reduceMotion,
         tapEveryToggle = true,
         screenReaderFeedback = false,
+        onNoteStarted = onNoteStarted,
     )
 
 private fun classicGeometry(context: Context): (Int, Int, Int) -> ClassicPitchPipeGeometry {
@@ -57,6 +59,7 @@ fun rememberClassicPitchPipeState(model: PitchPipeModel): ClassicPitchPipeState 
             context,
             haptic = { view.performHapticFeedback(it) },
             reduceMotion = { systemAnimationsOff(context) },
+            onNoteStarted = { PitchPerfectAnalytics.pitchPlayed(PitchPerfectAnalytics.Source.CLASSIC_PITCH_PIPE) },
         )
     }
 }

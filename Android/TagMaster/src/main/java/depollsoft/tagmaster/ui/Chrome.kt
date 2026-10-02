@@ -26,6 +26,7 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.core.view.WindowCompat
 import depollsoft.compose.LocalMenuKey
 import depollsoft.compose.MenuKey
+import depollsoft.compose.ScreenView
 import depollsoft.compose.ShownSnackbar
 import depollsoft.compose.SlidingSnackbarHost
 import depollsoft.compose.SnackbarState
@@ -42,12 +43,17 @@ import kotlinx.coroutines.launch
  *
  * `RichApplication` pads the content view by the system bars and consumes them, so screens only
  * handle the keyboard inset; the padding above the content is painted in the chrome color.
+ * [screen] is the name analytics reports for it (docs/analytics.md); a tag's pages report their own.
  */
-fun AppCompatActivity.setTagMasterContent(content: @Composable () -> Unit) {
+fun AppCompatActivity.setTagMasterContent(
+    screen: String? = null,
+    content: @Composable () -> Unit,
+) {
     WindowCompat.setDecorFitsSystemWindows(window, false)
     WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = false
     val menuKey = MenuKey()
     setContent {
+        if (screen != null) ScreenView(screen)
         TagMasterTheme {
             CompositionLocalProvider(LocalMenuKey provides menuKey) {
                 ProvideSnackbars {

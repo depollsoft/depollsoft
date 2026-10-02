@@ -31,6 +31,8 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import depollsoft.compose.LocalMenuKey
 import depollsoft.compose.MenuKey
+import depollsoft.compose.ReviewCalmScreen
+import depollsoft.compose.ScreenView
 import depollsoft.lib.privacy.PrivacyChoices
 import depollsoft.lib.privacy.TelemetryConsent
 import depollsoft.lib.util.RunUtils
@@ -125,6 +127,9 @@ class PitchPerfectActivity : AppCompatActivity(), TelemetryConsent.Host {
                         }
                     }
                     StartupPrompts(this)
+                    val tab = MainTab.entries[pagerState.settledPage]
+                    ScreenView(PitchPerfectAnalytics.screenFor(tab))
+                    ReviewCalmScreen(tab == MainTab.SONGS && startupPrompt == null)
                 }
             }
         }

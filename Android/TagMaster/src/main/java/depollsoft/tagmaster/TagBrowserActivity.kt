@@ -87,7 +87,7 @@ class TagBrowserActivity :
                 hasMoreResults = { currentModel.hasMoreResults },
                 fetchMore = { currentModel.fetchResults() },
             )
-        setTagMasterContent { BrowseScreen(this) }
+        setTagMasterContent(TagMasterAnalytics.SCREEN_BROWSE) { BrowseScreen(this) }
         tagPane.restore(savedInstanceState)
     }
 
