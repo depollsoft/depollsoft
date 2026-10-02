@@ -25,6 +25,8 @@ public class StreamingAudioTrack extends AudioTrack {
         while (this.keepGoing) {
           int playbackHeadPosition = StreamingAudioTrack.this
               .getPlaybackHeadPosition();
+          // Fill to the threshold unless stopped: a filler that can't write (its track is gone)
+          // would otherwise hold a stopped watcher here forever.
           do {
             int requestedAmount = StreamingAudioTrack.this.bufferFrameThreshold
                 - (StreamingAudioTrack.this.writtenFrames - playbackHeadPosition);
@@ -34,7 +36,7 @@ public class StreamingAudioTrack extends AudioTrack {
                 filler.invoke(requestedAmount);
               }
             }
-          } while (StreamingAudioTrack.this.writtenFrames - playbackHeadPosition < StreamingAudioTrack.this.bufferFrameThreshold);
+          } while (this.keepGoing && StreamingAudioTrack.this.writtenFrames - playbackHeadPosition < StreamingAudioTrack.this.bufferFrameThreshold);
           try {
             Thread.sleep(1);
           }

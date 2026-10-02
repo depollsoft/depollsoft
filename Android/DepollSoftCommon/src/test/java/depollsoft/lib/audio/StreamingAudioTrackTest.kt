@@ -179,6 +179,25 @@ class StreamingAudioTrackTest {
         }
     }
 
+    @Test
+    fun stoppingEndsAWatcherWhoseFillerWritesNothing() {
+        // A wave's filler swallows the exception from a track that's gone and writes nothing, so
+        // the buffer never fills; stopping must still end the watcher rather than leave it spinning.
+        track.setBufferFiller(Action { fills += Fill(it, track.playState, Thread.currentThread()) })
+        track.play()
+        assertTrue("the watcher asked for audio", awaitFill())
+
+        track.pause()
+
+        assertTrue("the watcher ends", awaitNoWatchers())
+    }
+
+    private fun awaitFill(): Boolean {
+        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(1)
+        while (fills.isEmpty() && System.nanoTime() < deadline) Thread.sleep(5)
+        return fills.isNotEmpty()
+    }
+
     /** Whether every buffer-filling thread has ended within a second. */
     private fun awaitNoWatchers(): Boolean {
         val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(1)
