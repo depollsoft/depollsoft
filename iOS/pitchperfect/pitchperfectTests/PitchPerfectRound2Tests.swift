@@ -352,7 +352,20 @@ final class CleanupHelperTests: PitchPerfectTestCase {
         // An overloaded runner once took more than the usual 10 s to show the controls at all
         // (PR #89); 20 s still leaves the launch room inside the 30 s test budget.
         settle(20) { controls().map(settled) ?? false }
-        let (delete, reorder, info) = try XCTUnwrap(controls())
+        guard let (delete, reorder, info) = controls() else {
+            // Say what was there instead, so a failure on CI shows where edit mode stopped.
+            let shown = editing
+            let cells = shown?.visibleCells.sorted { $0.frame.minY < $1.frame.minY } ?? []
+            let parts = cells.first.map { cell in
+                app.descendants(of: UIView.self, in: cell).map { String(describing: type(of: $0)) }
+                    .filter { $0.contains("Control") || $0.contains("Button") || $0.contains("Accessory") }
+            } ?? []
+            return XCTFail("""
+                The edit controls never appeared. Songs editing: \(app.songs.isEditing); \
+                list: \(shown.map { "\($0.visibleCells.count) rows, editing \($0.isEditing)" } ?? "none"); \
+                top row controls: \(parts)
+                """)
+        }
         XCTAssertEqual(delete.minX, reference.delete.minX, accuracy: 0.5, "delete control")
         XCTAssertEqual(reorder.minX, reference.reorder.minX, accuracy: 0.5, "reorder control")
         XCTAssertEqual(info.maxX, reference.info.maxX, accuracy: 0.5, "detail disclosure")
