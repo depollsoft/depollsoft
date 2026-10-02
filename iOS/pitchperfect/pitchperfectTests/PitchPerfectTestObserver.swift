@@ -5,6 +5,7 @@
 //  The bundle's principal class: runs once before any test.
 //
 
+import FirebaseAnalytics
 import FirebaseAuth
 import FirebaseCore
 import FirebaseInstallations
@@ -44,12 +45,19 @@ final class PitchPerfectTestObserver: NSObject, XCTestObservation {
         if FirebaseApp.app() == nil { FirebaseApp.configure() }
         var authStarted = false
         var installationAnswered = false
+        var analyticsAnswered = false
         let listener = Auth.auth().addStateDidChangeListener { _, _ in authStarted = true }
         Installations.installations().installationID { _, _ in
             DispatchQueue.main.async { installationAnswered = true }
         }
+        // Analytics starts on its own queue and answers only once that is done. A run where
+        // its start (about 10 s on CI) overlapped CleanupHelperTests never showed the edit
+        // controls; runs where it started minutes later passed.
+        Analytics.sessionID { _, _ in
+            DispatchQueue.main.async { analyticsAnswered = true }
+        }
         let deadline = Date(timeIntervalSinceNow: 120)
-        while !(authStarted && installationAnswered), Date() < deadline {
+        while !(authStarted && installationAnswered && analyticsAnswered), Date() < deadline {
             RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.05))
         }
         Auth.auth().removeStateDidChangeListener(listener)

@@ -211,9 +211,11 @@ object ReviewPrompt {
             return
         }
         val manager = ReviewManagerFactory.create(activity)
+        // Getting the card ready takes a moment; a touch meanwhile means someone carried on.
+        val watcher = InteractionWatcher(activity.window)
         manager.requestReviewFlow().addOnCompleteListener { request ->
-            // Getting the card ready takes a moment; someone may have started something meanwhile.
-            if (request.isSuccessful && isCalm(activity)) {
+            val interacted = watcher.stop()
+            if (request.isSuccessful && !interacted && isCalm(activity)) {
                 manager.launchReviewFlow(activity, request.result)
             }
         }
