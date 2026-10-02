@@ -92,6 +92,8 @@ fun TagDetailContent(
     val pagerTabs = rememberPagerTabs(pager)
     LaunchedEffect(pager) { snapshotFlow { pager.settledPage }.collect { state.page = it } }
     LaunchedEffect(state.page) { if (pager.settledPage != state.page) pager.scrollToPage(state.page) }
+    // Reported from the first load on; another tag in the same pane is another visit to the page.
+    ScreenView(TagMasterAnalytics.tagPageScreen(state.page), key = state.tagId)
     val loadingLabel = stringResource(R.string.detail_loading)
     Column(modifier.fillMaxSize()) {
         if (state.isLoading && loaded) {
@@ -111,8 +113,6 @@ fun TagDetailContent(
             if (tag != null) {
                 if (!inPane) BarberPoleWatermark()
                 DetailPages(state, tag, dialogs, pager)
-                // Another tag in the same pane is another visit to the page.
-                ScreenView(TagMasterAnalytics.tagPageScreen(state.page), key = state.tagId)
             }
             if (state.isLoading && !loaded) LoadingState(state.tagId)
             if (state.loadFailed && !loaded && !state.isLoading) ErrorState(state)

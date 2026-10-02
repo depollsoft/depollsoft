@@ -152,6 +152,32 @@ class ReviewPromptTest {
         assertEquals(1, asked.size)
     }
 
+    @Test fun leavingTheAppSpendsTheTask() {
+        becomeEligible()
+        ReviewPrompt.install(RuntimeEnvironment.getApplication())
+        ReviewPrompt.policyForTesting = policy
+        ReviewPrompt.taskFinished()
+        controller.pause().stop()
+        controller.restart().start().resume()
+        controller.windowFocusChanged(true)
+        // Coming back to a calm screen within the task's two minutes is like a launch: no ask.
+        ReviewPrompt.calmScreenShown(activity)
+        idle(ReviewPrompt.CALM_MILLIS)
+        assertEquals(emptyList<Activity>(), asked)
+    }
+
+    @Test fun turningTheScreenKeepsTheTask() {
+        becomeEligible()
+        ReviewPrompt.install(RuntimeEnvironment.getApplication())
+        ReviewPrompt.policyForTesting = policy
+        ReviewPrompt.taskFinished()
+        controller.recreate()
+        controller.windowFocusChanged(true)
+        ReviewPrompt.calmScreenShown(activity)
+        idle(ReviewPrompt.CALM_MILLIS)
+        assertEquals(1, asked.size)
+    }
+
     @Test fun aDialogOrMenuInFrontBlocksTheAsk() {
         becomeEligible()
         ReviewPrompt.calmScreenShown(activity)

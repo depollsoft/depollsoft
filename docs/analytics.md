@@ -24,7 +24,8 @@ Android also still sends its older `app_open` event to the DepollSoft endpoint (
 
 A `screen_view` carries the same name as both `screen_name` and `screen_class`. It is logged each time
 the screen comes to the front: opening it, switching to its tab or page, returning to it from another
-screen, or bringing the app back.
+screen, or bringing the app back from the background. Screens report through `ScreenView(name)`
+(DepollSoftCompose) on Android and `.analyticsScreen(name)` (`iOS/shared/UsageAnalytics.swift`) on iOS.
 
 | App | `screen_name` | Screen |
 | --- | --- | --- |
@@ -35,14 +36,14 @@ screen, or bringing the app back.
 | Pitch Perfect | `set_lists` | Set lists (manage) |
 | Pitch Perfect | `song_editor` | Adding or editing a song |
 | Pitch Perfect | `add_songs` | Adding songs from other set lists |
-| Pitch Perfect | `settings` | Settings |
+| Pitch Perfect | `settings` | Settings, including the sound list (a dialog on Android, a pushed list on iOS) |
 | Tag Master | `home` | Home |
 | Tag Master | `browse` | Browse |
 | Tag Master | `search` | Search form |
 | Tag Master | `search_results` | Search results |
 | Tag Master | `tag_list` | One of the person's own lists |
 | Tag Master | `teachable_tags` | Teachable tags |
-| Tag Master | `tag_summary`, `tag_details`, `tag_tracks`, `tag_videos` | The four pages of a tag, phone or side pane |
+| Tag Master | `tag_summary`, `tag_details`, `tag_tracks`, `tag_videos` | The four pages of a tag, phone or side pane, from the first load on; again for each new tag in a reused side pane |
 | Tag Master | `sheet_music` | Sheet music |
 | Tag Master | `settings` | Settings |
 
@@ -57,7 +58,7 @@ Dialogs, alerts, menus and system or SDK screens (sign-in, privacy, ads, share) 
 | `set_list_created` | Pitch Perfect | | A new set list is named (not a rename or duplicate) |
 | `songs_added_to_set_list` | Pitch Perfect | | Songs from other set lists are added |
 | `tag_viewed` | Tag Master | | A tag's details finish loading (not a refresh of the same tag) |
-| `learning_track_played` | Tag Master | `part` | A learning track starts playing after it loads |
+| `learning_track_played` | Tag Master | `part` | A learning track starts (or starts over) after it loads; resuming from a pause doesn't count |
 | `video_opened` | Tag Master | | A teaching or performance video opens |
 | `tag_added_to_list` | Tag Master | `list` | Someone adds a tag to a list (not undo, sync or migration) |
 | `tag_list_created` | Tag Master | | Someone creates a list |
@@ -79,9 +80,12 @@ Parameter values:
 | Property | App | Values | Set |
 | --- | --- | --- | --- |
 | `pitch_pipe_style` | Pitch Perfect | `radial`, `classic` | At launch and when changed |
-| `note_sound` | Pitch Perfect | the sound's stored id (`pitch_pipe`, `piano`, ...) | At launch and when changed |
+| `note_sound` | Pitch Perfect | the sound's synced id (`pitchPipe`, `piano`, ...) | At launch and when changed |
 | `reference_pitch` | Pitch Perfect | A4 in Hz (`440`) | At launch and when changed |
 | `signed_in` | both | `yes`, `no` | At launch and on sign-in or sign-out |
+
+User properties sent while collection is off are dropped, so each app sends them again when someone
+turns usage analytics on (usually on the first launch's Privacy choices).
 
 ## Review prompts
 
@@ -117,22 +121,36 @@ All of these, in order:
    - Tag Master: Home, with no tag beside it on a tablet.
 
    A pitch pipe, a tag's pages and sheet music are never calm.
-3. The screen then stays **untouched for 3 seconds**: no touch, key or pointer.
-4. It is still in front with nothing over it (no dialog, sheet, menu or keyboard). The app is
-   foreground and active, and nothing is sounding.
+3. The screen then stays **untouched for 3 seconds**: no touch, key press or pointer movement.
+4. It is still in front with nothing over it (no dialog, sheet, menu, keyboard or text field in use).
+   The app is foreground and active, and nothing is sounding.
 
-A touch during the 3 seconds spends that task's chance; the next chance comes with the next finished
-task. Nothing is asked at launch.
+A touch during the 3 seconds spends that task's chance, and so does leaving the app (on iOS, even
+briefly, as for Control Center), so nothing is asked on coming back. The next chance comes with the next
+finished task. Nothing is asked at launch.
 
-Debug builds never call the store (Android logs instead; iOS skips it), and neither do tests: each
+Debug builds never call the store (both log a line instead), and neither do tests: each
 platform's tests replace the store call.
 
 ### Hooks
 
 | | Android | iOS |
 | --- | --- | --- |
-| Day of use | `ReviewPrompt.recordUse(context)` | `ReviewPrompt.shared.recordUse()` |
-| Sound | `ReviewPrompt.recordSound(context)` | `ReviewPrompt.shared.recordSound()` |
+| Start counting (launch) | `ReviewPrompt.install(context)` | `ReviewPrompt.shared.install()` |
+| Day of use | `ReviewPrompt.recordUse()` | `ReviewPrompt.shared.recordUse()` |
+| Sound | `ReviewPrompt.recordSound()` | `ReviewPrompt.shared.recordSound()` |
 | Finished task | `ReviewPrompt.taskFinished()` | `ReviewPrompt.shared.taskFinished()` |
-| Calm screen | `ReviewPrompt.calmScreenShown/Hidden(activity)` | `.reviewCalmScreen(isCalm)` view modifier |
+| Calm screen | `ReviewCalmScreen(calm)` (DepollSoftCompose) | `.reviewCalmScreen(isCalm)` |
 | Sounding now | `ReviewPrompt.isBusy` | `ReviewPrompt.shared.isBusy` |
+
+Each app's own calls are in one place: `PitchPerfectAnalytics`/`TagMasterAnalytics` on Android and
+`PitchPerfectUsage`/`TagMasterUsage` on iOS.
+
+### Tests
+
+- Rules and timing: `ReviewPolicyTest`, `ReviewPromptTest` and `UsageAnalyticsTest`
+  (depollsoft.lib.kotlin); `ReviewPromptTests` (Tag Master's iOS test bundle covers the shared iOS code).
+- Flows through the real screens: `UsageAndReviewTest`, `PitchPlayedTest` and `TrackUsageTest` on
+  Android; `PitchPerfectAnalyticsTests` and `TagMasterAnalyticsTests` on iOS.
+- Not covered by tests: delivery to Firebase (check DebugView on a device that opted in), and the store
+  card itself, which debug builds never request.

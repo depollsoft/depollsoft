@@ -1,8 +1,10 @@
 package depollsoft.lib.review
 
 import android.app.Activity
+import android.app.Application
 import android.content.Context
 import android.content.pm.ApplicationInfo
+import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
@@ -30,8 +32,9 @@ import depollsoft.lib.analytics.UsageAnalytics
  * - [CALM_MILLIS] with no touch or key, after which the screen still has the focus (no dialog, menu or
  *   other app in front), no keyboard is up and nothing is sounding ([isBusy]).
  *
- * Each finished task gives one chance: a touch during the wait spends it. iOS behaves the same way
- * (iOS/shared/ReviewPrompt.swift); docs/analytics.md describes both.
+ * Each finished task gives one chance: a touch during the wait, or leaving the app, spends it, so
+ * nothing is asked on coming back. iOS behaves the same way (iOS/shared/ReviewPrompt.swift);
+ * docs/analytics.md describes both.
  */
 object ReviewPrompt {
     /** How long the screen has to stay untouched before asking. */
@@ -57,6 +60,7 @@ object ReviewPrompt {
 
     private val handler = Handler(Looper.getMainLooper())
     private var installed: ReviewPolicy? = null
+    private var watchedApp: Application? = null
     private var calmActivity: Activity? = null
     private var taskFinishedAt: Long? = null
     private var waiting: Waiting? = null
@@ -64,12 +68,53 @@ object ReviewPrompt {
     /** The policy, once the app has called [install]; tests and previews have none and never ask. */
     private val policy: ReviewPolicy? get() = policyForTesting ?: installed
 
-    /** Starts keeping the counts in [context]'s app storage; each app calls it at launch. */
+    /**
+     * Starts keeping the counts in [context]'s app storage, and watches for the app leaving the
+     * screen; each app calls it at launch.
+     */
     fun install(context: Context) {
         installed = ReviewPolicy(
             context.applicationContext.getSharedPreferences(ReviewPolicy.PREFS_NAME, Context.MODE_PRIVATE)
         )
+        val app = context.applicationContext as? Application ?: return
+        if (watchedApp === app) return
+        watchedApp?.unregisterActivityLifecycleCallbacks(appVisibility)
+        watchedApp = app
+        app.registerActivityLifecycleCallbacks(appVisibility)
     }
+
+    /** The app left the screen: a task finished before it no longer counts. */
+    fun appLeft() {
+        cancelWaiting()
+        taskFinishedAt = null
+    }
+
+    /** Which activities are started, so the last one stopping means the app has gone. */
+    private val appVisibility =
+        object : Application.ActivityLifecycleCallbacks {
+            private val started = mutableSetOf<Activity>()
+
+            override fun onActivityStarted(activity: Activity) {
+                started += activity
+            }
+
+            override fun onActivityStopped(activity: Activity) {
+                started -= activity
+                if (started.isEmpty() && !activity.isChangingConfigurations) appLeft()
+            }
+
+            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
+
+            override fun onActivityResumed(activity: Activity) {}
+
+            override fun onActivityPaused(activity: Activity) {}
+
+            override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
+
+            override fun onActivityDestroyed(activity: Activity) {
+                started -= activity
+            }
+        }
 
     /** Someone did the app's main job (played a pitch, opened a tag). */
     fun recordUse() {
@@ -183,6 +228,8 @@ object ReviewPrompt {
         showStoreReview = ::showPlayReview
         policyForTesting = null
         installed = null
+        watchedApp?.unregisterActivityLifecycleCallbacks(appVisibility)
+        watchedApp = null
         uptimeMillis = SystemClock::uptimeMillis
     }
 
