@@ -77,6 +77,8 @@ NSString *const API_URI_STRING = @"https://www.barbershoptags.com/api.php?client
     return [DPTag cacheKeyForId:self.tagId];
 }
 
+/// Tags already read this run, by id. Rows load tags on background tasks while a sign-in's
+/// prefetch caches them on another thread, so every access holds the dictionary's lock.
 + (NSMutableDictionary *)tagCache {
     static NSMutableDictionary *tagCache = nil;
     static dispatch_once_t onceToken;
@@ -195,12 +197,18 @@ NSString *const API_URI_STRING = @"https://www.barbershoptags.com/api.php?client
 }
 
 + (DPTag *)loadFromCache:(int)tagId {
-    if (self.tagCache[@(tagId)]) {
-        return self.tagCache[@(tagId)];
+    NSMutableDictionary *tagCache = self.tagCache;
+    @synchronized (tagCache) {
+        DPTag *cached = tagCache[@(tagId)];
+        if (cached) {
+            return cached;
+        }
     }
     DPTag *cachedTag = [DPFileCache readObjectForKey:[self cacheKeyForId:tagId]];
     if (cachedTag && cachedTag.appVersion == APP_VERSION) {
-        self.tagCache[@(tagId)] = cachedTag;
+        @synchronized (tagCache) {
+            tagCache[@(tagId)] = cachedTag;
+        }
         return cachedTag;
     }
     return nil;
@@ -332,9 +340,11 @@ NSString *const API_URI_STRING = @"https://www.barbershoptags.com/api.php?client
 }
 
 - (void)cache {
-    DPTag.tagCache[@(self.tagId)] = self;
+    NSMutableDictionary *tagCache = DPTag.tagCache;
+    @synchronized (tagCache) {
+        tagCache[@(self.tagId)] = self;
+    }
     [DPFileCache writeObject:self forKey:self.cacheKey];
-    return;
 }
 
 - (NSArray *)tracks {
