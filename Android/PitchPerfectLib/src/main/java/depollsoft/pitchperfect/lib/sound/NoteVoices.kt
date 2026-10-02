@@ -25,7 +25,15 @@ private class TrackVoice(
 ) : SoundingNote {
     override val isSounding: Boolean get() = track.playState == AudioTrack.PLAYSTATE_PLAYING
 
-    override fun play() = track.play()
+    override fun play() {
+        try {
+            track.play()
+        } catch (e: IllegalStateException) {
+            // The platform couldn't make this track; it never will play, so don't keep it.
+            track.release()
+            throw e
+        }
+    }
 
     override fun stop() = stopTrack(track)
 }
@@ -97,13 +105,17 @@ object NoteVoices {
 
     /**
      * A note at [storedFrequency] (its A440 frequency) in [sound], tuned so A4 is [referencePitch];
-     * silent until played. The pitch pipe keeps its original 8 kHz generator.
+     * silent until played. The pitch pipe keeps its original 8 kHz generator. [onSilent] runs, on
+     * any thread, if the note gives up after [SoundingNote.play] returned (an instrument with no
+     * audio track for it or its fallback).
      */
     @JvmStatic
+    @JvmOverloads
     fun create(
         sound: NoteSound,
         storedFrequency: Double,
         referencePitch: Double,
+        onSilent: Runnable? = null,
     ): SoundingNote {
         val tuned = storedFrequency * referencePitch / 440
         return when (sound.kind) {
@@ -122,6 +134,7 @@ object NoteVoices {
                 InstrumentVoice(
                     plan = { InstrumentNote.plan(sound, storedFrequency, referencePitch, tuning()) },
                     fallback = { pitchPipe(tuned) },
+                    onSilent = { onSilent?.run() },
                 )
         }
     }

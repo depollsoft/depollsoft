@@ -124,11 +124,15 @@ internal class FrameStageAccumulator {
     }
 }
 
-/** Samples rendered frame durations without doing work on the UI thread. */
+/**
+ * Samples rendered frame durations without doing work on the UI thread. Its counts are only
+ * touched on its own thread, where the frame listener runs.
+ */
 internal class FramePerformanceMonitor(
     private val screen: String,
 ) {
     private val thread = HandlerThread("$screen-frame-metrics")
+    private var handler: Handler? = null
     private var frames = 0
     private var over8MsFrames = 0
     private var over16MsFrames = 0
@@ -165,13 +169,16 @@ internal class FramePerformanceMonitor(
                 window.windowManager.defaultDisplay.refreshRate
             }.getOrDefault(0f)
         thread.start()
-        window.addOnFrameMetricsAvailableListener(listener, Handler(thread.looper))
+        val handler = Handler(thread.looper).also { this.handler = it }
+        window.addOnFrameMetricsAvailableListener(listener, handler)
     }
 
     fun stop(window: Window) {
         if (!started) return
         window.removeOnFrameMetricsAvailableListener(listener)
-        report("stop")
+        // Report after any frame already queued for the listener, on its thread: reading the
+        // counts here raced the listener (a ConcurrentModificationException in describe()).
+        handler?.post { report("stop") }
         thread.quitSafely()
         started = false
     }

@@ -166,13 +166,28 @@ public class PitchAudioTrackGenerator {
           return candidate;
         }
       }
-      StreamingAudioTrack track = new StreamingAudioTrack(AudioManager.STREAM_MUSIC, sampleRate,
-          channelConfig, AudioFormat.ENCODING_PCM_16BIT, bufferSizeInBytes,
-          AudioTrack.MODE_STREAM);
+      StreamingAudioTrack track = PitchAudioTrackGenerator.newTrack(channelConfig, sampleRate,
+          bufferSizeInBytes);
+      if (track.getState() != AudioTrack.STATE_INITIALIZED) {
+        // The platform has run out of tracks for this app. The idle ones the pool keeps hold
+        // some of them: let those go and ask once more. A track that still isn't made refuses
+        // to play, and the note stays silent rather than crashing.
+        track.release();
+        for (StreamingAudioTrack idle : PitchAudioTrackGenerator.trackPool)
+          idle.release();
+        PitchAudioTrackGenerator.trackPool.clear();
+        track = PitchAudioTrackGenerator.newTrack(channelConfig, sampleRate, bufferSizeInBytes);
+      }
       PitchAudioTrackGenerator.trackShapes.put(track,
           new TrackShape(sampleRate, channelConfig, bufferSizeInBytes));
       return track;
     }
+  }
+
+  private static StreamingAudioTrack newTrack(int channelConfig, int sampleRate,
+      int bufferSizeInBytes) {
+    return new StreamingAudioTrack(AudioManager.STREAM_MUSIC, sampleRate, channelConfig,
+        AudioFormat.ENCODING_PCM_16BIT, bufferSizeInBytes, AudioTrack.MODE_STREAM);
   }
 
   public static void stop(AudioTrack track) {

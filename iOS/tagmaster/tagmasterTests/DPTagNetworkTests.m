@@ -492,6 +492,35 @@
     XCTAssertEqual(fileCached.tagId, self.sampleTag.tagId);
 }
 
+- (void)testCacheCanBeReadAndWrittenFromManyThreadsAtOnce {
+    // Right after a sign-in, every Home row loads its tag on a background task while the
+    // lists' prefetch caches the same tags on another thread, and the rows read the cache on
+    // the main thread. The unguarded dictionary crashed there (EXC_BAD_ACCESS in
+    // +loadFromCache:), most readily on a Mac with many cores.
+    NSMutableArray<DPTag *> *tags = [NSMutableArray array];
+    for (int i = 0; i < 200; i++) {
+        DPTag *tag = [[DPTag alloc] init];
+        tag.tagId = 900000 + i;
+        tag.title = [NSString stringWithFormat:@"Tag %d", tag.tagId];
+        [tags addObject:tag];
+    }
+
+    // Alternate rounds of writing and reading every tag; the rounds overlap across threads.
+    dispatch_apply(4000, DISPATCH_APPLY_AUTO, ^(size_t i) {
+        DPTag *tag = tags[i % tags.count];
+        if ((i / tags.count) % 2 == 0) {
+            [tag cache];
+        } else {
+            [DPTag loadFromCache:tag.tagId];
+        }
+    });
+
+    for (DPTag *tag in tags) {
+        XCTAssertEqual([DPTag loadFromCache:tag.tagId].tagId, tag.tagId);
+        [[NSFileManager defaultManager] removeItemAtPath:[DPFileCache pathForKey:tag.cacheKey] error:nil];
+    }
+}
+
 - (void)testClearCacheRemovesAll {
     // Cache a few tags
     DPTag *tag1 = [[DPTag alloc] init];
