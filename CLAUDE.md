@@ -200,6 +200,7 @@ npm test
 2. **SPM resolution**: Run `xcodebuild -resolvePackageDependencies` after package changes
 3. **Firebase setup**: Both platforms need proper Firebase configuration
 4. **Node versions**: Firebase Functions use Node 22 and the API container uses Node 24
+5. **FirebaseUI-iOS pin**: both Xcode projects pin FirebaseUI to revision `4d218a69` (16.1.0 plus the fix for firebase/FirebaseUI-iOS#1397; without it the sign-in picker crashes as soon as it opens when the iPad apps run on a Mac). Move back to a version requirement once a FirebaseUI release after 16.1.0 includes that fix
 
 ### Best Practices
 
