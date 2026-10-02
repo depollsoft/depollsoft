@@ -1,5 +1,9 @@
 package depollsoft.pitchperfect.lib;
 
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+
 import depollsoft.lib.json.NotStored;
 import depollsoft.lib.state.StateField;
 import depollsoft.pitchperfect.lib.sound.NoteSound;
@@ -30,10 +34,28 @@ public class Note {
     public void play(Note n) {
       SoundingNote voice = voices.get(n);
       if (voice == null) {
-        voice = NoteVoices.create(Note.getSound(), n.getFrequency(), Note.getReferencePitch());
+        voice = NoteVoices.create(Note.getSound(), n.getFrequency(), Note.getReferencePitch(),
+            () -> new Handler(Looper.getMainLooper()).post(() -> unlightIfSilent(n)));
         voices.put(n, voice);
       }
-      voice.play();
+      try {
+        voice.play();
+      } catch (IllegalStateException e) {
+        // The next press asks for a new voice rather than this one's dead track.
+        voices.remove(n);
+        throw e;
+      }
+    }
+
+    /**
+     * The voice gave up after play() returned (an instrument with no audio track to fall back on):
+     * stop the note, unless it has been played again since, so the next press plays it. Stopping
+     * goes through the installed player, as a release would, so a wrapper (the widget's) sees it.
+     */
+    private void unlightIfSilent(Note n) {
+      SoundingNote voice = voices.get(n);
+      if (n.getIsPlaying() && (voice == null || !voice.isSounding()))
+        n.stop();
     }
 
     @Override
@@ -243,9 +265,17 @@ public class Note {
       if (this.isAttemptingToPlay)
         return;
       this.isAttemptingToPlay = true;
-      player.play(this);
-      this.setIsPlaying(true);
-      this.isAttemptingToPlay = false;
+      try {
+        player.play(this);
+        this.setIsPlaying(true);
+      } catch (IllegalStateException e) {
+        // No audio track to be had right now (see PitchAudioTrackGenerator). The note stays
+        // silent and unlit, so the next press tries again instead of "stopping" it.
+        Log.w("Note", "Couldn't play " + this, e);
+        this.isPlaying.set(false);
+      } finally {
+        this.isAttemptingToPlay = false;
+      }
     }
   }
 
