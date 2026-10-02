@@ -87,7 +87,7 @@ npm run deploy  # Deploy to Firebase
 
 ## Development Setup & Configuration
 
-- Android minSdk is 24 for the phone apps, 26 for Wear and 23 for the libraries. The iOS deployment target is 17.0.
+- Android minSdk is 24 for the phone apps, 26 for Wear and 23 for the libraries. On iOS the apps and depolllib target 17.0, but pitchperfectlib still targets 15.0, so code there must stay available on iOS 15.
 - Node.js 22 for Firebase Functions; the API container uses Node.js 24. Docker is needed for API development.
 - Firebase client configs (`google-services.json`, `GoogleService-Info.plist`, including the private preview variants) are tracked. Service credentials belong in environment variables or a secret manager, never in git.
 - API: provide `PORT`, `PUBSUB_VERIFICATION_TOKEN` and GCP credentials through `.env` or a secret manager. It needs the GeoIP data first: `gsutil cp gs://depollsoft-build-data/geoip-lite.tar.gz . && tar -xzf geoip-lite.tar.gz`.
@@ -106,7 +106,7 @@ npm run deploy  # Deploy to Firebase
 - **iOS**:
   - pitchperfect: models are tested directly, and the real controls are driven in-process through the accessibility tree (`iOS/shared/SwiftUITestDriver.swift`). `PitchPerfectScreenCatalogTests` renders every screen state (set `TEST_RUNNER_SCREEN_CATALOG_DIR` to write captures).
   - tagmaster: the hosted `tagmasterTests` bundle tests models directly and drives the real SwiftUI screens and shell through `UIDriver` (`iOS/shared/SwiftUITestDriver.swift`).
-  - Both apps' `*UITests` bundles hold only launch metrics, keyboard/rotation/system-sheet cases and `StoreScreenshotTests` (used by `scripts/release/capture.py`). They run only on the weekly extended iOS CI run.
+  - Both apps' `*UITests` bundles hold only launch metrics, keyboard/rotation/system-sheet cases and `StoreScreenshotTests`. Test CI runs them only on its weekly extended run; release asset capture (`release-assets.yml` through `scripts/release/capture.py`) also runs `StoreScreenshotTests`.
   - pitchperfectlib's tests run in Pitch Perfect's CI job. depolllib has its own tests (`xcodebuild test -scheme depolllib`), which CI doesn't run.
 - **Sync against the Firestore emulators**: `TagListSyncEmulatorTest` (Android, run the class on its own) and `TMListSyncEmulatorTests` (iOS) cover Tag Master's lists against `scripts/firestore-emulator.sh tagmaster` (see `docs/tag-lists.md`). `SongListSyncEmulatorTest` (Android) and `DPSongListSyncEmulatorTests` (iOS; needs a signed build, and an ad-hoc `CODE_SIGN_IDENTITY=-` simulator build is enough) cover Pitch Perfect's set lists against `scripts/firestore-emulator.sh pitchperfect` (see `docs/pitchperfect-set-lists.md`). All of them skip when no emulator is running. The suites and the script honour `FIRESTORE_EMULATOR_HOST` / `FIREBASE_AUTH_EMULATOR_HOST` (iOS test runs take them as `TEST_RUNNER_FIRESTORE_EMULATOR_PORT` / `TEST_RUNNER_AUTH_EMULATOR_PORT`), so the emulators can run on free ports such as `localhost:8180` / `localhost:9199` when 8080 is taken.
 
