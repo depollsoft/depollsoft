@@ -207,6 +207,11 @@ NSString *const API_URI_STRING = @"https://www.barbershoptags.com/api.php?client
     DPTag *cachedTag = [DPFileCache readObjectForKey:[self cacheKeyForId:tagId]];
     if (cachedTag && cachedTag.appVersion == APP_VERSION) {
         @synchronized (tagCache) {
+            // A fetch may have cached a fresher copy while the file was read; keep it.
+            DPTag *fresher = tagCache[@(tagId)];
+            if (fresher) {
+                return fresher;
+            }
             tagCache[@(tagId)] = cachedTag;
         }
         return cachedTag;
