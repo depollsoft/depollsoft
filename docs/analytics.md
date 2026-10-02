@@ -18,7 +18,8 @@ nothing. Firebase's automatic screen reporting is off in both apps
 (`google_analytics_automatic_screen_reporting_enabled` in the Android manifests,
 `FirebaseAutomaticScreenReportingEnabled` in the iOS plists): it named screens after Android activities
 and SwiftUI hosting controllers, which lumped every Pitch Perfect tab together and meant nothing on iOS.
-Android also still sends its older `app_open` event to the DepollSoft endpoint (`Analytics.kt`).
+Nothing goes to DepollSoft's own analytics endpoint (`api/`) any more: Android's `app_open` event
+there was dropped, since Google Analytics records sessions.
 
 ### Screens
 

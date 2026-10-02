@@ -105,8 +105,10 @@ class AddableSongs(
     /** Appends deep copies of the ticked songs, in the order the sections present them. */
     fun confirm(): Boolean {
         if (ticked.isEmpty()) return false
+        // A set list deleted on another device meanwhile takes nothing, so nothing was added.
+        val targetExists = model.songLists.containsKey(targetId)
         model.copySongs(offered.filter { isTicked(it) }, targetId)
-        PitchPerfectAnalytics.songsAddedToSetList()
+        if (targetExists) PitchPerfectAnalytics.songsAddedToSetList()
         return true
     }
 }

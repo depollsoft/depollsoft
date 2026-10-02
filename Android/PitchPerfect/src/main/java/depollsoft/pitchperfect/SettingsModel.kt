@@ -45,7 +45,7 @@ object SettingsModel {
      * Whether the Pitch Pipe tab shows the classic grid of big buttons instead of the radial face.
      * It is how this device lays the tab out, as the appearance is, so it stays off the account.
      */
-    var classicPitchPipe: Boolean by preference(CLASSIC_PITCH_PIPE_KEY, false)
+    var classicPitchPipe: Boolean by preference(CLASSIC_PITCH_PIPE_KEY, false) { PitchPerfectAnalytics.reportSettings() }
 
     /** The A4 the notes are tuned to, in Hz: usually one of [Note.COMMON_A4_FREQUENCIES]. */
     var referencePitch: Int
@@ -57,6 +57,8 @@ object SettingsModel {
     private var storedReferencePitch: Int by preference(REFERENCE_PITCH_KEY, Note.STANDARD_A4.toInt()) {
         Note.setReferencePitch(referencePitch.toDouble())
         PitchPipeAppWidget.updateWidgets()
+        // Here rather than in Settings, so a change synced from another device is reported too.
+        PitchPerfectAnalytics.reportSettings()
         if (!restoring) {
             userRef?.set(mapOf("referencePitch" to it), SetOptions.merge())
         }
@@ -79,6 +81,7 @@ object SettingsModel {
 
     private var storedNoteSound: String by preference(NOTE_SOUND_KEY, NoteSound.DEFAULT.id) {
         Note.setSound(noteSound)
+        PitchPerfectAnalytics.reportSettings()
         if (!restoring) {
             userRef?.set(mapOf("noteSound" to it), SetOptions.merge())
         }

@@ -10,7 +10,6 @@ import androidx.appcompat.app.AppCompatDelegate
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import depollsoft.lib.activity.RichApplication
-import depollsoft.lib.analytics.Analytics
 import depollsoft.lib.analytics.UsageAnalytics
 import depollsoft.lib.json.JsonSerializer
 import depollsoft.lib.review.ReviewPrompt
@@ -46,11 +45,6 @@ class TagMasterApplication : RichApplication() {
             UsageAnalytics.signedIn(it.currentUser != null)
         }
         AppCompatDelegate.setDefaultNightMode(themeMode)
-
-        if (choices.analytics) Analytics.default.logEvent(
-            Analytics.APP_OPEN,
-            tags = setOfNotNull(if (Firebase.auth.currentUser != null) "logged_in" else null),
-        )
     }
 
     /** Sends [UsageAnalytics] to Firebase, while the person allows usage analytics. */

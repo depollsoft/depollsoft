@@ -36,6 +36,7 @@ class UsageAndReviewTest {
 
     private val screens = ComposeScreens(compose)
     private val events = mutableListOf<Pair<String, Map<String, String>>>()
+    private val properties = mutableMapOf<String, String>()
     private val asked = mutableListOf<Activity>()
     private val prefs = RuntimeEnvironment.getApplication().getSharedPreferences("usage_review_test", Context.MODE_PRIVATE)
     private var now = 1_790_881_200_000L
@@ -55,7 +56,9 @@ class UsageAndReviewTest {
                     events += name to params
                 }
 
-                override fun setUserProperty(name: String, value: String) {}
+                override fun setUserProperty(name: String, value: String) {
+                    properties[name] = value
+                }
             }
         ReviewPrompt.resetForTesting()
         ReviewPrompt.policyForTesting = policy
@@ -194,6 +197,30 @@ class UsageAndReviewTest {
         compose.onNodeWithTag(TestTags.NAME_DIALOG_FIELD).performTextReplacement("Contest Set")
         screens.click(TestTags.NAME_DIALOG_CONFIRM)
         assertEquals(1, named("set_list_created").size)
+    }
+
+    @Test
+    fun addingSongsToASetListDeletedMeanwhileIsNotReported() {
+        val model = SongsModel.get()
+        model.defaultSongList.addSong(ComposeScreens.song("Shenandoah"))
+        val target = model.createList("Contest Set")
+        val addable = AddableSongs(model, target)
+        addable.toggleAll()
+        // Deleted on another device while Add songs was open.
+        model.deleteList(target)
+        addable.confirm()
+        assertEquals(emptyList<Pair<String, Map<String, String>>>(), named("songs_added_to_set_list"))
+    }
+
+    @Test
+    fun settingsArriveAsUserPropertiesWhetherChangedHereOrSynced() {
+        SettingsModel.classicPitchPipe = true
+        assertEquals("classic", properties["pitch_pipe_style"])
+        // As the account's snapshot listener applies another device's choices.
+        SettingsModel.applyRemoteReferencePitch(432)
+        SettingsModel.applyRemoteNoteSound("piano")
+        assertEquals("432", properties["reference_pitch"])
+        assertEquals("piano", properties["note_sound"])
     }
 
     private fun List<String>.distinctConsecutive(): List<String> = filterIndexed { index, name -> index == 0 || this[index - 1] != name }

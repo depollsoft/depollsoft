@@ -48,7 +48,10 @@ object PitchPerfectAnalytics {
         ReviewPrompt.taskFinished()
     }
 
-    /** Reports the settings Pitch Perfect's user properties follow; at launch and when one changes. */
+    /**
+     * Reports the settings Pitch Perfect's user properties follow: at launch, when analytics is
+     * allowed, and whenever one changes here or arrives from another device.
+     */
     fun reportSettings() {
         UsageAnalytics.userProperty("pitch_pipe_style", if (SettingsModel.classicPitchPipe) "classic" else "radial")
         UsageAnalytics.userProperty("note_sound", SettingsModel.noteSound.id)

@@ -180,6 +180,18 @@ final class PitchPerfectAnalyticsTests: PitchPerfectTestCase {
         XCTAssertEqual(analytics.names, ["songs_added_to_set_list"])
     }
 
+    func testAddingToASetListDeletedMeanwhileIsNotReported() throws {
+        seedSongs(["Blue Skies"])
+        let target = try customList(named: "Saturday show")
+        let model = AddSongsModel(target: target)
+        model.toggleSelectAll()
+        // Deleted on another device while Add songs was open.
+        XCTAssertTrue(DPSongsModel.sharedInstance.deleteList(target))
+        model.confirm()
+        XCTAssertTrue(analytics.names.isEmpty)
+        XCTAssertFalse(prompt.hasFreshTaskForTesting)
+    }
+
     // MARK: Settings
 
     func testSettingsAreUserPropertiesSentWhenTheyChange() {

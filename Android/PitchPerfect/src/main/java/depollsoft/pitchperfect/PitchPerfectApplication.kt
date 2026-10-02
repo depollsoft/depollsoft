@@ -13,7 +13,6 @@ import depollsoft.lib.state.StateList
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import depollsoft.lib.activity.RichApplication
-import depollsoft.lib.analytics.Analytics
 import depollsoft.lib.analytics.UsageAnalytics
 import depollsoft.lib.json.JsonSerializer
 import depollsoft.lib.review.ReviewPrompt
@@ -79,13 +78,6 @@ class PitchPerfectApplication : RichApplication() {
                 SongsModel.get().attachToFirestore()
                 SettingsModel.attachToFirestore()
             }
-        }
-        val tags: MutableSet<String> = mutableSetOf()
-        if (Firebase.auth.currentUser != null) {
-            tags.add("logged_in")
-        }
-        if (PrivacyChoices(this).analytics) {
-            Analytics.default.logEvent(Analytics.APP_OPEN, tags = tags)
         }
     }
 

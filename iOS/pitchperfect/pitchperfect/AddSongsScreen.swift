@@ -58,8 +58,10 @@ final class AddSongsModel {
     func confirm() -> Int {
         let selected = allSongs.filter { chosen.contains($0.rowID) }
         guard !selected.isEmpty else { return 0 }
+        // A set list deleted on another device meanwhile is no longer anyone's, so nothing was added.
+        let targetExists = store.songLists[target.id] != nil
         store.copySongs(selected, to: target)
-        PitchPerfectUsage.songsAddedToSetList()
+        if targetExists { PitchPerfectUsage.songsAddedToSetList() }
         return selected.count
     }
 
