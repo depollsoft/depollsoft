@@ -1,6 +1,6 @@
 # Repository Guidelines
 
-Guidance for coding agents working in this repository. This is the only agent guide: Claude Code and Codex read `AGENTS.md` directly, and `.gemini/settings.json` points Gemini CLI at it.
+Guidance for coding agents working in this repository. This is the only agent guide; Claude Code and Codex both read `AGENTS.md` directly.
 
 ## Codebase Overview
 
