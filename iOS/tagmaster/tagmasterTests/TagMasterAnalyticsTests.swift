@@ -137,6 +137,17 @@ final class TagMasterAnalyticsTests: TMBehaviorTestCase {
         ])
     }
 
+    func testAListDeletedElsewhereIsNotAddedToFromAStalePickerRow() {
+        seedLists(lists: [(key: "set", name: "Set", ids: [])])
+        let picker = TMListPickerModel(tagId: 1809)
+        // Deleted on another device while the picker was open.
+        TMTagLists.deleteList("set")
+        picker.toggle("set")
+        XCTAssertTrue(analytics.events.isEmpty)
+        XCTAssertFalse(TMTagLists.allKeys().contains("set"), "the deleted list does not come back")
+        XCTAssertFalse(prompt.hasFreshTaskForTesting)
+    }
+
     func testCreatingAListFromHomeIsReportedOnlyWhenItIsMade() {
         let home = TMHomeModel(catalog: TMFixtureCatalog(available: 1).catalog, navigator: RecordingNavigator())
         home.commitNewList("Afterglow")
@@ -153,18 +164,20 @@ final class TagMasterAnalyticsTests: TMBehaviorTestCase {
         mountShell(router)
         settle()
         XCTAssertTrue(prompt.hasCalmScreenForTesting, "Home is calm")
+        // Each step settles, so its screen reports before the next replaces it, and then waits
+        // for Home to join or leave the calm list, which follows the push or pop finishing.
         router.showTag(1809, source: nil)
         spinUntil("the tag loads") { router.path.last?.tagModel?.tag != nil }
         settle()
-        XCTAssertFalse(prompt.hasCalmScreenForTesting, "a tag is never calm")
+        spinUntil("a tag is never calm") { !prompt.hasCalmScreenForTesting }
         router.path.last?.tagModel?.selectedPage = .tracks
         settle()
         router.path.removeAll()
         settle()
-        XCTAssertTrue(prompt.hasCalmScreenForTesting)
+        spinUntil("Home is calm again") { prompt.hasCalmScreenForTesting }
         router.show(.search)
         settle()
-        XCTAssertFalse(prompt.hasCalmScreenForTesting)
+        spinUntil("Search covers Home") { !prompt.hasCalmScreenForTesting }
         ScreenCatalog.settle(0.2)
         XCTAssertEqual(analytics.screens, ["home", "tag_summary", "tag_tracks", "home", "search"])
         XCTAssertEqual(names, ["tag_viewed"])
@@ -180,5 +193,8 @@ final class TagMasterAnalyticsTests: TMBehaviorTestCase {
         router.showTag(1809, source: nil)
         settle()
         XCTAssertFalse(prompt.hasCalmScreenForTesting, "the tag beside Home may be sung from")
+        router.setExpanded(false)
+        settle()
+        XCTAssertTrue(prompt.hasCalmScreenForTesting, "a collapsed split shows no tag beside Home")
     }
 }

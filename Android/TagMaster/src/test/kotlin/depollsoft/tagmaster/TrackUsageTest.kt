@@ -86,6 +86,13 @@ class TrackUsageTest {
                 track.togglePlay()
                 assertEquals("resuming is the same playing", listOf("lead"), parts)
                 assertTrue(Sounding.any)
+
+                val finished = ArgumentCaptor.forClass(MediaPlayer.OnCompletionListener::class.java)
+                verify(player).setOnCompletionListener(finished.capture())
+                finished.value.onCompletion(player)
+                assertFalse("a finished track is quiet", Sounding.any)
+                track.togglePlay()
+                assertEquals("playing a finished track starts it over", listOf("lead", "lead"), parts)
             } finally {
                 track.release()
             }

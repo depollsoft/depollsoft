@@ -49,6 +49,11 @@ object TagMasterAnalytics {
         ReviewPrompt.recordSound()
     }
 
+    /** A paused learning track played on: a sound, but not another play. */
+    fun learningTrackResumed() {
+        ReviewPrompt.recordSound()
+    }
+
     fun videoOpened() {
         UsageAnalytics.event("video_opened")
         ReviewPrompt.recordSound()

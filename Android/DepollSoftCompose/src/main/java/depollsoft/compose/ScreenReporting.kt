@@ -1,5 +1,7 @@
 package depollsoft.compose
 
+import android.os.Handler
+import android.os.Looper
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -16,8 +18,29 @@ fun ScreenView(
     key: Any? = null,
 ) {
     LifecycleResumeEffect(name, key) {
-        UsageAnalytics.screen(name)
+        FrontScreen.shown(name)
         onPauseOrDispose {}
+    }
+}
+
+/**
+ * Screens that come to the front together, such as a list and the tag beside it as the app comes
+ * back, count once: as the one composed last, which is the one in front. iOS's ScreenTracker
+ * settles the same way.
+ */
+private object FrontScreen {
+    private val main = Handler(Looper.getMainLooper())
+    private var pending: String? = null
+    private val report =
+        Runnable {
+            val name = pending ?: return@Runnable
+            pending = null
+            UsageAnalytics.screen(name)
+        }
+
+    fun shown(name: String) {
+        if (pending == null) main.post(report)
+        pending = name
     }
 }
 

@@ -369,8 +369,8 @@ struct TMHomeRoute: View {
     var body: some View {
         TMScreens.home(router.home)
             // Home is where a review may be asked for after a finished task,
-            // unless a tag is open beside it.
-            .reviewCalmScreen(!router.hasDetail)
+            // unless a tag is open beside it (a collapsed split shows none beside it).
+            .reviewCalmScreen(router.currentSplitTagId == nil)
             .tmRoute(in: column)
     }
 }

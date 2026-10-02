@@ -173,6 +173,23 @@ class UsageAndReviewTest : ComposeScreenTest() {
         assertEquals(emptyList<Activity>(), asked)
     }
 
+    @Test
+    @Config(qualifiers = "w1280dp-h800dp-land-xhdpi")
+    fun comingBackToATagBesideItsListReportsOnlyTheTag() {
+        ScreenTestSupport.cacheOnDisk(fixture)
+        TeachableTagsModel.addTeachableTag(fixture.id)
+        val activity = launch(TeachableTagsActivity::class.java)
+        activity.showTag(fixture.id)
+        val detail = activity.tagPane.detail!!
+        ScreenTestSupport.await("the pane's tag to load") { !detail.isLoading && detail.tag != null }
+        idle()
+        events.clear()
+        controller!!.pause().stop()
+        controller!!.restart().start().resume()
+        idle()
+        assertEquals(listOf("tag_summary"), screenViews())
+    }
+
     private companion object {
         const val DAY = 24L * 60 * 60 * 1000
     }

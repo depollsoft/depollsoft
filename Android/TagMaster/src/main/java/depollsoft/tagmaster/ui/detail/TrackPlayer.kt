@@ -41,6 +41,9 @@ class TrackPlayer(
     /** The part [location] is a track for, as analytics names it ("tenor"). */
     private var part: String? = null
 
+    /** Whether the prepared track played to its end, so playing again starts it over. */
+    private var finished = false
+
     var isPlaying by mutableStateOf(false)
         private set
 
@@ -89,6 +92,7 @@ class TrackPlayer(
             created.setOnCompletionListener { mp ->
                 if (mp !== player || !prepared) return@setOnCompletionListener
                 position = max(0, mp.duration)
+                finished = true
                 updatePlaying(false)
             }
             created.setOnErrorListener { mp, _, _ ->
@@ -117,10 +121,13 @@ class TrackPlayer(
         if (!changedSinceLastPlay && prepared) {
             current.start()
             updatePlaying(true)
+            if (finished) part?.let(TagMasterAnalytics::learningTrackPlayed) else TagMasterAnalytics.learningTrackResumed()
+            finished = false
             return
         }
         val generation = ++loadGeneration
         prepared = false
+        finished = false
         isLoading = true
         cache.loadContentPublic(selected.uri, selected.type, false).continueWith { task ->
             handler.post {
