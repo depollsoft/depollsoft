@@ -49,12 +49,13 @@ public class Note {
 
     /**
      * The voice gave up after play() returned (an instrument with no audio track to fall back on):
-     * unlight the note, unless it has been played again since, so the next press plays it.
+     * stop the note, unless it has been played again since, so the next press plays it. Stopping
+     * goes through the installed player, as a release would, so a wrapper (the widget's) sees it.
      */
     private void unlightIfSilent(Note n) {
       SoundingNote voice = voices.get(n);
       if (n.getIsPlaying() && (voice == null || !voice.isSounding()))
-        n.setIsPlaying(false);
+        n.stop();
     }
 
     @Override
