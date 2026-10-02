@@ -349,7 +349,9 @@ final class CleanupHelperTests: PitchPerfectTestCase {
         // disclosure slides in with them: on a loaded runner the first frames
         // seen can be mid-slide (CI once read the disclosure at 397.5, not 316).
         // Wait for the layout to finish; if it never lands, the checks below say where it stopped.
-        settle { controls().map(settled) ?? false }
+        // An overloaded runner once took more than the usual 10 s to show the controls at all
+        // (PR #89); 20 s still leaves the launch room inside the 30 s test budget.
+        settle(20) { controls().map(settled) ?? false }
         let (delete, reorder, info) = try XCTUnwrap(controls())
         XCTAssertEqual(delete.minX, reference.delete.minX, accuracy: 0.5, "delete control")
         XCTAssertEqual(reorder.minX, reference.reorder.minX, accuracy: 0.5, "reorder control")
