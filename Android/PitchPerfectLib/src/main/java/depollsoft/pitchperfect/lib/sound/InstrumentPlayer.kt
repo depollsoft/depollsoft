@@ -330,7 +330,17 @@ internal class InstrumentVoice(
         synchronized(lock) {
             pending = false
             if (!held) return
-            fallbackVoice = fallback().also { it.play() }
+            val voice = fallback()
+            try {
+                voice.play()
+            } catch (e: IllegalStateException) {
+                // No track for the fallback either. This runs on the loader thread, where an
+                // escaping exception would end the app: let the note go so the next press retries.
+                Log.w("InstrumentVoice", "Couldn't play the fallback voice", e)
+                held = false
+                return
+            }
+            fallbackVoice = voice
         }
     }
 }
