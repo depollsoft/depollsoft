@@ -38,10 +38,9 @@ public class Note {
       try {
         voice.play();
       } catch (IllegalStateException e) {
-        // No audio track to be had right now (see PitchAudioTrackGenerator): the note stays
-        // silent, and the next press asks for a new voice.
+        // The next press asks for a new voice rather than this one's dead track.
         voices.remove(n);
-        Log.w("Note", "Couldn't play " + n, e);
+        throw e;
       }
     }
 
@@ -252,9 +251,17 @@ public class Note {
       if (this.isAttemptingToPlay)
         return;
       this.isAttemptingToPlay = true;
-      player.play(this);
-      this.setIsPlaying(true);
-      this.isAttemptingToPlay = false;
+      try {
+        player.play(this);
+        this.setIsPlaying(true);
+      } catch (IllegalStateException e) {
+        // No audio track to be had right now (see PitchAudioTrackGenerator). The note stays
+        // silent and unlit, so the next press tries again instead of "stopping" it.
+        Log.w("Note", "Couldn't play " + this, e);
+        this.isPlaying.set(false);
+      } finally {
+        this.isAttemptingToPlay = false;
+      }
     }
   }
 
