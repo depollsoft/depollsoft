@@ -1,6 +1,6 @@
 # Repository Guidelines
 
-Guidance for coding agents (Claude Code, Codex and others) working in this repository.
+Guidance for coding agents working in this repository. This is the only agent guide: Claude Code and Codex read `AGENTS.md` directly, and `.gemini/settings.json` points Gemini CLI at it.
 
 ## Codebase Overview
 
@@ -82,7 +82,7 @@ npm run deploy  # Deploy to Firebase
 
 ### Backend
 
-- **API server**: Express on Cloud Run. Writes analytics to BigQuery and messages to Pub/Sub, and uses geoip-lite for geolocation. Multi-stage Docker build; `.github/workflows/api.yml` deploys it on pushes to `main`.
+- **API server**: Express on Cloud Run. Writes analytics to BigQuery and messages to Pub/Sub, and uses geoip-lite for geolocation. Multi-stage Docker build; `.github/workflows/api.yml` deploys it on pushes to `main`. `.github/workflows/geoip.yml` refreshes the geoip-lite data from MaxMind every Wednesday and uploads it to `gs://depollsoft-build-data`.
 - **Firebase**: Firestore for data, Auth shared across platforms, and Functions for server-side logic.
 
 ## Development Setup & Configuration
