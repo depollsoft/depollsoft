@@ -1374,8 +1374,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/FirebaseUI-iOS";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 16.1.0;
+				kind = revision;
+				revision = 4d218a698f08ab9944c3eef564667b15b2f08f99;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
