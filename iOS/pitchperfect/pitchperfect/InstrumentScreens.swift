@@ -116,11 +116,12 @@ extension View {
             .accessibilityAction { activate() }
     }
 
-    /// A row that sounds `note` while pressed (or toggles it, with Toggle Notes).
-    func notePress(_ note: DPNote, player: NotePlayer = .shared) -> some View {
-        notePress(began: { player.pressBegan(note) },
+    /// A row that sounds `note` while pressed (or toggles it, with Toggle Notes),
+    /// reporting a note it starts as played from `source`.
+    func notePress(_ note: DPNote, source: PitchSource, player: NotePlayer = .shared) -> some View {
+        notePress(began: { player.pressBegan(note, source: source) },
                   ended: { player.pressEnded(note) },
-                  activate: { player.activate(note) })
+                  activate: { player.activate(note, source: source) })
     }
 }
 
@@ -369,7 +370,7 @@ struct NotesScreen: View {
             ScrollViewReader { proxy in
                 List(notes.indices, id: \.self) { index in
                     NoteRow(note: notes[index], lit: model.isLit(notes[index]))
-                        .notePress(notes[index])
+                        .notePress(notes[index], source: .notes)
                         .plateRow()
                         .id(index)
                 }
@@ -539,7 +540,7 @@ struct KeysScreen: View {
             ScrollViewReader { proxy in
                 List(keys.indices, id: \.self) { index in
                     KeyRow(key: keys[index], lit: model.isLit(keys[index]))
-                        .notePress(keys[index].note)
+                        .notePress(keys[index].note, source: .keys)
                         .plateRow()
                         .id(index)
                 }

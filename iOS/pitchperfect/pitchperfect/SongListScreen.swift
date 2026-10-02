@@ -158,7 +158,7 @@ final class SongListModel {
     func press(_ song: DPPitchedSong) {
         guard let note = song.key?.note else { return }
         pressedSongs.insert(song.rowID)
-        player.pressBegan(note)
+        player.pressBegan(note, source: .song)
     }
 
     func release(_ song: DPPitchedSong) {
@@ -178,7 +178,7 @@ final class SongListModel {
     /// A VoiceOver double-tap on a row: its note for a moment, or toggled.
     func activate(_ song: DPPitchedSong) {
         guard let note = song.key?.note else { return }
-        player.activate(note)
+        player.activate(note, source: .song)
     }
 
     func stopSoundingRows() {
@@ -216,6 +216,7 @@ final class SongListModel {
             list.addSong(song)
             list.storeValue()
             self?.pendingScrollTarget = .row(ObjectIdentifier(song), anchor: .center)
+            PitchPerfectUsage.songAdded()
         }
     }
 
@@ -251,6 +252,7 @@ final class SongListModel {
             self.stopSoundingRows()
             self.store.currentListId = created.id
             self.doneEditing()
+            PitchPerfectUsage.setListCreated()
         }
     }
 

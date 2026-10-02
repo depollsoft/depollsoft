@@ -59,6 +59,7 @@ final class AddSongsModel {
         let selected = allSongs.filter { chosen.contains($0.rowID) }
         guard !selected.isEmpty else { return 0 }
         store.copySongs(selected, to: target)
+        PitchPerfectUsage.songsAddedToSetList()
         return selected.count
     }
 
@@ -89,6 +90,7 @@ struct AddSongsList: View {
         .plateList(fullScreen: true)
         .environment(\.defaultMinListHeaderHeight, 0)
         .instrumentChrome()
+        .analyticsScreen("add_songs")
     }
 
     private func row(_ song: DPPitchedSong) -> some View {

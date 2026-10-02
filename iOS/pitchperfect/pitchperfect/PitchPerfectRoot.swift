@@ -12,6 +12,16 @@ import UIKit
 
 enum PitchPerfectTab: Hashable {
     case pitchPipe, notes, keys, songs
+
+    /// The tab's screen in analytics (docs/analytics.md).
+    var screenName: String {
+        switch self {
+        case .pitchPipe: "pitch_pipe"
+        case .notes: "notes"
+        case .keys: "keys"
+        case .songs: "songs"
+        }
+    }
 }
 
 /// The models behind the tabs, made once for the app (or a test) and kept for
@@ -41,16 +51,21 @@ struct PitchPerfectRoot: View {
 
     var body: some View {
         TabView(selection: $models.tab) {
-            NavigationStack { PitchPipeScreen(model: models.pitchPipe) }
+            NavigationStack { PitchPipeScreen(model: models.pitchPipe).analyticsScreen(screen(.pitchPipe)) }
                 .tabItem { TabLabel(title: "Pitch Pipe", image: "pitchpipe.png") }
                 .tag(PitchPerfectTab.pitchPipe)
-            NavigationStack { NotesScreen(model: models.notes) }
+            NavigationStack { NotesScreen(model: models.notes).analyticsScreen(screen(.notes)) }
                 .tabItem { TabLabel(title: "Notes", image: "notes.png") }
                 .tag(PitchPerfectTab.notes)
-            NavigationStack { KeysScreen(model: models.keys) }
+            NavigationStack { KeysScreen(model: models.keys).analyticsScreen(screen(.keys)) }
                 .tabItem { TabLabel(title: "Keys", image: "keys.png") }
                 .tag(PitchPerfectTab.keys)
-            NavigationStack { SongListScreen(model: models.songs) }
+            NavigationStack {
+                SongListScreen(model: models.songs)
+                    .analyticsScreen(screen(.songs))
+                    // The song list is where a review may be asked for after a finished task.
+                    .reviewCalmScreen(models.tab == .songs)
+            }
                 .tabItem { TabLabel(title: "Songs", image: "songs.png") }
                 .tag(PitchPerfectTab.songs)
         }
@@ -68,7 +83,14 @@ struct PitchPerfectRoot: View {
         // appears, and the launch's own activation must offer Privacy choices.
         .onChange(of: scenePhase, initial: true) { _, phase in
             if phase == .active { DPAppDelegate.sceneDidBecomeActive() }
+            ScreenTracker.shared.scenePhaseChanged(phase)
         }
+    }
+
+    /// A tab's screen name while it is the chosen tab: every tab stays alive in
+    /// the TabView, so only the chosen one reports.
+    private func screen(_ tab: PitchPerfectTab) -> String? {
+        models.tab == tab ? tab.screenName : nil
     }
 }
 

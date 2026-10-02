@@ -18,6 +18,9 @@ struct PrivacyChoices {
 
 @objc final class TelemetryConsent: NSObject {
     private static var promptedThisSession = false
+    /// Runs when saved choices allow usage analytics, so an app can send what it
+    /// reported while collection was still off (its user properties).
+    static var analyticsAllowed: (() -> Void)?
     static var adPrivacyRequired: () -> Bool = { false }
     static var showAdPrivacy: ((UIViewController) -> Void)?
     static var onDismiss: (() -> Void)?
@@ -44,6 +47,7 @@ struct PrivacyChoices {
         if !choices.analytics { Analytics.resetAnalyticsData() }
         Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(choices.crashes)
         if !choices.crashes { Crashlytics.crashlytics().deleteUnsentReports() }
+        if choices.analytics { analyticsAllowed?() }
     }
 
     @objc static func presentIfNeeded(from presenter: UIViewController) {
@@ -138,7 +142,7 @@ struct PrivacyChoicesView: View {
                     // A cell's accessory switch sat 6 pt further in than SwiftUI's.
                     .padding(.trailing, 6)
             } footer: {
-                Text("Share screens visited, sessions, and app and device information with Google Analytics to understand app usage.")
+                Text("Share screens visited, features used, sessions, and app and device information with Google Analytics to understand app usage.")
                     .foregroundStyle(Color(uiColor: .label))
                     // UITableView's phone footers: this text ⅓ pt higher, the next card ⅔ pt lower.
                     .offset(y: FooterNudge.phone(TableNudge.at(scale, threeX: -1.0 / 3.0, twoX: -5.0 / 6.0)))

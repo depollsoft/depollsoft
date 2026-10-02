@@ -99,7 +99,20 @@ final class TagDetailModel {
             case .videos: "play.rectangle"
             }
         }
+
+        /// The page's screen in analytics (docs/analytics.md).
+        var screenName: String {
+            switch self {
+            case .summary: "tag_summary"
+            case .details: "tag_details"
+            case .tracks: "tag_tracks"
+            case .videos: "tag_videos"
+            }
+        }
     }
+
+    /// The screen analytics reports while a tag is showing: its chosen page.
+    var screenName: String? { tagId == 0 ? nil : selectedPage.screenName }
 
     // MARK: State
 
@@ -207,6 +220,7 @@ final class TagDetailModel {
                 self.tag = loaded
                 // UIKit's refreshView put Rate back on every newly loaded tag.
                 self.summary.tagDidLoad()
+                if !refresh { TagMasterUsage.tagViewed() }
             } else if self.tag != nil, self.screenVisible {
                 self.error = TMRecovery(
                     message: "The tag couldn't be refreshed. Check your connection and try again. Your saved tags are unchanged.",
@@ -277,12 +291,22 @@ final class TagDetailModel {
 
     func toggleFavorite() {
         guard tag != nil else { return }
-        if isFavorite { DPAppDelegate.removeFavorite(tagId) } else { DPAppDelegate.addFavorite(tagId) }
+        if isFavorite {
+            DPAppDelegate.removeFavorite(tagId)
+        } else {
+            DPAppDelegate.addFavorite(tagId)
+            TagMasterUsage.tagAddedToList(TMTagLists.favoriteKey)
+        }
     }
 
     func toggleTeachable() {
         guard tag != nil else { return }
-        if isTeachable { DPAppDelegate.removeTeachable(tagId) } else { DPAppDelegate.addTeachable(tagId) }
+        if isTeachable {
+            DPAppDelegate.removeTeachable(tagId)
+        } else {
+            DPAppDelegate.addTeachable(tagId)
+            TagMasterUsage.tagAddedToList(TMTagLists.teachableKey)
+        }
     }
 
     func showActions() {

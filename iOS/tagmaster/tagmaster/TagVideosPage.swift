@@ -90,7 +90,10 @@ struct TagVideosPage: View {
     }
 
     private func row(_ video: TMVideoRow) -> some View {
-        Button { watching = video.watch } label: {
+        Button {
+            watching = video.watch
+            TagMasterUsage.videoOpened()
+        } label: {
             HStack(alignment: .top, spacing: 12) {
                 TMVideoThumbnail(url: video.thumbnail)
                 VStack(alignment: .leading, spacing: 4) {

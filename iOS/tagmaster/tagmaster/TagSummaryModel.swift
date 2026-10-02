@@ -49,11 +49,12 @@ final class TagSummaryModel {
         syncKeyNote()
     }
 
-    /// A press: sounds until released.
-    func pressKey() {
+    /// A press: sounds until released. `source` is where the key is shown.
+    func pressKey(from source: TagMasterUsage.PitchSource = .tag) {
         keyActivation += 1
         guard let note = keyNote else { return }
         sound(note)
+        TagMasterUsage.pitchPlayed(source)
     }
 
     func releaseKey() {
@@ -61,11 +62,12 @@ final class TagSummaryModel {
     }
 
     /// VoiceOver or Switch Control: sounds for a moment and stops by itself.
-    func playTimedKeyNote() {
+    func playTimedKeyNote(from source: TagMasterUsage.PitchSource = .tag) {
         keyActivation += 1
         let generation = keyActivation
         guard let note = keyNote else { return }
         sound(note)
+        TagMasterUsage.pitchPlayed(source)
         DispatchQueue.main.asyncAfter(deadline: .now() + TagSummaryModel.timedKeyNoteDuration) { [weak self] in
             MainActor.assumeIsolated {
                 // A later press or activation owns this shared note's cleanup now.

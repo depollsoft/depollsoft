@@ -139,6 +139,7 @@ struct SongEditorView: View {
         }
         .onChange(of: model.titleFocusRequest) { _, _ in titleFocused = true }
         .animation(.easeOut(duration: 0.15), value: model.titleErrorVisible)
+        .analyticsScreen("song_editor")
     }
 }
 

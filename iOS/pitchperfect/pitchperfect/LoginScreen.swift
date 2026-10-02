@@ -215,6 +215,7 @@ enum SignIn {
     static func completed(isNewUser: Bool) {
         DPSettingsModel.sharedInstance.attachToFirestore()
         DPSongsModel.sharedInstance.attachToFirestore(store: isNewUser)
+        UsageAnalytics.login(Auth.auth().currentUser)
     }
 }
 

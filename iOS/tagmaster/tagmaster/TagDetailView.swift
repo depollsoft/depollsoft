@@ -35,6 +35,8 @@ struct TagDetailScreen: View {
         .tmRecoveryAlert($model.error)
         .onAppear { model.screenVisible = true }
         .onDisappear { model.screenVisible = false }
+        // The detail beside a list is reused for every tag: a new tag counts as coming to the front.
+        .analyticsScreen(model.screenName, subject: model.tagId)
     }
 
     private var pages: some View {

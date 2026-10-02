@@ -220,7 +220,14 @@ final class TMTrackPlayerModel {
 
     func requestFocus() { focusRequest += 1 }
 
+    /// Every inline player there is, so the app can tell whether any track is sounding.
+    private static let all = NSHashTable<TMTrackPlayerModel>.weakObjects()
+
+    /// Whether a learning track is playing on any tag's page.
+    static var anyPlaying: Bool { all.allObjects.contains { $0.player.isPlaying } }
+
     init() {
+        TMTrackPlayerModel.all.add(self)
         player.onProgress = { [weak self] in MainActor.assumeIsolated { self?.refresh() } }
         player.onEnded = { [weak self] in
             MainActor.assumeIsolated {
@@ -356,6 +363,7 @@ final class TagTracksModel {
             // Same track again: restart it rather than reloading.
             player.stop()
             player.play()
+            TagMasterUsage.learningTrackPlayed(title: track.title)
             return
         }
         // Android stops the old track as soon as a new one is chosen.
@@ -380,6 +388,7 @@ final class TagTracksModel {
             MainActor.assumeIsolated {
                 guard let self, let session, self.session === session, !self.hasLeft, self.tag === tag else { return }
                 self.session = nil
+                TagMasterUsage.learningTrackPlayed(title: track.title)
                 if let presentPlayer = self.presentPlayer {
                     presentPlayer(track, buffer)
                 } else {

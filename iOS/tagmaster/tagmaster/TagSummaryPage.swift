@@ -332,6 +332,8 @@ struct TMKeyNoteButton: View {
     /// Takes any taller height it is offered (Sheet Music's), outline and all, as
     /// the UIKit key did under its equal-height constraint.
     var fillsHeight = false
+    /// Where the key is shown, for analytics.
+    var source = TagMasterUsage.PitchSource.tag
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
@@ -356,12 +358,12 @@ struct TMKeyNoteButton: View {
         // page's scroll view is held back while the system decides whether a scroll
         // is starting. A scroll that starts on the key still scrolls and lets the
         // note go, as does a press the system cancels (a call, a system gesture).
-        .overlay { TMPressSurface(began: model.pressKey, ended: model.releaseKey) }
+        .overlay { TMPressSurface(began: { [source] in model.pressKey(from: source) }, ended: model.releaseKey) }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Play key note \(model.keyNote?.description ?? title)")
         .accessibilityHint("Plays for one and a half seconds")
         .accessibilityAddTraits(.isButton)
-        .accessibilityAction { model.playTimedKeyNote() }
+        .accessibilityAction { model.playTimedKeyNote(from: source) }
     }
 
     /// UIKit's high-contrast accent, for white text on the filled key in light mode.

@@ -105,6 +105,9 @@
 		A4E5ADA8D05A8CE05F741E93 /* ScrollViewFinders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AC397F0D61D3C7FD50858BC /* ScrollViewFinders.swift */; };
 		0DFBB620400C6C31E9C1BD48 /* MIDINotePlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 997C13458D94F1A81EDE2E7A /* MIDINotePlayer.swift */; };
 		6F05AC7A56B3C1CBAAE67F14 /* ClassicPitchPipe.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCC6E0EB5ADB67F6C99A9411 /* ClassicPitchPipe.swift */; };
+		C83028649A5E1418CA162F36 /* UsageAnalytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8408BCD4AA60E75772B8CFCC /* UsageAnalytics.swift */; };
+		CBD51711D0AD4D02C84125BD /* ReviewPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32B4175AE639B15F66A2D132 /* ReviewPrompt.swift */; };
+		2F22940E58D93579ED0EAAC9 /* PitchPerfectUsage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C3C049071B183208BC0D361 /* PitchPerfectUsage.swift */; };
 		ABBB000A000000000000000A /* SongEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBB00090000000000000009 /* SongEditorView.swift */; };
 		ABBB00030000000000000003 /* PitchChord.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBB00010000000000000001 /* PitchChord.swift */; };
 		C0AUTH001000000000000001 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C0AUTH001000000000000002 /* Localizable.strings */; };
@@ -146,6 +149,7 @@
 		0605DC160601C8B05FD74E55 /* PitchPerfectListScrollingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 159D628260ED694920D9740A /* PitchPerfectListScrollingTests.swift */; };
 		ADEF10F26910267DFAD30C0D /* PitchPerfectNoteSoundTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0045E70110B1D76029B45C07 /* PitchPerfectNoteSoundTests.swift */; };
 		470F95B5DBAA80E51CE1B06B /* ClassicPitchPipeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A118FAD2D7E836E64EBB82DC /* ClassicPitchPipeTests.swift */; };
+		1C1879ED0EA02A70637C0755 /* PitchPerfectAnalyticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF1DAB9D66FA11654DFD30F /* PitchPerfectAnalyticsTests.swift */; };
 		1F162A3E6D015D56AB99FD87 /* PitchPerfectSongManagementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5965ABAE6CDE569D817AF0A5 /* PitchPerfectSongManagementTests.swift */; };
 		319BAFA3CDBA97E6CCDAEBAD /* FirebaseAnalyticsCore in Frameworks */ = {isa = PBXBuildFile; productRef = 02C2927DF115B8E67AFA6F59 /* FirebaseAnalyticsCore */; };
 		3590F25955BA13F49EF7DED7 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 6D805B3F00E05D86234DC2BF /* FirebaseCrashlytics */; };
@@ -272,6 +276,7 @@
 		3AC397F0D61D3C7FD50858BC /* ScrollViewFinders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollViewFinders.swift; sourceTree = "<group>"; };
 		997C13458D94F1A81EDE2E7A /* MIDINotePlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MIDINotePlayer.swift; sourceTree = "<group>"; };
 		DCC6E0EB5ADB67F6C99A9411 /* ClassicPitchPipe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassicPitchPipe.swift; sourceTree = "<group>"; };
+		3C3C049071B183208BC0D361 /* PitchPerfectUsage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectUsage.swift; sourceTree = "<group>"; };
 		ABBB00090000000000000009 /* SongEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SongEditorView.swift; sourceTree = "<group>"; };
 		631C911515906D2B004733F1 /* notes.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = notes.png; sourceTree = "<group>"; };
 		631C911615906D2B004733F1 /* notes@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "notes@2x.png"; sourceTree = "<group>"; };
@@ -366,6 +371,7 @@
 		159D628260ED694920D9740A /* PitchPerfectListScrollingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectListScrollingTests.swift; sourceTree = "<group>"; };
 		0045E70110B1D76029B45C07 /* PitchPerfectNoteSoundTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectNoteSoundTests.swift; sourceTree = "<group>"; };
 		A118FAD2D7E836E64EBB82DC /* ClassicPitchPipeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassicPitchPipeTests.swift; sourceTree = "<group>"; };
+		BFF1DAB9D66FA11654DFD30F /* PitchPerfectAnalyticsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectAnalyticsTests.swift; sourceTree = "<group>"; };
 		5965ABAE6CDE569D817AF0A5 /* PitchPerfectSongManagementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectSongManagementTests.swift; sourceTree = "<group>"; };
 		BD8765116ED3097D4A35113F /* AdConsent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AdConsent.swift; path = pitchperfect/AdConsent.swift; sourceTree = "<group>"; };
 		FA302DC4CFB02B16EA9E5DD8 /* ConsentUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConsentUITests.swift; path = ../shared/ConsentUITests.swift; sourceTree = "<group>"; };
@@ -373,6 +379,8 @@
 		E16DD6724FC3BBA706C7C969 /* SwiftUITestDriver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SwiftUITestDriver.swift; path = ../shared/SwiftUITestDriver.swift; sourceTree = "<group>"; };
 		50DB0DAA70B62F167F2D7815 /* TestRendering.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TestRendering.swift; path = ../shared/TestRendering.swift; sourceTree = "<group>"; };
 		A1095E291DED0DAAC7410D3B /* TestKeyboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TestKeyboard.swift; path = ../shared/TestKeyboard.swift; sourceTree = "<group>"; };
+		8408BCD4AA60E75772B8CFCC /* UsageAnalytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = UsageAnalytics.swift; path = ../shared/UsageAnalytics.swift; sourceTree = "<group>"; };
+		32B4175AE639B15F66A2D132 /* ReviewPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ReviewPrompt.swift; path = ../shared/ReviewPrompt.swift; sourceTree = "<group>"; };
 		FD2D9CF23F62F9CB913287A2 /* TelemetryConsent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TelemetryConsent.swift; path = ../shared/TelemetryConsent.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -511,6 +519,8 @@
 				BD8765116ED3097D4A35113F /* AdConsent.swift */,
 				FA302DC4CFB02B16EA9E5DD8 /* ConsentUITests.swift */,
 				FD2D9CF23F62F9CB913287A2 /* TelemetryConsent.swift */,
+				32B4175AE639B15F66A2D132 /* ReviewPrompt.swift */,
+				8408BCD4AA60E75772B8CFCC /* UsageAnalytics.swift */,
 				A1095E291DED0DAAC7410D3B /* TestKeyboard.swift */,
 				50DB0DAA70B62F167F2D7815 /* TestRendering.swift */,
 				E16DD6724FC3BBA706C7C969 /* SwiftUITestDriver.swift */,
@@ -610,6 +620,7 @@
 				ABBB00010000000000000001 /* PitchChord.swift */,
 				ABBB00060000000000000006 /* PitchRadialLayout.swift */,
 				ABBB00090000000000000009 /* SongEditorView.swift */,
+				3C3C049071B183208BC0D361 /* PitchPerfectUsage.swift */,
 				DCC6E0EB5ADB67F6C99A9411 /* ClassicPitchPipe.swift */,
 				997C13458D94F1A81EDE2E7A /* MIDINotePlayer.swift */,
 				3AC397F0D61D3C7FD50858BC /* ScrollViewFinders.swift */,
@@ -656,6 +667,7 @@
 				C0NEWF0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift */,
 				C0NEWF0050000000000000F5 /* PitchChordTests.swift */,
 				5965ABAE6CDE569D817AF0A5 /* PitchPerfectSongManagementTests.swift */,
+				BFF1DAB9D66FA11654DFD30F /* PitchPerfectAnalyticsTests.swift */,
 				A118FAD2D7E836E64EBB82DC /* ClassicPitchPipeTests.swift */,
 				0045E70110B1D76029B45C07 /* PitchPerfectNoteSoundTests.swift */,
 				159D628260ED694920D9740A /* PitchPerfectListScrollingTests.swift */,
@@ -980,6 +992,9 @@
 				1E989A3122F5063000EA9F2E /* DPAppDelegate.swift in Sources */,
 				ABBB00070000000000000007 /* PitchRadialLayout.swift in Sources */,
 				ABBB000A000000000000000A /* SongEditorView.swift in Sources */,
+				2F22940E58D93579ED0EAAC9 /* PitchPerfectUsage.swift in Sources */,
+				CBD51711D0AD4D02C84125BD /* ReviewPrompt.swift in Sources */,
+				C83028649A5E1418CA162F36 /* UsageAnalytics.swift in Sources */,
 				6F05AC7A56B3C1CBAAE67F14 /* ClassicPitchPipe.swift in Sources */,
 				0DFBB620400C6C31E9C1BD48 /* MIDINotePlayer.swift in Sources */,
 				A4E5ADA8D05A8CE05F741E93 /* ScrollViewFinders.swift in Sources */,
@@ -1022,6 +1037,7 @@
 				C0NEWT0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift in Sources */,
 				C0NEWT0050000000000000F5 /* PitchChordTests.swift in Sources */,
 				1F162A3E6D015D56AB99FD87 /* PitchPerfectSongManagementTests.swift in Sources */,
+				1C1879ED0EA02A70637C0755 /* PitchPerfectAnalyticsTests.swift in Sources */,
 				470F95B5DBAA80E51CE1B06B /* ClassicPitchPipeTests.swift in Sources */,
 				ADEF10F26910267DFAD30C0D /* PitchPerfectNoteSoundTests.swift in Sources */,
 				0605DC160601C8B05FD74E55 /* PitchPerfectListScrollingTests.swift in Sources */,

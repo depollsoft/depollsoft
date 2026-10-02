@@ -141,6 +141,9 @@ enum WidgetInstrumentHook {
     /// note or its release, a pitch pipe or wave note), so the widget leaves
     /// the shared audio session active.
     static var isSounding: (() -> Bool)?
+    /// Tells the app a cell started sounding, for its analytics and review
+    /// counts; the widget target has neither.
+    static var pitchStarted: (() -> Void)?
 }
 
 /// The note a widget cell started, set once `start` returns, for its `ended`
@@ -378,7 +381,9 @@ struct PlayWidgetPitchIntent: AudioPlaybackIntent {
         try await MainActor.run {
             let player = WidgetTonePlayer.shared
             defer { WidgetPitchState.set(player.activePitches) }
+            let wasSounding = player.activePitches.contains(pitchIndex)
             try player.toggle(pitchIndex: pitchIndex, frequency: frequency)
+            if !wasSounding, player.activePitches.contains(pitchIndex) { WidgetInstrumentHook.pitchStarted?() }
         }
         return .result()
     }

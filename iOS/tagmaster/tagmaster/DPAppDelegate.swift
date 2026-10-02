@@ -46,6 +46,7 @@ final class DPAppDelegate: UIResponder, UIApplicationDelegate {
         DPAppLog.start()
         FirebaseApp.configure()
         TelemetryConsent.configure()
+        TagMasterUsage.start()
         #if canImport(FBSDKCoreKit)
         ApplicationDelegate.shared.application(application, didFinishLaunchingWithOptions: launchOptions)
         #endif
@@ -227,6 +228,7 @@ extension DPAppDelegate {
         
         var registration: ListenerRegistration? = nil
         _ = Auth.auth().addStateDidChangeListener { (_, user) in
+            MainActor.assumeIsolated { UsageAnalytics.signedIn(user != nil) }
             registration?.remove()
             registration = nil
             if let user = user {

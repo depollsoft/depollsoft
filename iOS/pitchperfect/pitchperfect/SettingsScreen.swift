@@ -351,6 +351,7 @@ struct SettingsScreen: View {
             }
         }
         .onAppear { model.reload() }
+        .analyticsScreen("settings")
         .navigationDestination(isPresented: $model.showingSoundPicker) {
             SoundPickerScreen(model: model)
         }
@@ -612,6 +613,8 @@ struct SoundPickerScreen: View {
         .navigationBarTitleDisplayMode(.inline)
         .instrumentChrome()
         .onDisappear { model.stopPreview() }
+        // Part of Settings, as Android's Sound dialog is.
+        .analyticsScreen("settings")
     }
 }
 

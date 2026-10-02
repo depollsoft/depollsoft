@@ -72,12 +72,17 @@ final class NotePlayer {
         revision += 1
     }
 
+    /// Reports a note started from `source` (docs/analytics.md); tests replace it.
+    var reportPlayed: (PitchSource) -> Void = { PitchPerfectUsage.pitchPlayed($0) }
+
     /// A finger landed on a row: momentary notes start; toggled ones flip.
-    func pressBegan(_ note: DPNote) {
+    /// A note it starts is reported as played from `source`.
+    func pressBegan(_ note: DPNote, source: PitchSource? = nil) {
         if toggleNotes(), note.isPlaying {
             stop(note)
         } else {
             play(note)
+            if let source { reportPlayed(source) }
         }
     }
 
@@ -94,12 +99,14 @@ final class NotePlayer {
     /// A VoiceOver double-tap: toggles with Toggle Notes, otherwise sounds the
     /// note for `activationDuration`. (A synthesized touch would start and stop
     /// it in the same instant.)
-    func activate(_ note: DPNote, after delay: @escaping (TimeInterval, @escaping () -> Void) -> Void = NotePlayer.later) {
+    func activate(_ note: DPNote, source: PitchSource? = nil,
+                  after delay: @escaping (TimeInterval, @escaping () -> Void) -> Void = NotePlayer.later) {
         if toggleNotes() {
-            pressBegan(note)
+            pressBegan(note, source: source)
             return
         }
         play(note)
+        if let source { reportPlayed(source) }
         delay(Self.activationDuration) { [weak self] in self?.stop(note) }
     }
 
