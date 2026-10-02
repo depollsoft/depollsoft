@@ -41,4 +41,10 @@
 /// whoever kept the audio session active for it can give it up.
 + (void)setOnLastStopped:(void (^)(void))block;
 
+/// Whether notes start the real audio output (YES unless changed). The app's
+/// hosted tests turn it off: starting the output unit on CI's audio-less
+/// simulators has deadlocked. Without it a note still starts, counts as running
+/// and stops as usual; it just isn't heard.
+@property (class) BOOL usesAudioHardware;
+
 @end

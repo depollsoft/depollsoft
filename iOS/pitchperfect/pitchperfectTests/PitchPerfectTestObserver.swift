@@ -25,6 +25,13 @@ final class PitchPerfectTestObserver: NSObject, XCTestObservation {
         // No test may start the audio hardware: wiring AVAudioEngine's output
         // has deadlocked hosted runs. Instruments get no engine here.
         MIDINotePlayer.usesAudioHardware = false
+        // Nor may a wave note. Starting DPAudioSynthesizer's output unit on CI's
+        // audio-less simulators timed out ("Start: RPC timeout. Apparently
+        // deadlocked") and froze whichever test was sounding a note past its 30 s
+        // budget (a barbershop chord, the edit-mode controls after a pitch-pipe
+        // test, the tuning menu on main). Notes still start and stop as far as
+        // the app can tell; nothing reaches the output hardware.
+        DPAudioSynthesizer.usesAudioHardware = false
         // The first Canvas and alert pay their one-off rendering cost here, not in a test; see TestRendering.
         MainActor.assumeIsolated {
             TestRendering.warmUp([AnyView(PitchInstrumentView(model: PitchPipeModel()).frame(width: 360, height: 360))])

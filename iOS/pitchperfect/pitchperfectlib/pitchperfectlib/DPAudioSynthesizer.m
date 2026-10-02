@@ -56,6 +56,7 @@ static atomic_long sRunningCount = 0;
 /// make a start fail. Nil: the real AudioOutputUnitStart/Stop.
 static OSStatus (^sTestingUnitStart)(AudioUnit) = nil;
 static OSStatus (^sTestingUnitStop)(AudioUnit) = nil;
+static BOOL sUsesAudioHardware = YES;
 /// Called on the main queue when the last running synthesizer stops.
 static void (^sOnLastStopped)(void) = nil;
 
@@ -236,12 +237,21 @@ OSStatus renderAudio (void *inRefCon,
     return atomic_load(&sRunningCount);
 }
 
++ (BOOL)usesAudioHardware {
+    return sUsesAudioHardware;
+}
+
++ (void)setUsesAudioHardware:(BOOL)uses {
+    sUsesAudioHardware = uses;
+}
+
 /// Starts the audio unit; it counts as running only if it really started.
 - (BOOL)startUnit {
     if (unitRunning) {
         return YES;
     }
-    OSStatus status = sTestingUnitStart ? sTestingUnitStart(audioUnit) : AudioOutputUnitStart(audioUnit);
+    OSStatus status = sTestingUnitStart ? sTestingUnitStart(audioUnit)
+        : sUsesAudioHardware ? AudioOutputUnitStart(audioUnit) : noErr;
     if (status != noErr) {
         NSLog(@"DPAudioSynthesizer: AudioOutputUnitStart failed: %d", (int)status);
         return NO;
@@ -255,7 +265,7 @@ OSStatus renderAudio (void *inRefCon,
     if (unitRunning) {
         if (sTestingUnitStop) {
             sTestingUnitStop(audioUnit);
-        } else {
+        } else if (sUsesAudioHardware) {
             AudioOutputUnitStop(audioUnit);
         }
         unitRunning = NO;
@@ -309,7 +319,8 @@ OSStatus renderAudio (void *inRefCon,
         if (self->generation != stopping || self->isPlaying) {
             return;
         }
-        if (atomic_load(&self->fadedOut) || polls <= 0) {
+        // Without the hardware nothing renders the fade-out; the first check stops it.
+        if (atomic_load(&self->fadedOut) || polls <= 0 || (!sUsesAudioHardware && !sTestingUnitStart)) {
             [self stopUnit];
         } else {
             [self stopUnitAfterFadeOut:stopping delay:kWaveStopPoll polls:polls - 1];
