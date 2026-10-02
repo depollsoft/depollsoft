@@ -90,7 +90,7 @@ npm run deploy  # Deploy to Firebase
 - Android minSdk is 24 for the phone apps, 26 for Wear and 23 for the libraries. On iOS the apps and depolllib target 17.0, but pitchperfectlib still targets 15.0, so code there must stay available on iOS 15.
 - Node.js 22 for Firebase Functions; the API container uses Node.js 24. Docker is needed for API development.
 - Firebase client configs (`google-services.json`, `GoogleService-Info.plist`, including the private preview variants) are tracked. Service credentials belong in environment variables or a secret manager, never in git.
-- API: provide `PORT`, `PUBSUB_VERIFICATION_TOKEN` and GCP credentials through `.env` or a secret manager. It needs the GeoIP data first: `gsutil cp gs://depollsoft-build-data/geoip-lite.tar.gz . && tar -xzf geoip-lite.tar.gz`.
+- API: `.env` (or a secret manager) supplies `PUBSUB_VERIFICATION_TOKEN` and GCP credentials. `npm start` runs the container on port 8080; to call `npm run docker-run` directly, export `PORT` in the shell first, because the script expands it for the port mapping before Docker reads `.env`. It needs the GeoIP data first: `gsutil cp gs://depollsoft-build-data/geoip-lite.tar.gz . && tar -xzf geoip-lite.tar.gz`.
 - `Android/debug.jks` (password `depollsoft`) signs debug builds. API deploys use the `GCP_PROJECT_ID` and `GCP_SA_KEY` Actions secrets.
 
 ## Coding Style & Naming Conventions
