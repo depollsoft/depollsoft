@@ -1,5 +1,7 @@
 package depollsoft.pitchperfect.lib;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import depollsoft.lib.json.NotStored;
@@ -32,7 +34,8 @@ public class Note {
     public void play(Note n) {
       SoundingNote voice = voices.get(n);
       if (voice == null) {
-        voice = NoteVoices.create(Note.getSound(), n.getFrequency(), Note.getReferencePitch());
+        voice = NoteVoices.create(Note.getSound(), n.getFrequency(), Note.getReferencePitch(),
+            () -> new Handler(Looper.getMainLooper()).post(() -> unlightIfSilent(n)));
         voices.put(n, voice);
       }
       try {
@@ -42,6 +45,16 @@ public class Note {
         voices.remove(n);
         throw e;
       }
+    }
+
+    /**
+     * The voice gave up after play() returned (an instrument with no audio track to fall back on):
+     * unlight the note, unless it has been played again since, so the next press plays it.
+     */
+    private void unlightIfSilent(Note n) {
+      SoundingNote voice = voices.get(n);
+      if (n.getIsPlaying() && (voice == null || !voice.isSounding()))
+        n.setIsPlaying(false);
     }
 
     @Override

@@ -268,12 +268,14 @@ internal interface InstrumentStarter {
  * An instrument note: sounding from [play] until [stop], which lets its release play. The note
  * starts asynchronously; a stop that arrives first releases it as soon as it has started, and the
  * engine's minimum length keeps a quick tap audible. If the instrument can't sound, the note plays
- * in [fallback] (the original voice) instead of staying lit and silent.
+ * in [fallback] (the original voice) instead of staying lit and silent; if that can't sound either,
+ * the note lets go and calls [onSilent] (on the loader thread) so its owner can unlight it.
  */
 internal class InstrumentVoice(
     internal val plan: () -> InstrumentNotePlan,
     private val fallback: () -> SoundingNote,
     private val starter: InstrumentStarter = InstrumentPlayer,
+    private val onSilent: () -> Unit = {},
 ) : SoundingNote {
     private val lock = Any()
     private var held = false
@@ -327,20 +329,24 @@ internal class InstrumentVoice(
     }
 
     private fun failed() {
-        synchronized(lock) {
-            pending = false
-            if (!held) return
-            val voice = fallback()
-            try {
-                voice.play()
-            } catch (e: IllegalStateException) {
-                // No track for the fallback either. This runs on the loader thread, where an
-                // escaping exception would end the app: let the note go so the next press retries.
-                Log.w("InstrumentVoice", "Couldn't play the fallback voice", e)
-                held = false
-                return
+        val gaveUp =
+            synchronized(lock) {
+                pending = false
+                if (!held) return
+                val voice = fallback()
+                try {
+                    voice.play()
+                    fallbackVoice = voice
+                    false
+                } catch (e: IllegalStateException) {
+                    // No track for the fallback either. This runs on the loader thread, where an
+                    // escaping exception would end the app: let the note go instead.
+                    Log.w("InstrumentVoice", "Couldn't play the fallback voice", e)
+                    held = false
+                    true
+                }
             }
-            fallbackVoice = voice
-        }
+        // The next press then tries the instrument again rather than stopping a silent note.
+        if (gaveUp) onSilent()
     }
 }

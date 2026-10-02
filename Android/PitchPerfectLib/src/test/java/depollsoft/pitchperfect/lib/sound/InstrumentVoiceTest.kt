@@ -74,7 +74,7 @@ class InstrumentVoiceTest {
     }
 
     @Test
-    fun aFallbackThatCantPlayLetsTheNoteGoInsteadOfThrowingOnTheLoader() {
+    fun aFallbackThatCantPlayLetsTheNoteGoAndSaysSoInsteadOfThrowingOnTheLoader() {
         // Neither the instrument nor the original voice could get an audio track.
         val noTrack =
             object : SoundingNote {
@@ -84,13 +84,15 @@ class InstrumentVoiceTest {
 
                 override fun stop() {}
             }
-        val stuck = InstrumentVoice({ plan }, { noTrack }, starter)
+        var silenced = 0
+        val stuck = InstrumentVoice({ plan }, { noTrack }, starter, onSilent = { silenced++ })
         starter.fails = true
         stuck.play()
 
         starter.run() // the loader thread; must not throw
 
         assertFalse("the note isn't held silent", stuck.isSounding)
+        assertEquals("the owner hears so it can unlight the note", 1, silenced)
         starter.fails = false
         stuck.play()
         starter.run()
