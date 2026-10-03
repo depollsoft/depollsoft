@@ -1,13 +1,14 @@
-## ios: c36d60085a9a02c669a5a480c9308153796114f6..HEAD
+# Pitch Perfect release evidence
 
-9168b949 release: find Compose controls in the accessibility tree
-39698a91 release: dismiss startup prompts before Android captures
-8deee7f2 release: prepare Pitch Perfect 3.2.1 and 5.2.1
-f3ab9a09 Pitch Perfect: classic pitch pipe setting (the old grid of big buttons) on Android and iOS (#87)
+- iOS: Mac sign-in picker fix and GoogleUtilities stability update since 3.2.1.
+- Android phone and Wear OS: shared audio-track failure handling, note retry/highlight fixes, and the phone frame-reporting crash fix since 5.2.1.
 
-## android: c36d60085a9a02c669a5a480c9308153796114f6..HEAD
+## ios: cbd249e71e343381854ecc74935c944e544bfab6..HEAD
 
-9168b949 release: find Compose controls in the accessibility tree
-39698a91 release: dismiss startup prompts before Android captures
-8deee7f2 release: prepare Pitch Perfect 3.2.1 and 5.2.1
-f3ab9a09 Pitch Perfect: classic pitch pipe setting (the old grid of big buttons) on Android and iOS (#87)
+f73ac5da iOS: pin FirebaseUI to the fix for the picker crashing on a Mac (#91)
+2e8e5cea Fix Tag Master's crash at login on Mac, and this month's Crashlytics crashes (#90)
+
+## android: cbd249e71e343381854ecc74935c944e544bfab6..HEAD
+
+f73ac5da iOS: pin FirebaseUI to the fix for the picker crashing on a Mac (#91)
+2e8e5cea Fix Tag Master's crash at login on Mac, and this month's Crashlytics crashes (#90)

@@ -1,17 +1,14 @@
-## ios: 528bbc5f903f58776afed571398f20d19b956f65..HEAD
+# Tag Master release evidence
 
-0bf440c7 release: wait for rendered Tag Master screenshot scenes
-f3426a3d release: prepare both apps for iOS and Android
-e06d4ad3 Pitch Perfect: choose the note sound (waves and MIDI instruments) (#85)
-32b589cf Pitch Perfect: choose the A4 reference pitch (415–446 Hz) (#84)
-0509fd8e iOS: port Pitch Perfect and Tag Master to SwiftUI (#82)
-b3e109b6 Android: port Pitch Perfect, Wear and Tag Master to Compose; remove Bindroid (#81)
+- iOS: Mac sign-in picker fix, synchronized saved-tag cache, and GoogleUtilities stability update since 3.1.1.
+- Android: shared PitchPerfectLib and DepollSoftCommon audio fixes used by the tag starting-pitch button since 6.1.1. Pitch Perfect sound, tuning, and Classic Pitch Pipe UI changes do not add Tag Master features.
 
-## android: 528bbc5f903f58776afed571398f20d19b956f65..HEAD
+## ios: c36d60085a9a02c669a5a480c9308153796114f6..HEAD
 
-0bf440c7 release: wait for rendered Tag Master screenshot scenes
-f3426a3d release: prepare both apps for iOS and Android
-e06d4ad3 Pitch Perfect: choose the note sound (waves and MIDI instruments) (#85)
-32b589cf Pitch Perfect: choose the A4 reference pitch (415–446 Hz) (#84)
-0509fd8e iOS: port Pitch Perfect and Tag Master to SwiftUI (#82)
-b3e109b6 Android: port Pitch Perfect, Wear and Tag Master to Compose; remove Bindroid (#81)
+f73ac5da iOS: pin FirebaseUI to the fix for the picker crashing on a Mac (#91)
+2e8e5cea Fix Tag Master's crash at login on Mac, and this month's Crashlytics crashes (#90)
+
+## android: c36d60085a9a02c669a5a480c9308153796114f6..HEAD
+
+f73ac5da iOS: pin FirebaseUI to the fix for the picker crashing on a Mac (#91)
+2e8e5cea Fix Tag Master's crash at login on Mac, and this month's Crashlytics crashes (#90)

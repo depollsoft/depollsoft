@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="VersionNumber">6.1.1</string>
+    <string name="VersionNumber">6.1.2</string>
     <string name="Changelog">        <![CDATA[Thank you for using Tag Master!  Here\'s what has changed since you last used the app:
+            <p>
+                    <h5>Version 6.1.2</h5>
+                    - Fixes crashes when a starting pitch cannot play, so you can press the pitch button to try again.<br />
+            </p>
             <p>
                     <h5>Version 6.1.1</h5>
                     - Fixes problems with scrolling and reordering saved tag lists, learning-track playback, and layouts with large text.<br />
