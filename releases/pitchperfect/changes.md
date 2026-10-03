@@ -5,10 +5,16 @@
 
 ## ios: cbd249e71e343381854ecc74935c944e544bfab6..HEAD
 
+a21693df Android: prefetch the runtime used by shared Java tests
+8e9d6a7b Android: fetch Robolectric runtimes before starting tests
+de444493 release: prepare both apps for crash-fix updates
 f73ac5da iOS: pin FirebaseUI to the fix for the picker crashing on a Mac (#91)
 2e8e5cea Fix Tag Master's crash at login on Mac, and this month's Crashlytics crashes (#90)
 
 ## android: cbd249e71e343381854ecc74935c944e544bfab6..HEAD
 
+a21693df Android: prefetch the runtime used by shared Java tests
+8e9d6a7b Android: fetch Robolectric runtimes before starting tests
+de444493 release: prepare both apps for crash-fix updates
 f73ac5da iOS: pin FirebaseUI to the fix for the picker crashing on a Mac (#91)
 2e8e5cea Fix Tag Master's crash at login on Mac, and this month's Crashlytics crashes (#90)
