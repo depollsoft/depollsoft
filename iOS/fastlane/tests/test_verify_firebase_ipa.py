@@ -66,5 +66,24 @@ class SigningTests(unittest.TestCase):
                 verifier.inspect_bundles(Path(directory), "PitchPerfect")
 
 
+class DeviceListTests(unittest.TestCase):
+    def test_matching_device_lists_pass(self):
+        verifier.check_same_devices({
+            "app": {"ProvisionedDevices": ["iphone", "ipad"]},
+            "app.widget": {"ProvisionedDevices": ["ipad", "iphone"]},
+        })
+
+    def test_widget_missing_a_newly_registered_device_is_rejected(self):
+        # The app's profile was regenerated after an iPad was registered; the widget's was not.
+        with self.assertRaisesRegex(ValueError, "app.widget: provisioning profile lacks 1 device"):
+            verifier.check_same_devices({
+                "app": {"ProvisionedDevices": ["iphone", "ipad"]},
+                "app.widget": {"ProvisionedDevices": ["iphone"]},
+            })
+
+    def test_a_single_profile_always_passes(self):
+        verifier.check_same_devices({"app": {"ProvisionedDevices": ["iphone"]}})
+
+
 if __name__ == "__main__":
     unittest.main()
