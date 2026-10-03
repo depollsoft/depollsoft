@@ -207,84 +207,92 @@ final class RealAppAppearanceUITests: TagMasterUITestCase {
         pad ? CGRect(x: 0.45, y: 0.45, width: 0.5, height: 0.45) : CGRect(x: 0.22, y: 0.36, width: 0.55, height: 0.3)
     }
 
-    func testTheDetailShowsThePoleOnEveryPageInBothAppearances() throws {
-        // Both appearances, each with live catalog loads: well over a minute.
-        executionTimeAllowance = 240
-        for appearance in [XCUIDevice.Appearance.light, .dark] {
-            let style = appearance == .dark ? "dark" : "light"
-            launch(appearance)
-            // On iPad the placeholder's slice is the window's pole where the detail
-            // column lies; every page opened there must show that same pole.
-            let baseline: PoleReading? = pad ? assertPole("placeholder-\(style)", region: detailRegion, appearance: appearance) : nil
-            openTag("1809")
-            for title in ["Summary", "Details", "Tracks", "Videos"] {
-                let item = app.buttons["page-\(title)"]
-                XCTAssertTrue(item.existsOrWait(timeout: 10))
-                item.tap()
-                assertPole("detail-\(style)-\(title)", region: detailRegion, appearance: appearance)
-                if let baseline {
-                    assertSamePole("detail-\(style)-\(title)", as: baseline, region: detailRegion, appearance: appearance)
-                }
-            }
-            XCUIDevice.shared.orientation = .landscapeLeft
-            app.buttons["page-Details"].tap()
-            assertPole("detail-\(style)-landscape", region: landscapeRegion, appearance: appearance)
-            XCUIDevice.shared.orientation = .portrait
-            if let baseline {
-                // Back from landscape with no further interaction: the slice follows the column.
-                assertSamePole("detail-\(style)-after-rotation", as: baseline, region: detailRegion, appearance: appearance)
-                // A keyboard in the list column leaves the detail's pole where it was.
-                app.navigationBars.buttons["Search"].tap()
-                let field = app.searchFields.firstMatch
-                XCTAssertTrue(field.existsOrWait(timeout: 5))
-                field.focusForTyping()
-                field.typeText("Lo")
-                assertSamePole("detail-\(style)-keyboard", as: baseline, region: detailRegion, appearance: appearance)
-            }
-            app.terminate()
-        }
+    func testTheDetailShowsThePoleOnEveryPageInLightAppearance() {
+        assertDetailPole(.light)
     }
 
-    func testListScreensShowThePoleInBothAppearances() throws {
-        // Both appearances, each with live catalog loads: well over a minute.
-        executionTimeAllowance = 240
-        for appearance in [XCUIDevice.Appearance.light, .dark] {
-            let style = appearance == .dark ? "dark" : "light"
-            launch(appearance)
-            // A phone's screen is its own column; on iPad the list column's own region.
-            let region = pad ? listRegion : detailRegion
-            let checksList = !pad || listShowsPole
-            func check(_ name: String) {
-                if checksList { assertPole(name, region: region, appearance: appearance) }
-                if pad {
-                    // Whatever the list column shows, the detail column keeps its pole.
-                    assertPole("\(name)-detail", region: detailRegion, appearance: appearance)
-                }
+    func testTheDetailShowsThePoleOnEveryPageInDarkAppearance() {
+        assertDetailPole(.dark)
+    }
+
+    private func assertDetailPole(_ appearance: XCUIDevice.Appearance) {
+        let style = appearance == .dark ? "dark" : "light"
+        launch(appearance)
+        // On iPad the placeholder's slice is the window's pole where the detail
+        // column lies; every page opened there must show that same pole.
+        let baseline: PoleReading? = pad ? assertPole("placeholder-\(style)", region: detailRegion, appearance: appearance) : nil
+        openTag("1809")
+        for title in ["Summary", "Details", "Tracks", "Videos"] {
+            let item = app.buttons["page-\(title)"]
+            XCTAssertTrue(item.existsOrWait(timeout: 10))
+            item.tap()
+            assertPole("detail-\(style)-\(title)", region: detailRegion, appearance: appearance)
+            if let baseline {
+                assertSamePole("detail-\(style)-\(title)", as: baseline, region: detailRegion, appearance: appearance)
             }
-            check("home-\(style)")
-            app.buttons["Browse"].firstMatch.tap()
-            for title in ["Latest", "Rating", "Downloads", "Classic"] {
-                let item = app.buttons["page-\(title)"]
-                XCTAssertTrue(item.existsOrWait(timeout: 10))
-                item.tap()
-                check("browse-\(style)-\(title)")
-            }
-            app.navigationBars.buttons["Home"].tap()
-            let teachable = app.buttons["home.lists.teachable"]
-            XCTAssertTrue(teachable.existsOrWait(timeout: 5))
-            teachable.tap()
-            check("teachable-\(style)")
-            app.navigationBars.buttons["Home"].tap()
-            // Results pushed from Search.
+        }
+        XCUIDevice.shared.orientation = .landscapeLeft
+        app.buttons["page-Details"].tap()
+        assertPole("detail-\(style)-landscape", region: landscapeRegion, appearance: appearance)
+        XCUIDevice.shared.orientation = .portrait
+        if let baseline {
+            // Back from landscape with no further interaction: the slice follows the column.
+            assertSamePole("detail-\(style)-after-rotation", as: baseline, region: detailRegion, appearance: appearance)
+            // A keyboard in the list column leaves the detail's pole where it was.
             app.navigationBars.buttons["Search"].tap()
             let field = app.searchFields.firstMatch
             XCTAssertTrue(field.existsOrWait(timeout: 5))
             field.focusForTyping()
-            field.typeText("Lost\n")
-            XCTAssertTrue(app.collectionViews.firstMatch.tagRows.firstMatch.existsOrWait(timeout: 60))
-            check("results-\(style)")
-            app.terminate()
+            field.typeText("Lo")
+            assertSamePole("detail-\(style)-keyboard", as: baseline, region: detailRegion, appearance: appearance)
         }
+        app.terminate()
+    }
+
+    func testListScreensShowThePoleInLightAppearance() {
+        assertListPole(.light)
+    }
+
+    func testListScreensShowThePoleInDarkAppearance() {
+        assertListPole(.dark)
+    }
+
+    private func assertListPole(_ appearance: XCUIDevice.Appearance) {
+        let style = appearance == .dark ? "dark" : "light"
+        launch(appearance)
+        // A phone's screen is its own column; on iPad the list column's own region.
+        let region = pad ? listRegion : detailRegion
+        let checksList = !pad || listShowsPole
+        func check(_ name: String) {
+            if checksList { assertPole(name, region: region, appearance: appearance) }
+            if pad {
+                // Whatever the list column shows, the detail column keeps its pole.
+                assertPole("\(name)-detail", region: detailRegion, appearance: appearance)
+            }
+        }
+        check("home-\(style)")
+        app.buttons["Browse"].firstMatch.tap()
+        for title in ["Latest", "Rating", "Downloads", "Classic"] {
+            let item = app.buttons["page-\(title)"]
+            XCTAssertTrue(item.existsOrWait(timeout: 10))
+            item.tap()
+            check("browse-\(style)-\(title)")
+        }
+        app.navigationBars.buttons["Home"].tap()
+        let teachable = app.buttons["home.lists.teachable"]
+        XCTAssertTrue(teachable.existsOrWait(timeout: 5))
+        teachable.tap()
+        check("teachable-\(style)")
+        app.navigationBars.buttons["Home"].tap()
+        // Results pushed from Search.
+        app.navigationBars.buttons["Search"].tap()
+        let field = app.searchFields.firstMatch
+        XCTAssertTrue(field.existsOrWait(timeout: 5))
+        field.focusForTyping()
+        field.typeText("Lost\n")
+        XCTAssertTrue(app.collectionViews.firstMatch.tagRows.firstMatch.existsOrWait(timeout: 60))
+        check("results-\(style)")
+        app.terminate()
     }
 }
 
