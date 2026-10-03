@@ -124,7 +124,8 @@ All of these, in order:
    - Tag Master: Home, with no tag beside it on a tablet.
 
    A pitch pipe, a tag's pages and sheet music are never calm.
-3. The screen then stays **untouched for 3 seconds**: no touch, key press or pointer movement.
+3. Once nothing covers it (the task's dialog or sheet has gone, no keyboard, nothing sounding), the
+   screen stays **untouched for 3 seconds**: no touch, key press or pointer movement.
 4. It is still in front with nothing over it (no dialog, sheet, menu, keyboard or text field in use).
    The app is foreground and active, and nothing is sounding.
 

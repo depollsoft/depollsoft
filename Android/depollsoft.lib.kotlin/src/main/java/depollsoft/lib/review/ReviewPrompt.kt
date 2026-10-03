@@ -29,8 +29,9 @@ import depollsoft.lib.analytics.UsageAnalytics
  *   a tag on a list), within [TASK_WINDOW_MILLIS];
  * - a calm screen in front ([calmScreenShown]): one that nobody reads or plays from while singing, such
  *   as Pitch Perfect's song list or Tag Master's Home, never a pitch pipe, a tag or sheet music;
- * - [CALM_MILLIS] with no touch or key, after which the screen still has the focus (no dialog, menu or
- *   other app in front), no keyboard is up and nothing is sounding ([isBusy]).
+ * - [CALM_MILLIS] with no touch or key, counted from when the screen has the focus (no dialog, menu
+ *   or other app in front), no keyboard is up and nothing is sounding ([isBusy]), and all still true
+ *   at the end.
  *
  * Each finished task gives one chance: a touch during the wait, or leaving the app, spends it, so
  * nothing is asked on coming back. iOS behaves the same way (iOS/shared/ReviewPrompt.swift);
@@ -39,6 +40,9 @@ import depollsoft.lib.analytics.UsageAnalytics
 object ReviewPrompt {
     /** How long the screen has to stay untouched before asking. */
     const val CALM_MILLIS = 3_000L
+
+    /** How often a covered calm screen is looked at again, to start the wait once it's clear. */
+    private const val CALM_CHECK_MILLIS = 250L
 
     /** How long a finished task waits for a calm screen. */
     const val TASK_WINDOW_MILLIS = 2L * 60 * 1000
@@ -64,6 +68,7 @@ object ReviewPrompt {
     private var calmActivity: Activity? = null
     private var taskFinishedAt: Long? = null
     private var waiting: Waiting? = null
+    private var calmCheck: Runnable? = null
 
     /** The policy, once the app has called [install]; tests and previews have none and never ask. */
     private val policy: ReviewPolicy? get() = policyForTesting ?: installed
@@ -156,12 +161,25 @@ object ReviewPrompt {
         val policy = policy ?: return
         val version = versionName(activity) ?: return
         if (!policy.shouldAsk(version)) return
+        if (!isCalm(activity)) {
+            // The three untouched seconds start once nothing covers the screen: the task's
+            // dialog still closing, the keyboard, a sound.
+            val check = Runnable {
+                calmCheck = null
+                if (calmActivity === activity) startWaiting(activity)
+            }
+            calmCheck = check
+            handler.postDelayed(check, CALM_CHECK_MILLIS)
+            return
+        }
         val next = Waiting(activity, version, InteractionWatcher(activity.window))
         waiting = next
         handler.postDelayed(next.finish, CALM_MILLIS)
     }
 
     private fun cancelWaiting() {
+        calmCheck?.let(handler::removeCallbacks)
+        calmCheck = null
         val current = waiting ?: return
         waiting = null
         handler.removeCallbacks(current.finish)

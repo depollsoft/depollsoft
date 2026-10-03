@@ -29,7 +29,8 @@ internal class WidgetAwareNotePlayer(
 
     override fun stop(n: Note) {
         val wasSounding = n.isPlaying
-        if (wasSounding) PitchPerfectAnalytics.soundStopped()
+        // A toggle turning a note off clears its flag before stopping it; the set still knows.
+        if (started.remove(n) || wasSounding) PitchPerfectAnalytics.soundStopped()
         delegate.stop(n)
         if (wasSounding) onSoundingChanged()
     }

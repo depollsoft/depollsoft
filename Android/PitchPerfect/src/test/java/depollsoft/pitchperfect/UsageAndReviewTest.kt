@@ -239,6 +239,29 @@ class UsageAndReviewTest {
         Note.setPlayer(ScreenTestSupport.silentPlayer)
     }
 
+    @Test
+    fun aToggledNoteTurnedOffKeepsTheQuietFromWhenItStops() {
+        becomeEligible()
+        Note.setPlayer(WidgetAwareNotePlayer(ScreenTestSupport.silentPlayer) {})
+        val note = Note.getCommonNotes()[1]
+        note.isPlaying = true
+        now += 10 * 60 * 1000L
+        // As the pitch pipe's toggle and its stopAll do: the flag first, then the stop.
+        note.isPlaying = false
+        assertFalse("the quiet starts when the note stops", policy.shouldAsk("1.0"))
+        Note.setPlayer(ScreenTestSupport.silentPlayer)
+    }
+
+    @Test
+    fun settingsSoundPreviewIsASound() {
+        becomeEligible()
+        val preview = SoundPreview()
+        preview.play()
+        preview.stop()
+        assertFalse(policy.shouldAsk("1.0"))
+        assertEquals("a preview is not a pitch played", emptyList<Pair<String, Map<String, String>>>(), named(UsageAnalytics.PITCH_PLAYED))
+    }
+
     private fun List<String>.distinctConsecutive(): List<String> = filterIndexed { index, name -> index == 0 || this[index - 1] != name }
 
     private companion object {

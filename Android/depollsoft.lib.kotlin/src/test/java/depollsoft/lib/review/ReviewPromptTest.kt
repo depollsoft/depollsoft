@@ -178,6 +178,20 @@ class ReviewPromptTest {
         assertEquals(1, asked.size)
     }
 
+    @Test fun theThreeSecondsStartOnceNothingCoversTheScreen() {
+        becomeEligible()
+        // The task's dialog is still up when the task finishes.
+        controller.windowFocusChanged(false)
+        ReviewPrompt.calmScreenShown(activity)
+        ReviewPrompt.taskFinished()
+        idle(2_000)
+        controller.windowFocusChanged(true)
+        idle(ReviewPrompt.CALM_MILLIS - 500)
+        assertEquals("the dialog's time doesn't count", emptyList<Activity>(), asked)
+        idle(1_000)
+        assertEquals(1, asked.size)
+    }
+
     @Test fun aDialogOrMenuInFrontBlocksTheAsk() {
         becomeEligible()
         ReviewPrompt.calmScreenShown(activity)

@@ -242,6 +242,15 @@ final class ReviewPromptTests: XCTestCase {
         work.forEach { $0() }
     }
 
+    /// Runs the run loop until `condition` holds (UIKit finishing a presentation).
+    private func spin(file: StaticString = #filePath, line: UInt = #line, until condition: () -> Bool) {
+        let deadline = Date(timeIntervalSinceNow: 10)
+        while !condition(), Date() < deadline {
+            RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.01))
+        }
+        XCTAssertTrue(condition(), "Timed out waiting", file: file, line: line)
+    }
+
     private let screen = UUID()
 
     func testAsksAfterAFinishedTaskOnACalmScreen() {
@@ -295,6 +304,22 @@ final class ReviewPromptTests: XCTestCase {
         XCTAssertTrue(asked.isEmpty)
         prompt.calmScreenShown(screen)
         XCTAssertTrue(prompt.isWaiting, "an untouched task survives a screen going by")
+    }
+
+    func testTheThreeSecondsStartOnceNothingCoversTheScreen() {
+        // The task's sheet is still up when the task finishes.
+        let root = window.rootViewController
+        root?.present(UIViewController(), animated: false)
+        spin { root?.presentedViewController != nil && root?.transitionCoordinator == nil }
+        prompt.calmScreenShown(screen)
+        prompt.taskFinished()
+        XCTAssertFalse(prompt.isWaiting, "nothing counts while the sheet covers the screen")
+        root?.dismiss(animated: false)
+        spin { root?.presentedViewController == nil && root?.transitionCoordinator == nil }
+        finishWait()
+        XCTAssertTrue(prompt.isWaiting, "the next look finds the screen clear and starts the wait")
+        finishWait()
+        XCTAssertEqual(asked, [window])
     }
 
     func testNothingAskedOverASheet() {

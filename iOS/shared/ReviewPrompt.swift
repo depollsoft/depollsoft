@@ -107,6 +107,8 @@ final class ReviewPrompt {
 
     /// How long the screen has to stay untouched before asking.
     static let calmSeconds: TimeInterval = 3
+    /// How often a covered calm screen is looked at again, to start the wait once it's clear.
+    static let calmCheckInterval: TimeInterval = 0.25
     /// How long a finished task waits for a calm screen.
     static let taskWindow: TimeInterval = 2 * 60
     /// Reported to analytics each time the app asks the store (which may still show nothing).
@@ -204,15 +206,25 @@ final class ReviewPrompt {
               let window = activeWindow() else { return }
         generation += 1
         let token = generation
+        guard isCalm(window) else {
+            // The three untouched seconds start once nothing covers the screen: the task's
+            // sheet still closing, the keyboard, a sound.
+            after(Self.calmCheckInterval) { [weak self] in
+                guard let self, token == self.generation, self.calmScreen != nil else { return }
+                self.startWaiting()
+            }
+            return
+        }
         let next = Waiting(window: window, version: version, screen: calmScreen, watcher: InteractionWatcher(window))
         waiting = next
         after(Self.calmSeconds) { [weak self] in self?.finishWaiting(token) }
     }
 
     private func cancelWaiting() {
+        // Also voids a pending look at a covered calm screen.
+        generation += 1
         guard let current = waiting else { return }
         waiting = nil
-        generation += 1
         // A touch while the screen was going away still spends the chance.
         if current.watcher.stop() { taskFinishedAt = nil }
     }

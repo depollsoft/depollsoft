@@ -37,6 +37,9 @@ object PitchPerfectAnalytics {
         ReviewPrompt.recordSound()
     }
 
+    /** The app made a sound that isn't a pitch played (Settings' sound preview). */
+    fun soundPlayed() = ReviewPrompt.recordSound()
+
     /**
      * A note stopped sounding. The quiet a review waits for runs from the end of a sound, so a note
      * held (or toggled on) for minutes still counts as recent.

@@ -227,9 +227,10 @@ final class PitchPerfectAnalyticsTests: PitchPerfectTestCase {
         app.show(tab: 1)
         app.show(tab: 3)
         app.songs.addSong()
-        ScreenCatalog.settle(0.6)
+        // A sheet takes its time on a loaded runner; wait for each screen to report.
+        settle { self.analytics.screens.last == "song_editor" }
         app.songs.editor?.completion(false)
-        ScreenCatalog.settle(0.8)
+        settle { self.analytics.screens.count == 6 }
         XCTAssertEqual(analytics.screens, ["pitch_pipe", "songs", "notes", "songs", "song_editor", "songs"])
     }
 
