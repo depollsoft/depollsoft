@@ -126,6 +126,20 @@ final class ScreenTracker {
         scheduleReport()
     }
 
+    /// A tab bar's chosen tab is `name`. The tab sits under every screen shown
+    /// from it (a pushed screen, a sheet), so it is renamed in place: a screen
+    /// over it stays in front.
+    func tabChosen(_ name: String) {
+        if let index = shown.firstIndex(where: { $0.id == Self.tabSlot }) {
+            shown[index].name = name
+        } else {
+            shown.insert((Self.tabSlot, name), at: 0)
+        }
+        scheduleReport()
+    }
+
+    private static let tabSlot = UUID()
+
     func disappeared(_ id: UUID) {
         shown.removeAll { $0.id == id }
         scheduleReport()
