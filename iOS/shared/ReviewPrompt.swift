@@ -72,8 +72,9 @@ struct ReviewPolicy {
         guard defaults.string(forKey: Self.lastAskVersionKey) != version else { return false }
         if let lastAsk = integer(Self.lastAskDayKey), today - lastAsk < Self.minDaysBetweenAsks { return false }
         guard let lastSound = (defaults.object(forKey: Self.lastSoundAtKey) as? NSNumber)?.doubleValue else { return true }
-        // A clock set back a little leaves the sound just ahead of now; that is recent too.
-        return abs(now().timeIntervalSince1970 - lastSound) >= Self.quietSecondsAfterSound
+        // A clock set back leaves the sound ahead of now: recent until the clock catches up, or the
+        // next sound records the time afresh.
+        return now().timeIntervalSince1970 - lastSound >= Self.quietSecondsAfterSound
     }
 
     /// Records an ask; the next one needs a new version, the wait, and fresh active days.

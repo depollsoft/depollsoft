@@ -123,11 +123,14 @@ class ReviewPolicyTest {
         assertTrue(policy.shouldAsk("1.0"))
     }
 
-    @Test fun aClockSetBackALittleAfterASoundCountsAsRecent() {
+    @Test fun aClockSetBackAfterASoundKeepsItRecentUntilTheNextSound() {
         assertTrue(eligible())
         policy.recordSound()
-        now -= 60 * 1000L
-        assertFalse(policy.shouldAsk("1.0"))
+        now -= 60 * 60 * 1000L
+        assertFalse("a sound ahead of the clock is recent", policy.shouldAsk("1.0"))
+        policy.recordSound()
+        now += ReviewPolicy.QUIET_MILLIS_AFTER_SOUND
+        assertTrue("the next sound records the time afresh", policy.shouldAsk("1.0"))
     }
 
     @Test fun theCountsSurviveANewPolicyInstance() {

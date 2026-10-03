@@ -2,7 +2,6 @@ package depollsoft.lib.review
 
 import android.content.SharedPreferences
 import java.util.TimeZone
-import kotlin.math.abs
 
 /**
  * When an app may ask the store for a review. iOS applies the same rules (iOS/shared/ReviewPrompt.swift);
@@ -55,8 +54,9 @@ class ReviewPolicy(
         val lastAsk = long(LAST_ASK_DAY)
         if (lastAsk != null && today - lastAsk < MIN_DAYS_BETWEEN_ASKS) return false
         val lastSound = long(LAST_SOUND_AT) ?: return true
-        // A clock set back a little leaves the sound just ahead of now; that is recent too.
-        return abs(now() - lastSound) >= QUIET_MILLIS_AFTER_SOUND
+        // A clock set back leaves the sound ahead of now: recent until the clock catches up, or the
+        // next sound records the time afresh.
+        return now() - lastSound >= QUIET_MILLIS_AFTER_SOUND
     }
 
     /** Records an ask; the next one needs a new version, the wait, and fresh active days. */

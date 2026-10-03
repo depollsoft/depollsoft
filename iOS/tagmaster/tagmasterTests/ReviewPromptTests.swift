@@ -184,14 +184,14 @@ final class ReviewPolicyTests: XCTestCase {
         XCTAssertTrue(clock.policy.shouldAsk(version: "1.0"))
     }
 
-    func testASoundJustAheadOfAClockSetBackIsRecent() {
+    func testASoundAheadOfAClockSetBackStaysRecentUntilTheNextSound() {
         clock.makeEligible()
         clock.policy.recordSound()
-        clock.advance(seconds: -60)
-        XCTAssertFalse(clock.policy.shouldAsk(version: "1.0"))
-        // A sound recorded far ahead by a misset clock does not block asking for ever.
         clock.advance(seconds: -3600)
-        XCTAssertTrue(clock.policy.shouldAsk(version: "1.0"))
+        XCTAssertFalse(clock.policy.shouldAsk(version: "1.0"), "a sound ahead of the clock is recent")
+        clock.policy.recordSound()
+        clock.advance(seconds: ReviewPolicy.quietSecondsAfterSound)
+        XCTAssertTrue(clock.policy.shouldAsk(version: "1.0"), "the next sound records the time afresh")
     }
 }
 
