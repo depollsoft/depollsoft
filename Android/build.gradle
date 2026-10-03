@@ -45,7 +45,33 @@ allprojects {
     }
 }
 
+// Resolve runtimes before the test JVM starts. Robolectric's Android security providers can
+// break HTTPS downloads when a later test first requests another SDK in the same process.
+// Keep these aligned with Robolectric 4.16.1 and the SDKs used by our @Config annotations.
+def robolectricSdks = ['7.0.0_r1-robolectric-r1-i7', '8.0.0_r4-robolectric-r1-i7',
+ '9-robolectric-4913185-2-i7', '13-robolectric-9030017-i7',
+ '15-robolectric-13954326-i7'].collect { version ->
+    // Separate configurations prevent Gradle from selecting only the newest runtime version.
+    def sdk = configurations.create("robolectricSdk${version.replaceAll('[^a-zA-Z0-9]', '_')}") {
+        canBeConsumed = false
+        transitive = false
+    }
+    dependencies.add(sdk.name, "org.robolectric:android-all-instrumented:$version")
+    sdk
+}
+def robolectricSdkDirectory = layout.buildDirectory.dir('robolectric-sdks')
+def downloadRobolectricSdks = tasks.register('downloadRobolectricSdks', Sync) {
+    from robolectricSdks
+    into robolectricSdkDirectory
+}
+
 subprojects {
+    tasks.withType(Test).configureEach {
+        dependsOn downloadRobolectricSdks
+        systemProperty 'robolectric.offline', 'true'
+        systemProperty 'robolectric.dependency.dir', robolectricSdkDirectory.get().asFile.absolutePath
+    }
+
     pluginManager.withPlugin("com.android.application") {
         android {
             compileOptions {
