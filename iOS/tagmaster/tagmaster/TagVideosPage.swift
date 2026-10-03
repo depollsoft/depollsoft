@@ -81,8 +81,10 @@ struct TagVideosPage: View {
                 }
             }
             .tmGroupedTableMetrics()
+            // A video can play for longer than the quiet a review waits for; its end is a sound too.
             .fullScreenCover(item: Binding(get: { watching.map(TMWatchedURL.init) },
-                                           set: { watching = $0?.url })) { watched in
+                                           set: { watching = $0?.url }),
+                             onDismiss: { TagMasterUsage.soundStopped() }) { watched in
                 TMSafariView(url: watched.url) { watching = nil }
                     .ignoresSafeArea()
             }

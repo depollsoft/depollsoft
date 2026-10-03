@@ -56,9 +56,10 @@ object TagMasterAnalytics {
         ReviewPrompt.recordSound()
     }
 
+    /** A video opened, in YouTube: coming back from it counts as a sound as well. */
     fun videoOpened() {
         UsageAnalytics.event("video_opened")
-        ReviewPrompt.recordSound()
+        ReviewPrompt.soundGoingOutside()
     }
 
     /** Someone put a tag on the list [key]; undo, sync and migration don't count. */

@@ -95,11 +95,15 @@ object ReviewPrompt {
     }
 
     /** Which activities are started, so the last one stopping means the app has gone. */
+    private val started = mutableSetOf<Activity>()
+
     private val appVisibility =
         object : Application.ActivityLifecycleCallbacks {
-            private val started = mutableSetOf<Activity>()
-
             override fun onActivityStarted(activity: Activity) {
+                if (started.isEmpty() && soundOutside) {
+                    soundOutside = false
+                    recordSound()
+                }
                 started += activity
             }
 
@@ -130,6 +134,17 @@ object ReviewPrompt {
     fun recordSound() {
         policy?.recordSound()
     }
+
+    /**
+     * Someone left to play something outside the app (a video in YouTube). It may play for longer than
+     * the quiet a review waits for, so coming back counts as the end of a sound too.
+     */
+    fun soundGoingOutside() {
+        recordSound()
+        soundOutside = true
+    }
+
+    private var soundOutside = false
 
     /** Someone just finished a task away from the music. */
     fun taskFinished() {
@@ -248,6 +263,8 @@ object ReviewPrompt {
         showStoreReview = ::showPlayReview
         policyForTesting = null
         installed = null
+        soundOutside = false
+        started.clear()
         watchedApp?.unregisterActivityLifecycleCallbacks(appVisibility)
         watchedApp = null
         uptimeMillis = SystemClock::uptimeMillis

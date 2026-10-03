@@ -9,6 +9,7 @@ import androidx.activity.ComponentActivity
 import depollsoft.lib.analytics.UsageAnalytics
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -164,6 +165,19 @@ class ReviewPromptTest {
         ReviewPrompt.calmScreenShown(activity)
         idle(ReviewPrompt.CALM_MILLIS)
         assertEquals(emptyList<Activity>(), asked)
+    }
+
+    @Test fun comingBackFromASoundOutsideTheAppIsASound() {
+        becomeEligible()
+        ReviewPrompt.install(RuntimeEnvironment.getApplication())
+        ReviewPrompt.policyForTesting = policy
+        ReviewPrompt.soundGoingOutside()
+        controller.pause().stop()
+        // Ten minutes of video in another app.
+        now += 10 * 60 * 1000L
+        assertTrue(policy.shouldAsk("1.0"))
+        controller.restart().start()
+        assertFalse("its end is recent when the app comes back", policy.shouldAsk("1.0"))
     }
 
     @Test fun turningTheScreenKeepsTheTask() {
