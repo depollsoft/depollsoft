@@ -310,6 +310,21 @@ final class CleanupHelperTests: PitchPerfectTestCase {
         app.host.dismiss(animated: false)
     }
 
+    /// If SwiftUI leaves the list's collection view out of edit mode, as it did on a
+    /// slow CI simulator, the Songs screen puts it back in step.
+    func testEditModeReachesTheListEvenIfSwiftUIMissesIt() throws {
+        seedSongs(["Blue Skies", "Shenandoah"])
+        let app = try launch()
+        app.editSongs()
+        let list = try XCTUnwrap(app.descendants(of: UICollectionView.self, in: app.window).first { $0.window != nil })
+        settle { list.isEditing }
+        // The miss: the model edits, the collection view doesn't.
+        list.isEditing = false
+        app.songs.keepListInStep()
+        settle(5) { list.isEditing }
+        XCTAssertTrue(app.songs.isEditing)
+    }
+
     /// In edit mode the delete, disclosure and reorder controls sit where a real
     /// UITableView in the same place puts them.
     func testEditModeControlsSitWhereUIKitsTablePutsThem() throws {

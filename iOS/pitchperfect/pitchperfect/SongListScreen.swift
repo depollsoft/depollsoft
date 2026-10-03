@@ -146,8 +146,29 @@ final class SongListModel {
     // MARK: Editing
 
     /// Animated, as `setEditing:animated:YES` and the bar's animated item swap were.
-    func edit() { withAnimation { isEditing = true } }
-    func doneEditing() { withAnimation { isEditing = false } }
+    func edit() {
+        withAnimation { isEditing = true }
+        keepListInStep()
+    }
+
+    func doneEditing() {
+        withAnimation { isEditing = false }
+        keepListInStep()
+    }
+
+    /// SwiftUI can leave the List's collection view out of a new edit mode: the rows
+    /// change, but the delete and reorder controls never come, and nothing corrects it
+    /// later (seen on slow CI simulators). Once the change has had time to land, the
+    /// collection view is put in step with the model.
+    func keepListInStep() {
+        for delay in [0.4, 1.5] {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                guard let self, let list = self.listScrollView as? UICollectionView,
+                      list.window != nil, list.isEditing != self.isEditing else { return }
+                list.isEditing = self.isEditing
+            }
+        }
+    }
 
     // MARK: Sounding
 

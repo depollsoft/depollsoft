@@ -26,6 +26,11 @@ enum PitchPerfectUsage {
         ReviewPrompt.shared.recordSound()
     }
 
+    /// The app made a sound that isn't a pitch played (Settings' sound preview).
+    static func soundPlayed() {
+        ReviewPrompt.shared.recordSound()
+    }
+
     /// A note stopped sounding. The quiet a review waits for runs from the end of
     /// a sound, so a note held (or toggled on) for minutes still counts as recent.
     static func soundStopped() {
