@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="Copyright">© 2022</string>
-    <string name="app_version">5.2.1</string>
+    <string name="app_version">5.2.2</string>
     <string name="Changelog"><![CDATA[Thank you for using Pitch Perfect!  Here\'s what has changed since you last used the app:
+            <p>
+                    <h5>Version 5.2.2</h5>
+                    - Fixes crashes when audio cannot start.<br />
+                    - Notes that could not sound no longer stay highlighted, so you can press them to try again.<br />
+            </p>
             <p>
                     <h5>Version 5.2.1</h5>
                     - Switch to Classic Pitch Pipe in Settings for the original grid of big note buttons.<br />

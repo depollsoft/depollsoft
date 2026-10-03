@@ -6,7 +6,7 @@
     "wear": {
       "module": "PitchPerfectWear",
       "track": "wear:production",
-      "notes": "This companion update accompanies the new Classic Pitch Pipe setting in the phone app."
+      "notes": "Fixes crashes when your watch cannot start audio playback. Notes that could not sound no longer stay highlighted, so you can press them to try again."
     },
     "ios_scheme": "pitchperfectUITests",
     "scenes": [
