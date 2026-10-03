@@ -262,6 +262,14 @@ class UsageAndReviewTest {
         assertEquals("a preview is not a pitch played", emptyList<Pair<String, Map<String, String>>>(), named(UsageAnalytics.PITCH_PLAYED))
     }
 
+    @Test
+    fun signingInReportsTheProviderAndFallsBackToOther() {
+        PitchPerfectAnalytics.signedIn("facebook.com")
+        // No response and nobody signed in (the fake Firebase app here has no user): other.
+        PitchPerfectAnalytics.signedIn(null)
+        assertEquals(listOf("facebook", "other"), named(UsageAnalytics.LOGIN).map { it.second.getValue(UsageAnalytics.METHOD) })
+    }
+
     private fun List<String>.distinctConsecutive(): List<String> = filterIndexed { index, name -> index == 0 || this[index - 1] != name }
 
     private companion object {

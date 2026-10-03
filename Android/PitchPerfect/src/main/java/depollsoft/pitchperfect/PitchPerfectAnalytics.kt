@@ -1,5 +1,7 @@
 package depollsoft.pitchperfect
 
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import depollsoft.lib.analytics.UsageAnalytics
 import depollsoft.lib.review.ReviewPrompt
 
@@ -45,6 +47,18 @@ object PitchPerfectAnalytics {
      * held (or toggled on) for minutes still counts as recent.
      */
     fun soundStopped() = ReviewPrompt.recordSound()
+
+    /**
+     * Sign-in succeeded. FirebaseUI can report a cancellation after Firebase has already accepted the
+     * account, with no response to say how; then the account's ID token names the provider, as on iOS.
+     */
+    fun signedIn(providerType: String?) {
+        if (providerType != null) return UsageAnalytics.login(providerType)
+        val user = Firebase.auth.currentUser ?: return UsageAnalytics.login(null)
+        user.getIdToken(false)
+            .addOnSuccessListener { UsageAnalytics.login(it.signInProvider) }
+            .addOnFailureListener { UsageAnalytics.login(null) }
+    }
 
     fun songAdded() = taskFinished("song_added")
 

@@ -38,7 +38,6 @@ import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
-import depollsoft.lib.analytics.UsageAnalytics
 import depollsoft.lib.auth.SignInOutcome
 import depollsoft.pitchperfect.ui.AppCompatAlertDialog
 import depollsoft.pitchperfect.ui.DialogButton
@@ -120,7 +119,7 @@ fun LoginPromptDialog(
                         reset(R.string.SignInFailed)
                     } else {
                         SongsModel.get().attachToFirestore(response?.isNewUser == true)
-                        UsageAnalytics.login(response?.providerType)
+                        PitchPerfectAnalytics.signedIn(response?.providerType)
                         onDismiss()
                         onAuthenticated()
                     }

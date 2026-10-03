@@ -222,10 +222,13 @@ final class PitchPerfectAnalyticsTests: PitchPerfectTestCase {
 
     func testTabsAndSheetsAreReportedAsTheyComeToTheFront() throws {
         let app = try launch()
-        ScreenCatalog.settle()
-        app.show(tab: 3)
-        app.show(tab: 1)
-        app.show(tab: 3)
+        settle { self.analytics.screens.last == "pitch_pipe" }
+        // A person switches tabs no faster than the screen draws; a loaded runner can take
+        // longer than one settle to draw a tab, so wait for each to report.
+        for (tab, name) in [(3, "songs"), (1, "notes"), (3, "songs")] {
+            app.show(tab: tab)
+            settle { self.analytics.screens.last == name }
+        }
         app.songs.addSong()
         // A sheet takes its time on a loaded runner; wait for each screen to report.
         settle { self.analytics.screens.last == "song_editor" }
