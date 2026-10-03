@@ -75,6 +75,7 @@
 		0B5E23ECC4A55E046E880953 /* TagMasterTestObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22AFC827264EA1C0323A6EC6 /* TagMasterTestObserver.swift */; };
 		E217FA772065AE2778C513F6 /* TagMasterRound2Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 935F312ACBF6F0E5B126DB34 /* TagMasterRound2Tests.swift */; };
 		8564980BE566621AAB8AA3AE /* TestRendering.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83F42B3FF7F30DA1835B86EF /* TestRendering.swift */; };
+		DD47F4FD78AE8470D294579C /* MainThreadWatchdog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36F3B204BCB1A0AF3F5AA9AE /* MainThreadWatchdog.swift */; };
 		F7FA5FABF4407A7627F98A37 /* TestKeyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C560A928A2DFE595C4E83838 /* TestKeyboard.swift */; };
 		A81652B47F5F4879B459A5F2 /* ReviewPromptTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B026FAD76053F65F813657B9 /* ReviewPromptTests.swift */; };
 		F910737FE5C2F7A9DCB25C4F /* TagMasterAnalyticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2750766ABF7C7C58891D3E26 /* TagMasterAnalyticsTests.swift */; };
@@ -325,6 +326,7 @@
 		FC7D60E9982541B0A82AC843 /* ScreenCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ScreenCatalog.swift; path = ../shared/ScreenCatalog.swift; sourceTree = "<group>"; };
 		7C42CD1CE6BA8E54914DEA7E /* SwiftUITestDriver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SwiftUITestDriver.swift; path = ../shared/SwiftUITestDriver.swift; sourceTree = "<group>"; };
 		83F42B3FF7F30DA1835B86EF /* TestRendering.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TestRendering.swift; path = ../shared/TestRendering.swift; sourceTree = "<group>"; };
+		36F3B204BCB1A0AF3F5AA9AE /* MainThreadWatchdog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MainThreadWatchdog.swift; path = ../shared/MainThreadWatchdog.swift; sourceTree = "<group>"; };
 		C560A928A2DFE595C4E83838 /* TestKeyboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TestKeyboard.swift; path = ../shared/TestKeyboard.swift; sourceTree = "<group>"; };
 		5FCC14A7ECA94C4EE3E8FCFF /* UsageAnalytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = UsageAnalytics.swift; path = ../shared/UsageAnalytics.swift; sourceTree = "<group>"; };
 		65188BCE7F219A6F862CA57C /* ReviewPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ReviewPrompt.swift; path = ../shared/ReviewPrompt.swift; sourceTree = "<group>"; };
@@ -428,6 +430,7 @@
 				5FCC14A7ECA94C4EE3E8FCFF /* UsageAnalytics.swift */,
 				C560A928A2DFE595C4E83838 /* TestKeyboard.swift */,
 				83F42B3FF7F30DA1835B86EF /* TestRendering.swift */,
+				36F3B204BCB1A0AF3F5AA9AE /* MainThreadWatchdog.swift */,
 				7C42CD1CE6BA8E54914DEA7E /* SwiftUITestDriver.swift */,
 				FC7D60E9982541B0A82AC843 /* ScreenCatalog.swift */,
 				1ECAAF8225F05AB300A2A3F1 /* Localizable.strings */,
@@ -954,6 +957,7 @@
 				A81652B47F5F4879B459A5F2 /* ReviewPromptTests.swift in Sources */,
 				F7FA5FABF4407A7627F98A37 /* TestKeyboard.swift in Sources */,
 				8564980BE566621AAB8AA3AE /* TestRendering.swift in Sources */,
+				DD47F4FD78AE8470D294579C /* MainThreadWatchdog.swift in Sources */,
 				E217FA772065AE2778C513F6 /* TagMasterRound2Tests.swift in Sources */,
 				0B5E23ECC4A55E046E880953 /* TagMasterTestObserver.swift in Sources */,
 				28F695DF481EE0B06AFD6D03 /* TagMasterAuditTests.swift in Sources */,

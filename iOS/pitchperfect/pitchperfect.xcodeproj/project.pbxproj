@@ -144,6 +144,7 @@
 		67EB40D10F8194725DEF4997 /* UIKitSetListSelectorReference.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0349F38E16D7E5FC08B30A3D /* UIKitSetListSelectorReference.swift */; };
 		3FA984DCB4689A7F95CD5B73 /* PitchPerfectFinalReviewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD05A18482DA75F31160AFC7 /* PitchPerfectFinalReviewTests.swift */; };
 		3D8A074948AF161868C698E6 /* TestRendering.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50DB0DAA70B62F167F2D7815 /* TestRendering.swift */; };
+		CA7A2B55D8C5B86DF4CD7D05 /* MainThreadWatchdog.swift in Sources */ = {isa = PBXBuildFile; fileRef = E623CCE44D57D8D82F9C43E9 /* MainThreadWatchdog.swift */; };
 		AA6CC793372CEFE5EE2AAF4F /* TestKeyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1095E291DED0DAAC7410D3B /* TestKeyboard.swift */; };
 		A130958F168AE0846420AE2D /* InstrumentRealAudioTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 752FECB8F6E22E2770D906A3 /* InstrumentRealAudioTests.swift */; };
 		0605DC160601C8B05FD74E55 /* PitchPerfectListScrollingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 159D628260ED694920D9740A /* PitchPerfectListScrollingTests.swift */; };
@@ -378,6 +379,7 @@
 		B5FA3CE6D4BCDEBA8C146EA7 /* ScreenCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ScreenCatalog.swift; path = ../shared/ScreenCatalog.swift; sourceTree = "<group>"; };
 		E16DD6724FC3BBA706C7C969 /* SwiftUITestDriver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SwiftUITestDriver.swift; path = ../shared/SwiftUITestDriver.swift; sourceTree = "<group>"; };
 		50DB0DAA70B62F167F2D7815 /* TestRendering.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TestRendering.swift; path = ../shared/TestRendering.swift; sourceTree = "<group>"; };
+		E623CCE44D57D8D82F9C43E9 /* MainThreadWatchdog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MainThreadWatchdog.swift; path = ../shared/MainThreadWatchdog.swift; sourceTree = "<group>"; };
 		A1095E291DED0DAAC7410D3B /* TestKeyboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TestKeyboard.swift; path = ../shared/TestKeyboard.swift; sourceTree = "<group>"; };
 		8408BCD4AA60E75772B8CFCC /* UsageAnalytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = UsageAnalytics.swift; path = ../shared/UsageAnalytics.swift; sourceTree = "<group>"; };
 		32B4175AE639B15F66A2D132 /* ReviewPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ReviewPrompt.swift; path = ../shared/ReviewPrompt.swift; sourceTree = "<group>"; };
@@ -523,6 +525,7 @@
 				8408BCD4AA60E75772B8CFCC /* UsageAnalytics.swift */,
 				A1095E291DED0DAAC7410D3B /* TestKeyboard.swift */,
 				50DB0DAA70B62F167F2D7815 /* TestRendering.swift */,
+				E623CCE44D57D8D82F9C43E9 /* MainThreadWatchdog.swift */,
 				E16DD6724FC3BBA706C7C969 /* SwiftUITestDriver.swift */,
 				B5FA3CE6D4BCDEBA8C146EA7 /* ScreenCatalog.swift */,
 				1E13131A2682475900F33385 /* panobackground.svg */,
@@ -1044,6 +1047,7 @@
 				A130958F168AE0846420AE2D /* InstrumentRealAudioTests.swift in Sources */,
 				AA6CC793372CEFE5EE2AAF4F /* TestKeyboard.swift in Sources */,
 				3D8A074948AF161868C698E6 /* TestRendering.swift in Sources */,
+				CA7A2B55D8C5B86DF4CD7D05 /* MainThreadWatchdog.swift in Sources */,
 				3FA984DCB4689A7F95CD5B73 /* PitchPerfectFinalReviewTests.swift in Sources */,
 				67EB40D10F8194725DEF4997 /* UIKitSetListSelectorReference.swift in Sources */,
 				4833DD5905A555F0F65EFA77 /* PitchPerfectRound2Tests.swift in Sources */,

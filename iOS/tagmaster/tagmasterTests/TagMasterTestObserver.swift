@@ -27,5 +27,7 @@ final class TagMasterTestObserver: NSObject, XCTestObservation {
             TestRendering.warmUp([AnyView(TMBarberPole(compact: true)), AnyView(TMBarberPole(compact: false)),
                                   AnyView(TMBarberPole(compact: true, darkSurface: true))])
         }
+        // From here on, a main thread that stops answering prints its stack; see MainThreadWatchdog.
+        MainThreadWatchdog.start()
     }
 }

@@ -37,6 +37,8 @@ final class PitchPerfectTestObserver: NSObject, XCTestObservation {
             TestRendering.warmUp([AnyView(PitchInstrumentView(model: PitchPipeModel()).frame(width: 360, height: 360))])
             Self.startFirebase()
         }
+        // From here on, a main thread that stops answering prints its stack; see MainThreadWatchdog.
+        MainThreadWatchdog.start()
     }
 
     /// Hosted tests use Firebase (PitchPerfectTestCase configures it). Its first
