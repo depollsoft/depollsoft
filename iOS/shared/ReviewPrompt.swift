@@ -55,7 +55,8 @@ struct ReviewPolicy {
     func recordUse() {
         let today = today()
         if integer(Self.firstUseDayKey) == nil { defaults.set(today, forKey: Self.firstUseDayKey) }
-        if integer(Self.lastActiveDayKey) != today {
+        // Only a later day counts: a clock or time zone set back revisits days already counted.
+        if today > integer(Self.lastActiveDayKey) ?? Int.min {
             defaults.set(today, forKey: Self.lastActiveDayKey)
             defaults.set(activeDays + 1, forKey: Self.activeDaysKey)
         }

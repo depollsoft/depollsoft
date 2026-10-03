@@ -102,13 +102,17 @@ class TrackPlayer(
             applyBalance()
         }
 
-    /** Chooses the track to play (null for none), the [part]'s; whatever was playing stops. */
+    /**
+     * Chooses the track to play (null for none), the [part]'s; whatever was playing stops. A part
+     * that shares the file already chosen keeps it playing, and counts as that part from then on.
+     */
     fun select(
         value: RemoteLocation?,
         part: String? = null,
     ) {
-        location = value
         this.part = part
+        if (value == location) return
+        location = value
         stop()
     }
 

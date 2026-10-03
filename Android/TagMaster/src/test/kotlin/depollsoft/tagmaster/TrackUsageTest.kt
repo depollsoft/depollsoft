@@ -130,4 +130,40 @@ class TrackUsageTest {
             assertFalse("a released track is quiet", Sounding.any)
         }
     }
+
+    @Test
+    fun anotherPartWithTheSameFileKeepsPlayingAndCountsAsThatPart() {
+        mockConstruction(MediaPlayer::class.java).use { players ->
+            val track = TrackPlayer(RuntimeEnvironment.getApplication()) {}
+            val pending = TaskCompletionSource<File>()
+            val cache = mock(ContentCache::class.java)
+            `when`(cache.loadContentPublic(anyString(), anyString(), anyBoolean())).thenReturn(pending.task)
+            TrackPlayer::class.java.getDeclaredField("cache").apply { isAccessible = true }.set(track, cache)
+            fun shared() = RemoteLocation().apply { uri = "https://example.com/all.mp3"; type = "mp3" }
+            try {
+                track.select(shared(), "all")
+                track.togglePlay()
+                val file = File.createTempFile("track", ".mp3")
+                pending.setResult(file)
+                shadowOf(Looper.getMainLooper()).idle()
+                file.delete()
+                val player = players.constructed().single()
+                `when`(player.duration).thenReturn(10000)
+                val captor = ArgumentCaptor.forClass(MediaPlayer.OnPreparedListener::class.java)
+                verify(player).setOnPreparedListener(captor.capture())
+                captor.value.onPrepared(player)
+                assertEquals(listOf("all"), parts)
+
+                track.select(shared(), "lead")
+                assertTrue("the same file keeps playing", track.isPlaying)
+                val finished = ArgumentCaptor.forClass(MediaPlayer.OnCompletionListener::class.java)
+                verify(player).setOnCompletionListener(finished.capture())
+                finished.value.onCompletion(player)
+                track.togglePlay()
+                assertEquals("the next play is the part now chosen", listOf("all", "lead"), parts)
+            } finally {
+                track.release()
+            }
+        }
+    }
 }

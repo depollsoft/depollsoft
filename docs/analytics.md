@@ -103,7 +103,8 @@ Its counts stay on the device, are never sent anywhere, and do not depend on the
 
 - They have used the app on at least **5 different days**, and the first of those was at least
   **14 days** ago. A day of use is a day with the app's main job done: a pitch played (Pitch Perfect),
-  a tag opened (Tag Master).
+  a tag opened (Tag Master). Only a day later than the last one counted adds to the count, so a clock
+  or time zone set back cannot count a day twice.
 - They have not been asked in this app version, nor in the last **180 days**. After an ask the days of
   use start over.
 - Nothing has sounded for **5 minutes**: no pitch, key note or learning track has started or stopped,

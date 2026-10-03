@@ -136,7 +136,8 @@ fun TracksPage(
     val location = available.getOrNull(selected)?.second
     LaunchedEffect(selected, location) {
         if (selected >= 0 && location == null) selected = -1
-        if (location != player.location) player.select(location, TagMasterAnalytics.trackPart(selected))
+        // Every choice reaches the player: two parts can share a file, and plays count as the one chosen.
+        player.select(location, TagMasterAnalytics.trackPart(selected))
     }
     val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 

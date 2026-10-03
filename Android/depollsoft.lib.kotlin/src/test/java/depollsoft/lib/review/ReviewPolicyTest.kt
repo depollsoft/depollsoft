@@ -85,6 +85,21 @@ class ReviewPolicyTest {
         assertEquals(2, policy.activeDays)
     }
 
+    @Test fun aDayRevisitedAfterTheClockGoesBackIsNotCountedAgain() {
+        policy.recordUse()
+        advanceDays(1)
+        policy.recordUse()
+        advanceDays(-1)
+        policy.recordUse()
+        assertEquals(2, policy.activeDays)
+        advanceDays(1)
+        policy.recordUse()
+        assertEquals("the latest day was counted already", 2, policy.activeDays)
+        advanceDays(1)
+        policy.recordUse()
+        assertEquals(3, policy.activeDays)
+    }
+
     @Test fun neverAsksTwiceInOneVersion() {
         assertTrue(eligible())
         policy.recordAsk("1.0")

@@ -141,6 +141,21 @@ final class ReviewPolicyTests: XCTestCase {
         XCTAssertEqual(utc.policy.activeDays, 1)
     }
 
+    func testADayRevisitedAfterTheClockGoesBackIsNotCountedAgain() {
+        clock.policy.recordUse()
+        clock.advance(days: 1)
+        clock.policy.recordUse()
+        clock.advance(days: -1)
+        clock.policy.recordUse()
+        XCTAssertEqual(clock.policy.activeDays, 2)
+        clock.advance(days: 1)
+        clock.policy.recordUse()
+        XCTAssertEqual(clock.policy.activeDays, 2, "the latest day was counted already")
+        clock.advance(days: 1)
+        clock.policy.recordUse()
+        XCTAssertEqual(clock.policy.activeDays, 3)
+    }
+
     func testAnAskedVersionIsNotAskedAgain() {
         clock.makeEligible()
         XCTAssertTrue(clock.policy.shouldAsk(version: "1.0"))

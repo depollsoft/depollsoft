@@ -34,7 +34,8 @@ class ReviewPolicy(
         val today = today()
         val editor = prefs.edit()
         if (long(FIRST_USE_DAY) == null) editor.putLong(FIRST_USE_DAY, today)
-        if (long(LAST_ACTIVE_DAY) != today) {
+        // Only a later day counts: a clock or time zone set back revisits days already counted.
+        if (today > (long(LAST_ACTIVE_DAY) ?: Long.MIN_VALUE)) {
             editor.putLong(LAST_ACTIVE_DAY, today)
             editor.putInt(ACTIVE_DAYS, activeDays + 1)
         }
