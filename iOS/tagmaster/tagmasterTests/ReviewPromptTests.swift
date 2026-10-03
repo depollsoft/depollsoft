@@ -364,16 +364,19 @@ final class ReviewPromptTests: XCTestCase {
     }
 
     func testNothingAskedWhileATextFieldIsEditing() {
-        let field = UITextField(frame: CGRect(x: 0, y: 0, width: 200, height: 44))
-        // An empty input view keeps the software keyboard (and its stalls) out of the test.
-        field.inputView = UIView(frame: .zero)
-        window.rootViewController?.view.addSubview(field)
+        // A hardware keyboard sends no keyboard notifications; the focused field is the sign. A real
+        // field's focus would build UIKit's keyboard, which stalled CI for over 30 s (8e068440).
+        var typing = false
+        prompt.isTyping = { typing }
         prompt.calmScreenShown(screen)
         prompt.taskFinished()
-        field.becomeFirstResponder()
-        defer { field.resignFirstResponder() }
+        typing = true
         finishWait()
         XCTAssertTrue(asked.isEmpty)
+    }
+
+    func testNoFocusedFieldIsNotTyping() {
+        XCTAssertFalse(ReviewPrompt().isTyping(), "the test window has nothing focused")
     }
 
     func testLeavingTheAppSpendsTheChance() {

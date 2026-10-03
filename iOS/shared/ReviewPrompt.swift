@@ -118,6 +118,9 @@ final class ReviewPrompt {
 
     /// Whether the app is sounding or otherwise in live use; each app sets it.
     var isBusy: () -> Bool = { false }
+    /// Whether a text field (or other text input) has the focus. Tests stand in for it: focusing a
+    /// real field builds UIKit's keyboard, which has stalled CI past a test's whole budget.
+    var isTyping: () -> Bool = { UIResponder.currentFirstResponder is UITextInput }
     /// Asks the store; tests replace it. Debug builds and test runs never ask.
     var presentStoreReview: (UIWindow) -> Void = ReviewPrompt.requestStoreReview
     /// The window an ask would cover: the foreground-active scene's key window.
@@ -252,7 +255,7 @@ final class ReviewPrompt {
         guard activeWindow() === window, let root = window.rootViewController else { return false }
         if root.presentedViewController != nil || root.transitionCoordinator != nil
             || root.isBeingPresented || root.isBeingDismissed { return false }
-        if keyboardShown || UIResponder.currentFirstResponder is UITextInput { return false }
+        if keyboardShown || isTyping() { return false }
         return !isBusy()
     }
 
