@@ -41,6 +41,9 @@ final class ConsentUITests: XCTestCase {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = ["--reset-privacy-for-testing", "-FIRDebugEnabled"]
+        // Ad-network consent and ATT can interrupt the Settings tap after
+        // saving. This debug switch leaves telemetry choices fully active.
+        app.launchEnvironment["STORE_SCREENSHOTS"] = "1"
         app.launch()
         let analytics = app.switches["Usage analytics"]
         let crashes = app.switches["Crash reports"]
@@ -70,6 +73,8 @@ final class ConsentUITests: XCTestCase {
         XCTAssertTrue(settingsButton.exists || settingsButton.waitForExistence(timeout: 15))
         let settings = settingsButton
         settings.tap()
+        let settingsBar = app.navigationBars["Settings"]
+        XCTAssertTrue(settingsBar.exists || settingsBar.waitForExistence(timeout: 5))
         // A button in SwiftUI Settings. A SwiftUI list only creates the rows it
         // has laid out, so scroll until the row exists and can be tapped.
         let privacy = app.buttons["Privacy choices"].firstMatch
