@@ -57,7 +57,7 @@ struct TMSheetMusicScreen: View {
 
 extension TMSheetMusicScreen {
     fileprivate func keyButton(_ key: String) -> some View {
-        TMKeyNoteButton(model: summary, title: key, singleLine: true)
+        TMKeyNoteButton(model: summary, title: key, singleLine: true, source: .sheetMusic)
             .fixedSize()
             .accessibilityIdentifier("sheet.key")
     }

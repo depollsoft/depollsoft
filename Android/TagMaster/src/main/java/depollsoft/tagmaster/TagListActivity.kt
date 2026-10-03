@@ -51,7 +51,7 @@ class TagListActivity : SavedListActivity() {
                 listedIds = { model.ids.toList() },
             )
         listEditor = SavedListEditor(wasEditing(savedInstanceState), { model })
-        setTagMasterContent {
+        setTagMasterContent(TagMasterAnalytics.SCREEN_TAG_LIST) {
             val dialogs = rememberListDialogs()
             val exists = TagLists.customKeys.contains(key)
             LaunchedEffect(exists) { if (!exists) finish() }

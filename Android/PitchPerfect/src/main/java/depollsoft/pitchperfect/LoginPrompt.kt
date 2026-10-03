@@ -119,6 +119,7 @@ fun LoginPromptDialog(
                         reset(R.string.SignInFailed)
                     } else {
                         SongsModel.get().attachToFirestore(response?.isNewUser == true)
+                        PitchPerfectAnalytics.signedIn(response?.providerType)
                         onDismiss()
                         onAuthenticated()
                     }

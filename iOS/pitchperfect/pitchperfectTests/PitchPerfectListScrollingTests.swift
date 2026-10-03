@@ -229,8 +229,10 @@ final class PitchPerfectListScrollingTests: PitchPerfectTestCase {
             settle { menuList = self.menuList(containing: firstLabel); return menuList != nil }
             let menu = try XCTUnwrap(menuList, "the tuning menu, \(layout)")
             // Menu presentation and Dynamic Type can still change row heights
-            // after the first choice appears. Wait for the final row's layout.
-            settle(5) {
+            // after the first choice appears. Wait for the final row's layout;
+            // at the largest text on a small phone, a loaded CI runner took
+            // more than 5 s to make that row at all.
+            settle(12) {
                 self.scrollToBottom(menu)
                 guard let item = self.menuItem(labelled: lastLabel, in: menu) else { return false }
                 return self.visibleRect(of: menu).insetBy(dx: -2, dy: -2).contains(item.accessibilityFrame)

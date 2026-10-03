@@ -35,6 +35,7 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.auth.auth
 import com.google.firebase.functions.functions
+import depollsoft.compose.ScreenView
 import depollsoft.lib.privacy.TelemetryConsent
 import depollsoft.lib.util.AppLog
 import depollsoft.pitchperfect.ui.AppCompatAlertDialog
@@ -98,6 +99,7 @@ class SettingsActivity(
             )
         setContent {
             PlateTheme {
+                ScreenView(PitchPerfectAnalytics.SCREEN_SETTINGS)
                 Column(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
                     PlateTopBar(stringResource(R.string.Settings))
                     SettingsScreen(state, actions)

@@ -45,6 +45,7 @@ final class DPAppDelegate: UIResponder, UIApplicationDelegate {
         DPAppLog.start()
         FirebaseApp.configure()
         TelemetryConsent.configure()
+        PitchPerfectUsage.start()
 #if canImport(FBSDKCoreKit)
         ApplicationDelegate.shared.application(application, didFinishLaunchingWithOptions: launchOptions)
 #endif
@@ -72,6 +73,7 @@ final class DPAppDelegate: UIResponder, UIApplicationDelegate {
     private func attachSyncToSignIn() {
         var registration: ListenerRegistration?
         authListener = Auth.auth().addStateDidChangeListener { _, user in
+            MainActor.assumeIsolated { UsageAnalytics.signedIn(user != nil) }
             if let reg = registration {
                 reg.remove()
                 registration = nil

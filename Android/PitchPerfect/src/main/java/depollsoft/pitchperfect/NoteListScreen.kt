@@ -63,6 +63,10 @@ private fun NoteRow(
     val colors = plateColors
     val lit = note.isPlaying
     val name = NoteText.noteName(note)
+    val play = {
+        note.play()
+        PitchPerfectAnalytics.pitchPlayed(PitchPerfectAnalytics.Source.NOTES)
+    }
     Row(
         modifier
             .fillMaxWidth()
@@ -71,14 +75,14 @@ private fun NoteRow(
             .soundsWhileHeld(
                 toggleMode = { SettingsModel.toggleNotes },
                 isPlaying = { note.isPlaying },
-                play = { note.play() },
+                play = play,
                 stop = { note.stop() },
             ).semantics(mergeDescendants = true) {
                 role = Role.Button
                 // The row shows its name in a music font whose letters would be spelled out.
                 contentDescription = NoteNames.spoken(note) + ", " + "%1.2f Hz".format(note.tunedFrequency)
                 selected = lit
-                onClick { BriefNotes.activate(note) }
+                onClick { BriefNotes.activate(note, { note.isPlaying }, play, { note.stop() }) }
             },
         verticalAlignment = ViewAlign.CenterVertically,
     ) {

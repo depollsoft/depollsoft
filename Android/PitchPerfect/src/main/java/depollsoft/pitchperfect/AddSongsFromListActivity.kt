@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.sp
 import depollsoft.compose.ListMotion
 import depollsoft.compose.LocalMenuKey
 import depollsoft.compose.MenuKey
+import depollsoft.compose.ScreenView
 import depollsoft.compose.ViewAlign
 import depollsoft.pitchperfect.lib.PitchedSong
 import depollsoft.pitchperfect.ui.DrawableIcon
@@ -104,7 +105,10 @@ class AddableSongs(
     /** Appends deep copies of the ticked songs, in the order the sections present them. */
     fun confirm(): Boolean {
         if (ticked.isEmpty()) return false
+        // A set list deleted on another device meanwhile takes nothing, so nothing was added.
+        val targetExists = model.songLists.containsKey(targetId)
         model.copySongs(offered.filter { isTicked(it) }, targetId)
+        if (targetExists) PitchPerfectAnalytics.songsAddedToSetList()
         return true
     }
 }
@@ -125,6 +129,7 @@ class AddSongsFromListActivity : AppCompatActivity() {
         addable = AddableSongs(model, intent.getStringExtra(LIST_EXTRA) ?: model.currentListId)
         setContent {
             PlateTheme {
+                ScreenView(PitchPerfectAnalytics.SCREEN_ADD_SONGS)
                 CompositionLocalProvider(LocalMenuKey provides menuKey) {
                     Column(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
                         val count = addable.count

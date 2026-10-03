@@ -134,6 +134,7 @@ class TagDetailState(
                 isLoading = false
                 if (!task.isFaulted && !task.isCancelled && task.result?.id == requestedId) {
                     tag = task.result
+                    if (!refresh) TagMasterAnalytics.tagViewed()
                 } else {
                     // A refresh failure must not discard an already-visible tag.
                     loadFailed = true

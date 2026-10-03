@@ -65,7 +65,7 @@ fun SetListNameDialog(
                 model.renameList(listId, value.text)
                 listId
             } else {
-                model.createList(value.text)
+                model.createList(value.text).also { PitchPerfectAnalytics.setListCreated() }
             }
         onDone(result, !renaming)
     }

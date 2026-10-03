@@ -36,21 +36,24 @@ import androidx.compose.ui.unit.IntSize
 import androidx.lifecycle.compose.LifecycleStartEffect
 import depollsoft.pitchperfect.lib.Accidental
 import depollsoft.pitchperfect.lib.Note
+import depollsoft.tagmaster.Sounding
 
 /**
  * Plays a note the way the pitch-pipe key buttons did: it sounds while a finger is down and stops
  * when it lifts; a click that is not a touch (keyboard, screen reader) plays it for 1.5 seconds.
- * Only a note this control started is ever stopped by it.
+ * Only a note this control started is ever stopped by it. [onPlayed] runs each time it starts one.
  */
 @Stable
-class NotePlayer {
+class NotePlayer(
+    private val onPlayed: () -> Unit = {},
+) {
     private val main = Handler(Looper.getMainLooper())
     private var active: Note? = null
     private val stopTimed = Runnable { stop() }
 
     fun press(note: Note?) {
         stop()
-        active = note?.also { it.play() }
+        active = note?.also { started(it) }
     }
 
     fun release() = stop()
@@ -59,21 +62,28 @@ class NotePlayer {
         stop()
         val playing = note ?: return
         active = playing
-        playing.play()
+        started(playing)
         main.postDelayed(stopTimed, 1500)
+    }
+
+    private fun started(note: Note) {
+        note.play()
+        Sounding.started(this)
+        onPlayed()
     }
 
     fun stop() {
         main.removeCallbacks(stopTimed)
         active?.stop()
         active = null
+        Sounding.stopped(this)
     }
 }
 
 /** A [NotePlayer] that falls silent when its screen stops or it leaves the composition. */
 @Composable
-fun rememberNotePlayer(): NotePlayer {
-    val player = remember { NotePlayer() }
+fun rememberNotePlayer(onPlayed: () -> Unit = {}): NotePlayer {
+    val player = remember { NotePlayer(onPlayed) }
     LifecycleStartEffect(player) { onStopOrDispose { player.stop() } }
     return player
 }

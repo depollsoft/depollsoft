@@ -53,9 +53,13 @@ final class TMListPickerModel {
 
     /// Adds the tag to `key`, or takes it off, and says which.
     func toggle(_ key: String) {
+        // The list may have been deleted on another device since this row was drawn;
+        // adding to it here would bring it back under its raw key.
+        guard TMTagLists.allKeys().contains(key) else { return }
         let added = TMTagLists.toggle(Int(tagId), in: key)
         let name = TMTagLists.name(for: key)
         UIAccessibility.post(notification: .announcement, argument: added ? "Added to \(name)" : "Removed from \(name)")
+        if added { TagMasterUsage.tagAddedToList(key) }
     }
 
     // MARK: New list
@@ -69,6 +73,8 @@ final class TMListPickerModel {
         guard let key = TMTagLists.createList(named: name) else { return }
         TMTagLists.add(Int(tagId), to: key)
         UIAccessibility.post(notification: .announcement, argument: "Added to \(name)")
+        TagMasterUsage.tagListCreated()
+        TagMasterUsage.tagAddedToList(key)
     }
 }
 

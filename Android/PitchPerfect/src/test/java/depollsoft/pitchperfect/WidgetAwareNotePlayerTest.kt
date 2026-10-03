@@ -51,4 +51,20 @@ class WidgetAwareNotePlayerTest {
         note.stop()
         assertEquals(2, changes)
     }
+
+    @Test
+    fun knowsWhetherAnythingItStartedIsSounding() {
+        val player = WidgetAwareNotePlayer(RecordingPlayer()) {}
+        Note.setPlayer(player)
+        val (first, second) = Note.getCommonNotes()
+        assertFalse(player.isSounding)
+
+        first.play()
+        second.play()
+        assertTrue(player.isSounding)
+        first.stop()
+        assertTrue("one note is still sounding", player.isSounding)
+        second.stop()
+        assertFalse(player.isSounding)
+    }
 }

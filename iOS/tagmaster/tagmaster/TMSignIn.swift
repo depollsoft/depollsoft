@@ -183,6 +183,7 @@ struct TagMasterAuthView: View {
                     return
                 }
                 didFinish = true
+                UsageAnalytics.login(Auth.auth().currentUser)
                 onAuthStateChanged()
             }
             .onChange(of: authService.isPresented) { _, isPresented in

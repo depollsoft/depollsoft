@@ -6,14 +6,16 @@ import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 
 import android.content.res.Configuration
+import android.os.Bundle
 import android.os.SystemClock
 import androidx.appcompat.app.AppCompatDelegate
 import depollsoft.lib.state.StateList
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import depollsoft.lib.activity.RichApplication
-import depollsoft.lib.analytics.Analytics
+import depollsoft.lib.analytics.UsageAnalytics
 import depollsoft.lib.json.JsonSerializer
+import depollsoft.lib.review.ReviewPrompt
 import depollsoft.lib.util.Preferences
 import depollsoft.pitchperfect.lib.*
 import depollsoft.pitchperfect.lib.sound.NoteVoices
@@ -35,10 +37,18 @@ class PitchPerfectApplication : RichApplication() {
             if (!analytics) sdk.resetAnalyticsData()
             FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(crashes)
             if (!crashes) FirebaseCrashlytics.getInstance().deleteUnsentReports()
+            if (analytics) {
+                PitchPerfectAnalytics.reportSettings()
+                UsageAnalytics.signedIn(Firebase.auth.currentUser != null)
+            }
         }
+        UsageAnalytics.sink = firebaseSink(FirebaseAnalytics.getInstance(this))
+        ReviewPrompt.install(this)
         TelemetryConsent.applyChoices(choices.analytics, choices.crashes)
         PerformanceDiagnostics.startMainThreadMonitor()
-        Note.setPlayer(WidgetAwareNotePlayer(Note.DEFAULT_PLAYER) { PitchPipeAppWidget.updateWidgets() })
+        val player = WidgetAwareNotePlayer(Note.DEFAULT_PLAYER) { PitchPipeAppWidget.updateWidgets() }
+        Note.setPlayer(player)
+        ReviewPrompt.isBusy = { player.isSounding }
         registerStorageAliases()
         SettingsModel.applyReferencePitch()
         SettingsModel.applyNoteSound()
@@ -60,6 +70,7 @@ class PitchPerfectApplication : RichApplication() {
             if (!authAttachment.transitionTo(user?.uid)) {
                 return@addAuthStateListener
             }
+            UsageAnalytics.signedIn(user != null)
 
             SongsModel.get().detachFromFirestore()
             SettingsModel.detachFromFirestore()
@@ -68,14 +79,27 @@ class PitchPerfectApplication : RichApplication() {
                 SettingsModel.attachToFirestore()
             }
         }
-        val tags: MutableSet<String> = mutableSetOf()
-        if (Firebase.auth.currentUser != null) {
-            tags.add("logged_in")
-        }
-        if (PrivacyChoices(this).analytics) {
-            Analytics.default.logEvent(Analytics.APP_OPEN, tags = tags)
-        }
     }
+
+    /** Sends [UsageAnalytics] to Firebase, while the person allows usage analytics. */
+    private fun firebaseSink(sdk: FirebaseAnalytics) =
+        object : UsageAnalytics.Sink {
+            override fun logEvent(
+                name: String,
+                params: Map<String, String>,
+            ) {
+                if (!PrivacyChoices(this@PitchPerfectApplication).analytics) return
+                sdk.logEvent(name, Bundle().apply { params.forEach { (key, value) -> putString(key, value) } })
+            }
+
+            override fun setUserProperty(
+                name: String,
+                value: String,
+            ) {
+                if (!PrivacyChoices(this@PitchPerfectApplication).analytics) return
+                sdk.setUserProperty(name, value)
+            }
+        }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)

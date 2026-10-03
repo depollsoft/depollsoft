@@ -168,10 +168,16 @@ final class PitchPipeModel {
         guard index >= 0, index < notes.count else { return }
         if toggleMode {
             let note = notes[index]
-            if note.isPlaying { player.stop(note) } else { player.play(note) }
+            if note.isPlaying {
+                player.stop(note)
+            } else {
+                player.play(note)
+                reportPlayed()
+            }
             impact()
         } else {
             startNote(at: index)
+            reportPlayed()
             activeTouches[id] = index
         }
     }
@@ -228,13 +234,24 @@ final class PitchPipeModel {
         guard notes.indices.contains(index) else { return }
         let note = notes[index]
         if toggleMode {
-            if note.isPlaying { player.stop(note) } else { player.play(note) }
+            if note.isPlaying {
+                player.stop(note)
+            } else {
+                player.play(note)
+                reportPlayed()
+            }
         } else {
             player.play(note)
+            reportPlayed()
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [player] in
                 player.stop(note)
             }
         }
+    }
+
+    /// A press or activation started a note; sliding onto a neighbour does not count.
+    private func reportPlayed() {
+        player.reportPlayed(isClassic ? .classicPitchPipe : .pitchPipe)
     }
 
     private func startNote(at index: Int) {

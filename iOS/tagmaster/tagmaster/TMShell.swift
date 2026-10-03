@@ -43,6 +43,7 @@ struct TagMasterApp: App {
                     } else {
                         TMPrivacyOffer.shared.sceneResigned()
                     }
+                    ScreenTracker.shared.scenePhaseChanged(phase)
                 }
         }
     }
@@ -367,6 +368,9 @@ struct TMHomeRoute: View {
 
     var body: some View {
         TMScreens.home(router.home)
+            // Home is where a review may be asked for after a finished task,
+            // unless a tag is open beside it (a collapsed split shows none beside it).
+            .reviewCalmScreen(router.currentSplitTagId == nil)
             .tmRoute(in: column)
     }
 }
@@ -470,6 +474,7 @@ struct TMSheetMusicRoute: View {
     var body: some View {
         TMSheetMusicScreen(document: document, summary: summary, state: state)
             .tmCharcoalBar()
+            .analyticsScreen("sheet_music")
             .onAppear {
                 state.toggleFullScreen = { [weak router] in router?.toggleFullScreen() }
             }
@@ -499,6 +504,7 @@ enum TMScreens {
                 }
                 .tmCharcoalBar(backTitle: "Home", homeTitle: true)
                 .onAppear { model.reload() }
+                .analyticsScreen("home")
         }
     }
 
@@ -531,6 +537,7 @@ enum TMScreens {
                 }
                 .tmCharcoalBar(backTitle: model.backTitle)
                 .onAppear { model.syncSelection() }
+                .analyticsScreen(model.isCustom ? "tag_list" : "teachable_tags")
         }
     }
 
@@ -540,6 +547,7 @@ enum TMScreens {
                 .navigationTitle("Browse")
                 .navigationBarTitleDisplayMode(.inline)
                 .tmCharcoalBar()
+                .analyticsScreen("browse")
         }
     }
 
@@ -550,6 +558,7 @@ enum TMScreens {
                 .navigationBarTitleDisplayMode(.inline)
                 .tmCharcoalBar()
                 .onAppear { model.syncSelection() }
+                .analyticsScreen("search_results")
         }
     }
 
@@ -565,6 +574,7 @@ enum TMScreens {
                     }
                 }
                 .tmCharcoalBar()
+                .analyticsScreen("search")
         }
     }
 
@@ -575,6 +585,7 @@ enum TMScreens {
                 .navigationBarTitleDisplayMode(.inline)
                 .tmCharcoalBar()
                 .onAppear { model.refresh() }
+                .analyticsScreen("settings")
         }
     }
 

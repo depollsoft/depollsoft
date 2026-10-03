@@ -12,6 +12,16 @@ import UIKit
 
 enum PitchPerfectTab: Hashable {
     case pitchPipe, notes, keys, songs
+
+    /// The tab's screen in analytics (docs/analytics.md).
+    var screenName: String {
+        switch self {
+        case .pitchPipe: "pitch_pipe"
+        case .notes: "notes"
+        case .keys: "keys"
+        case .songs: "songs"
+        }
+    }
 }
 
 /// The models behind the tabs, made once for the app (or a test) and kept for
@@ -40,6 +50,10 @@ struct PitchPerfectRoot: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     var body: some View {
+        // The chosen tab is reported from the selection below, not from inside the tabs:
+        // a tab's content that read the selection was rebuilt on every switch, and edit
+        // mode set during that rebuild was lost; a tab's own appearance can come too late
+        // on a loaded runner to count its visit.
         TabView(selection: $models.tab) {
             NavigationStack { PitchPipeScreen(model: models.pitchPipe) }
                 .tabItem { TabLabel(title: "Pitch Pipe", image: "pitchpipe.png") }
@@ -50,7 +64,11 @@ struct PitchPerfectRoot: View {
             NavigationStack { KeysScreen(model: models.keys) }
                 .tabItem { TabLabel(title: "Keys", image: "keys.png") }
                 .tag(PitchPerfectTab.keys)
-            NavigationStack { SongListScreen(model: models.songs) }
+            NavigationStack {
+                SongListScreen(model: models.songs)
+                    // The song list is where a review may be asked for after a finished task.
+                    .reviewCalmScreen()
+            }
                 .tabItem { TabLabel(title: "Songs", image: "songs.png") }
                 .tag(PitchPerfectTab.songs)
         }
@@ -66,8 +84,12 @@ struct PitchPerfectRoot: View {
         .onOpenURL { DPAppDelegate.handle(url: $0) }
         // `initial`: the scene is often already active when the root first
         // appears, and the launch's own activation must offer Privacy choices.
+        .onChange(of: models.tab, initial: true) { _, tab in
+            ScreenTracker.shared.tabChosen(tab.screenName)
+        }
         .onChange(of: scenePhase, initial: true) { _, phase in
             if phase == .active { DPAppDelegate.sceneDidBecomeActive() }
+            ScreenTracker.shared.scenePhaseChanged(phase)
         }
     }
 }

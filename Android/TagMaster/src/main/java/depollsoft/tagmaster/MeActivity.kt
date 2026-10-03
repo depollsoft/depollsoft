@@ -1,6 +1,7 @@
 package depollsoft.tagmaster
 
 import android.os.Bundle
+import depollsoft.compose.ReviewCalmScreen
 import depollsoft.lib.privacy.PrivacyChoices
 import depollsoft.lib.privacy.TelemetryConsent
 import depollsoft.lib.ui.ChangelogViewer
@@ -33,7 +34,11 @@ class MeActivity : SavedListActivity() {
                 model = { ListModel(TagLists.FAVORITE) },
                 companion = { TagLists.customKeys.isNotEmpty() },
             )
-        setTagMasterContent { HomeScreen(tagPane, home, listEditor) }
+        setTagMasterContent(TagMasterAnalytics.SCREEN_HOME) {
+            HomeScreen(tagPane, home, listEditor)
+            // With a tag open beside it, Home is where someone reads that tag.
+            ReviewCalmScreen(tagPane.selectedTagId == null)
+        }
         tagPane.restore(savedInstanceState)
 
         if (PrivacyChoices(this).hasChosen) {

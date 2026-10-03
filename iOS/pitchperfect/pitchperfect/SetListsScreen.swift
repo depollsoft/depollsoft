@@ -99,6 +99,7 @@ final class SetListsModel {
         prompts.create { [weak self] name in
             guard let self, let created = self.store.createList(named: name) else { return }
             self.store.currentListId = created.id
+            PitchPerfectUsage.setListCreated()
         }
     }
 
@@ -149,6 +150,7 @@ struct SetListsScreen: View {
             }
         }
         .setListPrompts(model.prompts)
+        .analyticsScreen("set_lists")
     }
 
     private func row(_ list: DPSongList) -> some View {

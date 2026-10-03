@@ -95,7 +95,7 @@ class SheetMusicActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setTagMasterContent { SheetMusicScreen(this) }
+        setTagMasterContent(TagMasterAnalytics.SCREEN_SHEET_MUSIC) { SheetMusicScreen(this) }
         val tagId = intent.getIntExtra("tagId", -1)
         Tag.loadTagById(tagId).continueWith({ task ->
             if (!isFinishing && !isDestroyed) {
@@ -271,7 +271,7 @@ private fun KeyFab(
     modifier: Modifier,
 ) {
     val colors = TagMasterTheme.colors
-    val player = rememberNotePlayer()
+    val player = rememberNotePlayer { TagMasterAnalytics.keyNotePlayed(TagMasterAnalytics.SOURCE_SHEET_MUSIC) }
     val playing = tag.keyNote?.isPlaying == true
     val shape = RoundedCornerShape(16.dp)
     val content = if (playing) colors.onPrimary else colors.primary

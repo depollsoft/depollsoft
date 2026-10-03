@@ -57,6 +57,8 @@ private final class LiveSoundPreviewer {
                                 accidental: c4.accidental, frequency: c4.frequency) else { return }
         note.play()
         self.note = note
+        // A sound (no review for a while after it), though not a pitch played.
+        PitchPerfectUsage.soundPlayed()
         let work = DispatchWorkItem { [weak self] in self?.stop() }
         pending = work
         DispatchQueue.main.asyncAfter(deadline: .now() + Self.duration, execute: work)
@@ -65,6 +67,7 @@ private final class LiveSoundPreviewer {
     func stop() {
         pending?.cancel()
         pending = nil
+        if note?.isPlaying == true { PitchPerfectUsage.soundStopped() }
         note?.stop()
         note = nil
     }
@@ -351,6 +354,7 @@ struct SettingsScreen: View {
             }
         }
         .onAppear { model.reload() }
+        .analyticsScreen("settings")
         .navigationDestination(isPresented: $model.showingSoundPicker) {
             SoundPickerScreen(model: model)
         }
@@ -612,6 +616,8 @@ struct SoundPickerScreen: View {
         .navigationBarTitleDisplayMode(.inline)
         .instrumentChrome()
         .onDisappear { model.stopPreview() }
+        // Part of Settings, as Android's Sound dialog is.
+        .analyticsScreen("settings")
     }
 }
 

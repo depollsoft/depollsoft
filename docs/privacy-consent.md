@@ -2,7 +2,9 @@
 
 Pitch Perfect and Tag Master ask separately for usage analytics and crash reports. Both are off on a new installation and stay off if the screen is dismissed. Saving or declining is remembered on that installation. Settings > Privacy choices reopens the controls.
 
-Analytics consent enables Google Analytics. On Android it also permits the existing DepollSoft app-open event. Declining disables Analytics and resets its local data. Crash reporting uses Firebase's opt-in collection control; declining deletes unsent reports. Disabling crash reporting takes full effect on the next app launch, as stated on the screen. These controls do not delete reports already received by either service.
+Analytics consent enables Google Analytics: the screens, feature-use events and user properties listed in [analytics.md](analytics.md), plus what Firebase collects on its own (sessions, app and device information). Declining disables Analytics and resets its local data. Crash reporting uses Firebase's opt-in collection control; declining deletes unsent reports. Disabling crash reporting takes full effect on the next app launch, as stated on the screen. These controls do not delete reports already received by either service.
+
+The review prompt ([analytics.md](analytics.md#review-prompts)) keeps its own counts (days of use, the last ask, the last sound) on the device. They are never sent anywhere and don't depend on either choice.
 
 Telemetry does not enable advertising consent. Firebase ad storage, ad user data, and ad personalization are denied. iOS uses FirebaseAnalyticsCore, which omits Analytics IDFA collection. Facebook automatic app events and advertiser-ID collection are disabled in both apps.
 
@@ -14,11 +16,11 @@ Publish the appropriate messages for **both** Pitch Perfect app IDs in AdMob > P
 
 ## Publication work outside this PR
 
-The currently published policy at https://apps.depoll.com/privacy/ contains outdated statements about not collecting information. Update it before releasing these changes. The in-app screen explains the actual optional collection; linking to the existing policy does not correct its text.
+The published policy at https://apps.depoll.com/privacy/ describes the optional collection below; keep it, and the store disclosures, in step with it. (It still says Android may send app-open events to DepollSoft's analytics service, which the apps no longer do.)
 
 The policy and store disclosures need to describe:
 
-- Optional Google Analytics usage events, installation identifiers, and app/device information; Android's existing DepollSoft usage endpoint.
+- Optional Google Analytics usage events (screens visited and features used, as listed in [analytics.md](analytics.md)), installation identifiers, and app/device information.
 - Optional Firebase Crashlytics reports, stack traces, installation identifiers, and app/device information.
 - Pitch Perfect's separate Google advertising/consent processing and iOS tracking permission.
 - Account and synchronization data, how to change consent, data retention, and how to request deletion of data already received.

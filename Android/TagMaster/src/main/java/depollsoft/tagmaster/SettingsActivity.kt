@@ -124,6 +124,7 @@ class SettingsActivity : AppCompatActivity() {
                     hasError = response?.error != null,
                 )
             AuthState.notifyChanged()
+            if (outcome == SignInOutcome.SIGNED_IN) TagMasterAnalytics.signedIn(response?.providerType)
             showMessage(
                 when (outcome) {
                     SignInOutcome.SIGNED_IN -> R.string.forms_signed_in
@@ -135,7 +136,7 @@ class SettingsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setTagMasterContent { SettingsScreen(this) }
+        setTagMasterContent(TagMasterAnalytics.SCREEN_SETTINGS) { SettingsScreen(this) }
         refreshCacheSize()
     }
 

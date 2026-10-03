@@ -21,6 +21,8 @@ import kotlin.math.PI
  *   (the watch).
  * @param screenReaderFeedback whether a screen reader's activation taps and ticks as a finger
  *   does (the watch) or is silent (the phone).
+ * @param onNoteStarted runs when a press, a toggle or a screen reader starts a note; not when a
+ *   finger slides onto the next one.
  */
 abstract class InstrumentState<G : InstrumentGeometry>(
     val model: PitchPipe,
@@ -29,6 +31,7 @@ abstract class InstrumentState<G : InstrumentGeometry>(
     private val reduceMotion: () -> Boolean,
     private val tapEveryToggle: Boolean,
     private val screenReaderFeedback: Boolean,
+    private val onNoteStarted: () -> Unit = {},
 ) {
     /** "Notes play until pressed again": a tap latches a note instead of holding it. */
     var toggleMode by mutableStateOf(false)
@@ -45,12 +48,16 @@ abstract class InstrumentState<G : InstrumentGeometry>(
     val breathing: Boolean get() = notes.any { it.isPlaying } && !reduceMotion()
 
     private val main = Handler(Looper.getMainLooper())
+
+    /** Whether the tracker is handling a finger landing, rather than one sliding. */
+    private var pressing = false
     private val touchTracker =
         PitchMultiTouchTracker(
             onStart = { cell ->
                 cancelPendingStop(cell)
                 notes.getOrNull(cell)?.play()
                 haptic(HapticFeedbackConstants.KEYBOARD_TAP)
+                if (pressing) onNoteStarted()
             },
             onStop = { cell -> notes.getOrNull(cell)?.stop() },
         )
@@ -92,8 +99,14 @@ abstract class InstrumentState<G : InstrumentGeometry>(
             val note = notes[index]
             note.isPlaying = !note.isPlaying
             if (tapEveryToggle || note.isPlaying) haptic(HapticFeedbackConstants.KEYBOARD_TAP)
+            if (note.isPlaying) onNoteStarted()
         } else {
-            touchTracker.press(pointerId.toInt(), index)
+            pressing = true
+            try {
+                touchTracker.press(pointerId.toInt(), index)
+            } finally {
+                pressing = false
+            }
         }
         return true
     }
@@ -153,9 +166,11 @@ abstract class InstrumentState<G : InstrumentGeometry>(
         if (toggleMode) {
             note.isPlaying = !note.isPlaying
             if (screenReaderFeedback && note.isPlaying) haptic(HapticFeedbackConstants.KEYBOARD_TAP)
+            if (note.isPlaying) onNoteStarted()
         } else {
             cancelPendingStop(cell)
             note.play()
+            onNoteStarted()
             if (screenReaderFeedback) haptic(HapticFeedbackConstants.KEYBOARD_TAP)
             val stop =
                 Runnable {

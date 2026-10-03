@@ -21,6 +21,8 @@ internal class SoundPreview(
         val preview = Note(c4.friendlyName, c4.octave, c4.accidental, c4.frequency)
         note = preview
         preview.play()
+        // A sound (no review for a while after it), though not a pitch played.
+        PitchPerfectAnalytics.soundPlayed()
         handler.postDelayed(stopLater, DURATION_MS)
     }
 

@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
+import depollsoft.compose.ScreenView
 import depollsoft.pitchperfect.ui.PlateActionIcon
 import depollsoft.pitchperfect.ui.PlateTheme
 import depollsoft.pitchperfect.ui.PlateTopBar
@@ -39,6 +40,7 @@ class AddSongActivity : AppCompatActivity() {
             PlateTheme {
                 val titleFocus = remember { FocusRequester() }
                 val save = rememberSongSave(editor, { done(RESULT_SAVED) }, titleFocus)
+                ScreenView(PitchPerfectAnalytics.SCREEN_SONG_EDITOR)
                 Column(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
                     PlateTopBar(stringResource(if (editor.editing) R.string.EditSong else R.string.AddSong)) {
                         PlateActionIcon(R.drawable.ic_delete, stringResource(R.string.RemoveSong), ::remove, Modifier.testTag(TestTags.REMOVE_SONG))

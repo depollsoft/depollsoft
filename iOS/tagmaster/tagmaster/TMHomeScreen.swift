@@ -219,7 +219,7 @@ final class TMHomeModel: TMTagListing {
     }
 
     func commitNewList(_ name: String) {
-        _ = TMTagLists.createList(named: name)
+        if TMTagLists.createList(named: name) != nil { TagMasterUsage.tagListCreated() }
         reload()
         UIAccessibility.post(notification: .layoutChanged, argument: nil)
     }

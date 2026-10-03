@@ -58,7 +58,10 @@ final class AddSongsModel {
     func confirm() -> Int {
         let selected = allSongs.filter { chosen.contains($0.rowID) }
         guard !selected.isEmpty else { return 0 }
+        // A set list deleted on another device meanwhile is no longer anyone's, so nothing was added.
+        let targetExists = store.songLists[target.id] != nil
         store.copySongs(selected, to: target)
+        if targetExists { PitchPerfectUsage.songsAddedToSetList() }
         return selected.count
     }
 
@@ -89,6 +92,7 @@ struct AddSongsList: View {
         .plateList(fullScreen: true)
         .environment(\.defaultMinListHeaderHeight, 0)
         .instrumentChrome()
+        .analyticsScreen("add_songs")
     }
 
     private func row(_ song: DPPitchedSong) -> some View {

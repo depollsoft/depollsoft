@@ -43,6 +43,7 @@ import depollsoft.compose.ViewAlign
 import depollsoft.compose.listViewScrollbar
 import depollsoft.compose.scrollViewScrollbar
 import depollsoft.tagmaster.R
+import depollsoft.tagmaster.TagMasterAnalytics
 import depollsoft.tagmaster.barbershop.Tag
 import depollsoft.tagmaster.barbershop.Video
 import depollsoft.tagmaster.ui.ReadingWidth
@@ -297,7 +298,10 @@ private fun VideoRow(
         modifier
             .fillMaxWidth()
             .heightIn(min = 72.dp)
-            .clickable { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(watch))) }
+            .clickable {
+                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(watch)))
+                TagMasterAnalytics.videoOpened()
+            }
             .padding(horizontal = padding),
         verticalAlignment = ViewAlign.CenterVertically,
     ) {

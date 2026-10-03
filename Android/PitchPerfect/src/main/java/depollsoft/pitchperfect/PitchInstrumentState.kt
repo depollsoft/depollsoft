@@ -5,11 +5,13 @@ package depollsoft.pitchperfect
  *
  * @param haptic performs a `HapticFeedbackConstants` effect on the face.
  * @param reduceMotion whether the system asks for animations to be switched off.
+ * @param onNoteStarted runs when someone starts a note (see [InstrumentState]).
  */
 class PitchInstrumentState(
     model: PitchPipe,
     haptic: (Int) -> Unit = {},
     reduceMotion: () -> Boolean = { false },
+    onNoteStarted: () -> Unit = {},
 ) : InstrumentState<PitchInstrumentGeometry>(
         model,
         ::PitchInstrumentGeometry,
@@ -17,4 +19,5 @@ class PitchInstrumentState(
         reduceMotion,
         tapEveryToggle = true,
         screenReaderFeedback = false,
+        onNoteStarted = onNoteStarted,
     )

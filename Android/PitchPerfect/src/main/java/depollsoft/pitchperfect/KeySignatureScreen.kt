@@ -140,6 +140,10 @@ private fun KeyRow(
     val note = key.note
     val lit = note.isPlaying
     val ink = if (lit) colors.onAccent else colors.ink
+    val play = {
+        note.play()
+        PitchPerfectAnalytics.pitchPlayed(PitchPerfectAnalytics.Source.KEYS)
+    }
     Row(
         modifier
             .fillMaxWidth()
@@ -148,13 +152,13 @@ private fun KeyRow(
             .soundsWhileHeld(
                 toggleMode = { SettingsModel.toggleNotes },
                 isPlaying = { note.isPlaying },
-                play = { note.play() },
+                play = play,
                 stop = { note.stop() },
             ).semantics(mergeDescendants = true) {
                 contentDescription = SongKeys.spokenName(key)
                 role = Role.Button
                 selected = lit
-                onClick { BriefNotes.activate(note) }
+                onClick { BriefNotes.activate(note, { note.isPlaying }, play, { note.stop() }) }
             },
         verticalAlignment = ViewAlign.CenterVertically,
     ) {

@@ -220,7 +220,14 @@ final class TMTrackPlayerModel {
 
     func requestFocus() { focusRequest += 1 }
 
+    /// Every inline player there is, so the app can tell whether any track is sounding.
+    private static let all = NSHashTable<TMTrackPlayerModel>.weakObjects()
+
+    /// Whether a learning track is playing on any tag's page.
+    static var anyPlaying: Bool { all.allObjects.contains { $0.player.isPlaying } }
+
     init() {
+        TMTrackPlayerModel.all.add(self)
         player.onProgress = { [weak self] in MainActor.assumeIsolated { self?.refresh() } }
         player.onEnded = { [weak self] in
             MainActor.assumeIsolated {
@@ -239,12 +246,32 @@ final class TMTrackPlayerModel {
         refresh()
     }
 
-    func play() { _ = player.play(); refresh() }
+    /// Starts the track; false when the audio engine couldn't start.
+    @discardableResult
+    func play() -> Bool {
+        let started = player.play()
+        refresh()
+        return started
+    }
+
     func pause() { player.pause(); refresh() }
     func stop() { player.stop(); refresh() }
 
     func togglePlayPause() {
-        if player.isPlaying { player.pause() } else { _ = player.play() }
+        if player.isPlaying {
+            player.pause()
+        } else {
+            // From the top (stopped, or ended, which stops) starts the track over; anywhere
+            // else a paused track plays on, which is a sound but not another play.
+            let fromTop = player.currentTime == 0
+            if player.play() {
+                if fromTop, let track {
+                    TagMasterUsage.learningTrackPlayed(title: track.title)
+                } else {
+                    ReviewPrompt.shared.recordSound()
+                }
+            }
+        }
         refresh()
     }
 
@@ -267,6 +294,8 @@ final class TMTrackPlayerModel {
     func centerBalance() { setBalance(TMBalanceAudioPlayer.centeredBalance) }
 
     func refresh() {
+        // However it stopped (pause, stop, the end, an interruption), that was a sound.
+        if isPlaying, !player.isPlaying { TagMasterUsage.soundStopped() }
         isPlaying = player.isPlaying
         isLoaded = player.isLoaded
         duration = player.duration
@@ -343,7 +372,7 @@ final class TagTracksModel {
     func present(_ track: DPTrack, buffer: AVAudioPCMBuffer) {
         player.load(track: track, buffer: buffer)
         playerVisible = true
-        player.play()
+        if player.play() { TagMasterUsage.learningTrackPlayed(title: track.title) }
         // VoiceOver lands on Play/Pause, as the UIKit player posted it.
         player.requestFocus()
         UIAccessibility.post(notification: .layoutChanged, argument: nil)
@@ -355,7 +384,7 @@ final class TagTracksModel {
         if player.track === track, player.isLoaded {
             // Same track again: restart it rather than reloading.
             player.stop()
-            player.play()
+            if player.play() { TagMasterUsage.learningTrackPlayed(title: track.title) }
             return
         }
         // Android stops the old track as soon as a new one is chosen.

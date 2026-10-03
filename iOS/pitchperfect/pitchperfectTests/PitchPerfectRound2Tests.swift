@@ -310,6 +310,21 @@ final class CleanupHelperTests: PitchPerfectTestCase {
         app.host.dismiss(animated: false)
     }
 
+    /// If SwiftUI leaves the list's collection view out of edit mode, as it did on a
+    /// slow CI simulator, the Songs screen puts it back in step.
+    func testEditModeReachesTheListEvenIfSwiftUIMissesIt() throws {
+        seedSongs(["Blue Skies", "Shenandoah"])
+        let app = try launch()
+        app.editSongs()
+        let list = try XCTUnwrap(app.descendants(of: UICollectionView.self, in: app.window).first { $0.window != nil })
+        settle { list.isEditing }
+        // The miss: the model edits, the collection view doesn't.
+        list.isEditing = false
+        app.songs.keepListInStep()
+        settle(5) { list.isEditing }
+        XCTAssertTrue(app.songs.isEditing)
+    }
+
     /// In edit mode the delete, disclosure and reorder controls sit where a real
     /// UITableView in the same place puts them.
     func testEditModeControlsSitWhereUIKitsTablePutsThem() throws {
@@ -349,8 +364,23 @@ final class CleanupHelperTests: PitchPerfectTestCase {
         // disclosure slides in with them: on a loaded runner the first frames
         // seen can be mid-slide (CI once read the disclosure at 397.5, not 316).
         // Wait for the layout to finish; if it never lands, the checks below say where it stopped.
-        settle { controls().map(settled) ?? false }
-        let (delete, reorder, info) = try XCTUnwrap(controls())
+        // An overloaded runner once took more than the usual 10 s to show the controls at all
+        // (PR #89); 20 s still leaves the launch room inside the 30 s test budget.
+        settle(20) { controls().map(settled) ?? false }
+        guard let (delete, reorder, info) = controls() else {
+            // Say what was there instead, so a failure on CI shows where edit mode stopped.
+            let shown = editing
+            let cells = shown?.visibleCells.sorted { $0.frame.minY < $1.frame.minY } ?? []
+            let parts = cells.first.map { cell in
+                app.descendants(of: UIView.self, in: cell).map { String(describing: type(of: $0)) }
+                    .filter { $0.contains("Control") || $0.contains("Button") || $0.contains("Accessory") }
+            } ?? []
+            return XCTFail("""
+                The edit controls never appeared. Songs editing: \(app.songs.isEditing); \
+                list: \(shown.map { "\($0.visibleCells.count) rows, editing \($0.isEditing)" } ?? "none"); \
+                top row controls: \(parts)
+                """)
+        }
         XCTAssertEqual(delete.minX, reference.delete.minX, accuracy: 0.5, "delete control")
         XCTAssertEqual(reorder.minX, reference.reorder.minX, accuracy: 0.5, "reorder control")
         XCTAssertEqual(info.maxX, reference.info.maxX, accuracy: 0.5, "detail disclosure")

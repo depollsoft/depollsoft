@@ -141,6 +141,12 @@ enum WidgetInstrumentHook {
     /// note or its release, a pitch pipe or wave note), so the widget leaves
     /// the shared audio session active.
     static var isSounding: (() -> Bool)?
+    /// Tells the app a cell started sounding, for its analytics and review
+    /// counts; the widget target has neither.
+    static var pitchStarted: (() -> Void)?
+    /// Tells the app a cell stopped sounding (toggled off, a range change, an
+    /// instrument note dying away), for its review counts.
+    static var pitchStopped: (() -> Void)?
 }
 
 /// The note a widget cell started, set once `start` returns, for its `ended`
@@ -241,12 +247,14 @@ final class WidgetTonePlayer {
             // The app's MIDI player is still playing the release; it gives
             // up the session itself once it falls silent.
             WidgetInstrumentHook.stop?(note)
+            WidgetInstrumentHook.pitchStopped?()
             return
         }
         if let playing = players.removeValue(forKey: pitchIndex) {
             end(playing, cell: pitchIndex)
             balanceVolume()
             deactivateIfSilent()
+            WidgetInstrumentHook.pitchStopped?()
             return
         }
         let sound = WidgetSoundState.sound
@@ -298,6 +306,8 @@ final class WidgetTonePlayer {
     }
 
     func stop() {
+        let wasSounding = !activePitches.isEmpty
+        defer { if wasSounding { WidgetInstrumentHook.pitchStopped?() } }
         players.forEach { end($0.value, cell: $0.key) }
         players.removeAll()
         instrumentNotes.values.forEach { WidgetInstrumentHook.stop?($0) }
@@ -309,6 +319,7 @@ final class WidgetTonePlayer {
     /// A cell's instrument note fell silent on its own: the cell goes dark.
     private func instrumentEnded(cell: Int) {
         instrumentNotes.removeValue(forKey: cell)
+        WidgetInstrumentHook.pitchStopped?()
         WidgetPitchState.set(activePitches)
         WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
         deactivateIfSilent()
@@ -378,7 +389,9 @@ struct PlayWidgetPitchIntent: AudioPlaybackIntent {
         try await MainActor.run {
             let player = WidgetTonePlayer.shared
             defer { WidgetPitchState.set(player.activePitches) }
+            let wasSounding = player.activePitches.contains(pitchIndex)
             try player.toggle(pitchIndex: pitchIndex, frequency: frequency)
+            if !wasSounding, player.activePitches.contains(pitchIndex) { WidgetInstrumentHook.pitchStarted?() }
         }
         return .result()
     }
