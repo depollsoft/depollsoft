@@ -93,6 +93,16 @@ final class TagMasterAnalyticsTests: TMBehaviorTestCase {
         XCTAssertEqual(reviewDefaults.double(forKey: "review.lastSoundAt"), Date().timeIntervalSince1970, accuracy: 5)
     }
 
+    func testAKeyNoteHeldForMinutesIsRecentWhenItStops() {
+        let (model, _) = loadedModel()
+        model.summary.pressKey()
+        // As if it had been sounding for ten minutes.
+        reviewDefaults.set(Date().timeIntervalSince1970 - 600, forKey: "review.lastSoundAt")
+        model.summary.releaseKey()
+        XCTAssertEqual(reviewDefaults.double(forKey: "review.lastSoundAt"), Date().timeIntervalSince1970, accuracy: 5,
+                       "the quiet a review waits for starts when the note stops")
+    }
+
     func testTrackTitlesNameTheirPart() {
         XCTAssertEqual(["All Parts", "Tenor", "Lead", "Baritone", "Bass", "Other 1", "Other 4", nil].map(TagMasterUsage.part(forTrackTitle:)),
                        ["all", "tenor", "lead", "baritone", "bass", "other", "other", "other"])

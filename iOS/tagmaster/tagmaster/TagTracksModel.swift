@@ -294,6 +294,8 @@ final class TMTrackPlayerModel {
     func centerBalance() { setBalance(TMBalanceAudioPlayer.centeredBalance) }
 
     func refresh() {
+        // However it stopped (pause, stop, the end, an interruption), that was a sound.
+        if isPlaying, !player.isPlaying { TagMasterUsage.soundStopped() }
         isPlaying = player.isPlaying
         isLoaded = player.isLoaded
         duration = player.duration

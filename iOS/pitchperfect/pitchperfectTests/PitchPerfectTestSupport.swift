@@ -152,6 +152,12 @@ final class HostedApp {
 
     func editSongs() {
         show(tab: 3)
+        // Edit is tapped on a list that is on screen, as a person would.
+        let deadline = Date().addingTimeInterval(10)
+        while !descendants(of: UICollectionView.self, in: window).contains(where: { $0.window != nil }),
+              Date() < deadline {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.02))
+        }
         ui.tap(id: "pencil")
     }
 

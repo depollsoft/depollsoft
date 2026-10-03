@@ -29,6 +29,7 @@ internal class WidgetAwareNotePlayer(
 
     override fun stop(n: Note) {
         val wasSounding = n.isPlaying
+        if (wasSounding) PitchPerfectAnalytics.soundStopped()
         delegate.stop(n)
         if (wasSounding) onSoundingChanged()
     }

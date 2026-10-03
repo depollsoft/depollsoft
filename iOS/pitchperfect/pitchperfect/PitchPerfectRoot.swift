@@ -50,21 +50,25 @@ struct PitchPerfectRoot: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     var body: some View {
+        // Each tab reports itself as it appears and disappears, so no tab's content
+        // depends on which tab is chosen: reading it there rebuilt every tab on each
+        // switch, and edit mode set while the Songs list was still being rebuilt was
+        // lost (the model edited, the list's collection view never did; seen on CI).
         TabView(selection: $models.tab) {
-            NavigationStack { PitchPipeScreen(model: models.pitchPipe).analyticsScreen(screen(.pitchPipe)) }
+            NavigationStack { PitchPipeScreen(model: models.pitchPipe).analyticsScreen(PitchPerfectTab.pitchPipe.screenName) }
                 .tabItem { TabLabel(title: "Pitch Pipe", image: "pitchpipe.png") }
                 .tag(PitchPerfectTab.pitchPipe)
-            NavigationStack { NotesScreen(model: models.notes).analyticsScreen(screen(.notes)) }
+            NavigationStack { NotesScreen(model: models.notes).analyticsScreen(PitchPerfectTab.notes.screenName) }
                 .tabItem { TabLabel(title: "Notes", image: "notes.png") }
                 .tag(PitchPerfectTab.notes)
-            NavigationStack { KeysScreen(model: models.keys).analyticsScreen(screen(.keys)) }
+            NavigationStack { KeysScreen(model: models.keys).analyticsScreen(PitchPerfectTab.keys.screenName) }
                 .tabItem { TabLabel(title: "Keys", image: "keys.png") }
                 .tag(PitchPerfectTab.keys)
             NavigationStack {
                 SongListScreen(model: models.songs)
-                    .analyticsScreen(screen(.songs))
+                    .analyticsScreen(PitchPerfectTab.songs.screenName)
                     // The song list is where a review may be asked for after a finished task.
-                    .reviewCalmScreen(models.tab == .songs)
+                    .reviewCalmScreen()
             }
                 .tabItem { TabLabel(title: "Songs", image: "songs.png") }
                 .tag(PitchPerfectTab.songs)
@@ -85,12 +89,6 @@ struct PitchPerfectRoot: View {
             if phase == .active { DPAppDelegate.sceneDidBecomeActive() }
             ScreenTracker.shared.scenePhaseChanged(phase)
         }
-    }
-
-    /// A tab's screen name while it is the chosen tab: every tab stays alive in
-    /// the TabView, so only the chosen one reports.
-    private func screen(_ tab: PitchPerfectTab) -> String? {
-        models.tab == tab ? tab.screenName : nil
     }
 }
 

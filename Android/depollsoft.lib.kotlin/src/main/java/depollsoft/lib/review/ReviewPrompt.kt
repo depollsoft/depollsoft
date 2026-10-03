@@ -58,7 +58,7 @@ object ReviewPrompt {
     /** The uptime clock the task window is measured on; tests replace it. */
     var uptimeMillis: () -> Long = SystemClock::uptimeMillis
 
-    private val handler = Handler(Looper.getMainLooper())
+    private val handler by lazy { Handler(Looper.getMainLooper()) }
     private var installed: ReviewPolicy? = null
     private var watchedApp: Application? = null
     private var calmActivity: Activity? = null

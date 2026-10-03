@@ -90,7 +90,8 @@ object Sounding {
         sources.add(source)
     }
 
+    /** [source] stopped; the quiet a review waits for runs from here, however long it sounded. */
     fun stopped(source: Any) {
-        sources.remove(source)
+        if (sources.remove(source)) ReviewPrompt.recordSound()
     }
 }

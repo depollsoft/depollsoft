@@ -26,6 +26,12 @@ enum PitchPerfectUsage {
         ReviewPrompt.shared.recordSound()
     }
 
+    /// A note stopped sounding. The quiet a review waits for runs from the end of
+    /// a sound, so a note held (or toggled on) for minutes still counts as recent.
+    static func soundStopped() {
+        ReviewPrompt.shared.recordSound()
+    }
+
     static func songAdded() {
         UsageAnalytics.event("song_added")
         ReviewPrompt.shared.taskFinished()
@@ -71,6 +77,7 @@ enum PitchPerfectUsage {
         ReviewPrompt.shared.install()
         ReviewPrompt.shared.isBusy = { isSounding }
         WidgetInstrumentHook.pitchStarted = { pitchPlayed(.widget) }
+        WidgetInstrumentHook.pitchStopped = { soundStopped() }
         // Allowed after launch (the first launch's Privacy choices): send what was held back.
         TelemetryConsent.analyticsAllowed = {
             MainActor.assumeIsolated {

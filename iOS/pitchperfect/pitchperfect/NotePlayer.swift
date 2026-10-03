@@ -63,11 +63,13 @@ final class NotePlayer {
     }
 
     func stop(_ note: DPNote) {
+        if note.isPlaying { PitchPerfectUsage.soundStopped() }
         note.stop()
         revision += 1
     }
 
     func stop(_ notes: [DPNote]) {
+        if notes.contains(where: \.isPlaying) { PitchPerfectUsage.soundStopped() }
         notes.forEach { $0.stop() }
         revision += 1
     }

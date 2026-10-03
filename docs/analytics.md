@@ -106,8 +106,10 @@ Its counts stay on the device, are never sent anywhere, and do not depend on the
   a tag opened (Tag Master).
 - They have not been asked in this app version, nor in the last **180 days**. After an ask the days of
   use start over.
-- Nothing has sounded for **5 minutes**: no pitch, key note or learning track and no video opened. Someone
-  who just played something may be rehearsing or singing with others.
+- Nothing has sounded for **5 minutes**: no pitch, key note or learning track has started or stopped,
+  and no video was opened. The quiet runs from the end of a sound, so a track played for ten minutes
+  still counts as recent when it stops. Someone who just played something may be rehearsing or singing
+  with others.
 
 ### When
 

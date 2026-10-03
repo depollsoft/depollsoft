@@ -37,6 +37,12 @@ object PitchPerfectAnalytics {
         ReviewPrompt.recordSound()
     }
 
+    /**
+     * A note stopped sounding. The quiet a review waits for runs from the end of a sound, so a note
+     * held (or toggled on) for minutes still counts as recent.
+     */
+    fun soundStopped() = ReviewPrompt.recordSound()
+
     fun songAdded() = taskFinished("song_added")
 
     fun setListCreated() = taskFinished("set_list_created")

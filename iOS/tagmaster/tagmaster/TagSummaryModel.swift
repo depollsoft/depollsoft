@@ -80,6 +80,7 @@ final class TagSummaryModel {
     /// Leaving the page, or the tag changing under it, silences the note, however it was started.
     func stopKeyNote() {
         keyActivation += 1
+        if soundingNote != nil { TagMasterUsage.soundStopped() }
         soundingNote?.stop()
         soundingNote = nil
         syncKeyNote()

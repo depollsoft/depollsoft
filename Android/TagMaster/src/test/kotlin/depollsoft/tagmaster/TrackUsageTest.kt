@@ -5,6 +5,8 @@ import android.media.MediaPlayer
 import android.os.Looper
 import bolts.TaskCompletionSource
 import depollsoft.lib.analytics.UsageAnalytics
+import depollsoft.lib.review.ReviewPolicy
+import depollsoft.lib.review.ReviewPrompt
 import depollsoft.lib.util.ContentCache
 import depollsoft.tagmaster.barbershop.RemoteLocation
 import depollsoft.tagmaster.ui.detail.TrackPlayer
@@ -49,6 +51,35 @@ class TrackUsageTest {
     }
 
     @After fun reset() = UsageAnalytics.resetForTesting()
+
+    private companion object {
+        const val DAY = 24L * 60 * 60 * 1000
+    }
+
+    @Test
+    fun anythingSoundingForMinutesKeepsTheQuietFromWhenItStops() {
+        val prefs = RuntimeEnvironment.getApplication().getSharedPreferences("track_usage_test", android.content.Context.MODE_PRIVATE)
+        prefs.edit().clear().commit()
+        var now = 1_790_881_200_000L
+        val policy = ReviewPolicy(prefs, { now })
+        ReviewPrompt.policyForTesting = policy
+        try {
+            repeat(ReviewPolicy.MIN_ACTIVE_DAYS) {
+                policy.recordUse()
+                now += DAY
+            }
+            now += ReviewPolicy.MIN_DAYS_SINCE_FIRST_USE * DAY
+            val track = Any()
+            Sounding.started(track)
+            now += 10 * 60 * 1000L
+            Sounding.stopped(track)
+            assertFalse("the quiet starts when the sound stops", policy.shouldAsk("1.0"))
+            now += ReviewPolicy.QUIET_MILLIS_AFTER_SOUND
+            assertTrue(policy.shouldAsk("1.0"))
+        } finally {
+            ReviewPrompt.resetForTesting()
+        }
+    }
 
     @Test
     fun thePartsAreNamedInThePickersOrder() {

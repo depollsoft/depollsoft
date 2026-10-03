@@ -123,6 +123,16 @@ final class PitchPerfectAnalyticsTests: PitchPerfectTestCase {
         XCTAssertEqual(analytics.sources, ["notes", "keys", "song"], "a press with no source (Settings' preview) is not reported")
     }
 
+    func testANoteHeldForMinutesIsRecentWhenItStops() throws {
+        let note = try XCTUnwrap((DPNote.commonNotes() as? [DPNote])?.first)
+        NotePlayer.shared.play(note)
+        // As if it had been sounding for ten minutes.
+        reviewDefaults.set(Date().timeIntervalSince1970 - 600, forKey: "review.lastSoundAt")
+        NotePlayer.shared.stop(note)
+        XCTAssertEqual(reviewDefaults.double(forKey: "review.lastSoundAt"), Date().timeIntervalSince1970, accuracy: 5,
+                       "the quiet a review waits for starts when the note stops")
+    }
+
     func testASoundKeepsTheReviewAwayForFiveMinutes() {
         let model = PitchPipeModel()
         model.activate(cell: 0)

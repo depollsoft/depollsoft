@@ -35,6 +35,12 @@ enum TagMasterUsage {
         ReviewPrompt.shared.recordSound()
     }
 
+    /// A key note or learning track stopped. The quiet a review waits for runs
+    /// from the end of a sound, so a track played for minutes still counts as recent.
+    static func soundStopped() {
+        ReviewPrompt.shared.recordSound()
+    }
+
     static func videoOpened() {
         UsageAnalytics.event("video_opened")
         ReviewPrompt.shared.recordSound()

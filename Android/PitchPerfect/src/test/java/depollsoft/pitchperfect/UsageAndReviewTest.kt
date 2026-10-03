@@ -13,6 +13,7 @@ import depollsoft.lib.review.ReviewPrompt
 import depollsoft.pitchperfect.lib.Note
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -221,6 +222,21 @@ class UsageAndReviewTest {
         SettingsModel.applyRemoteNoteSound("piano")
         assertEquals("432", properties["reference_pitch"])
         assertEquals("piano", properties["note_sound"])
+    }
+
+    @Test
+    fun aNoteHeldForMinutesKeepsTheQuietFromWhenItStops() {
+        becomeEligible()
+        Note.setPlayer(WidgetAwareNotePlayer(ScreenTestSupport.silentPlayer) {})
+        val note = Note.getCommonNotes()[0]
+        note.play()
+        now += 10 * 60 * 1000L
+        assertTrue("ten minutes after it started", policy.shouldAsk("1.0"))
+        note.stop()
+        assertFalse("the quiet starts when the note stops", policy.shouldAsk("1.0"))
+        now += ReviewPolicy.QUIET_MILLIS_AFTER_SOUND
+        assertTrue(policy.shouldAsk("1.0"))
+        Note.setPlayer(ScreenTestSupport.silentPlayer)
     }
 
     private fun List<String>.distinctConsecutive(): List<String> = filterIndexed { index, name -> index == 0 || this[index - 1] != name }

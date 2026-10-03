@@ -144,6 +144,8 @@ enum WidgetInstrumentHook {
     /// Tells the app a cell started sounding, for its analytics and review
     /// counts; the widget target has neither.
     static var pitchStarted: (() -> Void)?
+    /// Tells the app a cell stopped sounding, for its review counts.
+    static var pitchStopped: (() -> Void)?
 }
 
 /// The note a widget cell started, set once `start` returns, for its `ended`
@@ -384,6 +386,7 @@ struct PlayWidgetPitchIntent: AudioPlaybackIntent {
             let wasSounding = player.activePitches.contains(pitchIndex)
             try player.toggle(pitchIndex: pitchIndex, frequency: frequency)
             if !wasSounding, player.activePitches.contains(pitchIndex) { WidgetInstrumentHook.pitchStarted?() }
+            if wasSounding, !player.activePitches.contains(pitchIndex) { WidgetInstrumentHook.pitchStopped?() }
         }
         return .result()
     }
