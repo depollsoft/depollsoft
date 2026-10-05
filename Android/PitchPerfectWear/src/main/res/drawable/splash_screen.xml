@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Wear app quality guideline WO-V15 ("Branded launch"): the launch screen shows the
+     launcher icon as a 48x48dp circle centred on black. Wrapping the adaptive icon in a
+     sized layer keeps it at 48dp on every Wear OS version; the bare launcher icon came out
+     as core-splashscreen's 60dp masked disc, which Play rejected. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:width="@dimen/splash_screen_icon_size"
+        android:height="@dimen/splash_screen_icon_size"
+        android:drawable="@mipmap/ic_launcher"
+        android:gravity="center" />
+</layer-list>

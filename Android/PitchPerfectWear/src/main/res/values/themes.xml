@@ -4,10 +4,13 @@
         <item name="android:windowBackground">@color/plate_ground</item>
     </style>
 
-    <!-- Wear app quality requires the launcher icon on the splash screen. -->
+    <!-- Wear app quality guideline WO-V15: the launcher icon, 48x48dp, centred on a black
+         splash screen. The drawable sizes the icon and the background is pure black, not
+         plate_ground: Play rejected the 60dp disc on plate_ground that the bare launcher icon
+         produced as "Missing app icon in splash screen". -->
     <style name="Theme.PitchPerfect.Wear.Starting" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">@color/plate_ground</item>
-        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="windowSplashScreenBackground">@android:color/black</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_screen</item>
         <item name="postSplashScreenTheme">@style/Theme.PitchPerfect.Wear</item>
     </style>
 </resources>
