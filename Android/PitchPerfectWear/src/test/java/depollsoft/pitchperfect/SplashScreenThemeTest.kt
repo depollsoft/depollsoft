@@ -7,6 +7,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.drawable.AdaptiveIconDrawable
+import android.graphics.drawable.Drawable
 import android.graphics.drawable.LayerDrawable
 import android.util.TypedValue
 import androidx.core.content.res.ResourcesCompat
@@ -27,7 +28,6 @@ import kotlin.math.roundToInt
  * tests pin the theme, the icon's size and what the compat splash actually paints.
  */
 @RunWith(RobolectricTestRunner::class)
-@GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [35], application = Application::class)
 class SplashScreenThemeTest {
     private val context get() = ApplicationProvider.getApplicationContext<Application>()
@@ -48,6 +48,7 @@ class SplashScreenThemeTest {
     }
 
     @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
     fun splashIconIsTheLauncherIconAt48dp() {
         val icon = ResourcesCompat.getDrawable(context.resources, R.drawable.splash_screen, null)
         val layers = icon as LayerDrawable
@@ -55,16 +56,30 @@ class SplashScreenThemeTest {
         val expected = (48 * context.resources.displayMetrics.density).roundToInt()
         assertEquals(expected, layers.getLayerWidth(0))
         assertEquals(expected, layers.getLayerHeight(0))
-        assertTrue("splash icon must be the adaptive launcher icon",
-            layers.getDrawable(0) is AdaptiveIconDrawable)
+        val layer = layers.getDrawable(0)
+        assertTrue("splash icon must be the adaptive launcher icon", layer is AdaptiveIconDrawable)
+        // The guideline wants the launcher icon itself, so the layer must paint as ic_launcher.
+        val launcher = ResourcesCompat.getDrawable(context.resources, R.mipmap.ic_launcher, null)!!
+        assertTrue("splash icon pixels differ from the launcher icon", render(layer).sameAs(render(launcher)))
     }
+
+    private fun render(drawable: Drawable, size: Int = 96): Bitmap =
+        Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888).also {
+            drawable.setBounds(0, 0, size, size)
+            drawable.draw(Canvas(it))
+        }
 
     // Before Android 12 (Wear OS 3 and earlier) there is no system splash, so core-splashscreen
     // paints the window background itself; on a 384px round watch that must be a 96px (48dp)
     // icon centred on black. (Wear OS 4 draws the system splash at its own icon size.)
     @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Config(sdk = [28], qualifiers = "watch-xhdpi")
     fun compatSplashPaintsA48dpIconCentredOnBlack() {
+        // core-splashscreen's watch geometry: a 90dp icon box inside a 60dp mask hole. A 48dp
+        // layer fits; this pins that the watch dimensions, not the 288dp phone ones, are in play.
+        assertEquals(180, context.resources.getDimensionPixelSize(
+            androidx.core.splashscreen.R.dimen.splashscreen_icon_size_no_background))
         val theme = context.resources.newTheme().apply {
             applyStyle(R.style.Theme_PitchPerfect_Wear_Starting, true)
         }
