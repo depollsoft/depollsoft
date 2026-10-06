@@ -1,25 +1,9 @@
 # Pitch Perfect release evidence
 
-- iOS: Mac sign-in picker fix and GoogleUtilities stability update since 3.2.1.
-- Android phone and Wear OS: shared audio-track failure handling, note retry/highlight fixes, and the phone frame-reporting crash fix since 5.2.1.
-- Release validation: prefetch all Robolectric runtimes before Android test workers start; split iOS privacy persistence and revocation checks into focused cases with the existing duration limits and ad prompts suppressed using the existing debug switch.
+- Android phone and Wear OS: resubmission of the 5.2.2 changes that Play rejected on 2026-10-05 (Wear guideline WO-V15), with the Wear splash screen now a 48dp launcher icon on black (#96), plus the usage analytics and calm-moment review prompts from #89. Analytics stay off unless usage analytics is turned on in Privacy choices.
+- iOS: not included; 3.2.2 was submitted on 2026-10-03 and is unaffected.
 
-## ios: cbd249e71e343381854ecc74935c944e544bfab6..HEAD
+## android: 274e60e54d215303691322ece881a15d9c7e5764..HEAD
 
-74717e60 iOS: isolate telemetry UI tests from ad consent prompts
-6f16a77f iOS: keep privacy persistence and revocation UI cases focused
-a21693df Android: prefetch the runtime used by shared Java tests
-8e9d6a7b Android: fetch Robolectric runtimes before starting tests
-de444493 release: prepare both apps for crash-fix updates
-f73ac5da iOS: pin FirebaseUI to the fix for the picker crashing on a Mac (#91)
-2e8e5cea Fix Tag Master's crash at login on Mac, and this month's Crashlytics crashes (#90)
-
-## android: cbd249e71e343381854ecc74935c944e544bfab6..HEAD
-
-74717e60 iOS: isolate telemetry UI tests from ad consent prompts
-6f16a77f iOS: keep privacy persistence and revocation UI cases focused
-a21693df Android: prefetch the runtime used by shared Java tests
-8e9d6a7b Android: fetch Robolectric runtimes before starting tests
-de444493 release: prepare both apps for crash-fix updates
-f73ac5da iOS: pin FirebaseUI to the fix for the picker crashing on a Mac (#91)
-2e8e5cea Fix Tag Master's crash at login on Mac, and this month's Crashlytics crashes (#90)
+c87b181d Wear: 48dp launcher icon on a black splash screen (WO-V15) (#96)
+9cdc5f75 Usage analytics and calm-moment review prompts for both apps on Android and iOS (#89)

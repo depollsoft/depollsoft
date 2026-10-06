@@ -2,18 +2,13 @@
   "schema": 1,
   "app": "pitchperfect",
   "platforms": {
-    "ios": {
-      "version": "3.2.2",
-      "build": 1791007526
-    },
     "android": {
-      "version": "5.2.2",
-      "build": 1791007526
+      "version": "5.2.3",
+      "build": 1791237281
     }
   },
-  "notes": "On iOS, fixes a crash when opening sign-in on a Mac and improves stability. On Android and Wear OS, fixes crashes when audio cannot start. Notes that could not sound no longer stay highlighted, so you can press them to try again.",
+  "notes": "Fixes crashes when audio cannot start. Notes that could not sound no longer stay highlighted, so you can press them to try again. The Wear OS app now shows the Pitch Perfect icon on a black screen while it opens. Pitch Perfect may occasionally invite you to rate it, only while nothing is playing.",
   "since": {
-    "ios": "cbd249e71e343381854ecc74935c944e544bfab6",
-    "android": "cbd249e71e343381854ecc74935c944e544bfab6"
+    "android": "274e60e54d215303691322ece881a15d9c7e5764"
   }
 }

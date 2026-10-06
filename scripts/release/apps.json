@@ -6,7 +6,7 @@
     "wear": {
       "module": "PitchPerfectWear",
       "track": "wear:production",
-      "notes": "Fixes crashes when your watch cannot start audio playback. Notes that could not sound no longer stay highlighted, so you can press them to try again."
+      "notes": "Shows the Pitch Perfect icon on a black screen while the app opens. Fixes crashes when your watch cannot start audio playback. Notes that could not sound no longer stay highlighted, so you can press them to try again."
     },
     "ios_scheme": "pitchperfectUITests",
     "scenes": [
