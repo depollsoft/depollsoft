@@ -2,9 +2,10 @@
 //  TMShell.swift
 //  tagmaster
 //
-//  Tag Master's app shell in SwiftUI: the App, a NavigationStack on iPhone and
-//  a NavigationSplitView on iPad, each screen's bar, and the charcoal bar the
-//  app has always had. The router (TMRouter.swift) owns where things are.
+//  Tag Master's app shell in SwiftUI: the App, a NavigationStack on iPhone, a
+//  NavigationSplitView on iPad and a two-page book on an open iPhone Duo, each
+//  screen's bar, and the charcoal bar the app has always had. The router
+//  (TMRouter.swift) owns where things are.
 //
 
 import SwiftUI
@@ -130,8 +131,6 @@ final class TMPrivacyOffer {
 /// so it connects one plain scene, with no delegate, that the tests' windows join.
 @objc(TMTestAppDelegate)
 final class TMTestAppDelegate: UIResponder, UIApplicationDelegate {
-    var window: UIWindow?
-
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         DPAppDelegate.configureCacheSerialization()
@@ -188,7 +187,8 @@ struct TMRootView: View {
     var body: some View {
         GeometryReader { geometry in
             switch TMShellLayout(idiom: UIDevice.current.userInterfaceIdiom, horizontal: horizontal,
-                                 vertical: vertical, width: geometry.size.width) {
+                                 vertical: vertical, width: geometry.size.width,
+                                 fold: TMBookRoot.uprightFold(in: geometry)) {
             case .stack: TMStackRoot(router: router)
             case .split: TMSplitRoot(router: router)
             case .book: TMBookRoot(router: router)
@@ -210,15 +210,24 @@ enum TMShellLayout: Equatable {
     /// keeps the two side by side itself.
     case book
 
+    /// `fold` is the device's upright fold across the window, if it has one. The
+    /// book's divider has to run down it, so a fold too near either edge for two
+    /// pages (a window beside another app) keeps the stack.
     init(idiom: UIUserInterfaceIdiom, horizontal: UserInterfaceSizeClass?,
-         vertical: UserInterfaceSizeClass?, width: CGFloat) {
+         vertical: UserInterfaceSizeClass?, width: CGFloat, fold: CGRect? = nil) {
         if idiom == .pad {
             self = .split
-        } else if horizontal == .regular, vertical == .regular, width >= 720 {
+        } else if horizontal == .regular, vertical == .regular, width >= 720,
+                  fold.map({ Self.dividerFits($0, windowWidth: width) }) ?? true {
             self = .book
         } else {
             self = .stack
         }
+    }
+
+    /// Whether the book's divider can run down `fold` and leave each page 320 points.
+    static func dividerFits(_ fold: CGRect, windowWidth: CGFloat) -> Bool {
+        fold.midX >= 320 && windowWidth - fold.midX >= 320
     }
 }
 
@@ -358,7 +367,7 @@ struct TMBookRoot: View {
     /// (flat or half shut), an even split; without one, 36% of the window,
     /// 320–400 points, as the iPad's list.
     static func listWidth(windowWidth: CGFloat, fold: CGRect?) -> CGFloat {
-        if let fold, fold.midX >= 320, windowWidth - fold.midX >= 320 { return fold.midX }
+        if let fold, TMShellLayout.dividerFits(fold, windowWidth: windowWidth) { return fold.midX }
         return min(max(windowWidth * 0.36, 320), 400)
     }
 
@@ -371,17 +380,18 @@ struct TMBookRoot: View {
     }
 
     /// How far each page keeps its content from the divider while the device is
-    /// half shut: half the crease and the margin iOS asks for beside it. Flat, the
-    /// display is one sheet of glass and the columns keep their usual margins.
+    /// half shut: half the fold's region, whose frame holds the crease and the
+    /// margins iOS asks interactive content to keep from it. Flat, the display is
+    /// one sheet of glass and the columns keep their usual margins.
     static func creaseClearance(in geometry: GeometryProxy) -> CGFloat {
         guard #available(iOS 27.1, *),
               let crease = geometry.reservedRegions(kind: .division).first(where: { isUpright($0.frame, in: geometry.size) })
         else { return 0 }
-        return creaseClearance(band: crease.frame, margin: max(crease.margins.leading, crease.margins.trailing))
+        return creaseClearance(band: crease.frame)
     }
 
-    static func creaseClearance(band: CGRect, margin: CGFloat) -> CGFloat {
-        band.width / 2 + margin
+    static func creaseClearance(band: CGRect) -> CGFloat {
+        band.width / 2
     }
 
     private static func isUpright(_ frame: CGRect, in size: CGSize) -> Bool {
@@ -394,7 +404,9 @@ struct TMBookRoot: View {
             let showsList = router.columnVisibility != .detailOnly
             let clearance = TMBookRoot.creaseClearance(in: geometry)
             let list = TMColumnTraits(backdrop: .windowSlice, margins: listMargins, crease: (.trailing, clearance))
-            let detail = TMColumnTraits(backdrop: .windowSlice, margins: detailMargins, crease: (.leading, clearance))
+            // Full screen, the tag's page starts at the display's edge, not at the crease.
+            let detail = TMColumnTraits(backdrop: .windowSlice, margins: detailMargins,
+                                        crease: (.leading, showsList ? clearance : 0))
             HStack(spacing: 0) {
                 if showsList {
                     NavigationStack(path: $router.path) {
@@ -430,30 +442,8 @@ struct TMBookRoot: View {
             }
         }
         .background(TMWindowTint())
-        .modifier(TMHingeWatch(status: $hingeStatus))
+        .hingeStatus($hingeStatus)
         .onAppear { router.setExpanded(true) }
-    }
-}
-
-/// Follows the hinge's state (closed, half open, open), not each degree it turns.
-private struct TMHingeWatch: ViewModifier {
-    @Binding var status: Int
-
-    func body(content: Content) -> some View {
-        if #available(iOS 27.1, *) {
-            content.onHingeChange { _, context in
-                let now: Int
-                switch context.hinge?.status {
-                case .closed?: now = 1
-                case .partiallyOpen?: now = 2
-                case .fullyOpen?: now = 3
-                default: now = 0
-                }
-                if now != status { status = now }
-            }
-        } else {
-            content
-        }
     }
 }
 

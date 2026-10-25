@@ -8,7 +8,8 @@
 //  folds are synthetic (the simulator reports none to a hosted test) but
 //  measured: the face's size on the inner display, between its bars and above
 //  the banner, and the division region iOS 27.1 reports there with the hinge
-//  at 130°, a 40-point crease with 20 points of margin either side.
+//  at 130°: a 40-point frame that holds the crease and the 20 points either
+//  side iOS asks interactive content to keep from it.
 //
 
 import SwiftUI
@@ -19,10 +20,10 @@ import XCTest
 final class FoldGeometryTests: XCTestCase {
     /// The inner display held upright, folded across its middle (tabletop).
     private let upright = CGSize(width: 669, height: 703)
-    private var acrossFold: CGRect { CGRect(x: 0, y: 353.5, width: upright.width, height: 80) }
+    private var acrossFold: CGRect { CGRect(x: 0, y: 373.5, width: upright.width, height: 40) }
     /// Held wide, folded down its middle (book), the side bar on the right.
     private let sideways = CGSize(width: 867, height: 483)
-    private var downFold: CGRect { CGRect(x: 435.5, y: 0, width: 80, height: sideways.height) }
+    private var downFold: CGRect { CGRect(x: 455.5, y: 0, width: 40, height: sideways.height) }
 
     private func ring(_ geometry: InstrumentGeometry) -> CGRect {
         geometry.cellCenters.indices.map { geometry.cellRect($0).insetBy(dx: -geometry.cellRadius * 0.15,
@@ -115,7 +116,40 @@ final class FoldGeometryTests: XCTestCase {
             XCTAssertLessThan(corner, geometry.ringRadius - geometry.cellRadius * 1.15)
             XCTAssertGreaterThan(geometry.rangeLowRect.height, geometry.ringRadius * 0.145,
                                  "with the readout raised, the selector's rows grow")
+            // Each row takes a full 44-point target, grown away from the other, still
+            // clear of the cells' own.
+            for target in [geometry.rangeLowTarget, geometry.rangeHighTarget] {
+                XCTAssertGreaterThanOrEqual(target.height, 44, "\(geometry.posture)")
+                let far = hypot(target.width / 2, max(abs(target.minY - geometry.faceCenter.y),
+                                                      abs(target.maxY - geometry.faceCenter.y)))
+                XCTAssertLessThan(far, geometry.ringRadius - geometry.cellRadius * 1.15, "\(geometry.posture)")
+            }
+            XCTAssertEqual(geometry.rangeLowTarget.maxY, geometry.rangeHighTarget.minY, "the two meet between the rows")
+            XCTAssertEqual(geometry.range(at: CGPoint(x: selector.midX, y: geometry.rangeLowTarget.minY + 1)), false)
+            XCTAssertEqual(geometry.range(at: CGPoint(x: selector.midX, y: geometry.rangeHighTarget.maxY - 1)), true)
         }
+        // Flat, the phone's face is untouched: its rows are their own targets.
+        let flat = InstrumentGeometry(size: CGSize(width: 402, height: 640), count: 13)
+        XCTAssertEqual(flat.rangeLowTarget, flat.rangeLowRect)
+        XCTAssertEqual(flat.rangeHighTarget, flat.rangeHighRect)
+    }
+
+    func testTabletopSeatsTheDisplayJustAboveTheCrease() throws {
+        let geometry = InstrumentGeometry(size: upright, count: 13, fold: acrossFold)
+        let nameplate = try XCTUnwrap(geometry.nameplateArea)
+        let gap = acrossFold.minY - nameplate.maxY
+        XCTAssertGreaterThan(gap, 0)
+        XCTAssertLessThanOrEqual(gap, 30, "the readout stays with the keys below the fold, not up in the sky")
+    }
+
+    func testAFoldThatWouldShrinkTheCellsUnderATouchTargetKeepsTheFaceWhole() {
+        // A narrow window straddling the fold: the ring's 160-point page would leave
+        // 27-point cells, so the whole face takes the 200-point page instead.
+        let size = CGSize(width: 440, height: 600)
+        let geometry = InstrumentGeometry(size: size, count: 13, fold: CGRect(x: 200, y: 0, width: 80, height: 600))
+        XCTAssertEqual(geometry.posture, .flat)
+        XCTAssertNil(geometry.display)
+        XCTAssertEqual(geometry.faceArea, CGRect(x: 0, y: 0, width: 200, height: 600))
     }
 
     func testTouchesFollowTheFoldedFace() throws {

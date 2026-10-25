@@ -86,13 +86,18 @@ final class DuoTourUITests: TagMasterUITestCase {
         }
     }
 
-    /// Opens a tag on its Tracks page, then waits while the host opens the device and
-    /// closes it again (it writes `opened` and `closed` into the tour directory), and
-    /// checks the same tag and page are showing after each. Runs only when
+    /// Opens a tag on its Tracks page and starts a part, then waits while the host
+    /// opens the device and closes it again (it writes `opened` and `closed` into the
+    /// tour directory), and checks after each that the shell changed and the same
+    /// tag, page and playing part are still there. Runs only when
     /// TEST_RUNNER_DUO_TOUR_HANDOFF is set as well.
     func testOpeningAndClosingKeepTheTagAndPage() throws {
         guard ProcessInfo.processInfo.environment["DUO_TOUR_HANDOFF"] != nil else {
             throw XCTSkip("Set TEST_RUNNER_DUO_TOUR_HANDOFF to run the fold handoff")
+        }
+        // A previous run's signals would let this one pass without the pose changing.
+        for name in ["opened", "closed", "ready-opened", "ready-closed"] {
+            try? FileManager.default.removeItem(at: directory.appendingPathComponent(name))
         }
         XCTAssertTrue(app.buttons["Browse"].existsOrWait(timeout: 15))
         let favorite = app.buttons.matching(NSPredicate(
@@ -105,9 +110,14 @@ final class DuoTourUITests: TagMasterUITestCase {
         XCTAssertTrue(app.buttons["Rate tag"].existsOrWait(timeout: 20))
         app.buttons["page-Tracks"].tap()
         XCTAssertTrue(app.buttons["page-Tracks"].waitUntilSelected(timeout: 5))
+        let lead = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Lead'")).firstMatch
+        XCTAssertTrue(lead.existsOrWait(timeout: 10))
+        lead.tap()
+        let player = app.descendants(matching: .any)["tagmaster.trackPlayer.position"]
+        XCTAssertTrue(player.existsOrWait(timeout: 30), "The Lead track loads and plays")
         capture("handoff-1-closed")
 
-        for (signal, step) in [("opened", "handoff-2-open"), ("closed", "handoff-3-closed")] {
+        for (signal, step, open) in [("opened", "handoff-2-open", true), ("closed", "handoff-3-closed", false)] {
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
             FileManager.default.createFile(atPath: directory.appendingPathComponent("ready-\(signal)").path, contents: nil)
             let marker = directory.appendingPathComponent(signal).path
@@ -119,7 +129,12 @@ final class DuoTourUITests: TagMasterUITestCase {
             RunLoop.current.run(until: Date().addingTimeInterval(4))
             XCTAssertTrue(app.buttons["page-Tracks"].existsOrWait(timeout: 10), "The tag is still showing (\(signal))")
             XCTAssertTrue(app.buttons["page-Tracks"].isSelected, "Its page survived (\(signal))")
-            XCTAssertTrue(app.staticTexts["Lead"].exists || app.buttons["Lead"].exists, "The tracks are listed (\(signal))")
+            XCTAssertTrue(app.navigationBars["Lost"].exists || app.staticTexts["Lost"].exists,
+                          "It is the same tag (\(signal))")
+            // Open, Home's list shows beside the tag; closed, the tag covers it.
+            let browse = app.buttons["Browse"]
+            XCTAssertEqual(browse.exists && browse.isHittable, open, "The shell changed (\(signal))")
+            XCTAssertTrue(player.exists, "The part is still playing (\(signal))")
             capture(step)
         }
     }

@@ -75,9 +75,9 @@ final class PitchPerfectScreenCatalogTests: PitchPerfectTestCase {
     /// The face on the inner display upright, between its bars and above the
     /// banner, folded across its middle; and held wide beside its side bar,
     /// folded down it. Sizes and folds as measured on the iPhone Duo simulator
-    /// with the hinge at 130° (a 40-point crease and 20 points of margin each side).
-    private static let tabletop = (size: CGSize(width: 669, height: 703), fold: CGRect(x: 0, y: 353.5, width: 669, height: 80))
-    private static let book = (size: CGSize(width: 867, height: 483), fold: CGRect(x: 435.5, y: 0, width: 80, height: 483))
+    /// with the hinge at 130° (the region's 40-point frame, its margins included).
+    private static let tabletop = (size: CGSize(width: 669, height: 703), fold: CGRect(x: 0, y: 373.5, width: 669, height: 40))
+    private static let book = (size: CGSize(width: 867, height: 483), fold: CGRect(x: 455.5, y: 0, width: 40, height: 483))
 
     /// The pitch pipe alone at `size`, folded at `fold` (a hosted test gets no
     /// fold from the simulator), with `sounding` cells held on.

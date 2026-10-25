@@ -24,8 +24,13 @@ the iOS 27.1 reserved-region API. Neither checks for the device.
   sit on one edge; inset each side on its own.
 - **Folds come from reserved regions.** `GeometryProxy.reservedRegions(kind: .division)`
   returns the fold while the device is half open; with `.includeInactive` it also
-  returns the flat fold (zero width), which is where a two-column layout should
-  split. Guard with `#available(iOS 27.1, *)`.
+  returns the flat fold (inactive), which is where a two-column layout should
+  split. A region's frame already holds its margins: on the Duo it is 40 points,
+  the crease plus the 20 points either side iOS asks interactive content to keep
+  clear, so keep content out of the frame and don't add the margins again. Folding
+  changes the region, not the window's size: read the fold again when the hinge's
+  state changes (`View.hingeStatus`, `iOS/shared/HingeStatusWatch.swift`). Guard
+  with `#available(iOS 27.1, *)`.
 
 ## Tag Master
 
@@ -36,21 +41,26 @@ the iOS 27.1 reserved-region API. Neither checks for the device.
   tag the trailing one, both always showing, with a hairline divider down the
   middle of the fold's band, so the crease falls in the columns' margins
   (`TMBookRoot`, `TMShellLayout`, from the flat or folded division region). The
-  tag's stack meets the display's edge, so its bar items (steppers, favorite,
-  teachable, add to list, refresh, share) move into the side bar. The book is
+  tag's stack meets the display's edge, so its bar items move into the side bar,
+  in three glass groups so a slip off Next tag can't change a list: the steppers;
+  favorite, teachable and add to list; refresh and share. The book is
   not the iPad's `NavigationSplitView`: at 951 points UIKit's width buckets turn
   any split into an overlay that hides the list once a tag opens, whatever tile
-  preference or column minimum it is given. Reading sheet music full screen
-  hides the list column, as on iPad. Before a tag is chosen the trailing page
-  has no charcoal band: the system drops an empty bar there.
+  preference or column minimum it is given. A window where the divider can't run
+  down the fold with 320 points either side (beside another app) keeps the
+  stack. Reading sheet music full screen hides the list column, as on iPad; the
+  music then starts at the display's edge and the crease runs through it, as
+  through any scrolling content. Before a tag is chosen the trailing page has no
+  charcoal band: the system drops an empty bar there.
 - **Half shut like a book, both pages keep off the crease.** While the fold is
   active each column's navigation controller gains extra safe area on the crease
-  side, half the band plus the 20-point margin iOS asks for (`TMCreaseInset`),
-  so the list's chevrons and bar buttons and the tag's text and controls move
-  clear of it; the pages' colour and the watermark still run to the divider.
-  Flat, the display is one sheet of glass and the columns keep their usual
-  margins. The fold's region turns active a moment after the hinge reports the
-  change, so the book re-reads it on every hinge update (`TMHingeWatch`).
+  side, half the fold's 40-point region (`TMCreaseInset`), so the list's
+  chevrons and bar buttons and the tag's text and controls move clear of it; the
+  pages' colour, the open tag's lit row and the watermark still run to the
+  divider. Flat, the display is one sheet of glass and the columns keep their
+  usual margins. The book reads the fold again as the hinge's state changes
+  (`hingeStatus`); folding and unfolding a running app, quickly or slowly, moves
+  the insets with it.
 - **Half shut upright (tabletop): the stack, unchanged.** The bars sit at the
   top and bottom, far from the crease; the pages between them scroll, and
   scrolling content does not move around a fold (Apple's guidance), so a control
@@ -74,14 +84,19 @@ DESIGN.md's *Folded (iPhone Duo)* section is the design record; in short:
 
 - **Only a fold changes the face.** Closed, open flat, and on every other device
   the pitch pipe draws exactly as before. Half open, the active division region
-  (`Fold.band(in:)`) moves both faces off the crease and its 20-point margins.
+  (`Fold.band(in:)`, the crease and its 20-point margins) moves both faces off it.
 - **The bench instrument with its display raised.** Folded across (tabletop), the
   readout leaves the ring's hole for a display window on the upper half, and the
   ring sits alone on the lower half under the fingers. Folded like a book, the
   display takes the leading page and the ring the other. The window is sized from
   the ring (at most 1.2 × its width, 0.45 × as tall as wide), never from the half
-  it sits on, so the cells stay the largest part of the face. It is a machined
-  part, not a light: One-Glow still belongs to the sounding cell.
+  it sits on, so the cells stay the largest part of the face; in tabletop it sits
+  just above the crease, with the keys it reports on. It is a machined part, not
+  a light: One-Glow still belongs to the sounding cell. VoiceOver reads it as one
+  element, "Display".
+- **Targets stay full size.** The folded range rows take 44-point targets, and a
+  fold that would leave the cells' touch targets under 44 points keeps the face
+  whole on the larger side.
 - **Classic grid** opens a gap at the fold (rows 2|3 or columns 2|3) and splits
   its well the same way: readout on one side, the C to B / F to E choice on the other.
 - A fold too near the face's edge (beside another app) moves the whole face to
@@ -104,7 +119,12 @@ DESIGN.md's *Folded (iPhone Duo)* section is the design record; in short:
 - `DuoTourUITests` (opt-in, `TEST_RUNNER_DUO_TOUR_DIR`) walks each app's main
   screens and writes captures of every screen, for checking a real pose. Set the
   pose with Device Hub's Closed / Partially Open / Open buttons in Xcode 27.1, then
-  run the tour. `xcrun devicectl device appResize start --device <udid>
+  run the tour. Tag Master's `testOpeningAndClosingKeepTheTagAndPage` (with
+  `TEST_RUNNER_DUO_TOUR_HANDOFF` too) plays a part on a tag's Tracks page and
+  waits while the host opens and closes the device (it writes `opened` and
+  `closed` into the tour directory), checking each time that the layout changed
+  and the same tag, page and playing part are still there.
+  `xcrun devicectl device appResize start --device <udid>
   --preferred-size 951x669` puts a launched app in a window the inner display's
   size (capture it with `xcrun simctl io <udid> screenshot --display=5`), without
   the side bars or a fold.
@@ -125,3 +145,10 @@ DESIGN.md's *Folded (iPhone Duo)* section is the design record; in short:
   tabletop and closing. It happens with the fold code switched off and with any
   way of supplying the icon, so it looks like the system's; simple round trips
   don't do it, and Tag Master's bar items survive the same sequence.
+- In Tag Master's book the side bar's status cluster hangs over the charcoal
+  band's lower edge, so its ink suits only half of it: black (on the band) after
+  a tag is picked in the book, white (over the page) after a handoff. Asking
+  UIKit to update the status bar style changes nothing.
+- In tabletop, Pitch Perfect's Notes and Keys open with middle C at the crease.
+  `List`'s `scrollTo` puts the row in the middle whatever anchor it is given, so
+  opening it under the fingers needs another way in.

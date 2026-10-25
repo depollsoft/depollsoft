@@ -38,6 +38,19 @@ final class TMDuoTests: TMBehaviorTestCase {
         XCTAssertEqual(layout(.pad, .regular, .regular, 1194), .split)
     }
 
+    func testABookOnlyOpensWhereItsDividerCanRunDownTheFold() {
+        func layout(width: CGFloat, foldX: CGFloat?) -> TMShellLayout {
+            TMShellLayout(idiom: .phone, horizontal: .regular, vertical: .regular, width: width,
+                          fold: foldX.map { CGRect(x: $0, y: 0, width: 40, height: 669) })
+        }
+        XCTAssertEqual(layout(width: 867, foldX: 455.5), .book, "The whole inner display: the crease in the middle")
+        XCTAssertEqual(layout(width: 867, foldX: nil), .book, "No fold reported: the iPad's 36% list")
+        // A window beside another app: the fold 455.5 points in leaves the tag's page
+        // under 320, and a divider elsewhere would put the crease through the tag.
+        XCTAssertEqual(layout(width: 760, foldX: 455.5), .stack)
+        XCTAssertEqual(layout(width: 760, foldX: 4.5), .stack, "Nor with the crease near the window's leading edge")
+    }
+
     func testPopoversFloatWhereTheListSitsBesideTheTag() {
         func traits(_ idiom: UIUserInterfaceIdiom, _ horizontal: UIUserInterfaceSizeClass,
                     _ vertical: UIUserInterfaceSizeClass) -> UITraitCollection {
@@ -58,14 +71,12 @@ final class TMDuoTests: TMBehaviorTestCase {
         XCTAssertEqual(TMBookRoot.listWidth(windowWidth: 951, fold: CGRect(x: 455.5, y: 0, width: 40, height: 669)),
                        475.5, "An even split, the divider down the crease")
         XCTAssertEqual(TMBookRoot.listWidth(windowWidth: 951, fold: CGRect(x: 475.5, y: 0, width: 0, height: 669)), 475.5)
-        // No fold, or one too near an edge to leave either page a usable column.
+        // No fold: the iPad's list. (A fold too near an edge for two pages keeps the stack.)
         XCTAssertEqual(TMBookRoot.listWidth(windowWidth: 951, fold: nil), 342.36, accuracy: 0.01)
         XCTAssertEqual(TMBookRoot.listWidth(windowWidth: 1194, fold: nil), 400)
-        XCTAssertEqual(TMBookRoot.listWidth(windowWidth: 951, fold: CGRect(x: 280, y: 0, width: 40, height: 669)),
-                       342.36, accuracy: 0.01)
-        // Half shut, each page keeps half the 40-point crease and iOS's 20-point margin
-        // between its content and the divider.
-        XCTAssertEqual(TMBookRoot.creaseClearance(band: CGRect(x: 455.5, y: 0, width: 40, height: 669), margin: 20), 40)
+        // Half shut, each page keeps half the fold's 40-point region between its content
+        // and the divider: the region's frame already holds iOS's 20-point margins.
+        XCTAssertEqual(TMBookRoot.creaseClearance(band: CGRect(x: 455.5, y: 0, width: 40, height: 669)), 20)
     }
 
     // MARK: - The router carries the tag across

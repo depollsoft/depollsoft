@@ -101,7 +101,8 @@ final class TMRouter {
     var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
     /// The tag beside the list, reused from tag to tag so its open page survives. A tag
     /// moves in and out of this place whole when the window changes shape (`setExpanded`,
-    /// `useStack`), so its page and any part that is playing go with it.
+    /// `useStack`), so its page and any part that is playing go with it; the place it
+    /// leaves gets a fresh placeholder.
     private(set) var detail: TagDetailModel
     /// Whether the detail column shows a tag yet, or still the placeholder.
     private(set) var hasDetail = false

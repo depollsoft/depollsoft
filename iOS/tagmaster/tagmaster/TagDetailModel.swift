@@ -134,7 +134,7 @@ final class TagDetailModel {
     var screenVisible = false
     var applicationActive = true
     /// The screens showing this tag: two for a moment while it is carried between
-    /// the phone stack and the split, so the old one going does not hide the new one.
+    /// the phone stack and the book or split, so the old one going does not hide the new one.
     private var screensShowing: Set<AnyHashable> = []
 
     func screenAppeared(_ screen: AnyHashable = 0) {
@@ -147,7 +147,7 @@ final class TagDetailModel {
         screenVisible = !screensShowing.isEmpty
     }
 
-    /// The router is moving this tag between the phone stack and the split (an
+    /// The router is moving this tag between the phone stack and the book or split (an
     /// iPhone Duo opening or closing): the part playing keeps playing.
     func carryAcross() {
         tracks.carriedAcross = true

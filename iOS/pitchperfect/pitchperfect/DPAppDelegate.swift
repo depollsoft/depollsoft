@@ -144,18 +144,6 @@ final class DPAppDelegate: UIResponder, UIApplicationDelegate {
 /// tests' windows join.
 @objc(DPTestAppDelegate)
 final class DPTestAppDelegate: UIResponder, UIApplicationDelegate {
-    var window: UIWindow?
-
-    func application(_ application: UIApplication,
-                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
-        // Hidden and never drawn, so it needs no size (and no one screen to take it from).
-        let window = UIWindow(frame: .zero)
-        window.rootViewController = UIViewController()
-        window.isHidden = true
-        self.window = window
-        return true
-    }
-
     func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession,
                      options: UIScene.ConnectionOptions) -> UISceneConfiguration {
         UISceneConfiguration(name: nil, sessionRole: connectingSceneSession.role)

@@ -21,6 +21,7 @@
 		6FC5C8177A9D482C725660E0 /* TMShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA012B6F987B119001808DBE /* TMShell.swift */; };
 		BE42F0F9BE0897B5045C0E24 /* TMTableMargins.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A6EB7728E31536308B09228 /* TMTableMargins.swift */; };
 		E77E87422FC6F54CD8BEAE5B /* UsageAnalytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FCC14A7ECA94C4EE3E8FCFF /* UsageAnalytics.swift */; };
+		3A8BEA71FC6FC17B91B45FD8 /* HingeStatusWatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34912D4D39E345ACCFE84EE9 /* HingeStatusWatch.swift */; };
 		9A06113BB8CE5F79196AB372 /* ReviewPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65188BCE7F219A6F862CA57C /* ReviewPrompt.swift */; };
 		211E85D8325370D58A40199D /* TagMasterUsage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97C5A806D4A821CE138D5F68 /* TagMasterUsage.swift */; };
 		B4A1B0000000000000000001 /* TMTagLists.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1B0000000000000000000 /* TMTagLists.swift */; };
@@ -333,6 +334,7 @@
 		36F3B204BCB1A0AF3F5AA9AE /* MainThreadWatchdog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MainThreadWatchdog.swift; path = ../shared/MainThreadWatchdog.swift; sourceTree = "<group>"; };
 		C560A928A2DFE595C4E83838 /* TestKeyboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TestKeyboard.swift; path = ../shared/TestKeyboard.swift; sourceTree = "<group>"; };
 		5FCC14A7ECA94C4EE3E8FCFF /* UsageAnalytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = UsageAnalytics.swift; path = ../shared/UsageAnalytics.swift; sourceTree = "<group>"; };
+		34912D4D39E345ACCFE84EE9 /* HingeStatusWatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HingeStatusWatch.swift; path = ../shared/HingeStatusWatch.swift; sourceTree = "<group>"; };
 		65188BCE7F219A6F862CA57C /* ReviewPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ReviewPrompt.swift; path = ../shared/ReviewPrompt.swift; sourceTree = "<group>"; };
 		65D06CA2A30E2817B10D6A31 /* TelemetryConsent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TelemetryConsent.swift; path = ../shared/TelemetryConsent.swift; sourceTree = "<group>"; };
 		8D43DEC18C63FA36BF5D446B /* ConsentUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConsentUITests.swift; path = ../shared/ConsentUITests.swift; sourceTree = "<group>"; };
@@ -432,6 +434,7 @@
 				8D43DEC18C63FA36BF5D446B /* ConsentUITests.swift */,
 				65D06CA2A30E2817B10D6A31 /* TelemetryConsent.swift */,
 				65188BCE7F219A6F862CA57C /* ReviewPrompt.swift */,
+				34912D4D39E345ACCFE84EE9 /* HingeStatusWatch.swift */,
 				5FCC14A7ECA94C4EE3E8FCFF /* UsageAnalytics.swift */,
 				C560A928A2DFE595C4E83838 /* TestKeyboard.swift */,
 				83F42B3FF7F30DA1835B86EF /* TestRendering.swift */,
@@ -925,6 +928,7 @@
 				B4A1B0000000000000000001 /* TMTagLists.swift in Sources */,
 				211E85D8325370D58A40199D /* TagMasterUsage.swift in Sources */,
 				9A06113BB8CE5F79196AB372 /* ReviewPrompt.swift in Sources */,
+				3A8BEA71FC6FC17B91B45FD8 /* HingeStatusWatch.swift in Sources */,
 				E77E87422FC6F54CD8BEAE5B /* UsageAnalytics.swift in Sources */,
 				BE42F0F9BE0897B5045C0E24 /* TMTableMargins.swift in Sources */,
 				6FC5C8177A9D482C725660E0 /* TMShell.swift in Sources */,

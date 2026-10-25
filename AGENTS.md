@@ -76,7 +76,7 @@ npm run deploy  # Deploy to Firebase
 ### iOS
 
 - Both apps' UI is SwiftUI: a SwiftUI `App` and an `@Observable` model per screen; Tag Master routes through `TMRouter`. See `docs/ios-swiftui.md`.
-- Both apps adapt to iPhone Duo (outer display, inner display, half folded) through size classes, the window's own geometry and reserved regions, never device or idiom checks. See `docs/iphone-duo.md`.
+- Both apps adapt to iPhone Duo (outer display, inner display, half folded) through size classes, the window's own geometry and reserved regions, never device checks; idiom checks only keep iPad behaviour (Tag Master's split, no banners). See `docs/iphone-duo.md`.
 - Model layers stay mixed Objective-C and Swift (DPTag, DPNote, DPKey, stores) behind Swift bridging headers.
 - Swift Package Manager supplies Firebase, FirebaseUI, Google Sign-In, the Facebook SDK and Google Mobile Ads.
 - depolllib holds the shared non-UI pieces: JSON serialization, the file cache, NSString helpers, analytics and `DPAppLog`.

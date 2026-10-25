@@ -60,6 +60,10 @@ struct InstrumentGeometry: Equatable, PitchFaceLayout {
     let cellCenters: [CGPoint]
     let rangeLowRect: CGRect
     let rangeHighRect: CGRect
+    /// Where a finger (or VoiceOver) picks each range: the drawn row, grown away from
+    /// the other to 44 points tall when a raised display leaves the hole to it.
+    let rangeLowTarget: CGRect
+    let rangeHighTarget: CGRect
     /// The raised display window holding the readout; nil when the readout is in the ring's hole.
     let display: CGRect?
     /// The nameplate's line under a raised display; nil when it sits at the panel's foot.
@@ -72,7 +76,7 @@ struct InstrumentGeometry: Equatable, PitchFaceLayout {
         let count = max(count, 1)
         let cellFactor: CGFloat = count > 12 ? 0.225 : 0.245
         let bounds = CGRect(origin: .zero, size: size)
-        let plan = Self.plan(bounds: bounds, fold: fold, displayOnLeft: displayOnLeft)
+        let plan = Self.plan(bounds: bounds, fold: fold, displayOnLeft: displayOnLeft, cellFactor: cellFactor)
         posture = plan.posture
         faceArea = plan.face
 
@@ -82,9 +86,10 @@ struct InstrumentGeometry: Equatable, PitchFaceLayout {
             ringRadius = Self.foldedRingRadius(in: plan.face, cellFactor: cellFactor)
             // The display window is sized from the ring, not from its side of the
             // fold: no wider than 1.2 × the ring's glass, edge to edge, and 0.45 ×
-            // as tall as wide, so the cells stay the face's largest part. It is
-            // centred on its side (level with the ring on a book's page), with the
-            // nameplate's line beneath it.
+            // as tall as wide, so the cells stay the face's largest part. With the
+            // nameplate's line beneath it, it is centred across its side and sits
+            // level with the ring on a book's page, or just above the crease in
+            // tabletop, so the readout stays with the keys it reports on.
             let inset = max(16, min(display.width, display.height) * 0.07)
             let plate = min(max(display.height * 0.06, 14), 20)
             let available = display.insetBy(dx: inset, dy: inset)
@@ -92,7 +97,7 @@ struct InstrumentGeometry: Equatable, PitchFaceLayout {
             let width = min(available.width, ringWidth * 1.2)
             let height = min(available.height - plate - inset * 0.5, width * 0.45)
             let blockHeight = height + inset * 0.5 + plate
-            let centreY = posture == .book ? faceCenter.y : available.midY
+            let centreY = posture == .book ? faceCenter.y : available.maxY - blockHeight / 2
             let top = min(max(centreY - blockHeight / 2, available.minY), available.maxY - blockHeight)
             let window = CGRect(x: available.midX - width / 2, y: top, width: width, height: max(height, 0))
             self.display = window
@@ -124,6 +129,13 @@ struct InstrumentGeometry: Equatable, PitchFaceLayout {
         let rangeTop = display == nil ? faceCenter.y + ringRadius * 0.20 : faceCenter.y - rowHeight
         rangeLowRect = CGRect(x: faceCenter.x - rangeWidth / 2, y: rangeTop, width: rangeWidth, height: rowHeight)
         rangeHighRect = CGRect(x: rangeLowRect.minX, y: rangeLowRect.maxY, width: rangeWidth, height: rowHeight)
+        // The hole holds nothing else then, and two 44-point targets fit inside the
+        // cells' own: in tabletop about 66 points from the centre at the corners, against 80.
+        let reach = display == nil ? 0 : max(44 - rowHeight, 0)
+        rangeLowTarget = CGRect(x: rangeLowRect.minX, y: rangeLowRect.minY - reach,
+                                width: rangeWidth, height: rowHeight + reach)
+        rangeHighTarget = CGRect(x: rangeHighRect.minX, y: rangeHighRect.minY,
+                                 width: rangeWidth, height: rowHeight + reach)
     }
 
     /// A ring of cells filling `area`: its outermost touch target (1.15 × a cell)
@@ -133,7 +145,7 @@ struct InstrumentGeometry: Equatable, PitchFaceLayout {
     }
 
     /// Where the face, and a raised display, go for `fold`.
-    private static func plan(bounds: CGRect, fold: CGRect?, displayOnLeft: Bool)
+    private static func plan(bounds: CGRect, fold: CGRect?, displayOnLeft: Bool, cellFactor: CGFloat)
         -> (posture: Posture, face: CGRect, display: CGRect?) {
         guard let sides = FoldSides(bounds: bounds, fold: fold) else { return (.flat, bounds, nil) }
         let (display, ring): (CGRect, CGRect)
@@ -142,9 +154,11 @@ struct InstrumentGeometry: Equatable, PitchFaceLayout {
         } else {
             (display, ring) = displayOnLeft ? (sides.first, sides.second) : (sides.second, sides.first)
         }
-        // A fold near the face's edge (beside another app), or one leaving the
-        // display no room, keeps the face whole on the larger side, off the crease.
-        if sides.parts, display.width >= minimumDisplay.width, display.height >= minimumDisplay.height {
+        // A fold near the face's edge (beside another app), one leaving the display
+        // no room, or one that would shrink the cells' touch targets under 44 points
+        // keeps the face whole on the larger side, off the crease.
+        let touch = foldedRingRadius(in: ring, cellFactor: cellFactor) * cellFactor * 1.15 * 2
+        if sides.parts, display.width >= minimumDisplay.width, display.height >= minimumDisplay.height, touch >= 44 {
             return (sides.across ? .tabletop : .book, ring, display)
         }
         return (.flat, sides.larger, nil)
@@ -166,8 +180,8 @@ struct InstrumentGeometry: Equatable, PitchFaceLayout {
     }
 
     func range(at point: CGPoint) -> Bool? {
-        if rangeLowRect.contains(point) { return false }
-        if rangeHighRect.contains(point) { return true }
+        if rangeLowTarget.contains(point) { return false }
+        if rangeHighTarget.contains(point) { return true }
         return nil
     }
 }
@@ -224,8 +238,9 @@ enum Fold {
     /// window coordinates (nil for none).
     static var simulated: ((CGRect) -> CGRect?)?
 
-    /// The active fold across the view `proxy` measures, in its coordinates,
-    /// widened by the margins iOS asks content to keep from it.
+    /// The active fold across the view `proxy` measures, in its coordinates: the
+    /// region's frame, which holds the crease and the margins iOS asks interactive
+    /// content to keep from it.
     static func band(in proxy: GeometryProxy) -> CGRect? {
         if let simulated {
             let frame = proxy.frame(in: .global)
@@ -235,20 +250,15 @@ enum Fold {
         // Fixed, not mirrored: the face lays itself out in left-to-right coordinates
         // and picks its leading page itself.
         let regions = proxy.reservedRegions(kind: .division, layoutDirectionBehavior: .fixed)
-        guard let region = regions.first(where: \.isActive) else { return nil }
-        let margins = region.margins
-        return CGRect(x: region.frame.minX - margins.leading, y: region.frame.minY - margins.top,
-                      width: region.frame.width + margins.leading + margins.trailing,
-                      height: region.frame.height + margins.top + margins.bottom)
+        return regions.first(where: \.isActive)?.frame
     }
 }
 
 extension View {
     /// Lays the view out again whenever the hinge opens or folds, so a face
-    /// reading `Fold.band` meets the fold as it comes and goes. `status` changes
-    /// only with the hinge's state, not with every degree it turns.
+    /// reading `Fold.band` meets the fold as it comes and goes.
     func refreshesOnFold(_ status: Binding<Int>) -> some View {
-        modifier(FoldRefresh(status: status))
+        hingeStatus(status)
     }
 
     /// Centres the view, top-aligned, on the space it is given, or on the
@@ -276,27 +286,6 @@ private struct CentredOffTheFold: ViewModifier {
                 .offset(x: page.minX)
         }
         .refreshesOnFold($hingeStatus)
-    }
-}
-
-private struct FoldRefresh: ViewModifier {
-    @Binding var status: Int
-
-    func body(content: Content) -> some View {
-        if #available(iOS 27.1, *) {
-            content.onHingeChange { _, context in
-                let now: Int
-                switch context.hinge?.status {
-                case .closed?: now = 1
-                case .partiallyOpen?: now = 2
-                case .fullyOpen?: now = 3
-                default: now = 0
-                }
-                if now != status { status = now }
-            }
-        } else {
-            content
-        }
     }
 }
 
@@ -899,6 +888,8 @@ struct PitchInstrumentView: View {
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: geometry.posture)
             .onAppear { model.geometry = geometry }
             .onChange(of: geometry) { _, new in model.geometry = new }
+            // The cells VoiceOver knew have moved: let it find them again.
+            .onChange(of: geometry.posture) { UIAccessibility.post(notification: .layoutChanged, argument: nil) }
         }
         .refreshesOnFold($hingeStatus)
     }
@@ -934,6 +925,17 @@ struct PitchInstrumentView: View {
     @ViewBuilder
     private func accessibilityElements(_ geometry: InstrumentGeometry) -> some View {
         ZStack(alignment: .topLeading) {
+            // A raised display is half the face (a book's whole leading page): it reads
+            // out what the window shows, first, as the eye meets it.
+            if let display = geometry.display {
+                Color.clear
+                    .frame(width: display.width, height: display.height)
+                    .offset(x: display.minX, y: display.minY)
+                    .accessibilityElement()
+                    .accessibilityLabel("Display")
+                    .accessibilityValue(model.readout.map { "\($0.names), \($0.detail)" } ?? "Silent")
+                    .accessibilityAddTraits(.updatesFrequently)
+            }
             ForEach(Array(model.notes.indices), id: \.self) { index in
                 if index < geometry.cellCenters.count {
                     let rect = geometry.cellRect(index)
@@ -942,10 +944,10 @@ struct PitchInstrumentView: View {
                     }
                 }
             }
-            element(geometry.rangeLowRect, label: "Octave range C to C", selected: !model.isHighRange) {
+            element(geometry.rangeLowTarget, label: "Octave range C to C", selected: !model.isHighRange) {
                 model.selectRange(high: false)
             }
-            element(geometry.rangeHighRect, label: "Octave range F to F", selected: model.isHighRange) {
+            element(geometry.rangeHighTarget, label: "Octave range F to F", selected: model.isHighRange) {
                 model.selectRange(high: true)
             }
         }

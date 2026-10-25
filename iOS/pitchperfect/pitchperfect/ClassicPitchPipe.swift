@@ -305,6 +305,9 @@ struct ClassicPitchPipeView: View {
                 rangePicker
                     .frame(width: geometry.selectorRect.width)
                     .position(x: geometry.selectorRect.midX, y: geometry.selectorRect.midY)
+                    // It fades to its new place with the grid rather than sliding across it.
+                    .id(geometry.posture)
+                    .transition(.opacity)
                     .background(alignment: .topLeading) {
                         rangePicker
                             .fixedSize()

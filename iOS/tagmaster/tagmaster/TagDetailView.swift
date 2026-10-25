@@ -87,6 +87,9 @@ struct TagDetailScreen: View {
             // While a refresh is out, its barber pole stands in the bar on its own,
             // outside the glass the buttons share, as the UIKit loading item did.
             if model.expanded {
+                // Walking the list, keeping the tag and the utilities each get their own
+                // glass, so a slip off Next tag cannot take the tag out of the list.
+                if model.showsSteppers { groupGap }
                 ToolbarItemGroup(placement: .topBarTrailing) {
                     TMBarButton(model.isFavorite ? "heart.fill" : "heart",
                                 label: model.isFavorite ? "Remove Favorite" : "Add Favorite",
@@ -97,7 +100,10 @@ struct TagDetailScreen: View {
                     TMBarButton("text.badge.plus", label: "Add to list") { model.showListPicker(from: .toolbar) }
                         .accessibilityIdentifier("tag.addToList")
                         .tmListPicker(model: model, source: .toolbar)
-                    if !model.fetchPending {
+                }
+                if !model.fetchPending {
+                    groupGap
+                    ToolbarItemGroup(placement: .topBarTrailing) {
                         refreshButton
                         shareItem
                     }
@@ -117,6 +123,14 @@ struct TagDetailScreen: View {
                     shareItem
                 }
             }
+        }
+    }
+
+    /// Space between two groups of bar items, which otherwise share one glass.
+    @ToolbarContentBuilder
+    private var groupGap: some ToolbarContent {
+        if #available(iOS 26.0, *) {
+            ToolbarSpacer(.fixed, placement: .topBarTrailing)
         }
     }
 
