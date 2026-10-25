@@ -80,17 +80,21 @@ struct InstrumentGeometry: Equatable, PitchFaceLayout {
             // The ring alone, filling its side of the fold, with room round the cells.
             faceCenter = CGPoint(x: plan.face.midX, y: plan.face.midY)
             ringRadius = Self.foldedRingRadius(in: plan.face, cellFactor: cellFactor)
-            // The display window, no taller than a display is wide, centred on its
-            // side of the fold (level with the ring on a book's page), with the
+            // The display window is sized from the ring, not from its side of the
+            // fold: no wider than 1.2 × the ring's glass, edge to edge, and 0.45 ×
+            // as tall as wide, so the cells stay the face's largest part. It is
+            // centred on its side (level with the ring on a book's page), with the
             // nameplate's line beneath it.
             let inset = max(16, min(display.width, display.height) * 0.07)
             let plate = min(max(display.height * 0.06, 14), 20)
             let available = display.insetBy(dx: inset, dy: inset)
-            let height = min(available.height - plate - inset * 0.5, available.width * 0.8)
+            let ringWidth = 2 * ringRadius * (1 + cellFactor)
+            let width = min(available.width, ringWidth * 1.2)
+            let height = min(available.height - plate - inset * 0.5, width * 0.45)
             let blockHeight = height + inset * 0.5 + plate
             let centreY = posture == .book ? faceCenter.y : available.midY
             let top = min(max(centreY - blockHeight / 2, available.minY), available.maxY - blockHeight)
-            let window = CGRect(x: available.minX, y: top, width: available.width, height: max(height, 0))
+            let window = CGRect(x: available.midX - width / 2, y: top, width: width, height: max(height, 0))
             self.display = window
             nameplateArea = CGRect(x: window.minX, y: window.maxY + inset * 0.5, width: window.width, height: plate)
         } else {

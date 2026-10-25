@@ -62,8 +62,22 @@ final class FoldGeometryTests: XCTestCase {
         XCTAssertLessThanOrEqual(nameplate.maxY, acrossFold.minY, "both stay above the crease")
         XCTAssertGreaterThanOrEqual(ring(geometry).minY, acrossFold.maxY, "the ring is wholly below it")
         XCTAssertLessThanOrEqual(ring(geometry).maxY, upright.height)
-        XCTAssertGreaterThanOrEqual(display.width, upright.width * 0.8, "the display takes the half's width")
         XCTAssertEqual(geometry.faceCenter.x, upright.width / 2, accuracy: 0.001)
+        XCTAssertEqual(display.midX, geometry.faceCenter.x, accuracy: 0.001, "the display is centred over the ring")
+    }
+
+    func testTheDisplayIsSizedFromTheRingSoTheCellsStayTheLargestPart() throws {
+        for geometry in [InstrumentGeometry(size: upright, count: 13, fold: acrossFold),
+                         InstrumentGeometry(size: sideways, count: 13, fold: downFold)] {
+            let display = try XCTUnwrap(geometry.display)
+            let glass = 2 * (geometry.ringRadius + geometry.cellRadius)
+            XCTAssertLessThanOrEqual(display.width, glass * 1.2 + 0.001, "\(geometry.posture)")
+            XCTAssertEqual(display.height, display.width * 0.45, accuracy: 0.001, "\(geometry.posture)")
+        }
+        // Tabletop has the room, so the window is the full 1.2 × the ring there.
+        let tabletop = InstrumentGeometry(size: upright, count: 13, fold: acrossFold)
+        let glass = 2 * (tabletop.ringRadius + tabletop.cellRadius)
+        XCTAssertEqual(try XCTUnwrap(tabletop.display).width, glass * 1.2, accuracy: 0.001)
     }
 
     func testBookPutsTheDisplayOnTheLeadingPageAndTheRingOnTheOther() throws {

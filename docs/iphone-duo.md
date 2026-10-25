@@ -76,11 +76,12 @@ DESIGN.md's *Folded (iPhone Duo)* section is the design record; in short:
   the pitch pipe draws exactly as before. Half open, the active division region
   (`Fold.band(in:)`) moves both faces off the crease and its 20-point margins.
 - **The bench instrument with its display raised.** Folded across (tabletop), the
-  readout leaves the ring's hole for a display window on the upper half, big
-  enough to read across a rehearsal room, and the ring sits alone on the lower
-  half under the fingers. Folded like a book, the display takes the leading page
-  and the ring the other. The window is a machined part, not a light: One-Glow
-  still belongs to the sounding cell.
+  readout leaves the ring's hole for a display window on the upper half, and the
+  ring sits alone on the lower half under the fingers. Folded like a book, the
+  display takes the leading page and the ring the other. The window is sized from
+  the ring (at most 1.2 × its width, 0.45 × as tall as wide), never from the half
+  it sits on, so the cells stay the largest part of the face. It is a machined
+  part, not a light: One-Glow still belongs to the sounding cell.
 - **Classic grid** opens a gap at the fold (rows 2|3 or columns 2|3) and splits
   its well the same way: readout on one side, the C to B / F to E choice on the other.
 - A fold too near the face's edge (beside another app) moves the whole face to
