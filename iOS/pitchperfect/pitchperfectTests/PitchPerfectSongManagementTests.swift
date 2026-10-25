@@ -423,10 +423,13 @@ final class PitchPerfectSongManagementTests: PitchPerfectTestCase {
         XCTAssertTrue(ui.traits(id: "setlist.row.default.current").contains(.selected))
         XCTAssertEqual(ui.label(id: "setlist.row.\(first.id)"), "Saturday show, no songs")
         XCTAssertEqual(ui.label(id: "setlist.row.menu.\(first.id)"), "Actions for Saturday show")
-        XCTAssertEqual(ui.element(id: "setlist.row.default.current")?.accessibilityCustomActions?.map(\.name) ?? [], [],
-                       "My Songs never moves")
-        XCTAssertEqual(ui.element(id: "setlist.row.\(first.id)")?.accessibilityCustomActions?.map(\.name), ["Move down"])
-        XCTAssertEqual(ui.element(id: "setlist.row.\(second.id)")?.accessibilityCustomActions?.map(\.name), ["Move up"])
+        // iOS 27 also offers each row's menu (Rename, Duplicate, Delete) as custom actions.
+        func moves(_ id: String) -> [String] {
+            (ui.element(id: id)?.accessibilityCustomActions?.map(\.name) ?? []).filter { $0.hasPrefix("Move") }
+        }
+        XCTAssertEqual(moves("setlist.row.default.current"), [], "My Songs never moves")
+        XCTAssertEqual(moves("setlist.row.\(first.id)"), ["Move down"])
+        XCTAssertEqual(moves("setlist.row.\(second.id)"), ["Move up"])
         ui.perform(action: "Move up", id: "setlist.row.\(second.id)")
         XCTAssertEqual(DPSongsModel.sharedInstance.orderedLists.map(\.id), ["default", second.id, first.id])
         ui.tap(id: "setlist.row.\(first.id)")

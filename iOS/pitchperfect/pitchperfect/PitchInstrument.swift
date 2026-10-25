@@ -28,23 +28,79 @@ protocol PitchFaceLayout {
 }
 
 /// Where everything sits on a face of `size` holding `count` cells.
+///
+/// A `fold` (an iPhone Duo's inner display, partly folded: see `Fold`) moves
+/// the face off the crease rather than across it, like a bench instrument with
+/// its display raised. Folded across (tabletop), the readout leaves the ring's
+/// hole for a display window on the upper half and the ring sits on the lower
+/// half, under the fingers; folded down the middle (book), the display takes the
+/// leading page and the ring the other. Without a fold the face is as it always was.
 struct InstrumentGeometry: Equatable, PitchFaceLayout {
+    /// How a fold across the face arranges it.
+    enum Posture: Equatable {
+        /// No fold across the face: the ring with the readout in its hole.
+        case flat
+        /// Folded across: the display on the upper half, the ring below.
+        case tabletop
+        /// Folded down: the display on the leading page, the ring on the other.
+        case book
+    }
+
+    /// The least room a raised display takes: below this the face stays whole
+    /// and moves to the larger side of the fold instead.
+    static let minimumDisplay = CGSize(width: 200, height: 120)
+
     let size: CGSize
+    let posture: Posture
+    /// Where the face is laid out: the whole panel, or the side of a fold it was moved to.
+    let faceArea: CGRect
     let faceCenter: CGPoint
     let ringRadius: CGFloat
     let cellRadius: CGFloat
     let cellCenters: [CGPoint]
     let rangeLowRect: CGRect
     let rangeHighRect: CGRect
+    /// The raised display window holding the readout; nil when the readout is in the ring's hole.
+    let display: CGRect?
+    /// The nameplate's line under a raised display; nil when it sits at the panel's foot.
+    let nameplateArea: CGRect?
 
-    init(size: CGSize, count: Int) {
+    /// `fold` is the band the fold covers, in the face's coordinates; `displayOnLeft`
+    /// says which page is leading (false in a right-to-left layout).
+    init(size: CGSize, count: Int, fold: CGRect? = nil, displayOnLeft: Bool = true) {
         self.size = size
-        let panelWidth = size.width
-        let panelHeight = size.height
-        faceCenter = CGPoint(x: panelWidth / 2, y: panelHeight * 0.44)
-        ringRadius = min(panelWidth, panelHeight * 0.82) * 0.365
         let count = max(count, 1)
-        cellRadius = ringRadius * (count > 12 ? 0.225 : 0.245)
+        let cellFactor: CGFloat = count > 12 ? 0.225 : 0.245
+        let bounds = CGRect(origin: .zero, size: size)
+        let plan = Self.plan(bounds: bounds, fold: fold, displayOnLeft: displayOnLeft)
+        posture = plan.posture
+        faceArea = plan.face
+
+        if let display = plan.display {
+            // The ring alone, filling its side of the fold, with room round the cells.
+            faceCenter = CGPoint(x: plan.face.midX, y: plan.face.midY)
+            ringRadius = Self.foldedRingRadius(in: plan.face, cellFactor: cellFactor)
+            // The display window, no taller than a display is wide, centred on its
+            // side of the fold (level with the ring on a book's page), with the
+            // nameplate's line beneath it.
+            let inset = max(16, min(display.width, display.height) * 0.07)
+            let plate = min(max(display.height * 0.06, 14), 20)
+            let available = display.insetBy(dx: inset, dy: inset)
+            let height = min(available.height - plate - inset * 0.5, available.width * 0.8)
+            let blockHeight = height + inset * 0.5 + plate
+            let centreY = posture == .book ? faceCenter.y : available.midY
+            let top = min(max(centreY - blockHeight / 2, available.minY), available.maxY - blockHeight)
+            let window = CGRect(x: available.minX, y: top, width: available.width, height: max(height, 0))
+            self.display = window
+            nameplateArea = CGRect(x: window.minX, y: window.maxY + inset * 0.5, width: window.width, height: plate)
+        } else {
+            faceCenter = CGPoint(x: plan.face.minX + plan.face.width / 2, y: plan.face.minY + plan.face.height * 0.44)
+            ringRadius = min(plan.face.width, plan.face.height * 0.82) * 0.365
+            display = nil
+            nameplateArea = nil
+        }
+
+        cellRadius = ringRadius * cellFactor
         let step = 360.0 / Double(count)
         let start = -90.0 + step / 2.0
         let center = faceCenter
@@ -56,12 +112,38 @@ struct InstrumentGeometry: Equatable, PitchFaceLayout {
                 y: center.y + radius * CGFloat(sin(angle))
             )
         }
-        // The range selector is one machined part seated in the ring's hole.
-        let rangeWidth = ringRadius * 0.72
-        let rowHeight = ringRadius * 0.145
-        let rangeTop = faceCenter.y + ringRadius * 0.20
+        // The range selector is one machined part seated in the ring's hole. With
+        // the readout raised on the display, the hole is the selector's alone and
+        // it fills the hole's middle.
+        let rangeWidth = ringRadius * (display == nil ? 0.72 : 0.9)
+        let rowHeight = ringRadius * (display == nil ? 0.145 : 0.22)
+        let rangeTop = display == nil ? faceCenter.y + ringRadius * 0.20 : faceCenter.y - rowHeight
         rangeLowRect = CGRect(x: faceCenter.x - rangeWidth / 2, y: rangeTop, width: rangeWidth, height: rowHeight)
         rangeHighRect = CGRect(x: rangeLowRect.minX, y: rangeLowRect.maxY, width: rangeWidth, height: rowHeight)
+    }
+
+    /// A ring of cells filling `area`: its outermost touch target (1.15 × a cell)
+    /// and a little air inside the area's shorter side.
+    static func foldedRingRadius(in area: CGRect, cellFactor: CGFloat) -> CGFloat {
+        min(area.width, area.height) / 2 / (1 + cellFactor * 1.15 + 0.08)
+    }
+
+    /// Where the face, and a raised display, go for `fold`.
+    private static func plan(bounds: CGRect, fold: CGRect?, displayOnLeft: Bool)
+        -> (posture: Posture, face: CGRect, display: CGRect?) {
+        guard let sides = FoldSides(bounds: bounds, fold: fold) else { return (.flat, bounds, nil) }
+        let (display, ring): (CGRect, CGRect)
+        if sides.across {
+            (display, ring) = (sides.first, sides.second)
+        } else {
+            (display, ring) = displayOnLeft ? (sides.first, sides.second) : (sides.second, sides.first)
+        }
+        // A fold near the face's edge (beside another app), or one leaving the
+        // display no room, keeps the face whole on the larger side, off the crease.
+        if sides.parts, display.width >= minimumDisplay.width, display.height >= minimumDisplay.height {
+            return (sides.across ? .tabletop : .book, ring, display)
+        }
+        return (.flat, sides.larger, nil)
     }
 
     func cellRect(_ index: Int) -> CGRect {
@@ -83,6 +165,134 @@ struct InstrumentGeometry: Equatable, PitchFaceLayout {
         if rangeLowRect.contains(point) { return false }
         if rangeHighRect.contains(point) { return true }
         return nil
+    }
+}
+
+// MARK: - Fold
+
+/// The two sides of a fold that runs right across a face. Nil when no fold
+/// crosses the face.
+struct FoldSides: Equatable {
+    /// Folded across the face (top and bottom halves), not down it (left and right pages).
+    let across: Bool
+    /// The top half or the left page.
+    let first: CGRect
+    /// The bottom half or the right page.
+    let second: CGRect
+
+    /// The roomier side.
+    var larger: CGRect {
+        across ? (first.height >= second.height ? first : second) : (first.width >= second.width ? first : second)
+    }
+
+    /// Whether the fold parts the face fairly: each side at least 30% of it.
+    /// A fold nearer an edge (beside another app) leaves the face whole on the larger side.
+    var parts: Bool {
+        across ? min(first.height, second.height) >= (first.height + second.height) * 0.3
+               : min(first.width, second.width) >= (first.width + second.width) * 0.3
+    }
+
+    init?(bounds: CGRect, fold: CGRect?) {
+        guard let fold, bounds.width > 0, bounds.height > 0 else { return nil }
+        let band = fold.intersection(bounds)
+        guard !band.isNull else { return nil }
+        // A fold divides the whole display, so it runs right across the face or right down it.
+        if band.width >= bounds.width - 0.5, band.width > band.height {
+            across = true
+            first = CGRect(x: bounds.minX, y: bounds.minY, width: bounds.width, height: band.minY - bounds.minY)
+            second = CGRect(x: bounds.minX, y: band.maxY, width: bounds.width, height: bounds.maxY - band.maxY)
+        } else if band.height >= bounds.height - 0.5, band.height > band.width {
+            across = false
+            first = CGRect(x: bounds.minX, y: bounds.minY, width: band.minX - bounds.minX, height: bounds.height)
+            second = CGRect(x: band.maxX, y: bounds.minY, width: bounds.maxX - band.maxX, height: bounds.height)
+        } else {
+            return nil
+        }
+    }
+}
+
+/// The fold of an iPhone Duo's inner display while it is partly folded: a band
+/// content should not straddle. iOS reports it as an active division region;
+/// a flat or closed Duo, and every other device, report none.
+@MainActor
+enum Fold {
+    /// Tests stand a fold in: given the face's frame in its window, the band in
+    /// window coordinates (nil for none).
+    static var simulated: ((CGRect) -> CGRect?)?
+
+    /// The active fold across the view `proxy` measures, in its coordinates,
+    /// widened by the margins iOS asks content to keep from it.
+    static func band(in proxy: GeometryProxy) -> CGRect? {
+        if let simulated {
+            let frame = proxy.frame(in: .global)
+            return simulated(frame).map { $0.offsetBy(dx: -frame.minX, dy: -frame.minY) }
+        }
+        guard #available(iOS 27.1, *) else { return nil }
+        // Fixed, not mirrored: the face lays itself out in left-to-right coordinates
+        // and picks its leading page itself.
+        let regions = proxy.reservedRegions(kind: .division, layoutDirectionBehavior: .fixed)
+        guard let region = regions.first(where: \.isActive) else { return nil }
+        let margins = region.margins
+        return CGRect(x: region.frame.minX - margins.leading, y: region.frame.minY - margins.top,
+                      width: region.frame.width + margins.leading + margins.trailing,
+                      height: region.frame.height + margins.top + margins.bottom)
+    }
+}
+
+extension View {
+    /// Lays the view out again whenever the hinge opens or folds, so a face
+    /// reading `Fold.band` meets the fold as it comes and goes. `status` changes
+    /// only with the hinge's state, not with every degree it turns.
+    func refreshesOnFold(_ status: Binding<Int>) -> some View {
+        modifier(FoldRefresh(status: status))
+    }
+
+    /// Centres the view, top-aligned, on the space it is given, or on the
+    /// leading page when a fold runs down that space (an iPhone Duo held like
+    /// a book), so a centred prompt never sits on the crease.
+    func centredOffTheFold() -> some View {
+        modifier(CentredOffTheFold())
+    }
+}
+
+private struct CentredOffTheFold: ViewModifier {
+    @Environment(\.layoutDirection) private var layoutDirection
+    @State private var hingeStatus = 0
+
+    func body(content: Content) -> some View {
+        GeometryReader { proxy in
+            let _ = hingeStatus
+            let bounds = CGRect(origin: .zero, size: proxy.size)
+            let sides = FoldSides(bounds: bounds, fold: Fold.band(in: proxy))
+            let page = sides.flatMap { $0.across || !$0.parts ? nil : $0 }
+                .map { layoutDirection == .leftToRight ? $0.first : $0.second } ?? bounds
+            content
+                .frame(width: page.width)
+                .frame(maxHeight: .infinity, alignment: .top)
+                .offset(x: page.minX)
+        }
+        .refreshesOnFold($hingeStatus)
+    }
+}
+
+private struct FoldRefresh: ViewModifier {
+    @Binding var status: Int
+
+    func body(content: Content) -> some View {
+        if #available(iOS 27.1, *) {
+            content.onHingeChange { _, context in
+                let now: Int
+                switch context.hinge?.status {
+                case .closed?: now = 1
+                case .partiallyOpen?: now = 2
+                case .fullyOpen?: now = 3
+                default: now = 0
+                }
+                if now != status { status = now }
+            }
+        } else {
+            content
+        }
     }
 }
 
@@ -387,7 +597,12 @@ struct InstrumentRenderer {
             label.draw(at: CGPoint(x: center.x - size.width / 2, y: center.y - size.height / 2))
         }
 
-        drawCenter(ink: ink, inkSecondary: inkSecondary)
+        if let display = geometry.display {
+            drawDisplay(display, context: context, surface: surface, ink: ink, inkSecondary: inkSecondary,
+                        hairline: hairline)
+        } else {
+            drawCenter(ink: ink, inkSecondary: inkSecondary)
+        }
 
         // One machined frame contains both range positions.
         let lowRect = geometry.rangeLowRect
@@ -408,15 +623,49 @@ struct InstrumentRenderer {
         drawRange(rect: lowRect, label: "C TO C", selected: !isHighRange, context: context, ink: ink, inkSecondary: inkSecondary, lit: lit)
         drawRange(rect: highRect, label: "F TO F", selected: isHighRange, context: context, ink: ink, inkSecondary: inkSecondary, lit: lit)
 
-        // Nameplate.
-        let ringRadius = geometry.ringRadius
-        let nameplate = NSAttributedString(string: "DIGITAL PITCH PIPE", attributes: [
-            .font: DPTheme.condensedFont(size: ringRadius * 0.08),
-            .foregroundColor: inkSecondary.withAlphaComponent(0.65),
-            .kern: ringRadius * 0.028,
-        ])
-        let nameplateSize = nameplate.size()
-        nameplate.draw(at: CGPoint(x: bounds.midX - nameplateSize.width / 2, y: bounds.height - nameplateSize.height * 2.2))
+        // Nameplate: at the panel's foot, or engraved under a raised display.
+        if let area = geometry.nameplateArea {
+            let size = area.height * 0.72
+            let nameplate = NSAttributedString(string: "DIGITAL PITCH PIPE", attributes: [
+                .font: DPTheme.condensedFont(size: size),
+                .foregroundColor: inkSecondary.withAlphaComponent(0.65),
+                .kern: size * 0.34,
+            ])
+            let nameplateSize = nameplate.size()
+            nameplate.draw(at: CGPoint(x: area.midX - nameplateSize.width / 2, y: area.midY - nameplateSize.height / 2))
+        } else {
+            let ringRadius = geometry.ringRadius
+            let face = geometry.faceArea
+            let nameplate = NSAttributedString(string: "DIGITAL PITCH PIPE", attributes: [
+                .font: DPTheme.condensedFont(size: ringRadius * 0.08),
+                .foregroundColor: inkSecondary.withAlphaComponent(0.65),
+                .kern: ringRadius * 0.028,
+            ])
+            let nameplateSize = nameplate.size()
+            nameplate.draw(at: CGPoint(x: face.midX - nameplateSize.width / 2, y: face.maxY - nameplateSize.height * 2.2))
+        }
+    }
+
+    /// The raised display: one machined window, a plate-surface glass in a
+    /// hairline frame with a fine inner rim, the readout large inside it. Like
+    /// the range selector it is a part of the plate, not a light: only a
+    /// sounding cell glows.
+    private func drawDisplay(_ window: CGRect, context: CGContext, surface: UIColor, ink: UIColor,
+                             inkSecondary: UIColor, hairline: UIColor) {
+        guard window.width > 0, window.height > 0 else { return }
+        let frame = UIBezierPath(roundedRect: window, cornerRadius: 5)
+        surface.withAlphaComponent(0.92).setFill()
+        frame.fill()
+        context.setStrokeColor(hairline.cgColor)
+        context.setLineWidth(1.5)
+        context.addPath(frame.cgPath)
+        context.strokePath()
+        context.setStrokeColor(inkSecondary.withAlphaComponent(0.3).cgColor)
+        context.setLineWidth(0.8)
+        context.addPath(UIBezierPath(roundedRect: window.insetBy(dx: 5, dy: 5), cornerRadius: 3).cgPath)
+        context.strokePath()
+        ReadoutPainter.draw(readout, in: window.insetBy(dx: 14, dy: 14), ink: ink, inkSecondary: inkSecondary,
+                            display: true)
     }
 
     /// The accidental cells' engraving: the NoteHedz sharp and flat either side of a slash.
@@ -504,27 +753,138 @@ struct InstrumentRenderer {
     }
 }
 
+/// The readout set in an area of its own (the classic grid's well, a folded
+/// face's raised display): the sounding notes, then a frequency, an interval, a
+/// chord's name or a count, as one centred block; "— Hz" when silent. Names at
+/// min(0.46 × the height, 0.22 × the width), the detail at half that (a chord's
+/// name at 0.62), each line shrunk to fit; a readout shorter than
+/// `ClassicGeometry.minReadout` reads as one line.
+enum ReadoutPainter {
+    /// `display` is a folded face's raised display: the names are not held to
+    /// 0.22 × the width, so one note fills the window and a chord's names shrink
+    /// to fit it, and the whole block shrinks to the window's height.
+    static func draw(_ readout: PitchPipeModel.Readout?, in area: CGRect, ink: UIColor, inkSecondary: UIColor,
+                     display: Bool = false) {
+        guard area.width > 0, area.height > 0 else { return }
+        if area.height < ClassicGeometry.minReadout {
+            drawLine(readout, in: area, ink: ink, inkSecondary: inkSecondary)
+            return
+        }
+        let fitsHeight = display
+        let base = display ? area.height * 0.46 : min(area.height * 0.46, area.width * 0.22)
+        let block = layout(readout, area: area, nameSize: base, ink: ink, inkSecondary: inkSecondary)
+        let height = block.reduce(0) { $0 + $1.size().height } + (block.count > 1 ? base * 0.15 : 0)
+        let limit = area.height * 0.92
+        let lines = fitsHeight && height > limit
+            ? layout(readout, area: area, nameSize: base * limit / height, ink: ink, inkSecondary: inkSecondary)
+            : block
+        let nameSize = fitsHeight && height > limit ? base * limit / height : base
+        let spacing = lines.count > 1 ? nameSize * 0.15 : 0
+        let total = lines.reduce(0) { $0 + $1.size().height } + spacing
+        var top = area.midY - total / 2
+        for line in lines {
+            let size = line.size()
+            line.draw(at: CGPoint(x: area.midX - size.width / 2, y: top))
+            top += size.height + spacing
+        }
+    }
+
+    /// The block's lines at `nameSize`, each fitted to the area's width.
+    private static func layout(_ readout: PitchPipeModel.Readout?, area: CGRect, nameSize: CGFloat, ink: UIColor,
+                               inkSecondary: UIColor) -> [NSAttributedString] {
+        let detailSize = nameSize * 0.5
+        let chordSize = nameSize * 0.62
+        let fit = CGSize(width: area.width * 0.92, height: .greatestFiniteMagnitude)
+        guard let readout else {
+            return [fitted(within: fit) { scale in
+                NSAttributedString(string: "\u{2014} Hz", attributes: [
+                    .font: DPTheme.monospacedFont(size: detailSize * scale),
+                    .foregroundColor: inkSecondary.withAlphaComponent(0.55),
+                ])
+            }]
+        }
+        let names = fitted(within: fit) { scale in
+            NSAttributedString(string: readout.names, attributes: [
+                .font: DPTheme.condensedFont(size: nameSize * scale), .foregroundColor: ink,
+            ])
+        }
+        // A chord has a name, not a measurement: engrave it in the display face.
+        let detail = fitted(within: fit) { scale in
+            NSAttributedString(string: readout.detail, attributes: readout.isChord
+                ? [.font: DPTheme.condensedFont(size: chordSize * scale), .foregroundColor: ink,
+                   .kern: chordSize * scale * 0.12]
+                : [.font: DPTheme.monospacedFont(size: detailSize * scale), .foregroundColor: ink])
+        }
+        return [names, detail]
+    }
+
+    /// The readout as one line: the names, then the detail after two spaces.
+    private static func drawLine(_ readout: PitchPipeModel.Readout?, in area: CGRect, ink: UIColor,
+                                 inkSecondary: UIColor) {
+        let lineSize = area.height * 0.6
+        let fit = CGSize(width: area.width * 0.92, height: .greatestFiniteMagnitude)
+        let line = fitted(within: fit) { scale in
+            guard let readout else {
+                return NSAttributedString(string: "\u{2014} Hz", attributes: [
+                    .font: DPTheme.monospacedFont(size: lineSize * 0.7 * scale),
+                    .foregroundColor: inkSecondary.withAlphaComponent(0.55),
+                ])
+            }
+            let text = NSMutableAttributedString(string: readout.names + "  ", attributes: [
+                .font: DPTheme.condensedFont(size: lineSize * scale), .foregroundColor: ink,
+            ])
+            text.append(NSAttributedString(string: readout.detail, attributes: readout.isChord
+                ? [.font: DPTheme.condensedFont(size: lineSize * 0.8 * scale), .foregroundColor: ink,
+                   .kern: lineSize * 0.8 * scale * 0.12]
+                : [.font: DPTheme.monospacedFont(size: lineSize * 0.7 * scale), .foregroundColor: ink]))
+            return text
+        }
+        let size = line.size()
+        line.draw(at: CGPoint(x: area.midX - size.width / 2, y: area.midY - size.height / 2))
+    }
+
+    /// The label `make` builds at scale 1, or smaller until it fits `bounds`.
+    static func fitted(within bounds: CGSize, _ make: (CGFloat) -> NSAttributedString) -> NSAttributedString {
+        let label = make(1)
+        let size = label.size()
+        guard size.width > 0, size.height > 0 else { return label }
+        let scale = min(1, bounds.width / size.width, bounds.height / size.height)
+        return scale < 1 ? make(scale) : label
+    }
+}
+
 // MARK: - View
 
 struct PitchInstrumentView: View {
     @Bindable var model: PitchPipeModel
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.layoutDirection) private var layoutDirection
+    /// The hinge's state, so the face is laid out again as a fold comes and goes.
+    @State private var hingeStatus = 0
 
     /// Tests freeze the breathing so a capture is deterministic.
     static var breathingFrozen = false
 
     var body: some View {
         GeometryReader { proxy in
-            let geometry = InstrumentGeometry(size: proxy.size, count: model.notes.count)
+            let _ = hingeStatus
+            let geometry = InstrumentGeometry(size: proxy.size, count: model.notes.count,
+                                              fold: Fold.band(in: proxy),
+                                              displayOnLeft: layoutDirection == .leftToRight)
             ZStack {
-                if model.anyPlaying, !reduceMotion, !Self.breathingFrozen {
-                    TimelineView(.animation) { timeline in
-                        face(geometry, phase: Self.phase(at: timeline.date))
+                Group {
+                    if model.anyPlaying, !reduceMotion, !Self.breathingFrozen {
+                        TimelineView(.animation) { timeline in
+                            face(geometry, phase: Self.phase(at: timeline.date))
+                        }
+                    } else {
+                        face(geometry, phase: 0)
                     }
-                } else {
-                    face(geometry, phase: 0)
                 }
+                // Folding or opening crossfades the face to its new arrangement.
+                .id(geometry.posture)
+                .transition(.opacity)
                 MultiTouchSurface(
                     began: { id, point in model.touchBegan(id: id, at: point) },
                     moved: { id, point in model.touchMoved(id: id, to: point) },
@@ -532,9 +892,11 @@ struct PitchInstrumentView: View {
                 )
                 accessibilityElements(geometry)
             }
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: geometry.posture)
             .onAppear { model.geometry = geometry }
             .onChange(of: geometry) { _, new in model.geometry = new }
         }
+        .refreshesOnFold($hingeStatus)
     }
 
     /// One breath every four seconds.

@@ -23,6 +23,7 @@
 		2EF6CD82388563FB4E1569A0 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 62DC20AC676D89FAF6306FE2 /* GoogleMobileAds */; };
 		3DDFB0BCB5E994DA2A6FB0E8 /* panobackground.png in Resources */ = {isa = PBXBuildFile; fileRef = 63B403D31588703200FCA77C /* panobackground.png */; };
 		47172D6AC4A2EE44B24A9BD2 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C312820713220954FBDB7D29 /* Foundation.framework */; };
+		96E5BF1668530DF61AF4AC4C /* DuoTourUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79BAD70E7E763DE71200F709 /* DuoTourUITests.swift */; };
 		4F1A765B2B7CD004526031A0 /* DesignTourUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C486582193CBB54AC3DB38A0 /* DesignTourUITests.swift */; };
 		A7D10A060000000000000006 /* WidgetHitTargetUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D10A050000000000000005 /* WidgetHitTargetUITests.swift */; };
 		631C911715906D2B004733F1 /* notes.png in Resources */ = {isa = PBXBuildFile; fileRef = 631C911515906D2B004733F1 /* notes.png */; };
@@ -149,6 +150,7 @@
 		A130958F168AE0846420AE2D /* InstrumentRealAudioTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 752FECB8F6E22E2770D906A3 /* InstrumentRealAudioTests.swift */; };
 		0605DC160601C8B05FD74E55 /* PitchPerfectListScrollingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 159D628260ED694920D9740A /* PitchPerfectListScrollingTests.swift */; };
 		ADEF10F26910267DFAD30C0D /* PitchPerfectNoteSoundTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0045E70110B1D76029B45C07 /* PitchPerfectNoteSoundTests.swift */; };
+		D4909E148F071ACC11304FDF /* PitchPerfectFoldTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54FEC6728DC1FD3D7A073C2C /* PitchPerfectFoldTests.swift */; };
 		470F95B5DBAA80E51CE1B06B /* ClassicPitchPipeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A118FAD2D7E836E64EBB82DC /* ClassicPitchPipeTests.swift */; };
 		1C1879ED0EA02A70637C0755 /* PitchPerfectAnalyticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF1DAB9D66FA11654DFD30F /* PitchPerfectAnalyticsTests.swift */; };
 		1F162A3E6D015D56AB99FD87 /* PitchPerfectSongManagementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5965ABAE6CDE569D817AF0A5 /* PitchPerfectSongManagementTests.swift */; };
@@ -347,6 +349,7 @@
 		C0NEWF0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPPitchPipeModelEdgeCaseTests.swift; sourceTree = "<group>"; };
 		C0NEWF0050000000000000F5 /* PitchChordTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchChordTests.swift; sourceTree = "<group>"; };
 		C312820713220954FBDB7D29 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		79BAD70E7E763DE71200F709 /* DuoTourUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuoTourUITests.swift; sourceTree = "<group>"; };
 		C486582193CBB54AC3DB38A0 /* DesignTourUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DesignTourUITests.swift; sourceTree = "<group>"; };
 		A7D10A050000000000000005 /* WidgetHitTargetUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WidgetHitTargetUITests.swift; sourceTree = "<group>"; };
 		E676252BBFDF4F8F575E325D /* PitchPerfectWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PitchPerfectWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -371,6 +374,7 @@
 		752FECB8F6E22E2770D906A3 /* InstrumentRealAudioTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstrumentRealAudioTests.swift; sourceTree = "<group>"; };
 		159D628260ED694920D9740A /* PitchPerfectListScrollingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectListScrollingTests.swift; sourceTree = "<group>"; };
 		0045E70110B1D76029B45C07 /* PitchPerfectNoteSoundTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectNoteSoundTests.swift; sourceTree = "<group>"; };
+		54FEC6728DC1FD3D7A073C2C /* PitchPerfectFoldTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectFoldTests.swift; sourceTree = "<group>"; };
 		A118FAD2D7E836E64EBB82DC /* ClassicPitchPipeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassicPitchPipeTests.swift; sourceTree = "<group>"; };
 		BFF1DAB9D66FA11654DFD30F /* PitchPerfectAnalyticsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectAnalyticsTests.swift; sourceTree = "<group>"; };
 		5965ABAE6CDE569D817AF0A5 /* PitchPerfectSongManagementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectSongManagementTests.swift; sourceTree = "<group>"; };
@@ -486,6 +490,7 @@
 			isa = PBXGroup;
 			children = (
 				C486582193CBB54AC3DB38A0 /* DesignTourUITests.swift */,
+				79BAD70E7E763DE71200F709 /* DuoTourUITests.swift */,
 				A7D10A050000000000000005 /* WidgetHitTargetUITests.swift */,
 				0F8B9AFCD4ED5E9F6865924C /* SongManagementUITests.swift */,
 				D6155D424790DC35A3826DC5 /* MainFlowsUITests.swift */,
@@ -672,6 +677,7 @@
 				5965ABAE6CDE569D817AF0A5 /* PitchPerfectSongManagementTests.swift */,
 				BFF1DAB9D66FA11654DFD30F /* PitchPerfectAnalyticsTests.swift */,
 				A118FAD2D7E836E64EBB82DC /* ClassicPitchPipeTests.swift */,
+				54FEC6728DC1FD3D7A073C2C /* PitchPerfectFoldTests.swift */,
 				0045E70110B1D76029B45C07 /* PitchPerfectNoteSoundTests.swift */,
 				159D628260ED694920D9740A /* PitchPerfectListScrollingTests.swift */,
 				752FECB8F6E22E2770D906A3 /* InstrumentRealAudioTests.swift */,
@@ -1042,6 +1048,7 @@
 				1F162A3E6D015D56AB99FD87 /* PitchPerfectSongManagementTests.swift in Sources */,
 				1C1879ED0EA02A70637C0755 /* PitchPerfectAnalyticsTests.swift in Sources */,
 				470F95B5DBAA80E51CE1B06B /* ClassicPitchPipeTests.swift in Sources */,
+				D4909E148F071ACC11304FDF /* PitchPerfectFoldTests.swift in Sources */,
 				ADEF10F26910267DFAD30C0D /* PitchPerfectNoteSoundTests.swift in Sources */,
 				0605DC160601C8B05FD74E55 /* PitchPerfectListScrollingTests.swift in Sources */,
 				A130958F168AE0846420AE2D /* InstrumentRealAudioTests.swift in Sources */,
@@ -1071,6 +1078,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4F1A765B2B7CD004526031A0 /* DesignTourUITests.swift in Sources */,
+				96E5BF1668530DF61AF4AC4C /* DuoTourUITests.swift in Sources */,
 				A7D10A060000000000000006 /* WidgetHitTargetUITests.swift in Sources */,
 				631D517D271DCD9D67FBDBE3 /* SongManagementUITests.swift in Sources */,
 				9FF07793CE29E6A611923170 /* MainFlowsUITests.swift in Sources */,

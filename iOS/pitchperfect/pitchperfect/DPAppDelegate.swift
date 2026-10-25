@@ -139,17 +139,26 @@ final class DPAppDelegate: UIResponder, UIApplicationDelegate {
 }
 
 /// The host the unit tests run in: no Firebase, no ads, no window of its own.
+/// Apps built with the iOS 27 SDK must adopt the scene life cycle or they do
+/// not launch, so it connects one plain scene, with no delegate, that the
+/// tests' windows join.
 @objc(DPTestAppDelegate)
 final class DPTestAppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
-        let window = UIWindow(frame: UIScreen.main.bounds)
+        // Hidden and never drawn, so it needs no size (and no one screen to take it from).
+        let window = UIWindow(frame: .zero)
         window.rootViewController = UIViewController()
         window.isHidden = true
         self.window = window
         return true
+    }
+
+    func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession,
+                     options: UIScene.ConnectionOptions) -> UISceneConfiguration {
+        UISceneConfiguration(name: nil, sessionRole: connectingSceneSession.role)
     }
 }
 

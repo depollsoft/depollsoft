@@ -58,7 +58,14 @@ final class BannerHostView: UIView, BannerViewDelegate {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
-    var isLandscape: Bool { window?.windowScene?.interfaceOrientation.isLandscape ?? false }
+    /// A landscape banner for a window wider than it is tall. The window's shape,
+    /// not the interface orientation: an iPhone Duo's inner display ignores the
+    /// supported orientations, and a window beside another app can be tall on a
+    /// screen held sideways.
+    var isLandscape: Bool {
+        guard let window else { return false }
+        return window.bounds.width > window.bounds.height
+    }
 
     override func didMoveToWindow() {
         super.didMoveToWindow()
@@ -98,7 +105,10 @@ struct BannerAdSlot: UIViewRepresentable {
     func updateUIView(_ view: BannerHostView, context: Context) {}
 
     func sizeThatFits(_ proposal: ProposedViewSize, uiView: BannerHostView, context: Context) -> CGSize? {
-        let width = proposal.width ?? uiView.window?.bounds.width ?? UIScreen.main.bounds.width
+        // Without a proposal or a window yet, the narrowest phone's width stands in
+        // until layout proposes one (an iPhone Duo has two screens, so there is no
+        // one screen to ask).
+        let width = proposal.width ?? uiView.window?.bounds.width ?? 320
         let size = AdBanner.size(width: width, landscape: uiView.isLandscape).size
         return CGSize(width: width, height: size.height)
     }
