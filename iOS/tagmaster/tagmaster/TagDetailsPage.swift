@@ -11,6 +11,7 @@ import SwiftUI
 struct TagDetailsPage: View {
     let model: TagDetailModel
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.displayScale) private var displayScale
 
     static func refreshedText(_ date: Date?) -> String {
         guard let date else { return "" }
@@ -38,7 +39,7 @@ struct TagDetailsPage: View {
                     Text(tag.title ?? "")
                         .font(.title)
                         .fixedSize(horizontal: false, vertical: true)
-                    TMFactsLayout(bodyFont: dynamicTypeSize.tmFont(.body)) {
+                    TMFactsLayout(bodyFont: dynamicTypeSize.tmFont(.body), scale: displayScale) {
                         TMCaption(text: "Last Refreshed")
                         TMFactText(text: TagDetailsPage.refreshedText(tag.lastRefreshed)).tmFactValue(.text)
                         TMCaption(text: "Downloads")

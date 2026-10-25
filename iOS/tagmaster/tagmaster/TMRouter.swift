@@ -95,12 +95,14 @@ final class TMRouter {
     var path: [TMRoute] = []
     /// Screens stacked on the tag beside the list (the sheet music reader).
     var detailPath: [TMRoute] = []
-    /// True when the list and a tag sit side by side (a regular-width iPad).
+    /// True when the list and a tag sit side by side (a regular-width iPad, an iPhone Duo open).
     private(set) var expanded = false
     /// The split's columns: both, or the tag alone while reading full screen.
     var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
-    /// The tag beside the list, reused from tag to tag so its open page survives.
-    let detail: TagDetailModel
+    /// The tag beside the list, reused from tag to tag so its open page survives. A tag
+    /// moves in and out of this place whole when the window changes shape (`setExpanded`,
+    /// `useStack`), so its page and any part that is playing go with it.
+    private(set) var detail: TagDetailModel
     /// Whether the detail column shows a tag yet, or still the placeholder.
     private(set) var hasDetail = false
     /// Home, the root of the list stack.
@@ -132,6 +134,10 @@ final class TMRouter {
 
     func setExpanded(_ expanded: Bool) {
         guard self.expanded != expanded else { return }
+        // Widening with a tag open on the list stack (an iPhone Duo opened, an iPad
+        // window dragged wider): that tag is what the user was looking at, so it
+        // moves beside the list rather than staying in the narrow list column.
+        if expanded { adoptTopTag() }
         self.expanded = expanded
         detail.expanded = expanded
         if !expanded {
@@ -139,6 +145,49 @@ final class TMRouter {
             preferredCompactColumn = hasDetail ? .detail : .sidebar
         }
         selectionChanged()
+    }
+
+    /// The shell is drawing one stack, with no column beside it (an iPhone, or an
+    /// iPhone Duo folded shut). A tag that was open beside the list goes on top of
+    /// the stack, with its reader, so closing the device keeps it in front.
+    func useStack() {
+        setExpanded(false)
+        guard hasDetail else { return }
+        let moved = detail
+        moved.carryAcross()
+        path.append(TMRoute(kind: .tag(moved)))
+        path.append(contentsOf: detailPath)
+        detailPath = []
+        hasDetail = false
+        let placeholder = TagDetailModel()
+        wire(placeholder)
+        detail = placeholder
+        preferredCompactColumn = .sidebar
+        selectionChanged()
+    }
+
+    /// Moves the tag on top of the list stack, and its reader if one is over it,
+    /// into the detail column. A list pushed over a tag is what is showing, so a tag
+    /// deeper in the stack stays where it is.
+    private func adoptTopTag() {
+        guard let index = path.lastIndex(where: { $0.tagModel != nil }),
+              let model = path[index].tagModel,
+              path[(index + 1)...].allSatisfy({ if case .sheetMusic = $0.kind { true } else { false } })
+        else { return }
+        let reader = Array(path[(index + 1)...])
+        model.carryAcross()
+        path.removeSubrange(index...)
+        if detail !== model {
+            // The tag that sat beside the list before is replaced, not kept playing unseen.
+            detail.tracks.stopPlayback()
+            detail.summary.stopKeyNote()
+            detail = model
+        }
+        detailPath = reader
+        hasDetail = true
+        preferredCompactColumn = .detail
+        // The list lights and reveals the row of the tag now beside it.
+        model.source?.tm_didStep(toTagId: model.tagId)
     }
 
     /// The tag the detail column shows, when there is one beside the list.

@@ -133,6 +133,25 @@ final class TagDetailModel {
     /// On screen, and the app active: the only time the quartet may move.
     var screenVisible = false
     var applicationActive = true
+    /// The screens showing this tag: two for a moment while it is carried between
+    /// the phone stack and the split, so the old one going does not hide the new one.
+    private var screensShowing: Set<AnyHashable> = []
+
+    func screenAppeared(_ screen: AnyHashable = 0) {
+        screensShowing.insert(screen)
+        screenVisible = true
+    }
+
+    func screenDisappeared(_ screen: AnyHashable = 0) {
+        screensShowing.remove(screen)
+        screenVisible = !screensShowing.isEmpty
+    }
+
+    /// The router is moving this tag between the phone stack and the split (an
+    /// iPhone Duo opening or closing): the part playing keeps playing.
+    func carryAcross() {
+        tracks.carriedAcross = true
+    }
 
     /// Bumped whenever the saved lists change anywhere, so membership reads re-run.
     private(set) var listsRevision = 0

@@ -91,6 +91,7 @@ struct TagSummaryPage: View {
     @Environment(\.tmAccent) private var accent
     let model: TagSummaryModel
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.displayScale) private var displayScale
     @State private var visible = false
 
     var body: some View {
@@ -182,7 +183,7 @@ struct TagSummaryPage: View {
     }
 
     private func facts(_ tag: DPTag) -> some View {
-        TMFactsLayout(bodyFont: dynamicTypeSize.tmFont(.body)) {
+        TMFactsLayout(bodyFont: dynamicTypeSize.tmFont(.body), scale: displayScale) {
             TMCaption(text: "Tag ID")
             TMFactText(text: "\(tag.tagId)").tmFactValue(.text, minimumHeight: 28)
             TMCaption(text: "Parts")

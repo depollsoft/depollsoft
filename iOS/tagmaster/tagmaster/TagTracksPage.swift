@@ -11,6 +11,8 @@ import SwiftUI
 struct TagTracksPage: View {
     @Environment(\.tmAccent) private var accent
     let model: TagTracksModel
+    /// This page, among any others showing the same tag while it is carried across.
+    @State private var page = UUID()
 
     var body: some View {
         List {
@@ -37,8 +39,8 @@ struct TagTracksPage: View {
         .listStyle(.grouped)
         .scrollContentBackground(.hidden)
         .accessibilityIdentifier("tracks.table")
-        .onAppear(perform: model.appeared)
-        .onDisappear(perform: model.disappeared)
+        .onAppear { model.appeared(page: page) }
+        .onDisappear { model.disappeared(page: page) }
     }
 
     private var header: some View {

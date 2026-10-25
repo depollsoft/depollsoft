@@ -279,6 +279,7 @@ final class TMHomeModel: TMTagListing {
 struct TMHomeScreen: View {
     @Bindable var model: TMHomeModel
     @Environment(\.tmTintDimmed) private var dimmed
+    @Environment(\.tmBackdrop) private var backdrop
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -325,8 +326,10 @@ struct TMHomeScreen: View {
             .listSectionSpacing(.custom(15))
             // UITableView ended Home with its footer view. A grouped List leaves more
             // after it: 20pt of margin and 32pt of closing section space on iPhone;
-            // in the iPad sidebar the table itself left 8pt more than the List.
-            .contentMargins(.bottom, UIDevice.current.userInterfaceIdiom == .pad ? 8 : -32, for: .scrollContent)
+            // in the iPad sidebar the table itself left 8pt more than the List. An
+            // open iPhone Duo's list column ends the way the iPad's does.
+            .contentMargins(.bottom, UIDevice.current.userInterfaceIdiom == .pad || backdrop != .own ? 8 : -32,
+                            for: .scrollContent)
             .scrollContentBackground(.hidden)
             .environment(\.editMode, .constant(model.isEditing ? .active : .inactive))
             .tmTracksScrolling($model.isScrolling)
@@ -471,11 +474,17 @@ private struct TMInsetGroupMargins: ViewModifier {
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.tmGroupedMargin) private var margin
     @Environment(\.tmGroupedTextInset) private var textInset
+    /// The list's horizontal safe area. Explicit content margins replace the ones a
+    /// List derives from it, so a side bar (an iPhone Duo's) or a notch is added
+    /// back here, each side on its own, as UITableView kept its cards inside it.
+    @State private var safeArea = EdgeInsets()
 
     func body(content: Content) -> some View {
         if sizeClass == .compact || always {
             // The cards where UIKit's were, and each row's text where UIKit's cell put it.
-            content.contentMargins(.horizontal, margin, for: .scrollContent)
+            content.contentMargins(.leading, margin + safeArea.leading, for: .scrollContent)
+                .contentMargins(.trailing, margin + safeArea.trailing, for: .scrollContent)
+                .onGeometryChange(for: EdgeInsets.self, of: \.safeAreaInsets) { safeArea = $0 }
                 .environment(\.tmInsetRowMargin, textInset - margin)
                 .environment(\.tmInInsetGroup, true)
         } else {

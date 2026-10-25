@@ -122,8 +122,8 @@ struct TMActionSheet: UIViewRepresentable {
                     action.handler()
                 })
             }
-            // iPhone shows the classic centred card; iPad needs a popover source.
-            if anchoredEverywhere || anchor.traitCollection.userInterfaceIdiom == .pad {
+            // iPhone shows the classic centred card; iPad, and an open iPhone Duo, need a popover source.
+            if anchoredEverywhere || anchor.traitCollection.tmFloatsPopovers {
                 sheet.popoverPresentationController?.delegate = coordinator
                 sheet.popoverPresentationController?.sourceView = anchor
                 sheet.popoverPresentationController?.sourceRect = anchor.bounds

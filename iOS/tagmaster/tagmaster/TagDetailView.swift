@@ -13,6 +13,8 @@ struct TagDetailScreen: View {
     @Bindable var model: TagDetailModel
     @Environment(\.tmAccent) private var accent
     @Environment(\.displayScale) private var displayScale
+    /// This screen, among any others showing the same tag while it is carried across.
+    @State private var screen = UUID()
 
     var body: some View {
         ZStack {
@@ -33,8 +35,8 @@ struct TagDetailScreen: View {
         .toolbar { toolbar }
         .focusEffectDisabled()
         .tmRecoveryAlert($model.error)
-        .onAppear { model.screenVisible = true }
-        .onDisappear { model.screenVisible = false }
+        .onAppear { model.screenAppeared(screen) }
+        .onDisappear { model.screenDisappeared(screen) }
         // The detail beside a list is reused for every tag: a new tag counts as coming to the front.
         .analyticsScreen(model.screenName, subject: model.tagId)
     }
@@ -133,7 +135,8 @@ struct TagDetailScreen: View {
     }
 
     private var refreshPole: some View {
-        TMBarberPole(compact: true, darkSurface: true, animating: model.screenVisible)
+        // On the charcoal band the pole is dark metal; in a vertical bar it stands on the page's glass.
+        TMBarInk { vertical in TMBarberPole(compact: true, darkSurface: !vertical, animating: model.screenVisible) }
             .accessibilityElement()
             .accessibilityLabel("Refreshing tag")
             .accessibilityAddTraits(.isStaticText)
@@ -179,9 +182,22 @@ struct TMBarButton: View {
     /// The charcoal bar's item colour: white; UIKit's dimmed grey while an alert or
     /// sheet is up; UIKit's disabled grey for an item that is off. Set explicitly, so
     /// a light-mode column (the iPad list) cannot turn the items black.
-    static func ink(dimmed: Bool, enabled: Bool = true) -> Color {
+    ///
+    /// A vertical bar (an iPhone Duo's side bar) is not the charcoal band: its items
+    /// stand on the system's glass over the page, so they take the label colours the
+    /// system's own back button there takes.
+    static func ink(dimmed: Bool, enabled: Bool = true, vertical: Bool = false) -> Color {
+        if vertical {
+            if !enabled { return Color(.tertiaryLabel) }
+            return dimmed ? Color(.secondaryLabel) : Color(.label)
+        }
         if !enabled { return Color(white: 1, opacity: 0.08) }
         return dimmed ? Color(white: 204.0 / 255.0) : Color(white: 245.0 / 255.0)
+    }
+
+    /// A disabled bar image, a little brighter than a disabled title as UIKit drew it.
+    static func disabledSymbolInk(vertical: Bool = false) -> Color {
+        vertical ? Color(.tertiaryLabel) : Color(white: 1, opacity: 0.23)
     }
 
     var body: some View {
@@ -201,8 +217,32 @@ struct TMBarLabel<Content: View>: View {
     init(@ViewBuilder content: () -> Content) { self.content = content() }
 
     var body: some View {
-        content.foregroundStyle(TMBarButton.ink(dimmed: dimmed, enabled: enabled))
+        TMBarInk { vertical in
+            content.foregroundStyle(TMBarButton.ink(dimmed: dimmed, enabled: enabled, vertical: vertical))
+        }
     }
+}
+
+/// Builds a bar item knowing whether it stands in a vertical bar. The system says so
+/// only from iOS 27.1, and only inside the item, so this reads it where it is placed.
+struct TMBarInk<Content: View>: View {
+    @ViewBuilder let content: (_ vertical: Bool) -> Content
+
+    var body: some View {
+        if #available(iOS 27.1, *) {
+            TMVerticalBarEdgeReader(content: content)
+        } else {
+            content(false)
+        }
+    }
+}
+
+@available(iOS 27.1, *)
+private struct TMVerticalBarEdgeReader<Content: View>: View {
+    @Environment(\.toolbarVerticalEdge) private var edge
+    let content: (_ vertical: Bool) -> Content
+
+    var body: some View { content(edge != nil) }
 }
 
 extension TMBarLabel where Content == TMBarSymbol {
@@ -223,7 +263,9 @@ struct TMBarSymbol: View {
         if enabled {
             TMBarButton.symbol(systemName, scale: scale)
         } else {
-            TMBarButton.symbol(systemName, scale: scale).foregroundStyle(Color(white: 1, opacity: 0.23))
+            TMBarInk { vertical in
+                TMBarButton.symbol(systemName, scale: scale).foregroundStyle(TMBarButton.disabledSymbolInk(vertical: vertical))
+            }
         }
     }
 }
