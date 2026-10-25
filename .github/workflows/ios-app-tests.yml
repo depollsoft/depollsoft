@@ -16,12 +16,14 @@ defaults:
 jobs:
   build:
     name: Build iOS test products
-    runs-on: macos-26
+    # Xcode 27.1 carries the iOS 27.1 SDK the apps need for iPhone Duo layouts
+    # (vertical bars, reserved regions); the xcode-27 image defaults to 27.0.
+    runs-on: xcode-27
     timeout-minutes: 35
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
     env:
-      DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
       IOS_APP: ${{ inputs.app }}
       LANG: en_US.UTF-8
       LC_ALL: en_US.UTF-8
@@ -35,12 +37,10 @@ jobs:
       - name: Select Xcode version
         id: select_xcode
         run: |
-          DEVELOPER_DIR="$(xcode-select -p 2>/dev/null || true)"
-          if [ -z "$DEVELOPER_DIR" ] || [ ! -d "$DEVELOPER_DIR" ]; then
-            DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"
-          fi
+          # The job's DEVELOPER_DIR names Xcode 27.1; never fall back to the
+          # image's default Xcode, which lacks the iOS 27.1 SDK.
           if [ ! -d "$DEVELOPER_DIR" ]; then
-            echo "No Xcode installation found!"
+            echo "Xcode 27.1 is not installed on this runner ($DEVELOPER_DIR)." >&2
             exit 1
           fi
 
@@ -154,7 +154,7 @@ jobs:
       - name: Create build destination
         id: build_simulator
         env:
-          IOS_SIMULATOR_VERSION: '26.5'
+          IOS_SIMULATOR_VERSION: '27.0'
         run: python3 ../scripts/ci/ios_simulator.py
 
       - name: Build app test targets
@@ -231,7 +231,7 @@ jobs:
   suites:
     name: iOS tests (${{ matrix.job }})
     needs: build
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 25
     strategy:
       fail-fast: false
@@ -242,8 +242,9 @@ jobs:
       max-parallel: 4
       matrix: ${{ fromJSON(needs.build.outputs.matrix) }}
     env:
-      DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
-      IOS_SIMULATOR_VERSION: '26.5'
+      DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
+      # The image's simulator runtime; it has no iOS 27.1 (iPhone Duo) runtime.
+      IOS_SIMULATOR_VERSION: '27.0'
       IOS_SIMULATOR_DEVICE: com.apple.CoreSimulator.SimDeviceType.iPhone-SE-3rd-generation
       IOS_MAX_TEST_SECONDS: ${{ matrix.timeout }}
       # Space-separated suites that share this runner (scripts/ci/ios_suites.py JOBS).
