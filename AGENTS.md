@@ -16,7 +16,7 @@ A polyglot monorepo with two mobile apps that share Firebase services, plus a sm
 - `api/`: TypeScript Express service on Google Cloud Run (GCP Pub/Sub and BigQuery).
 - `Firebase/`: Firebase configuration for both apps, and Pitch Perfect's account-deletion function.
 - `AppEngine/`: Google App Engine services (appears unused).
-- `docs/`: design and process notes (`android-compose.md`, `ios-swiftui.md`, `tag-lists.md`, `pitchperfect-set-lists.md`, `releases.md` and others).
+- `docs/`: design and process notes (`android-compose.md`, `ios-swiftui.md`, `iphone-duo.md`, `tag-lists.md`, `pitchperfect-set-lists.md`, `releases.md` and others).
 
 ## Build, Test, and Development Commands
 
@@ -76,6 +76,7 @@ npm run deploy  # Deploy to Firebase
 ### iOS
 
 - Both apps' UI is SwiftUI: a SwiftUI `App` and an `@Observable` model per screen; Tag Master routes through `TMRouter`. See `docs/ios-swiftui.md`.
+- Both apps adapt to iPhone Duo (outer display, inner display, half folded) through size classes, the window's own geometry and reserved regions, never device or idiom checks. See `docs/iphone-duo.md`.
 - Model layers stay mixed Objective-C and Swift (DPTag, DPNote, DPKey, stores) behind Swift bridging headers.
 - Swift Package Manager supplies Firebase, FirebaseUI, Google Sign-In, the Facebook SDK and Google Mobile Ads.
 - depolllib holds the shared non-UI pieces: JSON serialization, the file cache, NSString helpers, analytics and `DPAppLog`.
@@ -88,6 +89,7 @@ npm run deploy  # Deploy to Firebase
 ## Development Setup & Configuration
 
 - Android minSdk is 24 for the phone apps, 26 for Wear, and 23 for `PitchPerfectLicense` and the libraries. On iOS the apps and depolllib target 17.0, but pitchperfectlib still targets 15.0, so code there must stay available on iOS 15.
+- iOS builds need Xcode 27.1 (the iOS 27.1 SDK has the iPhone Duo APIs; guard them with `#available(iOS 27.1, *)`). Every iOS CI, preview, Firebase and release job runs on GitHub's `xcode-27` image with `/Applications/Xcode_27.1.app` selected and tests on its iOS 27.0 simulators; the iPhone Duo simulator needs the iOS 27.1 runtime, so it is local only.
 - Node.js 22 for Firebase Functions; the API container uses Node.js 24. Docker is needed for API development.
 - Firebase client configs (`google-services.json`, `GoogleService-Info.plist`, including the private preview variants) are tracked. Service credentials belong in environment variables or a secret manager, never in git.
 - API: `.env` (or a secret manager) supplies `PUBSUB_VERIFICATION_TOKEN` and GCP credentials. `npm start` runs the container on port 8080; to call `npm run docker-run` directly, export `PORT` in the shell first, because the script expands it for the port mapping before Docker reads `.env`. It needs the GeoIP data first: `gsutil cp gs://depollsoft-build-data/geoip-lite.tar.gz . && tar -xzf geoip-lite.tar.gz`.

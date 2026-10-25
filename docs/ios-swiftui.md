@@ -134,6 +134,28 @@ the XCUITest bundles and `scripts/release/capture.py` use them.
   Core Graphics calls the UIKit view made. `MultiTouchSurface`, a transparent
   `UIView`, is the one UIKit view left: SwiftUI gestures follow a single touch
   before iOS 18 (`SpatialEventGesture`), and chords need every finger.
+- **iPhone Duo.** Layout follows size classes and the view's own geometry, never
+  the idiom or a screen: `UITraitCollection.isRegularSpace` (regular both ways:
+  a full iPad, or a Duo open on its inner display) is what centres sheets (Add
+  songs presents as a form sheet there; the song editor re-centres its key on
+  the keyboard), and the banner picks portrait or landscape from its window's
+  shape. Idiom checks remain only where the thing is the device's own: iPadOS's
+  top tab bar (`TabBarChrome`) and where banners show (phones). The faces read
+  the fold with `Fold.band(in:)` (the active division reserved region, iOS 27.1)
+  and lay out again on each hinge state change (`refreshesOnFold`;
+  `centredOffTheFold` does the same for a centred prompt, Songs' empty list);
+  `InstrumentGeometry(size:count:fold:displayOnLeft:)` and
+  `ClassicGeometry(size:count:selectorSize:fold:)` take the band as a plain
+  input, so tests pass synthetic folds (`PitchPerfectFoldTests`) and set
+  `Fold.simulated` to fold the hosted app and the catalog's `fold-*` captures.
+  Bars: UIKit bar symbol items (`BarSymbol.item`) carry titles for the side
+  bar's overflow menu (a SwiftUI `Label` would split the button's accessibility
+  element in two); Settings, Log In and Add songs opt out of the side bar (one
+  control, or words);
+  Keys' Major/Minor stays horizontal; the editor's Done has high visibility
+  priority. `DuoTourUITests` (skipped unless `TEST_RUNNER_DUO_TOUR_DIR` is set,
+  `TEST_RUNNER_DUO_TOUR_POSE` prefixes its files) screenshots every tab and
+  Settings, for running once in each pose a Duo simulator is put in.
 - **Built from UIKit's pieces.** Where SwiftUI's version of a control draws
   differently, the screen hosts the UIKit one: the Keys Major/Minor control
   is a `UISegmentedControl` bar item (`KeyModeBarItem`); the Songs rows'
@@ -394,7 +416,9 @@ each over an `@Observable` model.
 ## Tag Master shell
 
 - **Entry.** `TagMasterMain` (`TMShell.swift`) starts the SwiftUI `TagMasterApp`,
-  or a bare `TMTestAppDelegate` host under XCTest. `DPAppDelegate` (now Swift)
+  or a bare `TMTestAppDelegate` host under XCTest. The test host connects one
+  plain scene (apps built with the iOS 27 SDK must adopt the scene life cycle or
+  they do not launch), and the tests' windows join it. `DPAppDelegate` (now Swift)
   keeps the launch work (Firebase, consent, the cache serializers, list sync)
   through `@UIApplicationDelegateAdaptor`, with the saved-tag helpers beside it.
   Opened URLs go to the sign-in providers first (`DPAppDelegate.handleAuthURL`,
@@ -406,8 +430,10 @@ each over an `@Observable` model.
   leaving the active phase cancels an attempt in flight.
   `TMWindowTint` gives the window the accent before any screen appears.
 - **Layout.** iPhone is one `NavigationStack` (`TMStackRoot`) with Home at its
-  root. iPad is a `NavigationSplitView` (`TMSplitRoot`): Home's stack in a
-  320–400 pt column (36% of the width), the tag or `TMTagPlaceholder` beside it,
+  root; an iPhone Duo held open and wide is `TMBookRoot`, the list and the tag
+  side by side with the fold between them (`TMShellLayout`, see
+  `docs/iphone-duo.md`). iPad is a `NavigationSplitView` (`TMSplitRoot`): Home's
+  stack in a 320–400 pt column (36% of the width), the tag or `TMTagPlaceholder` beside it,
   one watermark across both columns (see *Watermark* under Tag Master lists), and
   a chosen tag kept on top when the split collapses. The collapsed column is
   stored (`preferredCompactColumn`), decided at collapse and then following
@@ -416,7 +442,11 @@ each over an `@Observable` model.
   window slice (`TMSplitRoot.backdrops`).
 - **Routing.** `TMRouter` owns the list stack, the detail column's stack (the
   sheet music reader) and the tag beside the list, which it reuses from tag to
-  tag so the open page survives. `show(_:)` makes each screen's model with its
+  tag so the open page survives. When the window widens (`setExpanded(true)`) the
+  tag on top of the list stack moves beside the list, its reader with it; when a
+  Duo closes to the phone stack (`useStack()`) the tag beside the list goes on
+  top of the stack. Either way it is the same `TagDetailModel`, so its page and
+  any part playing carry across. `show(_:)` makes each screen's model with its
   route, so a screen's `TMRouteNavigator` can remove exactly that screen and the
   tags it opens step through it (`TMListingSource`). Deep links
   (`tagmaster://tag/<id>`, `tagmaster:///open/tag/<id>`) keep the Objective-C
