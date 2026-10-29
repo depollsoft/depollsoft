@@ -92,6 +92,8 @@ struct TagSummaryPage: View {
     let model: TagSummaryModel
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.displayScale) private var displayScale
+    /// On a tabletop Duo the key and Sheet Music are on the deck below the fold.
+    @Environment(\.tmOnStand) private var onStand
     @State private var visible = false
 
     var body: some View {
@@ -104,7 +106,8 @@ struct TagSummaryPage: View {
             }
             // The note is watched only while it sounds on a page someone can see,
             // as the UIKit key button's display link ran only while it was in a window.
-            .onReceive(TagSummaryPage.keyNoteTicks(active: visible && model.keyNotePlaying)) { _ in
+            // On the stand the deck, which holds the key, watches it.
+            .onReceive(TagSummaryPage.keyNoteTicks(active: visible && !onStand && model.keyNotePlaying)) { _ in
                 model.syncKeyNote()
             }
             .onAppear { visible = true }
@@ -164,21 +167,31 @@ struct TagSummaryPage: View {
     }
 
     private func performance(_ tag: DPTag) -> some View {
-        // UIKit held Sheet Music and the key to one height, the taller of the two.
         TMMatchedHeightStack {
             facts(tag)
-            if let key = tag.writtenKey, !key.isEmpty {
-                TMCaption(text: "Key").layoutValue(key: TMGapBefore.self, value: 16)
-                TMKeyNoteButton(model: model, title: key, fillsHeight: true)
-                    .accessibilityIdentifier("summary.key")
-                    .layoutValue(key: TMGapBefore.self, value: 4)
-                    .layoutValue(key: TMMatchesHeight.self, value: true)
-            }
-            if tag.sheetMusicUri != nil {
-                sheetMusicButton
-                    .layoutValue(key: TMGapBefore.self, value: 16)
-                    .layoutValue(key: TMMatchesHeight.self, value: true)
-            }
+            if !onStand { Self.keyAndMusicItems(tag, model: model) }
+        }
+    }
+
+    /// The key note and Sheet Music, held to one height (the taller of the two) as
+    /// UIKit held them: under the facts here, and on a tabletop Duo's deck.
+    static func keyAndMusic(_ tag: DPTag, model: TagSummaryModel) -> some View {
+        TMMatchedHeightStack { keyAndMusicItems(tag, model: model) }
+    }
+
+    @ViewBuilder
+    private static func keyAndMusicItems(_ tag: DPTag, model: TagSummaryModel) -> some View {
+        if let key = tag.writtenKey, !key.isEmpty {
+            TMCaption(text: "Key").layoutValue(key: TMGapBefore.self, value: 16)
+            TMKeyNoteButton(model: model, title: key, fillsHeight: true)
+                .accessibilityIdentifier("summary.key")
+                .layoutValue(key: TMGapBefore.self, value: 4)
+                .layoutValue(key: TMMatchesHeight.self, value: true)
+        }
+        if tag.sheetMusicUri != nil {
+            sheetMusicButton(model)
+                .layoutValue(key: TMGapBefore.self, value: 16)
+                .layoutValue(key: TMMatchesHeight.self, value: true)
         }
     }
 
@@ -199,7 +212,7 @@ struct TagSummaryPage: View {
         }
     }
 
-    private var sheetMusicButton: some View {
+    private static func sheetMusicButton(_ model: TagSummaryModel) -> some View {
         TMSheetMusicButton(busy: model.sheetMusicBusy) { model.openSheetMusic() }
             .overlay(alignment: .trailing) {
                 TMBarberPole.operation("Opening sheet music…", active: model.sheetMusicBusy)

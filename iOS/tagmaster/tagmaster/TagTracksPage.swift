@@ -9,16 +9,20 @@
 import SwiftUI
 
 struct TagTracksPage: View {
-    @Environment(\.tmAccent) private var accent
     let model: TagTracksModel
+    /// On a tabletop Duo the parts are on the deck below the fold; the page keeps
+    /// the recording notes and the player.
+    @Environment(\.tmOnStand) private var onStand
     /// This page, among any others showing the same tag while it is carried across.
     @State private var page = UUID()
 
     var body: some View {
         List {
             Section {
-                ForEach(Array(model.tracks.enumerated()), id: \.offset) { index, track in
-                    row(track, last: index == model.tracks.count - 1)
+                if !onStand {
+                    ForEach(Array(model.tracks.enumerated()), id: \.offset) { index, track in
+                        row(track, last: index == model.tracks.count - 1)
+                    }
                 }
             } header: {
                 // The recording notes and the player sit above the rows, as the
@@ -28,10 +32,12 @@ struct TagTracksPage: View {
                         .textCase(nil)
                         .foregroundStyle(Color(.label))
                         .padding(.vertical, 16)
-                    Text("Tracks")
-                        .padding(.leading, 4)
-                        .padding(.top, 28.67)
-                        .padding(.bottom, -1.67)
+                    if !onStand {
+                        Text("Tracks")
+                            .padding(.leading, 4)
+                            .padding(.top, 28.67)
+                            .padding(.bottom, -1.67)
+                    }
                 }
                 .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 8, trailing: 16))
             }
@@ -56,13 +62,32 @@ struct TagTracksPage: View {
             }
             if model.playerVisible {
                 TMTrackPlayer(model: model.player)
+            } else if onStand, !model.tracks.isEmpty {
+                TMFactText(text: "Tap a part below to play it.")
+                    .foregroundStyle(Color(.secondaryLabel))
             }
         }
     }
 
     private func row(_ track: DPTrack, last: Bool) -> some View {
+        TMTrackRow(model: model, track: track, lastInList: last)
+            .listRowInsets(EdgeInsets(top: 0, leading: 19, bottom: 0, trailing: 20))
+            .listRowBackground(Color.clear)
+    }
+}
+
+/// One part: tapping it plays the learning track. On the Tracks page, and on a
+/// tabletop Duo's deck.
+struct TMTrackRow: View {
+    @Environment(\.tmAccent) private var accent
+    let model: TagTracksModel
+    let track: DPTrack
+    /// In the page's list, whether this is the section's last row; nil on the deck.
+    var lastInList: Bool?
+
+    var body: some View {
         let loading = model.loadingTrack === track
-        return Button { model.select(track) } label: {
+        Button { model.select(track) } label: {
             HStack(spacing: 15) {
                 Image(systemName: "play.circle")
                     .font(.title2)
@@ -81,11 +106,11 @@ struct TagTracksPage: View {
             .frame(minHeight: 52)
             .contentShape(Rectangle())
             // UIKit's rules ended 20 pt from the trailing edge; the section's last is full width.
-            .alignmentGuide(.listRowSeparatorTrailing) { last ? $0.width * 2 : $0[.trailing] }
-            .alignmentGuide(.listRowSeparatorLeading) { last ? -$0.width : $0[.listRowSeparatorLeading] }
+            .alignmentGuide(.listRowSeparatorTrailing) { lastInList == true ? $0.width * 2 : $0[.trailing] }
+            .alignmentGuide(.listRowSeparatorLeading) {
+                lastInList == true ? -$0.width : $0[.listRowSeparatorLeading]
+            }
         }
-        .listRowInsets(EdgeInsets(top: 0, leading: 19, bottom: 0, trailing: 20))
-        .listRowBackground(Color.clear)
         .accessibilityLabel(loading ? "\(track.title ?? "Track"), loading" : (track.title ?? "Track"))
         .accessibilityHint("Plays the learning track")
     }

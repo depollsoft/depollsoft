@@ -120,20 +120,43 @@ struct InstrumentPage<Content: View>: View {
     /// The style of the UIKit table this screen's list stands in for.
     var tableStyle = UITableView.Style.plain
     @ViewBuilder let content: () -> Content
+    /// An iPhone Duo standing half open (tabletop): the fold runs across the page.
+    @State private var standing = false
+    @State private var hingeStatus = 0
 
     var body: some View {
         VStack(spacing: 0) {
+            // Standing, the banner tops the upper half, so the keys on the lower half
+            // under the fingers have the room it took and never sit against an ad.
+            if showsBanner, standing { banner }
             content()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-            if showsBanner {
-                BannerAdSlot()
-                    .accessibilityHidden(true)
+            if showsBanner, !standing { banner }
+        }
+        .background {
+            GeometryReader { proxy in
+                let _ = hingeStatus
+                let sides = FoldSides(bounds: CGRect(origin: .zero, size: proxy.size), fold: Fold.band(in: proxy))
+                Color.clear.preference(key: StandingKey.self, value: sides.map { $0.across && $0.parts } ?? false)
             }
         }
+        .onPreferenceChange(StandingKey.self) { standing = $0 }
+        .hingeStatus($hingeStatus)
         // UIKit's screens pinned the banner to the safe area's foot and never made
         // room for the keyboard: it covered the banner and the rows beneath it.
         .ignoresSafeArea(.keyboard, edges: .bottom)
         .staffScreenBackground()
         .tableMargins(style: tableStyle)
     }
+
+    private var banner: some View {
+        BannerAdSlot()
+            .accessibilityHidden(true)
+    }
+}
+
+/// Whether a fold runs across an instrument page (an iPhone Duo in tabletop).
+private struct StandingKey: PreferenceKey {
+    static let defaultValue = false
+    static func reduce(value: inout Bool, nextValue: () -> Bool) { value = value || nextValue() }
 }

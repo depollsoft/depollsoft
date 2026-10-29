@@ -7,6 +7,7 @@
 //  closes, and the tag the user was on goes with them, page and all.
 //
 
+import AVFoundation
 import SwiftUI
 import UIKit
 import XCTest
@@ -265,6 +266,66 @@ final class TMDuoTests: TMBehaviorTestCase {
         XCTAssertFalse(router.hasDetail)
         XCTAssertFalse(model.expanded)
         XCTAssertEqual(model.selectedPage, .tracks)
+    }
+
+    // MARK: - Tabletop: the music stand
+
+    func testAPageOnlyStandsOnAFoldRightAcrossItWithRoomOnBothSides() {
+        let page = CGSize(width: 669, height: 736)
+        XCTAssertTrue(TMStandFold.stands(CGRect(x: 0, y: 329.5, width: 669, height: 40), in: page))
+        XCTAssertFalse(TMStandFold.stands(CGRect(x: 314.5, y: 0, width: 40, height: 736), in: page),
+                       "A fold down the page is a book, not a stand")
+        XCTAssertFalse(TMStandFold.stands(CGRect(x: 0, y: 100, width: 669, height: 40), in: page), "Too little page above")
+        XCTAssertFalse(TMStandFold.stands(CGRect(x: 0, y: 600, width: 669, height: 40), in: page), "Too little deck below")
+    }
+
+    /// Upright and half shut on a table, the tag's page reads on the standing half and
+    /// what the singer plays lies on the half under the fingers.
+    func testInTabletopTheKeyAndThePartsLieBelowTheFold() throws {
+        seedCachedTag(id: 1809)
+        let upright = CGSize(width: 669, height: 951)
+        let fold = CGRect(x: 0, y: 455.5, width: upright.width, height: 40)
+        TMStandFold.simulated = { _ in fold }
+        defer { TMStandFold.simulated = nil }
+        let router = TMRouter()
+        let host = UIHostingController(rootView: TMRootView(router: router))
+        host.traitOverrides.horizontalSizeClass = .regular
+        host.traitOverrides.verticalSizeClass = .regular
+        mount(host, size: upright)
+        router.showTag(1809, source: nil)
+        settle()
+        let model = try XCTUnwrap(router.path.last?.tagModel)
+        spinUntil("the tag loads") { model.tag != nil }
+        settle()
+        let driver = UIDriver(window)
+
+        let key = try XCTUnwrap(driver.element(id: "summary.key"), "Summary's deck holds the key note")
+        XCTAssertGreaterThanOrEqual(key.accessibilityFrame.minY, fold.maxY)
+        let music = try XCTUnwrap(driver.element(label: "Sheet Music"))
+        XCTAssertGreaterThanOrEqual(music.accessibilityFrame.minY, fold.maxY)
+
+        model.selectedPage = .tracks
+        settle()
+        let lead = try XCTUnwrap(driver.element(label: "Lead"), "Tracks' deck holds the parts")
+        XCTAssertGreaterThanOrEqual(lead.accessibilityFrame.minY, fold.maxY)
+        XCTAssertTrue(driver.exists(label: "Tap a part below to play it."))
+
+        // A part playing on the stand keeps playing as the device is laid flat: the
+        // page stays where it was, so it never goes and stops the player.
+        let track = try XCTUnwrap(model.tracks.tracks.first)
+        let format = try XCTUnwrap(AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 2))
+        let buffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 44_100))
+        buffer.frameLength = 44_100
+        model.tracks.present(track, buffer: buffer)
+        settle()
+        XCTAssertTrue(model.tracks.playerVisible)
+
+        TMStandFold.simulated = nil
+        window.frame = CGRect(origin: .zero, size: CGSize(width: upright.width, height: upright.height - 1))
+        settle()
+        XCTAssertFalse(driver.exists(label: "Tap a part below to play it."), "Laid flat, the page is whole again")
+        XCTAssertTrue(driver.exists(label: "Lead"))
+        XCTAssertTrue(model.tracks.playerVisible, "and the part is still in the player")
     }
 
     private func open(_ host: UIViewController) {

@@ -61,10 +61,16 @@ the iOS 27.1 reserved-region API. Neither checks for the device.
   usual margins. The book reads the fold again as the hinge's state changes
   (`hingeStatus`); folding and unfolding a running app, quickly or slowly, moves
   the insets with it.
-- **Half shut upright (tabletop): the stack, unchanged.** The bars sit at the
-  top and bottom, far from the crease; the pages between them scroll, and
-  scrolling content does not move around a fold (Apple's guidance), so a control
-  that scrolls onto the crease (Sheet Music, say) is scrolled off it.
+- **Half shut upright (tabletop): a music stand.** It is still the stack, but a
+  tag stands up: each of its pages reads on the upper half, the one facing the
+  singers, and what they play lies on the lower half under the fingers, above
+  the page bar (`tmMusicStand`, `TMMusicStand.swift`). Summary, Details and
+  Videos put the key note and Sheet Music there; Tracks puts the parts there and
+  keeps the recording notes and the player above. A page with nothing for its
+  deck, or a fold leaving either part too little room, stays whole. Standing up
+  or lying down keeps the page in place, so its scroll position and a playing
+  part survive. Home and the lists still scroll across the fold, as Apple's
+  guidance has continuous content do.
 - **Opening, closing and turning carry the tag.** Opening moves the tag on top of
   the stack, with its sheet music, beside the list (`TMRouter.setExpanded(true)`);
   closing puts the tag beside the list on top of the stack (`TMRouter.useStack()`).
@@ -107,7 +113,9 @@ DESIGN.md's *Folded (iPhone Duo)* section is the design record; in short:
   or words); Keys' Major/Minor stays horizontal.
 - **Sheets and banners.** An open Duo is regular both ways, so sheets centre as
   on iPad (`isRegularSpace`); banners still show, as on any phone, sized from
-  their window's shape rather than the interface orientation.
+  their window's shape rather than the interface orientation. In tabletop the
+  banner moves to the top of the upper half (`InstrumentPage`), so the ring below
+  the fold gets its room and never sits against an ad.
 
 ## Testing
 

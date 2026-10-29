@@ -44,6 +44,7 @@
 		486B0CA3224947FA4117C431 /* TagDetailModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60F248CF839D292B5A554AAF /* TagDetailModel.swift */; };
 		24A50CF911D0B1355C98C550 /* TagSummaryModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A69F467F262F2D18D87FAF7 /* TagSummaryModel.swift */; };
 		FBF14E8E602F7A82192FFB0E /* TagTracksModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B1D1727D3EEAE97BBDBF08F /* TagTracksModel.swift */; };
+		13439AC0C8B353373CC1B04D /* TMMusicStand.swift in Sources */ = {isa = PBXBuildFile; fileRef = F51603D933047F73194A3570 /* TMMusicStand.swift */; };
 		2ADB50A87D031B9D0CB65D42 /* TagDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 876C6BD50FC5AE1674C8965F /* TagDetailView.swift */; };
 		E2EFF9D6D38E02634BB5DAF6 /* TMFactsLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93F5CF6B3C96209FC8DAE5C1 /* TMFactsLayout.swift */; };
 		D1045840E91B81774ED9399E /* TagSummaryPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41A38683354555FA1038024C /* TagSummaryPage.swift */; };
@@ -224,6 +225,7 @@
 		60F248CF839D292B5A554AAF /* TagDetailModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagDetailModel.swift; sourceTree = "<group>"; };
 		6A69F467F262F2D18D87FAF7 /* TagSummaryModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagSummaryModel.swift; sourceTree = "<group>"; };
 		5B1D1727D3EEAE97BBDBF08F /* TagTracksModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagTracksModel.swift; sourceTree = "<group>"; };
+		F51603D933047F73194A3570 /* TMMusicStand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMMusicStand.swift; sourceTree = "<group>"; };
 		876C6BD50FC5AE1674C8965F /* TagDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagDetailView.swift; sourceTree = "<group>"; };
 		93F5CF6B3C96209FC8DAE5C1 /* TMFactsLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMFactsLayout.swift; sourceTree = "<group>"; };
 		41A38683354555FA1038024C /* TagSummaryPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagSummaryPage.swift; sourceTree = "<group>"; };
@@ -563,6 +565,7 @@
 				41A38683354555FA1038024C /* TagSummaryPage.swift */,
 				93F5CF6B3C96209FC8DAE5C1 /* TMFactsLayout.swift */,
 				876C6BD50FC5AE1674C8965F /* TagDetailView.swift */,
+				F51603D933047F73194A3570 /* TMMusicStand.swift */,
 				5B1D1727D3EEAE97BBDBF08F /* TagTracksModel.swift */,
 				6A69F467F262F2D18D87FAF7 /* TagSummaryModel.swift */,
 				60F248CF839D292B5A554AAF /* TagDetailModel.swift */,
@@ -920,6 +923,7 @@
 				D1045840E91B81774ED9399E /* TagSummaryPage.swift in Sources */,
 				E2EFF9D6D38E02634BB5DAF6 /* TMFactsLayout.swift in Sources */,
 				2ADB50A87D031B9D0CB65D42 /* TagDetailView.swift in Sources */,
+				13439AC0C8B353373CC1B04D /* TMMusicStand.swift in Sources */,
 				FBF14E8E602F7A82192FFB0E /* TagTracksModel.swift in Sources */,
 				24A50CF911D0B1355C98C550 /* TagSummaryModel.swift in Sources */,
 				486B0CA3224947FA4117C431 /* TagDetailModel.swift in Sources */,
