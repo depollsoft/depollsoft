@@ -174,7 +174,9 @@ final class TagMasterRound3Tests: TMBehaviorTestCase {
         let window = CGRect(x: 0, y: 0, width: 1000, height: 800)
         func render(_ backdrop: TMBackdrop, frame: CGRect) -> UIImage {
             let host = UIHostingController(rootView: TMScreenBackground().environment(\.tmBackdrop, backdrop))
-            let container = UIWindow(frame: window)
+            // On the test host's scene: a window outside any scene is never drawn.
+            let container = ScreenCatalog.scene.map { UIWindow(windowScene: $0) } ?? UIWindow()
+            container.frame = window
             container.rootViewController = UIViewController()
             container.isHidden = false
             host.view.frame = frame

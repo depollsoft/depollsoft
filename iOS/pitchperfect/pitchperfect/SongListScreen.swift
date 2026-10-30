@@ -459,6 +459,7 @@ private struct SongRows: View {
                         .padding(.top, 48)
                         .accessibilityLabel(model.emptyAccessibilityLabel)
                         .accessibilityIdentifier("songs.empty")
+                        .centredOffTheFold()
                 }
             }
             .modifier(ScrollMemory(model: model, songs: songs, proxy: proxy))

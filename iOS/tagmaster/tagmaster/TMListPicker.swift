@@ -86,6 +86,8 @@ struct TMListPicker: View {
     @State private var margins = TMTableMargins()
     /// Closes the picker; the presenter owns how.
     var onDone: (() -> Void)?
+    /// Presented as a popover (iPad, an open iPhone Duo) rather than a phone sheet.
+    var floating = UIDevice.current.userInterfaceIdiom == .pad
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -109,7 +111,7 @@ struct TMListPicker: View {
             .modifier(TMClearNavigationContainer())
             // UIKit's cards where a UIKit table put them in this sheet or popover,
             // whichever size class the popover reports.
-            .tmInsetGroupMargins(always: UIDevice.current.userInterfaceIdiom == .pad)
+            .tmInsetGroupMargins(always: floating)
             // A sheet's or popover's SwiftUI cards land on UIKit's 16/3 pt further in.
             .environment(\.tmGroupedMargin, margins.grouped + 16.0 / 3)
             .environment(\.tmGroupedTextInset, margins.groupedText)
@@ -168,10 +170,10 @@ struct TMListPickerPresenter: UIViewRepresentable {
     final class Coordinator: NSObject, UIAdaptivePresentationControllerDelegate, UIPopoverPresentationControllerDelegate {
         var dismissed: () -> Void = {}
         func presentationControllerDidDismiss(_ presentationController: UIPresentationController) { dismissed() }
-        // A popover stays a popover on iPad even in a narrow column.
+        // A popover stays a popover on iPad even in a narrow column; a Duo folded shut takes the phone sheet.
         func adaptivePresentationStyle(for controller: UIPresentationController,
                                        traitCollection: UITraitCollection) -> UIModalPresentationStyle {
-            traitCollection.userInterfaceIdiom == .pad ? .none : .pageSheet
+            traitCollection.tmFloatsPopovers ? .none : .pageSheet
         }
     }
 
@@ -189,15 +191,17 @@ struct TMListPickerPresenter: UIViewRepresentable {
         let tagId = tagId
         anchor.alreadyUp = { $0 is Host }
         anchor.make = { anchor in
+            let floating = anchor.traitCollection.tmFloatsPopovers
             let picker = Host(rootView: TMListPicker(
                 model: TMListPickerModel(tagId: tagId),
                 onDone: { [weak anchor] in
                     binding.wrappedValue = false
                     anchor?.wanted = false
                     anchor?.sync()
-                }))
+                },
+                floating: floating))
             picker.view.backgroundColor = .clear
-            if anchor.traitCollection.userInterfaceIdiom == .pad {
+            if floating {
                 picker.modalPresentationStyle = .popover
                 // UIKit sized the navigation controller's list at 340 × 420 and added its bar.
                 picker.preferredContentSize = CGSize(width: 340, height: 420 + 63)

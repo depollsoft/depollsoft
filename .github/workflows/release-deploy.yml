@@ -15,7 +15,8 @@ permissions:
   contents: read
 jobs:
   deploy:
-    runs-on: ${{ inputs.platform == 'ios' && 'macos-latest' || 'ubuntu-latest' }}
+    # iOS builds with Xcode 27.1 (iPhone Duo layouts need its iOS 27.1 SDK), as iOS CI does.
+    runs-on: ${{ inputs.platform == 'ios' && 'xcode-27' || 'ubuntu-latest' }}
     timeout-minutes: 120
     concurrency:
       group: release-store-${{ inputs.platform }}-${{ inputs.platform == 'ios' && 'signing' || inputs.app }}
@@ -41,6 +42,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: python3 scripts/release/publish.py identity
+      - name: Select Xcode
+        if: inputs.platform == 'ios' && steps.identity.outputs.done != 'true'
+        run: |
+          developer_dir=/Applications/Xcode_27.1.app/Contents/Developer
+          if [ ! -d "$developer_dir" ]; then
+            echo "Xcode 27.1 is not installed on this runner." >&2
+            exit 1
+          fi
+          echo "DEVELOPER_DIR=$developer_dir" >> "$GITHUB_ENV"
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         if: steps.identity.outputs.done != 'true'
         with:

@@ -162,6 +162,12 @@ final class AddSongsController: UIHostingController<AddSongsList> {
     @available(*, unavailable)
     @MainActor required dynamic init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
+    /// One horizontal bar: Select all and Add are words, which a vertical bar
+    /// leaves horizontal, and they belong beside Close rather than apart from it
+    /// down the side.
+    @available(iOS 27.1, *)
+    override var preferredVerticalBarBehavior: UIVerticalBarBehavior { .disabled }
+
     /// Follows the model's choices, as the UIKit screen refreshed its items on every tick.
     private func refreshItems() {
         withObservationTracking {
@@ -191,13 +197,16 @@ final class AddSongsController: UIHostingController<AddSongsList> {
         }
     }
 
-    /// The picker as it is presented: a sheet (medium or large) on iPhone, a form sheet on iPad.
-    func embeddedInNavigation() -> UINavigationController {
+    /// The picker as it is presented over a screen with `traits`: a sheet (medium
+    /// or large) on iPhone, a form sheet on iPad. An iPhone Duo open on its inner
+    /// display centres a form sheet as an iPad does; closed, it is the phone's
+    /// sheet, with the phone's detents.
+    func embeddedInNavigation(over traits: UITraitCollection) -> UINavigationController {
         let navigation = UINavigationController(rootViewController: self)
         if UIDevice.current.userInterfaceIdiom == .pad {
             navigation.modalPresentationStyle = .formSheet
         } else {
-            navigation.modalPresentationStyle = .pageSheet
+            navigation.modalPresentationStyle = traits.isRegularSpace ? .formSheet : .pageSheet
             navigation.sheetPresentationController?.detents = [.medium(), .large()]
         }
         return navigation
@@ -217,7 +226,7 @@ struct AddSongsPresenter: UIViewControllerRepresentable {
             if isPresented, shown == nil {
                 let controller = AddSongsController(model: AddSongsModel(target: target))
                 controller.onFinish = { [weak self] in self?.close() }
-                let navigation = controller.embeddedInNavigation()
+                let navigation = controller.embeddedInNavigation(over: traitCollection)
                 shown = navigation
                 presentOnTop(navigation, stillWanted: { [weak self] in self?.shown === navigation }) { [weak self] in
                     navigation.presentationController?.delegate = self

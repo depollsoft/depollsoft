@@ -44,7 +44,23 @@ struct ClassicGeometry: Equatable, PitchFaceLayout {
     /// it reads as one line.
     static let minReadout: CGFloat = 56
 
+    /// A column's or row's start and length.
+    struct Span: Equatable {
+        let start: CGFloat
+        let length: CGFloat
+        var end: CGFloat { start + length }
+
+        /// Four equal spans from `start`.
+        static func quarters(from start: CGFloat, length: CGFloat) -> [Span] {
+            (0..<4).map { Span(start: start + CGFloat($0) * (length / 4), length: length / 4) }
+        }
+    }
+
     let size: CGSize
+    /// How a fold across the grid parts it (see `InstrumentGeometry.Posture`).
+    let posture: InstrumentGeometry.Posture
+    let columns: [Span]
+    let rows: [Span]
     let places: [Place]
     let slots: [CGRect]
     let buttons: [CGRect]
@@ -58,44 +74,98 @@ struct ClassicGeometry: Equatable, PitchFaceLayout {
     let selectorRect: CGRect
     let readoutRect: CGRect
 
-    init(size: CGSize, count: Int, selectorSize: CGSize = CGSize(width: 150, height: 32)) {
+    /// `fold` is the band an iPhone Duo's fold covers, in the grid's coordinates.
+    /// The grid keeps its outer margins and opens at the fold: folded across, two
+    /// rows above it and two below, the well's readout above and the range control
+    /// below; folded down, two columns either side, the readout left of the fold
+    /// and the control right of it. A fold too near an edge to part the grid
+    /// evenly leaves it whole on the larger side.
+    init(size: CGSize, count: Int, selectorSize: CGSize = CGSize(width: 150, height: 32), fold: CGRect? = nil) {
         self.size = size
-        let columnWidth = size.width / 4
-        let rowHeight = size.height / 4
+        let bounds = CGRect(origin: .zero, size: size)
+        var columns = Span.quarters(from: 0, length: size.width)
+        var rows = Span.quarters(from: 0, length: size.height)
+        var posture = InstrumentGeometry.Posture.flat
+        if let sides = FoldSides(bounds: bounds, fold: fold) {
+            let (first, second) = sides.across ? (sides.first.height, sides.second.height)
+                                               : (sides.first.width, sides.second.width)
+            if sides.parts {
+                // Two either side, each pair sharing its side.
+                let before = sides.across ? sides.first.minY : sides.first.minX
+                let after = sides.across ? sides.second.minY : sides.second.minX
+                let parted = Array(Span.quarters(from: before, length: first * 2).prefix(2))
+                    + Array(Span.quarters(from: after, length: second * 2).prefix(2))
+                if sides.across { rows = parted } else { columns = parted }
+                posture = sides.across ? .tabletop : .book
+            } else {
+                let larger = sides.larger
+                columns = Span.quarters(from: larger.minX, length: larger.width)
+                rows = Span.quarters(from: larger.minY, length: larger.height)
+            }
+        }
+        self.posture = posture
+        self.columns = columns
+        self.rows = rows
+        func rect(columns range: ClosedRange<Int>, rows rowRange: ClosedRange<Int>) -> CGRect {
+            CGRect(x: columns[range.lowerBound].start, y: rows[rowRange.lowerBound].start,
+                   width: columns[range.upperBound].end - columns[range.lowerBound].start,
+                   height: rows[rowRange.upperBound].end - rows[rowRange.lowerBound].start)
+        }
         func inset(_ rect: CGRect) -> CGRect {
             rect.insetBy(dx: Self.buttonInset.width, dy: Self.buttonInset.height)
         }
         places = Array(Self.places.prefix(max(0, min(count, Self.places.count))))
-        slots = places.map {
-            CGRect(x: CGFloat($0.column) * columnWidth, y: CGFloat($0.row) * rowHeight, width: columnWidth, height: rowHeight)
-        }
+        slots = places.map { rect(columns: $0.column...$0.column, rows: $0.row...$0.row) }
         buttons = slots.map(inset)
-        singleButton = inset(CGRect(x: 0, y: 0, width: columnWidth, height: rowHeight))
-        well = inset(CGRect(x: columnWidth, y: rowHeight, width: columnWidth * 2, height: rowHeight * 2))
+        // The smallest slot, so every label is the same size either side of a fold.
+        singleButton = inset(CGRect(x: 0, y: 0, width: columns.map(\.length).min() ?? 0,
+                                    height: rows.map(\.length).min() ?? 0))
+        well = inset(rect(columns: 1...2, rows: 1...2))
 
-        let half = well.height / 2
-        stacked = half >= max(selectorSize.height, Self.minReadout)
-        let height = min(selectorSize.height, well.height)
-        if stacked {
-            let width = min(selectorSize.width, well.width)
-            selectorRect = CGRect(x: well.midX - width / 2, y: well.midY + (half - height) / 2,
-                                  width: width, height: height)
-            readoutRect = CGRect(x: well.minX, y: well.minY, width: well.width, height: half)
-        } else {
-            let width = min(selectorSize.width, well.width / 2)
-            selectorRect = CGRect(x: well.maxX - width, y: well.midY - height / 2, width: width, height: height)
-            readoutRect = CGRect(x: well.minX, y: well.minY,
-                                 width: max(0, selectorRect.minX - Self.gap - well.minX), height: well.height)
+        let height: CGFloat
+        switch posture {
+        case .tabletop:
+            // The readout on the well's upper row, the control centred on its lower one.
+            let upper = inset(rect(columns: 1...2, rows: 1...1))
+            let lower = inset(rect(columns: 1...2, rows: 2...2))
+            stacked = true
+            height = min(selectorSize.height, lower.height)
+            let width = min(selectorSize.width, lower.width)
+            selectorRect = CGRect(x: lower.midX - width / 2, y: lower.midY - height / 2, width: width, height: height)
+            readoutRect = upper
+        case .book:
+            // The readout in the well's left column, the control centred in its right one.
+            let left = inset(rect(columns: 1...1, rows: 1...2))
+            let right = inset(rect(columns: 2...2, rows: 1...2))
+            stacked = false
+            height = min(selectorSize.height, right.height)
+            let width = min(selectorSize.width, right.width)
+            selectorRect = CGRect(x: right.midX - width / 2, y: right.midY - height / 2, width: width, height: height)
+            readoutRect = left
+        case .flat:
+            let half = well.height / 2
+            stacked = half >= max(selectorSize.height, Self.minReadout)
+            height = min(selectorSize.height, well.height)
+            if stacked {
+                let width = min(selectorSize.width, well.width)
+                selectorRect = CGRect(x: well.midX - width / 2, y: well.midY + (half - height) / 2,
+                                      width: width, height: height)
+                readoutRect = CGRect(x: well.minX, y: well.minY, width: well.width, height: half)
+            } else {
+                let width = min(selectorSize.width, well.width / 2)
+                selectorRect = CGRect(x: well.maxX - width, y: well.midY - height / 2, width: width, height: height)
+                readoutRect = CGRect(x: well.minX, y: well.minY,
+                                     width: max(0, selectorRect.minX - Self.gap - well.minX), height: well.height)
+            }
         }
     }
 
     /// The cell whose slot holds `point`: a finger anywhere in it, the margin
-    /// round the drawn button included, plays the cell. -1 for none.
+    /// round the drawn button included, plays the cell. -1 for none (the well,
+    /// the fold, outside the grid).
     func cellIndex(at point: CGPoint) -> Int {
-        guard size.width > 0, size.height > 0,
-              point.x >= 0, point.y >= 0, point.x < size.width, point.y < size.height else { return -1 }
-        let column = min(Int(point.x / (size.width / 4)), 3)
-        let row = min(Int(point.y / (size.height / 4)), 3)
+        guard let column = columns.firstIndex(where: { point.x >= $0.start && point.x < $0.end }),
+              let row = rows.firstIndex(where: { point.y >= $0.start && point.y < $0.end }) else { return -1 }
         return places.firstIndex { $0.column == column && $0.row == row } ?? -1
     }
 
@@ -182,84 +252,14 @@ struct ClassicRenderer {
         drawReadout(ink: ink, inkSecondary: inkSecondary)
     }
 
-    /// The label `make` builds at scale 1, or smaller until it fits `bounds`.
     private func fitted(within bounds: CGSize, _ make: (CGFloat) -> NSAttributedString) -> NSAttributedString {
-        let label = make(1)
-        let size = label.size()
-        guard size.width > 0, size.height > 0 else { return label }
-        let scale = min(1, bounds.width / size.width, bounds.height / size.height)
-        return scale < 1 ? make(scale) : label
+        ReadoutPainter.fitted(within: bounds, make)
     }
 
-    /// The radial face's readout, centred in the well: the sounding notes, then a
-    /// frequency, an interval, a chord's name or a count; "— Hz" when silent.
-    /// A short readout (a phone turned on its side) reads as one line.
+    /// The radial face's readout, centred in the well; a short readout (a phone
+    /// turned on its side) reads as one line.
     private func drawReadout(ink: UIColor, inkSecondary: UIColor) {
-        let area = geometry.readoutRect
-        guard area.width > 0, area.height > 0 else { return }
-        if area.height < ClassicGeometry.minReadout {
-            drawReadoutLine(in: area, ink: ink, inkSecondary: inkSecondary)
-            return
-        }
-        let nameSize = min(area.height * 0.46, area.width * 0.22)
-        let detailSize = nameSize * 0.5
-        let chordSize = nameSize * 0.62
-        let fit = CGSize(width: area.width * 0.92, height: .greatestFiniteMagnitude)
-
-        guard let readout else {
-            let idle = fitted(within: fit) { scale in
-                NSAttributedString(string: "\u{2014} Hz", attributes: [
-                    .font: DPTheme.monospacedFont(size: detailSize * scale),
-                    .foregroundColor: inkSecondary.withAlphaComponent(0.55),
-                ])
-            }
-            let size = idle.size()
-            idle.draw(at: CGPoint(x: area.midX - size.width / 2, y: area.midY - size.height / 2))
-            return
-        }
-
-        let names = fitted(within: fit) { scale in
-            NSAttributedString(string: readout.names, attributes: [
-                .font: DPTheme.condensedFont(size: nameSize * scale), .foregroundColor: ink,
-            ])
-        }
-        // A chord has a name, not a measurement: engrave it in the display face.
-        let detail = fitted(within: fit) { scale in
-            NSAttributedString(string: readout.detail, attributes: readout.isChord
-                ? [.font: DPTheme.condensedFont(size: chordSize * scale), .foregroundColor: ink,
-                   .kern: chordSize * scale * 0.12]
-                : [.font: DPTheme.monospacedFont(size: detailSize * scale), .foregroundColor: ink])
-        }
-        let nameBox = names.size()
-        let detailBox = detail.size()
-        let spacing = nameSize * 0.15
-        let top = area.midY - (nameBox.height + spacing + detailBox.height) / 2
-        names.draw(at: CGPoint(x: area.midX - nameBox.width / 2, y: top))
-        detail.draw(at: CGPoint(x: area.midX - detailBox.width / 2, y: top + nameBox.height + spacing))
-    }
-
-    /// The readout as one line: the names, then the detail after two spaces.
-    private func drawReadoutLine(in area: CGRect, ink: UIColor, inkSecondary: UIColor) {
-        let lineSize = area.height * 0.6
-        let fit = CGSize(width: area.width * 0.92, height: .greatestFiniteMagnitude)
-        let line = fitted(within: fit) { scale in
-            guard let readout else {
-                return NSAttributedString(string: "\u{2014} Hz", attributes: [
-                    .font: DPTheme.monospacedFont(size: lineSize * 0.7 * scale),
-                    .foregroundColor: inkSecondary.withAlphaComponent(0.55),
-                ])
-            }
-            let text = NSMutableAttributedString(string: readout.names + "  ", attributes: [
-                .font: DPTheme.condensedFont(size: lineSize * scale), .foregroundColor: ink,
-            ])
-            text.append(NSAttributedString(string: readout.detail, attributes: readout.isChord
-                ? [.font: DPTheme.condensedFont(size: lineSize * 0.8 * scale), .foregroundColor: ink,
-                   .kern: lineSize * 0.8 * scale * 0.12]
-                : [.font: DPTheme.monospacedFont(size: lineSize * 0.7 * scale), .foregroundColor: ink]))
-            return text
-        }
-        let size = line.size()
-        line.draw(at: CGPoint(x: area.midX - size.width / 2, y: area.midY - size.height / 2))
+        ReadoutPainter.draw(readout, in: geometry.readoutRect, ink: ink, inkSecondary: inkSecondary)
     }
 }
 
@@ -273,20 +273,29 @@ struct ClassicPitchPipeView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     /// The range control's own size, measured.
     @State private var selectorSize = CGSize(width: 150, height: 32)
+    /// The hinge's state, so the grid is laid out again as a fold comes and goes.
+    @State private var hingeStatus = 0
 
     static let minimumLabelSize: CGFloat = 28
 
     var body: some View {
         GeometryReader { proxy in
-            let geometry = ClassicGeometry(size: proxy.size, count: model.notes.count, selectorSize: selectorSize)
+            let _ = hingeStatus
+            let geometry = ClassicGeometry(size: proxy.size, count: model.notes.count, selectorSize: selectorSize,
+                                           fold: Fold.band(in: proxy))
             ZStack(alignment: .topLeading) {
-                if model.anyPlaying, !reduceMotion, !PitchInstrumentView.breathingFrozen {
-                    TimelineView(.animation) { timeline in
-                        face(geometry, phase: PitchInstrumentView.phase(at: timeline.date))
+                Group {
+                    if model.anyPlaying, !reduceMotion, !PitchInstrumentView.breathingFrozen {
+                        TimelineView(.animation) { timeline in
+                            face(geometry, phase: PitchInstrumentView.phase(at: timeline.date))
+                        }
+                    } else {
+                        face(geometry, phase: 0)
                     }
-                } else {
-                    face(geometry, phase: 0)
                 }
+                // Folding or opening crossfades the grid to its new arrangement.
+                .id(geometry.posture)
+                .transition(.opacity)
                 MultiTouchSurface(
                     began: { id, point in model.touchBegan(id: id, at: point) },
                     moved: { id, point in model.touchMoved(id: id, to: point) },
@@ -296,6 +305,9 @@ struct ClassicPitchPipeView: View {
                 rangePicker
                     .frame(width: geometry.selectorRect.width)
                     .position(x: geometry.selectorRect.midX, y: geometry.selectorRect.midY)
+                    // It fades to its new place with the grid rather than sliding across it.
+                    .id(geometry.posture)
+                    .transition(.opacity)
                     .background(alignment: .topLeading) {
                         rangePicker
                             .fixedSize()
@@ -304,9 +316,11 @@ struct ClassicPitchPipeView: View {
                             .onGeometryChange(for: CGSize.self) { $0.size } action: { selectorSize = $0 }
                     }
             }
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: geometry.posture)
             .onAppear { model.classicGeometry = geometry }
             .onChange(of: geometry) { _, new in model.classicGeometry = new }
         }
+        .refreshesOnFold($hingeStatus)
     }
 
     /// The old app's segmented control.

@@ -13,6 +13,8 @@ struct TagDetailScreen: View {
     @Bindable var model: TagDetailModel
     @Environment(\.tmAccent) private var accent
     @Environment(\.displayScale) private var displayScale
+    /// This screen, among any others showing the same tag while it is carried across.
+    @State private var screen = UUID()
 
     var body: some View {
         ZStack {
@@ -33,30 +35,36 @@ struct TagDetailScreen: View {
         .toolbar { toolbar }
         .focusEffectDisabled()
         .tmRecoveryAlert($model.error)
-        .onAppear { model.screenVisible = true }
-        .onDisappear { model.screenVisible = false }
+        .onAppear { model.screenAppeared(screen) }
+        .onDisappear { model.screenDisappeared(screen) }
         // The detail beside a list is reused for every tag: a new tag counts as coming to the front.
         .analyticsScreen(model.screenName, subject: model.tagId)
     }
 
+    /// On a tabletop iPhone Duo each page stands on the upper half and its deck lies
+    /// below the fold (`tmMusicStand`): the key and Sheet Music, or on Tracks the parts.
     private var pages: some View {
         TabView(selection: $model.selectedPage) {
             TagSummaryPage(model: model.summary)
+                .tmMusicStand(enabled: TMStandKeyDeck.has(model.summary)) { TMStandKeyDeck(model: model.summary) }
                 .tmTabPageBackground()
                 .background(TMPageTabBarBridge())
                 .tabItem { Label(TagDetailModel.Page.summary.title, systemImage: TagDetailModel.Page.summary.symbol).accessibilityIdentifier("page-\(TagDetailModel.Page.summary.title)").environment(\.symbolVariants, .none) }
                 .tag(TagDetailModel.Page.summary)
             TagDetailsPage(model: model)
+                .tmMusicStand(enabled: TMStandKeyDeck.has(model.summary)) { TMStandKeyDeck(model: model.summary) }
                 .tmTabPageBackground()
                 .background(TMPageTabBarBridge())
                 .tabItem { Label(TagDetailModel.Page.details.title, systemImage: TagDetailModel.Page.details.symbol).accessibilityIdentifier("page-\(TagDetailModel.Page.details.title)").environment(\.symbolVariants, .none) }
                 .tag(TagDetailModel.Page.details)
             TagTracksPage(model: model.tracks)
+                .tmMusicStand(enabled: !model.tracks.tracks.isEmpty) { TMStandPartsDeck(model: model.tracks) }
                 .tmTabPageBackground()
                 .background(TMPageTabBarBridge())
                 .tabItem { Label(TagDetailModel.Page.tracks.title, systemImage: TagDetailModel.Page.tracks.symbol).accessibilityIdentifier("page-\(TagDetailModel.Page.tracks.title)").environment(\.symbolVariants, .none) }
                 .tag(TagDetailModel.Page.tracks)
             TagVideosPage(model: model)
+                .tmMusicStand(enabled: TMStandKeyDeck.has(model.summary)) { TMStandKeyDeck(model: model.summary) }
                 .tmTabPageBackground()
                 .background(TMPageTabBarBridge())
                 .tabItem { Label(TagDetailModel.Page.videos.title, systemImage: TagDetailModel.Page.videos.symbol).accessibilityIdentifier("page-\(TagDetailModel.Page.videos.title)").environment(\.symbolVariants, .none) }
@@ -85,6 +93,9 @@ struct TagDetailScreen: View {
             // While a refresh is out, its barber pole stands in the bar on its own,
             // outside the glass the buttons share, as the UIKit loading item did.
             if model.expanded {
+                // Walking the list, keeping the tag and the utilities each get their own
+                // glass, so a slip off Next tag cannot take the tag out of the list.
+                if model.showsSteppers { groupGap }
                 ToolbarItemGroup(placement: .topBarTrailing) {
                     TMBarButton(model.isFavorite ? "heart.fill" : "heart",
                                 label: model.isFavorite ? "Remove Favorite" : "Add Favorite",
@@ -95,7 +106,10 @@ struct TagDetailScreen: View {
                     TMBarButton("text.badge.plus", label: "Add to list") { model.showListPicker(from: .toolbar) }
                         .accessibilityIdentifier("tag.addToList")
                         .tmListPicker(model: model, source: .toolbar)
-                    if !model.fetchPending {
+                }
+                if !model.fetchPending {
+                    groupGap
+                    ToolbarItemGroup(placement: .topBarTrailing) {
                         refreshButton
                         shareItem
                     }
@@ -118,6 +132,14 @@ struct TagDetailScreen: View {
         }
     }
 
+    /// Space between two groups of bar items, which otherwise share one glass.
+    @ToolbarContentBuilder
+    private var groupGap: some ToolbarContent {
+        if #available(iOS 26.0, *) {
+            ToolbarSpacer(.fixed, placement: .topBarTrailing)
+        }
+    }
+
     private var refreshButton: some View {
         TMBarButton("arrow.clockwise", label: "Refresh", action: model.refresh)
     }
@@ -133,7 +155,8 @@ struct TagDetailScreen: View {
     }
 
     private var refreshPole: some View {
-        TMBarberPole(compact: true, darkSurface: true, animating: model.screenVisible)
+        // On the charcoal band the pole is dark metal; in a vertical bar it stands on the page's glass.
+        TMBarInk { vertical in TMBarberPole(compact: true, darkSurface: !vertical, animating: model.screenVisible) }
             .accessibilityElement()
             .accessibilityLabel("Refreshing tag")
             .accessibilityAddTraits(.isStaticText)
@@ -179,9 +202,22 @@ struct TMBarButton: View {
     /// The charcoal bar's item colour: white; UIKit's dimmed grey while an alert or
     /// sheet is up; UIKit's disabled grey for an item that is off. Set explicitly, so
     /// a light-mode column (the iPad list) cannot turn the items black.
-    static func ink(dimmed: Bool, enabled: Bool = true) -> Color {
+    ///
+    /// A vertical bar (an iPhone Duo's side bar) is not the charcoal band: its items
+    /// stand on the system's glass over the page, so they take the label colours the
+    /// system's own back button there takes.
+    static func ink(dimmed: Bool, enabled: Bool = true, vertical: Bool = false) -> Color {
+        if vertical {
+            if !enabled { return Color(.tertiaryLabel) }
+            return dimmed ? Color(.secondaryLabel) : Color(.label)
+        }
         if !enabled { return Color(white: 1, opacity: 0.08) }
         return dimmed ? Color(white: 204.0 / 255.0) : Color(white: 245.0 / 255.0)
+    }
+
+    /// A disabled bar image, a little brighter than a disabled title as UIKit drew it.
+    static func disabledSymbolInk(vertical: Bool = false) -> Color {
+        vertical ? Color(.tertiaryLabel) : Color(white: 1, opacity: 0.23)
     }
 
     var body: some View {
@@ -201,8 +237,32 @@ struct TMBarLabel<Content: View>: View {
     init(@ViewBuilder content: () -> Content) { self.content = content() }
 
     var body: some View {
-        content.foregroundStyle(TMBarButton.ink(dimmed: dimmed, enabled: enabled))
+        TMBarInk { vertical in
+            content.foregroundStyle(TMBarButton.ink(dimmed: dimmed, enabled: enabled, vertical: vertical))
+        }
     }
+}
+
+/// Builds a bar item knowing whether it stands in a vertical bar. The system says so
+/// only from iOS 27.1, and only inside the item, so this reads it where it is placed.
+struct TMBarInk<Content: View>: View {
+    @ViewBuilder let content: (_ vertical: Bool) -> Content
+
+    var body: some View {
+        if #available(iOS 27.1, *) {
+            TMVerticalBarEdgeReader(content: content)
+        } else {
+            content(false)
+        }
+    }
+}
+
+@available(iOS 27.1, *)
+private struct TMVerticalBarEdgeReader<Content: View>: View {
+    @Environment(\.toolbarVerticalEdge) private var edge
+    let content: (_ vertical: Bool) -> Content
+
+    var body: some View { content(edge != nil) }
 }
 
 extension TMBarLabel where Content == TMBarSymbol {
@@ -223,7 +283,9 @@ struct TMBarSymbol: View {
         if enabled {
             TMBarButton.symbol(systemName, scale: scale)
         } else {
-            TMBarButton.symbol(systemName, scale: scale).foregroundStyle(Color(white: 1, opacity: 0.23))
+            TMBarInk { vertical in
+                TMBarButton.symbol(systemName, scale: scale).foregroundStyle(TMBarButton.disabledSymbolInk(vertical: vertical))
+            }
         }
     }
 }

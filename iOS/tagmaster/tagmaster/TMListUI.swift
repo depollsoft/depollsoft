@@ -82,9 +82,11 @@ extension View {
 /// UIKit's grid by a pixel every few rows and a wrapped label by points.
 struct TMLabelBox: Layout {
     let font: UIFont
+    /// The pixel grid: the display the view is on (an iPhone Duo has two).
+    var scale: CGFloat = 3
 
     /// UILabel's height for `lines` lines of `font`.
-    static func height(lines: CGFloat, font: UIFont, scale: CGFloat = UIScreen.main.scale) -> CGFloat {
+    static func height(lines: CGFloat, font: UIFont, scale: CGFloat) -> CGFloat {
         let raw = lines * font.lineHeight + max(0, lines - 1) * font.leading
         return (raw * scale).rounded(.up) / scale
     }
@@ -97,7 +99,7 @@ struct TMLabelBox: Layout {
         let size = child.sizeThatFits(ProposedViewSize(width: proposal.width, height: nil))
         let line = child.sizeThatFits(.unspecified).height
         let lines = line > 0 ? max(1, ((size.height + font.leading) / (line + font.leading)).rounded()) : 1
-        return CGSize(width: size.width, height: TMLabelBox.height(lines: lines, font: font))
+        return CGSize(width: size.width, height: TMLabelBox.height(lines: lines, font: font, scale: scale))
     }
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
@@ -118,10 +120,11 @@ extension View {
 private struct TMLabelMetricsModifier: ViewModifier {
     let style: UIFont.TextStyle
     @Environment(\.dynamicTypeSize) private var size
+    @Environment(\.displayScale) private var scale
 
     func body(content: Content) -> some View {
         let font = size.tmFont(style)
-        TMLabelBox(font: font) { content.lineSpacing(font.leading) }
+        TMLabelBox(font: font, scale: scale) { content.lineSpacing(font.leading) }
     }
 }
 

@@ -70,6 +70,66 @@ final class PitchPerfectScreenCatalogTests: PitchPerfectTestCase {
         capture("pipe-barbershop", app, settle: 0.01)
     }
 
+    // MARK: - Folded (iPhone Duo)
+
+    /// The face on the inner display upright, between its bars and above the
+    /// banner, folded across its middle; and held wide beside its side bar,
+    /// folded down it. Sizes and folds as measured on the iPhone Duo simulator
+    /// with the hinge at 130° (the region's 40-point frame, its margins included).
+    private static let tabletop = (size: CGSize(width: 669, height: 703), fold: CGRect(x: 0, y: 373.5, width: 669, height: 40))
+    private static let book = (size: CGSize(width: 867, height: 483), fold: CGRect(x: 455.5, y: 0, width: 40, height: 483))
+
+    /// The pitch pipe alone at `size`, folded at `fold` (a hosted test gets no
+    /// fold from the simulator), with `sounding` cells held on.
+    private func captureFolded(_ name: String, _ pose: (size: CGSize, fold: CGRect), classic: Bool = false,
+                               style: UIUserInterfaceStyle = .light, sounding: [Int] = []) {
+        DPSettingsModel.sharedInstance.toggleNotes = true
+        DPSettingsModel.sharedInstance.classicPitchPipe = classic
+        Fold.simulated = { _ in pose.fold }
+        PitchInstrumentView.breathingFrozen = true
+        defer {
+            Fold.simulated = nil
+            PitchInstrumentView.breathingFrozen = false
+        }
+        let model = PitchPipeModel()
+        let window = ScreenCatalog.makeWindow(style: style)
+        window.frame = CGRect(origin: .zero, size: pose.size)
+        // The inner display is regular both ways.
+        window.traitOverrides.horizontalSizeClass = .regular
+        window.traitOverrides.verticalSizeClass = .regular
+        let face = Group {
+            if classic { ClassicPitchPipeView(model: model) } else { PitchInstrumentView(model: model) }
+        }
+        window.rootViewController = UIHostingController(rootView: face.ignoresSafeArea())
+        window.makeKeyAndVisible()
+        ScreenCatalog.settle()
+        for cell in sounding { model.activate(cell: cell) }
+        capture(name, window: window)
+        model.stopAll()
+        window.isHidden = true
+        window.rootViewController = nil
+    }
+
+    private func capture(_ name: String, window: UIWindow) {
+        ScreenCatalog.capture(name, window: window, settle: 0.3)
+    }
+
+    func testPitchPipeFolded() throws {
+        captureFolded("fold-tabletop", Self.tabletop)
+        captureFolded("fold-tabletop-sounding-dark", Self.tabletop, style: .dark, sounding: [0])
+        // E, G, A♯ and C: a barbershop seventh.
+        captureFolded("fold-tabletop-barbershop", Self.tabletop, sounding: [0, 4, 7, 10])
+        captureFolded("fold-book", Self.book)
+        captureFolded("fold-book-sounding-dark", Self.book, style: .dark, sounding: [9])
+        captureFolded("fold-book-interval", Self.book, sounding: [0, 7])
+    }
+
+    func testClassicPitchPipeFolded() throws {
+        captureFolded("fold-classic-tabletop", Self.tabletop, classic: true, sounding: [4])
+        captureFolded("fold-classic-tabletop-dark", Self.tabletop, classic: true, style: .dark)
+        captureFolded("fold-classic-book", Self.book, classic: true, sounding: [0, 4, 7])
+    }
+
     // MARK: - Notes and keys
 
     func testNotesAndKeys() throws {

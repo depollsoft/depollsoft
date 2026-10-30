@@ -14,21 +14,35 @@ import UIKit
 /// from the edges, limited to a readable width.
 struct TMPageScroll<Content: View>: View {
     @ViewBuilder var content: Content
-    /// The readable width UIKit's guide gives the page right now.
-    @State private var readable = TMReadable.width
+    /// Standing on a tabletop Duo, the page fades out into the fold.
+    @Environment(\.tmOnStand) private var onStand
 
     var body: some View {
         ScrollView {
-            content
-                .frame(maxWidth: readable, alignment: .leading)
-                .frame(maxWidth: .infinity)
-                .padding(.horizontal, 16)
+            TMReadableColumn { content }
                 .padding(.vertical, 4)
+                // Room to scroll the last line up out of the fade.
+                .padding(.bottom, onStand ? TMStandDeck.fade : 0)
         }
         // UIKit's scroller ended at the safe area's foot (its keyboard guide), above the
         // page bar, and clipped there; the page never scrolled beneath the bar.
         .clipped()
-        .background(TMReadableProbe(width: $readable).accessibilityHidden(true))
+    }
+}
+
+/// Content 16 pt in from the edges, held to the readable width UIKit's guide gives
+/// it there, as every detail page's body is.
+struct TMReadableColumn<Content: View>: View {
+    @ViewBuilder var content: Content
+    /// The readable width UIKit's guide gives the column right now.
+    @State private var readable = TMReadable.width
+
+    var body: some View {
+        content
+            .frame(maxWidth: readable, alignment: .leading)
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 16)
+            .background(TMReadableProbe(width: $readable).accessibilityHidden(true))
     }
 }
 
@@ -91,6 +105,9 @@ struct TagSummaryPage: View {
     @Environment(\.tmAccent) private var accent
     let model: TagSummaryModel
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.displayScale) private var displayScale
+    /// On a tabletop Duo the key and Sheet Music are on the deck below the fold.
+    @Environment(\.tmOnStand) private var onStand
     @State private var visible = false
 
     var body: some View {
@@ -103,7 +120,8 @@ struct TagSummaryPage: View {
             }
             // The note is watched only while it sounds on a page someone can see,
             // as the UIKit key button's display link ran only while it was in a window.
-            .onReceive(TagSummaryPage.keyNoteTicks(active: visible && model.keyNotePlaying)) { _ in
+            // On the stand the deck, which holds the key, watches it.
+            .onReceive(TagSummaryPage.keyNoteTicks(active: visible && !onStand && model.keyNotePlaying)) { _ in
                 model.syncKeyNote()
             }
             .onAppear { visible = true }
@@ -164,17 +182,18 @@ struct TagSummaryPage: View {
 
     private func performance(_ tag: DPTag) -> some View {
         // UIKit held Sheet Music and the key to one height, the taller of the two.
+        // On a tabletop Duo both are on the deck below the fold (`TMStandKeyDeck`).
         TMMatchedHeightStack {
             facts(tag)
-            if let key = tag.writtenKey, !key.isEmpty {
+            if !onStand, let key = tag.writtenKey, !key.isEmpty {
                 TMCaption(text: "Key").layoutValue(key: TMGapBefore.self, value: 16)
                 TMKeyNoteButton(model: model, title: key, fillsHeight: true)
                     .accessibilityIdentifier("summary.key")
                     .layoutValue(key: TMGapBefore.self, value: 4)
                     .layoutValue(key: TMMatchesHeight.self, value: true)
             }
-            if tag.sheetMusicUri != nil {
-                sheetMusicButton
+            if !onStand, tag.sheetMusicUri != nil {
+                Self.sheetMusicButton(model)
                     .layoutValue(key: TMGapBefore.self, value: 16)
                     .layoutValue(key: TMMatchesHeight.self, value: true)
             }
@@ -182,7 +201,7 @@ struct TagSummaryPage: View {
     }
 
     private func facts(_ tag: DPTag) -> some View {
-        TMFactsLayout(bodyFont: dynamicTypeSize.tmFont(.body)) {
+        TMFactsLayout(bodyFont: dynamicTypeSize.tmFont(.body), scale: displayScale) {
             TMCaption(text: "Tag ID")
             TMFactText(text: "\(tag.tagId)").tmFactValue(.text, minimumHeight: 28)
             TMCaption(text: "Parts")
@@ -198,8 +217,11 @@ struct TagSummaryPage: View {
         }
     }
 
-    private var sheetMusicButton: some View {
-        TMSheetMusicButton(busy: model.sheetMusicBusy) { model.openSheetMusic() }
+    static func sheetMusicButton(_ model: TagSummaryModel, textStyle: UIFont.TextStyle = .body,
+                                 cornerRadius: CGFloat? = nil) -> some View {
+        TMSheetMusicButton(busy: model.sheetMusicBusy, textStyle: textStyle, cornerRadius: cornerRadius) {
+            model.openSheetMusic()
+        }
             .overlay(alignment: .trailing) {
                 TMBarberPole.operation("Opening sheet music…", active: model.sheetMusicBusy)
                     .padding(.trailing, 12)
@@ -332,6 +354,9 @@ struct TMKeyNoteButton: View {
     /// Takes any taller height it is offered (Sheet Music's), outline and all, as
     /// the UIKit key did under its equal-height constraint.
     var fillsHeight = false
+    /// The title's text style: body on the page, larger on a tabletop Duo's deck.
+    var font = Font.body
+    var cornerRadius: CGFloat = 8
     /// Where the key is shown, for analytics.
     var source = TagMasterUsage.PitchSource.tag
     @Environment(\.colorScheme) private var colorScheme
@@ -345,14 +370,14 @@ struct TMKeyNoteButton: View {
             Text(title)
                 .lineLimit(singleLine ? 1 : nil)
         }
-        .font(.body)
+        .font(font)
         .foregroundStyle(foreground)
         .padding(.vertical, 4)
         .padding(.horizontal, 8)
         .frame(maxWidth: singleLine ? nil : .infinity, minHeight: 44, maxHeight: fillsHeight ? .infinity : nil)
         .frame(minWidth: 44)
-        .background(RoundedRectangle(cornerRadius: 8).fill(playing ? fill : .clear))
-        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(accent, lineWidth: 1.5))
+        .background(RoundedRectangle(cornerRadius: cornerRadius).fill(playing ? fill : .clear))
+        .overlay(RoundedRectangle(cornerRadius: cornerRadius).strokeBorder(accent, lineWidth: 1.5))
         .contentShape(Rectangle())
         // UIKit touches, so the key sounds at touch-down: a SwiftUI press inside the
         // page's scroll view is held back while the system decides whether a scroll
@@ -376,24 +401,37 @@ struct TMKeyNoteButton: View {
     }()
 }
 
-/// Sheet Music as UIKit drew it: a filled button (white title and icon on the
-/// accent, medium corners, 8/44 insets, wrapping title) that greys out exactly as
-/// UIKit's does while something is presented over the page.
+/// Sheet Music as UIKit drew it: a filled button (title and icon on the accent,
+/// medium corners, 8/44 insets, wrapping title) that greys out exactly as UIKit's
+/// does while something is presented over the page. The title is white on the
+/// light accent and black on the dark one (white on the dark accent's pale blue
+/// read at under 2:1), as the sounding key's is.
 struct TMSheetMusicButton: UIViewRepresentable {
     let busy: Bool
+    var textStyle = UIFont.TextStyle.body
+    /// Fixed corners to match a key beside it; nil keeps UIKit's medium style.
+    var cornerRadius: CGFloat?
     let action: () -> Void
 
     func makeUIView(context: Context) -> UIButton {
         var configuration = UIButton.Configuration.filled()
-        configuration.baseForegroundColor = .white
-        configuration.cornerStyle = .medium
+        configuration.baseForegroundColor = UIColor { $0.userInterfaceStyle == .dark ? .black : .white }
+        if let cornerRadius {
+            configuration.cornerStyle = .fixed
+            configuration.background.cornerRadius = cornerRadius
+        } else {
+            configuration.cornerStyle = .medium
+        }
         configuration.image = UIImage(systemName: "doc.richtext")
+        if textStyle != .body {
+            configuration.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(textStyle: textStyle)
+        }
         configuration.imagePadding = 8
         configuration.titleLineBreakMode = .byWordWrapping
         configuration.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 44, bottom: 8, trailing: 44)
-        configuration.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attributes in
+        configuration.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { [textStyle] attributes in
             var attributes = attributes
-            attributes.font = UIFont.preferredFont(forTextStyle: .body)
+            attributes.font = UIFont.preferredFont(forTextStyle: textStyle)
             return attributes
         }
         let button = UIButton(configuration: configuration)

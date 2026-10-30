@@ -2,9 +2,10 @@
 //  TMShell.swift
 //  tagmaster
 //
-//  Tag Master's app shell in SwiftUI: the App, a NavigationStack on iPhone and
-//  a NavigationSplitView on iPad, each screen's bar, and the charcoal bar the
-//  app has always had. The router (TMRouter.swift) owns where things are.
+//  Tag Master's app shell in SwiftUI: the App, a NavigationStack on iPhone, a
+//  NavigationSplitView on iPad and a two-page book on an open iPhone Duo, each
+//  screen's bar, and the charcoal bar the app has always had. The router
+//  (TMRouter.swift) owns where things are.
 //
 
 import SwiftUI
@@ -125,15 +126,20 @@ final class TMPrivacyOffer {
     }
 }
 
-/// The unit-test host: no UI, only the cache serializers the app registers.
+/// The unit-test host: no UI, only the cache serializers the app registers. Apps
+/// built with the iOS 27 SDK must adopt the scene life cycle or they do not launch,
+/// so it connects one plain scene, with no delegate, that the tests' windows join.
 @objc(TMTestAppDelegate)
 final class TMTestAppDelegate: UIResponder, UIApplicationDelegate {
-    var window: UIWindow?
-
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         DPAppDelegate.configureCacheSerialization()
         return true
+    }
+
+    func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession,
+                     options: UIScene.ConnectionOptions) -> UISceneConfiguration {
+        UISceneConfiguration(name: nil, sessionRole: connectingSceneSession.role)
     }
 }
 
@@ -175,13 +181,62 @@ extension EnvironmentValues {
 
 struct TMRootView: View {
     let router: TMRouter
+    @Environment(\.horizontalSizeClass) private var horizontal
+    @Environment(\.verticalSizeClass) private var vertical
 
     var body: some View {
-        if UIDevice.current.userInterfaceIdiom == .pad {
-            TMSplitRoot(router: router)
-        } else {
-            TMStackRoot(router: router)
+        GeometryReader { geometry in
+            switch TMShellLayout(idiom: UIDevice.current.userInterfaceIdiom, horizontal: horizontal,
+                                 vertical: vertical, width: geometry.size.width,
+                                 fold: TMBookRoot.uprightFold(in: geometry)) {
+            case .stack: TMStackRoot(router: router)
+            case .split: TMSplitRoot(router: router)
+            case .book: TMBookRoot(router: router)
+            }
         }
+    }
+}
+
+/// Which shell a window gets. The router carries the open tag across when it
+/// changes (an iPhone Duo opening, closing or turning).
+enum TMShellLayout: Equatable {
+    /// One stack: every phone window, a large phone in landscape included, and an
+    /// open iPhone Duo held upright (two panes need 720 points, as on Android).
+    case stack
+    /// The system split: an iPad, whose split collapses by itself when it narrows.
+    case split
+    /// An iPhone Duo held open like a book: the list on one page, the tag on the
+    /// other. UIKit floats a split's list over a window this size, so the book
+    /// keeps the two side by side itself.
+    case book
+
+    /// `fold` is the device's upright fold across the window, if it has one. The
+    /// book's divider has to run down it, so a fold too near either edge for two
+    /// pages (a window beside another app) keeps the stack.
+    init(idiom: UIUserInterfaceIdiom, horizontal: UserInterfaceSizeClass?,
+         vertical: UserInterfaceSizeClass?, width: CGFloat, fold: CGRect? = nil) {
+        if idiom == .pad {
+            self = .split
+        } else if horizontal == .regular, vertical == .regular, width >= 720,
+                  fold.map({ Self.dividerFits($0, windowWidth: width) }) ?? true {
+            self = .book
+        } else {
+            self = .stack
+        }
+    }
+
+    /// Whether the book's divider can run down `fold` and leave each page 320 points.
+    static func dividerFits(_ fold: CGRect, windowWidth: CGFloat) -> Bool {
+        fold.midX >= 320 && windowWidth - fold.midX >= 320
+    }
+}
+
+extension UITraitCollection {
+    /// Whether menus and pickers float from their button, as on iPad: an iPad
+    /// window of any width, or any window regular both ways (an iPhone Duo
+    /// opened out). A large phone in landscape keeps its phone sheets.
+    var tmFloatsPopovers: Bool {
+        userInterfaceIdiom == .pad || (horizontalSizeClass == .regular && verticalSizeClass == .regular)
     }
 }
 
@@ -207,7 +262,7 @@ private struct TMWindowTint: UIViewRepresentable {
     func updateUIView(_ probe: Probe, context: Context) {}
 }
 
-/// iPhone: one stack, Home at its root.
+/// iPhone, and an iPhone Duo folded shut: one stack, Home at its root.
 struct TMStackRoot: View {
     @Bindable var router: TMRouter
     @State private var margins = TMTableMargins()
@@ -222,7 +277,7 @@ struct TMStackRoot: View {
         }
         .background(TMTableMarginReader { margins = $0 })
         .background(TMWindowTint())
-        .onAppear { router.setExpanded(false) }
+        .onAppear { router.useStack() }
     }
 }
 
@@ -293,11 +348,113 @@ struct TMSplitRoot: View {
     }
 }
 
+/// An iPhone Duo held open like a book: Home's stack on the leading page and the
+/// tag (or the placeholder) on the trailing one, both always showing, one
+/// watermark behind both. The divider runs down the crease; half shut, both pages
+/// keep their content clear of it. The tag's stack, along the display's edge, is
+/// the one whose bar items move into the side bar. Reading full screen hides the list.
+struct TMBookRoot: View {
+    @Bindable var router: TMRouter
+    @Environment(\.displayScale) private var displayScale
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var listMargins = TMTableMargins()
+    @State private var detailMargins = TMTableMargins()
+    /// The hinge's state: folding changes the fold's region but not the window's
+    /// geometry, so the layout reads this to look at the fold again.
+    @State private var hingeStatus = 0
+
+    /// The leading page's width: up to the middle of the device's upright fold
+    /// (flat or half shut), an even split; without one, 36% of the window,
+    /// 320–400 points, as the iPad's list.
+    static func listWidth(windowWidth: CGFloat, fold: CGRect?) -> CGFloat {
+        if let fold, TMShellLayout.dividerFits(fold, windowWidth: windowWidth) { return fold.midX }
+        return min(max(windowWidth * 0.36, 320), 400)
+    }
+
+    /// The device's upright fold across this window, active or flat, if it has one.
+    static func uprightFold(in geometry: GeometryProxy) -> CGRect? {
+        guard #available(iOS 27.1, *) else { return nil }
+        return geometry.reservedRegions(kind: .division, options: .includeInactive)
+            .map(\.frame)
+            .first { isUpright($0, in: geometry.size) }
+    }
+
+    /// How far each page keeps its content from the divider while the device is
+    /// half shut: half the fold's region, whose frame holds the crease and the
+    /// margins iOS asks interactive content to keep from it. Flat, the display is
+    /// one sheet of glass and the columns keep their usual margins.
+    static func creaseClearance(in geometry: GeometryProxy) -> CGFloat {
+        guard #available(iOS 27.1, *),
+              let crease = geometry.reservedRegions(kind: .division).first(where: { isUpright($0.frame, in: geometry.size) })
+        else { return 0 }
+        return creaseClearance(band: crease.frame)
+    }
+
+    static func creaseClearance(band: CGRect) -> CGFloat {
+        band.width / 2
+    }
+
+    private static func isUpright(_ frame: CGRect, in size: CGSize) -> Bool {
+        frame.height > frame.width && frame.height >= size.height / 2
+    }
+
+    var body: some View {
+        GeometryReader { geometry in
+            let _ = hingeStatus
+            let showsList = router.columnVisibility != .detailOnly
+            let clearance = TMBookRoot.creaseClearance(in: geometry)
+            let list = TMColumnTraits(backdrop: .windowSlice, margins: listMargins, crease: (.trailing, clearance))
+            // Full screen, the tag's page starts at the display's edge, not at the crease.
+            let detail = TMColumnTraits(backdrop: .windowSlice, margins: detailMargins,
+                                        crease: (.leading, showsList ? clearance : 0))
+            HStack(spacing: 0) {
+                if showsList {
+                    NavigationStack(path: $router.path) {
+                        TMHomeRoute(router: router, column: list)
+                            .navigationDestination(for: TMRoute.self) { route in
+                                TMRouteScreen(route: route, router: router, column: list)
+                            }
+                    }
+                    .background(TMTableMarginReader { listMargins = $0 })
+                    .frame(width: TMBookRoot.listWidth(windowWidth: geometry.size.width,
+                                                       fold: TMBookRoot.uprightFold(in: geometry)))
+                    .transition(.move(edge: .leading))
+                    Rectangle()
+                        .fill(Color(uiColor: .separator))
+                        .frame(width: 1 / displayScale)
+                        .ignoresSafeArea()
+                }
+                NavigationStack(path: $router.detailPath) {
+                    TMDetailColumn(router: router, column: detail)
+                        .navigationDestination(for: TMRoute.self) { route in
+                            TMRouteScreen(route: route, router: router, column: detail)
+                        }
+                }
+                .background(TMTableMarginReader { detailMargins = $0 })
+            }
+            .animation(reduceMotion ? nil : .default, value: showsList)
+            .background {
+                ZStack {
+                    Color(uiColor: .systemBackground)
+                    TMWatermark()
+                }
+                .ignoresSafeArea()
+            }
+        }
+        .background(TMWindowTint())
+        .hingeStatus($hingeStatus)
+        .onAppear { router.setExpanded(true) }
+    }
+}
+
 /// What a column tells the screens in it: their backdrop and UITableView's
 /// margins at the column's size.
 struct TMColumnTraits {
     var backdrop: TMBackdrop = .own
     var margins = TMTableMargins()
+    /// The column's side that meets an iPhone Duo's crease, in the book, and how far
+    /// its content keeps from it (zero while the device lies flat).
+    var crease: (edge: HorizontalEdge, clearance: CGFloat)?
     /// A phone's single stack, before its margins are measured.
     static let stack = TMColumnTraits()
 }
@@ -315,7 +472,62 @@ extension View {
             .environment(\.tmGroupedMargin, column.margins.grouped)
             .environment(\.tmGroupedTextInset, column.margins.groupedText)
             .tmFollowsUIKitTint()
+            .background { if let crease = column.crease { TMCreaseInset(edge: crease.edge, clearance: crease.clearance) } }
             .tmClearColumnBackground(column.backdrop != .own)
+    }
+}
+
+/// Keeps a book column's bar and screens off the crease: the clearance becomes
+/// the column's navigation controller's extra safe area on that side, which
+/// UIKit hands to its bar and every screen on it. SwiftUI's own padding stops
+/// at the stack's edge and never reaches the UIKit views inside.
+private struct TMCreaseInset: UIViewControllerRepresentable {
+    let edge: HorizontalEdge
+    let clearance: CGFloat
+
+    final class Hook: UIViewController {
+        var edge: HorizontalEdge = .leading
+        var clearance: CGFloat = 0
+
+        override func didMove(toParent parent: UIViewController?) {
+            super.didMove(toParent: parent)
+            apply(animated: false)
+        }
+
+        func apply(animated: Bool) {
+            var controller: UIViewController? = parent
+            while let current = controller, !(current is UINavigationController) { controller = current.parent }
+            guard let navigation = controller else { return }
+            let leftToRight = navigation.view.effectiveUserInterfaceLayoutDirection == .leftToRight
+            let left = (edge == .leading) == leftToRight
+            var insets = UIEdgeInsets.zero
+            if left { insets.left = clearance } else { insets.right = clearance }
+            guard navigation.additionalSafeAreaInsets != insets else { return }
+            let change = {
+                navigation.additionalSafeAreaInsets = insets
+                navigation.view.layoutIfNeeded()
+            }
+            if animated, !UIAccessibility.isReduceMotionEnabled {
+                UIView.animate(withDuration: 0.3, animations: change)
+            } else {
+                change()
+            }
+        }
+    }
+
+    func makeUIViewController(context: Context) -> Hook {
+        let hook = Hook()
+        hook.view.isHidden = true
+        hook.view.isUserInteractionEnabled = false
+        hook.edge = edge
+        hook.clearance = clearance
+        return hook
+    }
+
+    func updateUIViewController(_ hook: Hook, context: Context) {
+        hook.edge = edge
+        hook.clearance = clearance
+        hook.apply(animated: true)
     }
 }
 
@@ -327,7 +539,9 @@ struct TMDetailColumn: View {
     var body: some View {
         Group {
             if router.hasDetail {
+                // A tag carried in from the stack is a different model: a fresh screen for it.
                 TMTagRoute(model: router.detail)
+                    .id(ObjectIdentifier(router.detail))
             } else {
                 TMTagPlaceholder()
                     .background(TMScreenBackground())

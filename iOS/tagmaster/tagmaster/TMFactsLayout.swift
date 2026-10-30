@@ -49,6 +49,8 @@ struct TMFactsLayout: Layout {
     /// The value font at the screen's text size: the eight-em cap on a text value's
     /// width and the line height grow with it, as UIKit's label font did.
     var bodyFont: UIFont = .preferredFont(forTextStyle: .body)
+    /// The pixel grid: the display the view is on (an iPhone Duo has two).
+    var scale: CGFloat = 3
 
     private struct Row {
         var captionFrame: CGRect
@@ -129,7 +131,6 @@ struct TMFactsLayout: Layout {
         for (index, row) in rows(width: bounds.width, subviews: subviews).enumerated() {
             y += row.gapBefore
             // UILabel's text lands on the pixel above a fractional frame origin.
-            let scale = UIScreen.main.scale
             let captionY = ((y + row.captionFrame.minY) * scale).rounded(.down) / scale
             subviews[index * 2].place(at: CGPoint(x: bounds.minX + row.captionFrame.minX, y: captionY),
                                       proposal: ProposedViewSize(row.captionFrame.size))
@@ -166,7 +167,11 @@ struct TMFlowLayout: Layout {
     }
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let width = proposal.width ?? UIScreen.main.bounds.width
+        guard let width = proposal.width else {
+            // Asked for its ideal size: every capsule on one line.
+            let line = arrange(width: .greatestFiniteMagnitude, subviews: subviews)
+            return CGSize(width: line.frames.map(\.maxX).max() ?? 0, height: line.height)
+        }
         return CGSize(width: width, height: arrange(width: width, subviews: subviews).height)
     }
 
