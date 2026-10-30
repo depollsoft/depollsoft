@@ -65,9 +65,13 @@ the iOS 27.1 reserved-region API. Neither checks for the device.
   tag stands up: each of its pages reads on the upper half, the one facing the
   singers, and what they play lies on the lower half under the fingers, above
   the page bar (`tmMusicStand`, `TMMusicStand.swift`). Summary, Details and
-  Videos put the key note and Sheet Music there; Tracks puts the parts there and
-  keeps the recording notes and the player above. A page with nothing for its
-  deck, or a fold leaving either part too little room, stays whole. Standing up
+  Videos put the key note and Sheet Music there, as two pads side by side
+  (stacked at large text sizes) up to 120 points tall, held down to sound the key
+  as on the page; Tracks puts the parts there and keeps the recording notes and
+  the player above. Both decks run the page's readable width and sit centred
+  on the lower half, and the page fades out into the fold rather than cutting a
+  line in two. A page with nothing for its deck, or a fold leaving either part
+  too little room, stays whole. Standing up
   or lying down keeps the page in place, so its scroll position and a playing
   part survive. Home and the lists still scroll across the fold, as Apple's
   guidance has continuous content do.

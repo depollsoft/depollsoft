@@ -57,9 +57,22 @@ final class DuoTourUITests: TagMasterUITestCase {
         _ = app.buttons["Rate tag"].existsOrWait(timeout: 20)
         capture("2-tag-summary")
 
+        for (page, step) in [("Details", "2b-tag-details"), ("Videos", "2c-tag-videos")]
+        where app.buttons["page-\(page)"].existsOrWait(timeout: 5) {
+            app.buttons["page-\(page)"].tap()
+            capture(step)
+        }
+
         if app.buttons["page-Tracks"].existsOrWait(timeout: 5) {
             app.buttons["page-Tracks"].tap()
             capture("3-tag-tracks")
+            let lead = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Lead'")).firstMatch
+            if lead.existsOrWait(timeout: 5), lead.isHittable {
+                lead.tap()
+                if app.descendants(matching: .any)["tagmaster.trackPlayer.position"].existsOrWait(timeout: 30) {
+                    capture("3b-tag-playing")
+                }
+            }
         }
 
         if app.buttons["Next tag"].exists, app.buttons["Next tag"].isEnabled {

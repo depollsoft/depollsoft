@@ -303,11 +303,19 @@ final class TMDuoTests: TMBehaviorTestCase {
         XCTAssertGreaterThanOrEqual(key.accessibilityFrame.minY, fold.maxY)
         let music = try XCTUnwrap(driver.element(label: "Sheet Music"))
         XCTAssertGreaterThanOrEqual(music.accessibilityFrame.minY, fold.maxY)
+        // They are pads side by side across the page's width, one height, well over a button's.
+        XCTAssertEqual(key.accessibilityFrame.minX, 16, accuracy: 1)
+        XCTAssertEqual(music.accessibilityFrame.maxX, upright.width - 16, accuracy: 1)
+        XCTAssertLessThan(key.accessibilityFrame.maxX, music.accessibilityFrame.minX)
+        XCTAssertEqual(key.accessibilityFrame.maxY, music.accessibilityFrame.maxY, accuracy: 1)
+        XCTAssertEqual(key.accessibilityFrame.height, music.accessibilityFrame.height, accuracy: 1)
+        XCTAssertGreaterThanOrEqual(key.accessibilityFrame.height, 64)
 
         model.selectedPage = .tracks
         settle()
         let lead = try XCTUnwrap(driver.element(label: "Lead"), "Tracks' deck holds the parts")
         XCTAssertGreaterThanOrEqual(lead.accessibilityFrame.minY, fold.maxY)
+        XCTAssertEqual(lead.accessibilityFrame.maxX, upright.width - 16, accuracy: 1, "The parts run the page's width")
         XCTAssertTrue(driver.exists(label: "Tap a part below to play it."))
 
         // A part playing on the stand keeps playing as the device is laid flat: the

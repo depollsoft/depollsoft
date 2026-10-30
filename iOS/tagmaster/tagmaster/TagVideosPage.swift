@@ -54,6 +54,8 @@ struct TMVideoRow: Identifiable {
 struct TagVideosPage: View {
     let model: TagDetailModel
     @State private var watching: URL?
+    /// Standing on a tabletop Duo, the page fades out into the fold.
+    @Environment(\.tmOnStand) private var onStand
 
     var body: some View {
         if let tag = model.tag {
@@ -78,6 +80,8 @@ struct TagVideosPage: View {
                          ? "Sorry, this tag does not have any videos associated with it."
                          : "Videos open on YouTube inside Tag Master.")
                         .padding(.leading, 4)
+                        // Room to scroll the last line up out of the fade.
+                        .padding(.bottom, onStand ? TMStandDeck.fade : 0)
                 }
             }
             .tmGroupedTableMetrics()
