@@ -8,6 +8,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
@@ -24,16 +25,45 @@ import org.robolectric.annotation.Config
 class StreamingAudioTrackTest {
     private data class Fill(val requested: Int, val playState: Int, val thread: Thread)
 
-    private val track =
+    /**
+     * A 44.1 kHz mono track whose platform takes what it's given (Robolectric's takes nothing), at
+     * most [nextWriteTakes] frames of the next write, and whose playback head is [head].
+     */
+    private class FakePlatformTrack(bufferSizeInBytes: Int, threshold: Int) :
         @Suppress("DEPRECATION")
         StreamingAudioTrack(
             AudioManager.STREAM_MUSIC,
             44100,
             AudioFormat.CHANNEL_CONFIGURATION_MONO,
             AudioFormat.ENCODING_PCM_16BIT,
-            88200,
+            bufferSizeInBytes,
             AudioTrack.MODE_STREAM,
-        )
+            threshold,
+        ) {
+        @Volatile var nextWriteTakes = Int.MAX_VALUE
+
+        @Volatile var head = 0
+
+        /** Whether the head moves on every read, as a playing track's does between the watcher's polls. */
+        @Volatile var headMovesOnEveryRead = false
+
+        private val reads = AtomicInteger()
+
+        override fun writeToPlatform(
+            audioData: ShortArray,
+            offsetInShorts: Int,
+            sizeInShorts: Int,
+        ): Int {
+            val taken = minOf(sizeInShorts, nextWriteTakes)
+            nextWriteTakes = Int.MAX_VALUE
+            return taken
+        }
+
+        override fun getPlaybackHeadPosition() = if (headMovesOnEveryRead) head + reads.incrementAndGet() else head
+    }
+
+    // A wave's track: a second's buffer, kept a fifth of a second ahead.
+    private val track = FakePlatformTrack(88200, 8820)
     private val fills = CopyOnWriteArrayList<Fill>()
     private val samples = ShortArray(44100)
 
@@ -190,6 +220,107 @@ class StreamingAudioTrackTest {
         track.pause()
 
         assertTrue("the watcher ends", awaitNoWatchers())
+    }
+
+    /** A track like the instrument player's: 4096 frames, kept 2048 ahead. */
+    private fun instrumentLikeTrack() = FakePlatformTrack(8192, 2048)
+
+    private fun boundedFiller(target: StreamingAudioTrack) =
+        Action<Int> { requested ->
+            fills += Fill(requested, target.playState, Thread.currentThread())
+            val frames = minOf(requested, target.capacityFrames - target.queuedFrames)
+            if (frames > 0) target.write(samples, 0, frames)
+        }
+
+    private fun awaitWritten(
+        target: StreamingAudioTrack,
+        frames: Int,
+    ): Boolean {
+        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(1)
+        while (target.writtenFrames != frames && System.nanoTime() < deadline) Thread.sleep(5)
+        return target.writtenFrames == frames
+    }
+
+    @Test
+    fun onlyTheFramesThePlatformTakesCountAsWritten() {
+        val short = instrumentLikeTrack()
+        try {
+            short.nextWriteTakes = 4047
+
+            assertEquals(4047, short.write(samples, 0, 4096))
+
+            assertEquals(4047, short.writtenFrames)
+            assertEquals(4047, short.queuedFrames)
+        } finally {
+            short.release()
+        }
+    }
+
+    @Test
+    fun aTrackPrimedShortOfFullIsFilledTheRestOfTheWay() {
+        // The 5.2.3 review's "the sound stops working until I restart the app": an instrument note
+        // pressed while the idle instrument track was reset restarted it before the server had
+        // discarded the old audio, so the prime got 4047 of its 4096 frames in. The platform holds
+        // a track back until its buffer is full, and the watcher, counting 4096 and filling only to
+        // the threshold, never sent the rest: the track never started, and every later instrument
+        // note was silent.
+        val short = instrumentLikeTrack()
+        try {
+            short.setBufferFiller(boundedFiller(short))
+            short.setPrimesBeforePlay(true)
+            short.nextWriteTakes = 4047
+
+            short.play()
+
+            assertTrue("the watcher tops it up to the whole buffer: $fills", awaitWritten(short, 4096))
+        } finally {
+            short.pause()
+            short.release()
+        }
+    }
+
+    @Test
+    fun aPlayingTrackWhoseHeadStallsIsFilledToTheWholeBuffer() {
+        // The mixer drops a track that runs dry, and holds it back again until its buffer is full.
+        val short = instrumentLikeTrack()
+        try {
+            short.setBufferFiller(boundedFiller(short))
+            short.setPrimesBeforePlay(true)
+            short.play()
+            assertTrue(awaitWritten(short, 4096))
+
+            // The head moves once, then stands still with 3996 frames queued, more than the threshold.
+            short.head = 100
+
+            assertTrue("after a stall it's filled to the whole buffer", awaitWritten(short, 4196))
+        } finally {
+            short.pause()
+            short.release()
+        }
+    }
+
+    @Test
+    fun aPlayingTrackIsKeptOnlyToItsThreshold() {
+        // Filling the whole buffer while a track plays would double how far ahead an instrument
+        // renders, and so how late a note played over others is heard.
+        val short = instrumentLikeTrack()
+        try {
+            short.setBufferFiller(boundedFiller(short))
+            short.setPrimesBeforePlay(true)
+            short.play()
+            assertTrue(awaitWritten(short, 4096))
+            fills.clear()
+
+            // A frame a poll: the queue stays above the 2048-frame threshold for over a second.
+            short.headMovesOnEveryRead = true
+            Thread.sleep(200)
+
+            assertTrue("nothing more was asked for: $fills", fills.none { it.requested > 0 })
+            assertEquals(4096, short.writtenFrames)
+        } finally {
+            short.pause()
+            short.release()
+        }
     }
 
     private fun awaitFill(): Boolean {

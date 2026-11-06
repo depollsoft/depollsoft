@@ -17,7 +17,7 @@ import org.robolectric.annotation.Config
 
 /** Wave tracks start primed and are reset before reuse, so a note never starts twice. */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35])
+@Config(sdk = [35], shadows = [TakingAudioTrackShadow::class])
 class WaveTrackTest {
     @Suppress("DEPRECATION")
     private val mono = AudioFormat.CHANNEL_CONFIGURATION_MONO
@@ -54,7 +54,7 @@ class WaveTrackTest {
     fun aWaveTrackIsFullBeforeItStarts() {
         val track = waveTrack()
         track.play()
-        // Robolectric's track doesn't advance, so everything primed is still queued.
+        // The shadow's track doesn't advance, so everything primed is still queued.
         assertEquals(track.capacityFrames, track.queuedFrames)
         track.pause()
         track.flush()

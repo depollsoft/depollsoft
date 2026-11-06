@@ -22,21 +22,40 @@ public class StreamingAudioTrack extends AudioTrack {
     @Override
     public void run() {
       try {
+        int lastHead = StreamingAudioTrack.this.getPlaybackHeadPosition();
+        long lastMoved = System.nanoTime();
+        boolean started = false;
         while (this.keepGoing) {
           int playbackHeadPosition = StreamingAudioTrack.this
               .getPlaybackHeadPosition();
-          // Fill to the threshold unless stopped: a filler that can't write (its track is gone)
-          // would otherwise hold a stopped watcher here forever.
+          long now = System.nanoTime();
+          if (playbackHeadPosition != lastHead) {
+            started = true;
+            lastHead = playbackHeadPosition;
+            lastMoved = now;
+          }
+          // The platform holds a streaming track back until its whole buffer is full, and the
+          // mixer drops one that runs dry until something writes to it again. A track restarted
+          // before the server discarded what a flush left can come up a few frames short, and
+          // filling only to the threshold would never send them. So until the head first moves,
+          // and whenever it has stood still a while, fill the whole buffer.
+          boolean stalled = !started || now - lastMoved >= STALL_NANOS;
+          int target = stalled ? StreamingAudioTrack.this.capacityFrames
+              : StreamingAudioTrack.this.bufferFrameThreshold;
+          // Fill to the target unless stopped, and only while the filler gets something in: one
+          // that can't write (its track is gone) would otherwise hold the watcher here forever.
           do {
-            int requestedAmount = StreamingAudioTrack.this.bufferFrameThreshold
-                - (StreamingAudioTrack.this.writtenFrames - playbackHeadPosition);
+            int before = StreamingAudioTrack.this.writtenFrames;
+            int requestedAmount = target - (before - playbackHeadPosition);
             Action<Integer> filler = StreamingAudioTrack.this.bufferFiller;
             if (filler != null) {
               synchronized (filler) {
                 filler.invoke(requestedAmount);
               }
             }
-          } while (this.keepGoing && StreamingAudioTrack.this.writtenFrames - playbackHeadPosition < StreamingAudioTrack.this.bufferFrameThreshold);
+            if (StreamingAudioTrack.this.writtenFrames == before)
+              break;
+          } while (this.keepGoing && StreamingAudioTrack.this.writtenFrames - playbackHeadPosition < target);
           try {
             Thread.sleep(1);
           }
@@ -59,9 +78,18 @@ public class StreamingAudioTrack extends AudioTrack {
 
   private static final int FADE_SETTLE_MILLIS = 40;
 
+  /**
+   * How long a playing track's head may stand still before the watcher fills its whole buffer, as
+   * it does before the track first starts. Longer than any mixer period, so a track that is playing
+   * never looks stalled between the mixer's reads.
+   */
+  static final long STALL_NANOS = 100_000_000L;
+
   private TrackWatcherThread trackWatcherThread;
 
-  private int writtenFrames;
+  // Frames the platform has taken since the track was made or last flushed. Only the filler
+  // writes, holding its lock; play() and the watcher read it from their own threads.
+  private volatile int writtenFrames;
   private int numChannels;
 
   private int bytesPerSample;
@@ -173,7 +201,7 @@ public class StreamingAudioTrack extends AudioTrack {
     t.start();
   }
 
-  /** Frames written since the track was made or last flushed. */
+  /** Frames the platform has taken since the track was made or last flushed. */
   int getWrittenFrames() {
     return this.writtenFrames;
   }
@@ -236,16 +264,33 @@ public class StreamingAudioTrack extends AudioTrack {
     }
   }
 
+  // Both writes count only what the platform took, which can be less than they were given. A
+  // track that isn't playing yet writes without blocking, into a buffer the server may not have
+  // emptied since a flush. Counting the rest would leave the watcher waiting on audio it never sent.
+
   @Override
   public int write(byte[] audioData, int offsetInBytes, int sizeInBytes) {
-    this.writtenFrames += sizeInBytes / this.numChannels / this.bytesPerSample;
-    return super.write(audioData, offsetInBytes, sizeInBytes);
+    int written = this.writeToPlatform(audioData, offsetInBytes, sizeInBytes);
+    if (written > 0)
+      this.writtenFrames += written / this.numChannels / this.bytesPerSample;
+    return written;
   }
 
   @Override
   public int write(short[] audioData, int offsetInShorts, int sizeInShorts) {
-    this.writtenFrames += sizeInShorts * 2 / this.numChannels
-        / this.bytesPerSample;
+    int written = this.writeToPlatform(audioData, offsetInShorts, sizeInShorts);
+    if (written > 0)
+      this.writtenFrames += written * 2 / this.numChannels / this.bytesPerSample;
+    return written;
+  }
+
+  /** AudioTrack's own write, which tests replace to stand for a platform that takes less. */
+  int writeToPlatform(byte[] audioData, int offsetInBytes, int sizeInBytes) {
+    return super.write(audioData, offsetInBytes, sizeInBytes);
+  }
+
+  /** AudioTrack's own write, which tests replace to stand for a platform that takes less. */
+  int writeToPlatform(short[] audioData, int offsetInShorts, int sizeInShorts) {
     return super.write(audioData, offsetInShorts, sizeInShorts);
   }
 }

@@ -190,7 +190,14 @@ the clarinet is darker, for one.
   whose minimum is 4012 frames. Half a second after the last release dies
   away, the track fades out, pauses and flushes. The next note starts it
   again. A note played while it's stopping starts when the restart primes the
-  buffer.
+  buffer. That restart comes straight after the flush, before the server has
+  discarded the old audio, so the prime can come up a few frames short of the
+  whole buffer. `StreamingAudioTrack` counts only the frames a write took.
+  Until a track's head first moves, and again once it has stood still for
+  100 ms, its watcher fills to the whole buffer instead of the 2048-frame
+  threshold. In 5.2.3 a short prime left the track waiting for audio the
+  watcher never sent. It never started, and every instrument note stayed
+  silent until the app restarted.
 - **Measured on the API 36 emulator.** Notes were timed with
   `AudioTrack.getTimestamp`, and the output was recorded through QEMU's WAV
   audio backend.
