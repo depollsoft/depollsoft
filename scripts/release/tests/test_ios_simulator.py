@@ -29,6 +29,24 @@ class SimulatorCleanupTests(unittest.TestCase):
             self.assertEqual(create.call_args.args[1:3], (model, runtime))
             self.assertIn('id=new-owned-device', output.read_text())
 
+    def test_device_specific_runtimes_are_skipped(self):
+        # The xcode-27 image lists a runtime for one device type beside the plain ones.
+        runtime = 'com.apple.CoreSimulator.SimRuntime.iOS-27-0'
+        phone = {'isAvailable': True, 'deviceTypeIdentifier': 'com.apple.CoreSimulator.SimDeviceType.iPhone-17'}
+        existing = {'devices': {
+            'com.apple.CoreSimulator.SimRuntime.iOS-27-1-iPhone19-2': [dict(phone)],
+            runtime: [dict(phone)],
+            'com.apple.CoreSimulator.SimRuntime.watchOS-12-0': [],
+        }}
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / 'output'
+            with patch.dict('os.environ', {'IOS_SIMULATOR_VERSION': '', 'GITHUB_OUTPUT': str(output)}), \
+                    patch('ios_simulator.subprocess.check_output', side_effect=['27.1', json.dumps(existing)]), \
+                    patch('ios_simulator.owner_identity', return_value={'pid': 123}), \
+                    patch('ios_simulator.create', return_value='new-owned-device') as create:
+                main()
+            self.assertEqual(create.call_args.args[2], runtime)
+
     def test_boot_waits_and_also_handles_an_already_booted_device(self):
         with patch('ios_simulator.subprocess.run', return_value=subprocess.CompletedProcess(
                 ['simctl'], 0, 'Finished', '')) as run:
