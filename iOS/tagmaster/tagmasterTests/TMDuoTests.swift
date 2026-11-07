@@ -214,9 +214,10 @@ final class TMDuoTests: TMBehaviorTestCase {
         }
     }
 
-    /// The old shell's Tracks page can go before the new shell appears and moves the
-    /// tag: the root has the router mark the tag before it swaps shells, so the part
-    /// keeps playing however SwiftUI orders the two.
+    /// The old shell's Tracks page can go before the new shell appears: the root has
+    /// the router mark and move the tag before it swaps shells, so the part keeps
+    /// playing however SwiftUI orders the two, and the new shell is drawn with the tag
+    /// already in place.
     func testThePartKeepsPlayingWhenTheOldPageGoesBeforeTheNewShellComes() throws {
         let router = TMRouter()
         router.showTag(1809, source: nil)
@@ -224,18 +225,19 @@ final class TMDuoTests: TMBehaviorTestCase {
         let tracks = model.tracks
         tracks.appeared(page: "stack")
 
-        router.shellWillChange()
+        router.shellWillChange(to: .book)
+        XCTAssertTrue(router.detail === model, "Opening: the tag is beside the list before the book is drawn")
+        XCTAssertTrue(router.path.isEmpty)
         tracks.disappeared(page: "stack")
-        XCTAssertFalse(tracks.hasLeft, "Opening: the stack's page went first")
-        router.setExpanded(true)
+        XCTAssertFalse(tracks.hasLeft, "The stack's page went first")
         tracks.appeared(page: "book")
-        XCTAssertTrue(router.detail === model)
         XCTAssertFalse(tracks.carriedAcross, "The book's page coming clears the mark")
 
-        router.shellWillChange()
+        router.shellWillChange(to: .stack)
+        XCTAssertTrue(router.path.last?.tagModel === model, "Closing: the tag is on the stack before it is drawn")
+        XCTAssertFalse(router.hasDetail)
         tracks.disappeared(page: "book")
-        XCTAssertFalse(tracks.hasLeft, "Closing: the book's page went first")
-        router.useStack()
+        XCTAssertFalse(tracks.hasLeft, "The book's page went first")
         tracks.appeared(page: "stack again")
         XCTAssertFalse(tracks.hasLeft)
 
@@ -281,6 +283,15 @@ final class TMDuoTests: TMBehaviorTestCase {
         let model = try XCTUnwrap(router.path.last?.tagModel)
         spinUntil("the tag loads") { model.tag != nil }
         model.selectedPage = .tracks
+        settle()
+        // A part playing on the stack's Tracks page.
+        let track = try XCTUnwrap(model.tracks.tracks.first)
+        let format = try XCTUnwrap(AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 2))
+        let buffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 44_100))
+        buffer.frameLength = 44_100
+        model.tracks.present(track, buffer: buffer)
+        settle()
+        XCTAssertTrue(model.tracks.playerVisible)
 
         open(host)
         spinUntil("the split takes the tag") { router.expanded && router.hasDetail }
@@ -288,8 +299,8 @@ final class TMDuoTests: TMBehaviorTestCase {
         XCTAssertTrue(router.path.isEmpty)
         XCTAssertTrue(model.expanded, "Beside the list the bar grows the steppers and toggles")
         XCTAssertEqual(model.selectedPage, .tracks)
-
         XCTAssertFalse(model.tracks.hasLeft, "The Tracks page going with the stack left the part alone")
+        XCTAssertTrue(model.tracks.playerVisible, "and the part is still in the player")
 
         close(host)
         spinUntil("the stack takes the tag") { router.path.last?.tagModel === model }
@@ -298,6 +309,40 @@ final class TMDuoTests: TMBehaviorTestCase {
         XCTAssertFalse(model.expanded)
         XCTAssertEqual(model.selectedPage, .tracks)
         XCTAssertFalse(model.tracks.hasLeft, "The Tracks page going with the book left the part alone")
+        XCTAssertTrue(model.tracks.playerVisible, "and the part is still in the player")
+    }
+
+    /// A video playing full screen holds the shell: turning the open Duo from upright
+    /// to wide under it would take the Videos page, and the video, down. The book
+    /// comes once the video closes.
+    func testAVideoPlayingHoldsTheShellUntilItCloses() throws {
+        seedCachedTag(id: 1809)
+        let router = TMRouter()
+        let host = UIHostingController(rootView: TMRootView(router: router))
+        host.traitOverrides.horizontalSizeClass = .regular
+        host.traitOverrides.verticalSizeClass = .regular
+        mount(host, size: CGSize(width: 669, height: 951))
+        router.showTag(1809, source: nil)
+        settle()
+        let model = try XCTUnwrap(router.path.last?.tagModel)
+        spinUntil("the tag loads") { model.tag != nil }
+        model.selectedPage = .videos
+        settle()
+        XCTAssertFalse(router.expanded, "Upright, the open Duo is the stack")
+
+        model.watching = URL(string: "https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+        spinUntil("the video comes up") { TMPresentingAnchor.top(host) !== host }
+        XCTAssertTrue(router.holdsShell)
+        open(host)
+        XCTAssertFalse(router.expanded, "Turned wide under the video, the shell holds")
+        XCTAssertTrue(router.path.last?.tagModel === model)
+        XCTAssertNotNil(model.watching, "and the video is still up")
+        XCTAssertTrue(TMPresentingAnchor.top(host) !== host)
+
+        TMPresentingAnchor.top(host).dismiss(animated: false)
+        model.watching = nil
+        spinUntil("the book comes once it closes") { router.expanded && router.detail === model }
+        XCTAssertEqual(model.selectedPage, .videos)
     }
 
     /// The list picker up when the Duo opens or closes: the control that opened it goes
@@ -340,6 +385,22 @@ final class TMDuoTests: TMBehaviorTestCase {
         open(host)
         spinUntil("the book takes the tag again") { router.expanded && router.hasDetail }
         XCTAssertNil(picker(), "A picker swiped away does not come back")
+
+        // The tag actions sheet left up while the Duo opens: its Add to List opens the
+        // picker from the book's own button, since the phone bar's tag button has gone.
+        close(host)
+        spinUntil("the stack takes the tag once more") { router.path.last?.tagModel === model }
+        model.showActions()
+        spinUntil("the actions sheet comes up") { TMPresentingAnchor.top(host) is UIAlertController }
+        open(host)
+        spinUntil("the book takes the tag with the sheet up") { router.expanded && router.hasDetail }
+        let add = try XCTUnwrap(model.tagActions.first { $0.title.hasPrefix("Add to List") })
+        // Choosing an action closes the sheet first, as UIKit does.
+        TMPresentingAnchor.top(host).dismiss(animated: false)
+        model.actionsPresented = false
+        add.handler()
+        XCTAssertEqual(model.pickerSource, .toolbar, "The book's Add to list button presents it")
+        model.pickerSource = nil
     }
 
     // MARK: - Tabletop: the music stand
@@ -359,7 +420,11 @@ final class TMDuoTests: TMBehaviorTestCase {
         seedCachedTag(id: 1809)
         let upright = CGSize(width: 669, height: 951)
         let fold = CGRect(x: 0, y: 455.5, width: upright.width, height: 40)
-        TMStandFold.simulated = { _ in fold }
+        // The band reaches the page in the page's own coordinates, as the real region
+        // does; the page's top in the window, measured once it is up, puts it on the crease.
+        var pageTop: CGFloat?
+        let crease: (CGSize) -> CGRect? = { _ in pageTop.map { fold.offsetBy(dx: 0, dy: -$0) } }
+        TMStandFold.simulated = crease
         defer { TMStandFold.simulated = nil }
         let router = TMRouter()
         let host = UIHostingController(rootView: TMRootView(router: router))
@@ -373,15 +438,28 @@ final class TMDuoTests: TMBehaviorTestCase {
         settle()
         let driver = UIDriver(window)
 
-        // Summary stands its lyrics; the key, Sheet Music and the facts lie below. (The
-        // fold is simulated in SwiftUI's global space, which inside the navigation
-        // stack is not the window's, so the halves are measured where they landed.)
+        // Flat, the page fills the stack: its top is where the stand will start. (The
+        // key, which sits high enough on the flat page to be on a small phone's screen.)
+        let top = try XCTUnwrap(scroller(holding: try XCTUnwrap(driver.element(id: "summary.key")))).minY
+        pageTop = top
+        window.frame = CGRect(origin: .zero, size: CGSize(width: upright.width, height: upright.height - 1))
+        settle()
+        window.frame = CGRect(origin: .zero, size: upright)
+        settle()
+        // The page stands with an animation: measure once it has.
+        spinUntil("the page stands") {
+            (driver.element(id: "summary.lyrics").flatMap(scroller(holding:))?.maxY ?? .infinity) <= fold.minY + 1
+        }
+
+        // Summary stands its lyrics; the key, Sheet Music and the facts lie below.
         let lyrics = try XCTUnwrap(driver.element(id: "summary.lyrics"), "Summary stands the lyrics")
         let key = try XCTUnwrap(driver.element(id: "summary.key"), "Summary's deck holds the key note")
         let music = try XCTUnwrap(driver.element(label: "Sheet Music"))
         let standing = try XCTUnwrap(scroller(holding: lyrics))
         let deck = try XCTUnwrap(scroller(holding: key))
-        XCTAssertEqual(deck.minY - standing.maxY, fold.height, accuracy: 1, "The fold's band lies between them")
+        XCTAssertEqual(standing.minY, top, accuracy: 1, "The page still starts where it did")
+        XCTAssertEqual(standing.maxY, fold.minY, accuracy: 1, "The standing half ends at the fold's band")
+        XCTAssertEqual(deck.minY, fold.maxY, accuracy: 1, "and the deck starts below it")
         XCTAssertLessThanOrEqual(lyrics.accessibilityFrame.maxY, standing.maxY, "The lyrics are whole above the fold")
         XCTAssertEqual(key.accessibilityFrame.minY - deck.minY, TMStandDeck.top, accuracy: 1,
                        "First on the deck, not floated down it")
@@ -405,10 +483,11 @@ final class TMDuoTests: TMBehaviorTestCase {
         let lead = try XCTUnwrap(driver.element(label: "Lead"), "Tracks' deck holds the parts")
         let standingLyrics = try XCTUnwrap(driver.element(id: "summary.lyrics"), "Tracks stands the lyrics too")
         let parts = try XCTUnwrap(scroller(holding: lead))
-        XCTAssertGreaterThanOrEqual(parts.minY - standingLyrics.accessibilityFrame.maxY, fold.height,
-                                    "The parts lie below the fold, the lyrics above it")
+        XCTAssertLessThanOrEqual(standingLyrics.accessibilityFrame.maxY, fold.minY, "The lyrics stand above the fold")
+        XCTAssertGreaterThanOrEqual(parts.minY, fold.maxY, "and the parts lie below it")
         XCTAssertEqual(lead.accessibilityFrame.maxX, upright.width - 16, accuracy: 1, "The parts run the page's width")
-        XCTAssertTrue(driver.exists(label: "Tap a part below to play it."))
+        XCTAssertNil(driver.element(label: "Tap a part below to play it."),
+                     "No hint on the standing half: it faces the singers, and the parts carry play icons")
 
         // The player comes in on the deck, under the parts, and the part it holds is marked.
         let track = try XCTUnwrap(model.tracks.tracks.first { $0.title == "Lead" })
@@ -426,7 +505,6 @@ final class TMDuoTests: TMBehaviorTestCase {
         XCTAssertTrue(["Playing", "Paused"].contains(playing.accessibilityValue ?? ""), "The part in the player is marked")
         XCTAssertGreaterThanOrEqual(playing.accessibilityFrame.minY, shortened.minY - 1, "and kept in view")
         XCTAssertLessThanOrEqual(playing.accessibilityFrame.maxY, shortened.maxY + 1)
-        XCTAssertFalse(driver.exists(label: "Tap a part below to play it."))
 
         // A part playing on the stand keeps playing as the device is laid flat: the
         // page stays where it was, so it never goes and stops the player.
@@ -436,6 +514,44 @@ final class TMDuoTests: TMBehaviorTestCase {
         XCTAssertTrue(driver.exists(label: "Lead"))
         XCTAssertEqual(driver.element(label: "Lead")?.accessibilityValue ?? "", "", "Laid flat, the page is whole again")
         XCTAssertTrue(model.tracks.playerVisible, "and the part is still in the player")
+    }
+
+    /// Folded mid-song, the deck comes up with a part already playing: it opens with
+    /// that part in view, not at the top of the list with the player covering it.
+    func testADeckComingUpMidSongShowsThePartPlaying() throws {
+        seedCachedTag(id: 1809)
+        let router = TMRouter()
+        mount(UIHostingController(rootView: TMRootView(router: router)), size: CGSize(width: 669, height: 951))
+        router.showTag(1809, source: nil)
+        settle()
+        let model = try XCTUnwrap(router.path.last?.tagModel)
+        spinUntil("the tag loads") { model.tag != nil }
+        model.selectedPage = .tracks
+        settle()
+        // The last part playing on the flat page; then only the deck, as a fold brings it.
+        let last = try XCTUnwrap(model.tracks.tracks.last)
+        let format = try XCTUnwrap(AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 2))
+        let buffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 44_100))
+        buffer.frameLength = 44_100
+        model.tracks.present(last, buffer: buffer)
+        settle()
+        model.tracks.carriedAcross = true
+        window.frame = CGRect(origin: .zero, size: CGSize(width: 669, height: 372))
+        window.rootViewController = UIHostingController(rootView: TMStandPartsDeck(model: model.tracks))
+        settle()
+        XCTAssertTrue(model.tracks.playerVisible)
+        let driver = UIDriver(window)
+        // The deck's one scroll view is the parts list.
+        let list = try XCTUnwrap(descendants(of: window) { $0 is UIScrollView }.first)
+        spinUntil("\(last.title ?? "") is in view on the deck") {
+            let parts = list.convert(list.bounds, to: nil)
+            // The row, a button; the player under the parts shows the same title as text.
+            guard let row = driver.elements.first(where: {
+                $0.accessibilityLabel == last.title && $0.accessibilityTraits.contains(.button)
+            }) else { return false }
+            return ["Playing", "Paused"].contains(row.accessibilityValue ?? "")
+                && row.accessibilityFrame.minY >= parts.minY - 1 && row.accessibilityFrame.maxY <= parts.maxY + 1
+        }
     }
 
     /// The window frame of the scroller showing `element`: a half of the stand.

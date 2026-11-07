@@ -71,7 +71,9 @@ the iOS 27.1 reserved-region API. Neither checks for the device.
   large text sizes), then the lists the tag is on and its facts. Tracks stands
   the recording notes and the lyrics; its deck holds the parts and, once one is
   chosen, the player under them, with the part in the player marked (Playing
-  or Paused) and kept in view. Details and Videos, pages to browse, stay whole
+  or Paused) and kept in view, folded mid-song included. The parts list flashes
+  its scroll indicator when the player cuts it short, and a part peeks below the
+  last whole row. Details and Videos, pages to browse, stay whole
   and scroll across the fold as Home and the lists do, as Apple's guidance has
   continuous content do. A tag's pages draw no barber pole while the fold is
   active: it ran from the words, across the crease and under the controls. A
@@ -81,9 +83,21 @@ the iOS 27.1 reserved-region API. Neither checks for the device.
 - **Opening, closing and turning carry the tag.** Opening moves the tag on top of
   the stack, with its sheet music, beside the list (`TMRouter.setExpanded(true)`);
   closing puts the tag beside the list on top of the stack (`TMRouter.useStack()`).
-  It is the same `TagDetailModel` both ways, so its page survives, and a part
-  playing on the Tracks page keeps playing: the page stops the player only once
-  no page showing the tag is left (`TagTracksModel.carriedAcross`).
+  The root does the move through `TMRouter.shellWillChange(to:)` before it swaps
+  shells, so the new shell is first drawn with the tag in place and the tag is
+  marked before SwiftUI can take the old page down. It is the same
+  `TagDetailModel` both ways, so its page survives, and a part playing on the
+  Tracks page keeps playing: the page stops the player only once no page showing
+  the tag is left (`TagTracksModel.carriedAcross`). While a page's full-window
+  cover is up (a video playing, sign-in), the shell holds still and swaps once it
+  closes (`TMRouter.holdsShell`): swapping would take the page, and the cover,
+  down with it.
+- **Sheets outlive their button.** The Add to list picker, the tag's action sheet
+  and the rating sheet each keep their own closer, and the same control in the new
+  shell adopts one already up (`TMPresentingAnchor.adoptsPresented`), so Done, a
+  swipe or a tap outside still closes them after the device opens or closes, and
+  none comes back by itself. Add to List from an action sheet left up while the
+  Duo opens opens the picker from the book's own button.
 - **Menus float on the open display.** The Add to list picker and the tag's
   action sheet anchor to their button as popovers in a window regular both ways
   (`UITraitCollection.tmFloatsPopovers`); a closed Duo gets the phone's sheets.
@@ -122,7 +136,9 @@ DESIGN.md's *Folded (iPhone Duo)* section is the design record; in short:
   on iPad (`isRegularSpace`); banners still show, as on any phone, sized from
   their window's shape rather than the interface orientation. In tabletop the
   banner moves to the top of the upper half (`InstrumentPage`), so the ring below
-  the fold gets its room and never sits against an ad.
+  the fold gets its room and never sits against an ad. It is the same banner view
+  either way (`BannerStack`), so folding keeps the ad it loaded rather than
+  requesting another.
 
 ## Testing
 

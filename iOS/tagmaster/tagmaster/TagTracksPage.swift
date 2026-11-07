@@ -61,10 +61,6 @@ struct TagTracksPage: View {
                 TMFactText(text: method)
             }
             if onStand {
-                if !model.playerVisible, !model.tracks.isEmpty {
-                    TMFactText(text: "Tap a part below to play it.")
-                        .foregroundStyle(Color(.secondaryLabel))
-                }
                 if let lyrics = model.tag?.lyrics, !lyrics.isEmpty {
                     TMLyrics(text: lyrics, standing: true)
                         .padding(.top, 8)

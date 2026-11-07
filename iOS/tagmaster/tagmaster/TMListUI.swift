@@ -83,7 +83,7 @@ extension View {
 struct TMLabelBox: Layout {
     let font: UIFont
     /// The pixel grid: the display the view is on (an iPhone Duo has two).
-    var scale: CGFloat = 3
+    var scale: CGFloat
 
     /// UILabel's height for `lines` lines of `font`.
     static func height(lines: CGFloat, font: UIFont, scale: CGFloat) -> CGFloat {

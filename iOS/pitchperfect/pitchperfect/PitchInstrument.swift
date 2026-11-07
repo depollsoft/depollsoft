@@ -130,7 +130,7 @@ struct InstrumentGeometry: Equatable, PitchFaceLayout {
         rangeLowRect = CGRect(x: faceCenter.x - rangeWidth / 2, y: rangeTop, width: rangeWidth, height: rowHeight)
         rangeHighRect = CGRect(x: rangeLowRect.minX, y: rangeLowRect.maxY, width: rangeWidth, height: rowHeight)
         // The hole holds nothing else then, and two 44-point targets fit inside the
-        // cells' own: in tabletop about 66 points from the centre at the corners, against 80.
+        // cells' own touch circles, corners included (the fold tests check both poses).
         let reach = display == nil ? 0 : max(44 - rowHeight, 0)
         rangeLowTarget = CGRect(x: rangeLowRect.minX, y: rangeLowRect.minY - reach,
                                 width: rangeWidth, height: rowHeight + reach)
@@ -264,12 +264,6 @@ enum Fold {
 }
 
 extension View {
-    /// Lays the view out again whenever the hinge opens or folds, so a face
-    /// reading `Fold.band` meets the fold as it comes and goes.
-    func refreshesOnFold(_ status: Binding<Int>) -> some View {
-        hingeStatus(status)
-    }
-
     /// Centres the view, top-aligned, on the space it is given, or on the
     /// leading page when a fold runs down that space (an iPhone Duo held like
     /// a book), so a centred prompt never sits on the crease.
@@ -296,7 +290,7 @@ private struct CentredOffTheFold: ViewModifier {
                 .frame(maxHeight: .infinity, alignment: .top)
                 .offset(x: layoutDirection == .leftToRight ? page.minX : bounds.maxX - page.maxX)
         }
-        .refreshesOnFold($hingeStatus)
+        .hingeStatus($hingeStatus)
     }
 }
 
@@ -902,7 +896,7 @@ struct PitchInstrumentView: View {
             // The cells VoiceOver knew have moved: let it find them again.
             .onChange(of: geometry.posture) { UIAccessibility.post(notification: .layoutChanged, argument: nil) }
         }
-        .refreshesOnFold($hingeStatus)
+        .hingeStatus($hingeStatus)
     }
 
     /// One breath every four seconds.

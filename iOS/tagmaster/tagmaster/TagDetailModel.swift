@@ -166,6 +166,10 @@ final class TagDetailModel {
     var actionsPresented = false
     /// Where the "Add to list" picker is anchored while it is up (a popover on iPad).
     var pickerSource: TMPickerSource?
+    /// The video playing full screen over the tag. On the model, not the page, so the
+    /// root can see it and hold the shell still while it plays (an iPhone Duo turned
+    /// or opened under a video would otherwise take the page and the video down).
+    var watching: URL?
     var error: TMRecovery?
 
     var navigator = TMDetailNavigator()
@@ -345,7 +349,13 @@ final class TagDetailModel {
         [
             TMSheetAction(title: isFavorite ? "Remove Favorite" : "Add Favorite") { [weak self] in self?.toggleFavorite() },
             TMSheetAction(title: isTeachable ? "Unmark as Teachable" : "Mark as Teachable") { [weak self] in self?.toggleTeachable() },
-            TMSheetAction(title: "Add to List…") { [weak self] in self?.showListPicker(from: .actions) },
+            // The sheet can outlive its button: an iPhone Duo opened under it swaps the
+            // phone bar (whose tag button presents from .actions) for the book's, whose
+            // Add to list button presents from .toolbar.
+            TMSheetAction(title: "Add to List…") { [weak self] in
+                guard let self else { return }
+                showListPicker(from: expanded ? .toolbar : .actions)
+            },
             TMSheetAction(title: "Cancel", style: .cancel) {},
         ]
     }

@@ -53,7 +53,6 @@ struct TMVideoRow: Identifiable {
 
 struct TagVideosPage: View {
     let model: TagDetailModel
-    @State private var watching: URL?
 
     var body: some View {
         if let tag = model.tag {
@@ -82,10 +81,10 @@ struct TagVideosPage: View {
             }
             .tmGroupedTableMetrics()
             // A video can play for longer than the quiet a review waits for; its end is a sound too.
-            .fullScreenCover(item: Binding(get: { watching.map(TMWatchedURL.init) },
-                                           set: { watching = $0?.url }),
+            .fullScreenCover(item: Binding(get: { model.watching.map(TMWatchedURL.init) },
+                                           set: { model.watching = $0?.url }),
                              onDismiss: { TagMasterUsage.soundStopped() }) { watched in
-                TMSafariView(url: watched.url) { watching = nil }
+                TMSafariView(url: watched.url) { model.watching = nil }
                     .ignoresSafeArea()
             }
         }
@@ -93,7 +92,7 @@ struct TagVideosPage: View {
 
     private func row(_ video: TMVideoRow) -> some View {
         Button {
-            watching = video.watch
+            model.watching = video.watch
             TagMasterUsage.videoOpened()
         } label: {
             HStack(alignment: .top, spacing: 12) {

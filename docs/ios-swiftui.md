@@ -142,7 +142,7 @@ the XCUITest bundles and `scripts/release/capture.py` use them.
   shape. Idiom checks remain only where the thing is the device's own: iPadOS's
   top tab bar (`TabBarChrome`) and where banners show (phones). The faces read
   the fold with `Fold.band(in:)` (the active division reserved region, iOS 27.1)
-  and lay out again on each hinge state change (`refreshesOnFold`;
+  and lay out again on each hinge state change (`hingeStatus`, shared with Tag Master in `iOS/shared/HingeStatusWatch.swift`;
   `centredOffTheFold` does the same for a centred prompt, Songs' empty list);
   `InstrumentGeometry(size:count:fold:displayOnLeft:)` and
   `ClassicGeometry(size:count:selectorSize:fold:)` take the band as a plain

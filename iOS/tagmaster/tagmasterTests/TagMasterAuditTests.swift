@@ -121,7 +121,7 @@ final class TagDetailAuditTests: TMBehaviorTestCase {
         // fits beside the captions on a phone; a fixed 17-point cap would keep them side by side.
         let large = DynamicTypeSize.large.tmFont(.body)
         let huge = DynamicTypeSize.accessibility5.tmFont(.body)
-        XCTAssertEqual(TMFactsLayout(bodyFont: large).bodyFont.pointSize, large.pointSize)
+        XCTAssertEqual(TMFactsLayout(bodyFont: large, scale: 3).bodyFont.pointSize, large.pointSize)
         XCTAssertGreaterThan(huge.pointSize * 8, 402, "The cap outgrows a phone at the largest size")
         XCTAssertLessThan(large.pointSize * 8, 402 - 80)
     }

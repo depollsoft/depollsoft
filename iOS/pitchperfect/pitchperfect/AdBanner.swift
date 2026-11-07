@@ -129,13 +129,12 @@ struct InstrumentPage<Content: View>: View {
     @State private var hingeStatus = 0
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Standing, the banner tops the upper half, so the keys on the lower half
-            // under the fingers have the room it took and never sit against an ad.
-            if showsBanner, standing { banner }
+        // Standing, the banner tops the upper half, so the keys on the lower half
+        // under the fingers have the room it took and never sit against an ad.
+        BannerStack(bannerOnTop: standing) {
+            if showsBanner { banner }
             content()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-            if showsBanner, !standing { banner }
         }
         .background {
             GeometryReader { proxy in
@@ -156,6 +155,34 @@ struct InstrumentPage<Content: View>: View {
     private var banner: some View {
         BannerAdSlot()
             .accessibilityHidden(true)
+    }
+}
+
+/// The banner (first, when there is one) docked below the content or topping it. One
+/// layout either way, so moving it keeps the same banner view and the ad it loaded,
+/// rather than building a new one that requests another ad on every fold.
+struct BannerStack: Layout {
+    var bannerOnTop: Bool
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        proposal.replacingUnspecifiedDimensions()
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        guard subviews.count == 2 else {
+            subviews.first?.place(at: bounds.origin, proposal: ProposedViewSize(bounds.size))
+            return
+        }
+        let banner = subviews[0], content = subviews[1]
+        let bannerHeight = min(banner.sizeThatFits(ProposedViewSize(width: bounds.width, height: nil)).height,
+                               bounds.height)
+        let contentHeight = bounds.height - bannerHeight
+        let bannerY = bannerOnTop ? bounds.minY : bounds.minY + contentHeight
+        let contentY = bannerOnTop ? bounds.minY + bannerHeight : bounds.minY
+        banner.place(at: CGPoint(x: bounds.minX, y: bannerY),
+                     proposal: ProposedViewSize(width: bounds.width, height: bannerHeight))
+        content.place(at: CGPoint(x: bounds.minX, y: contentY),
+                      proposal: ProposedViewSize(width: bounds.width, height: contentHeight))
     }
 }
 

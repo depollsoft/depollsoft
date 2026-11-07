@@ -184,8 +184,8 @@ struct TMRootView: View {
     @Environment(\.horizontalSizeClass) private var horizontal
     @Environment(\.verticalSizeClass) private var vertical
     /// The shell on screen. It follows the window a beat later, once the router has
-    /// marked the tag it is about to carry, since SwiftUI may take the old shell's
-    /// pages down before the new shell appears.
+    /// marked and moved the tag it carries (SwiftUI may take the old shell's pages down
+    /// before the new shell appears), and not while a cover holds the shell.
     @State private var shell: TMShellLayout?
 
     var body: some View {
@@ -201,10 +201,18 @@ struct TMRootView: View {
                 }
             }
             .onAppear { shell = layout }
-            .onChange(of: layout) { _, new in
-                router.shellWillChange()
-                shell = new
-            }
+            .onChange(of: layout) { _, new in move(to: new) }
+            .onChange(of: router.holdsShell) { _, holds in if !holds { move(to: layout) } }
+        }
+    }
+
+    private func move(to new: TMShellLayout) {
+        guard shell != new, !router.holdsShell else { return }
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            router.shellWillChange(to: new)
+            shell = new
         }
     }
 }

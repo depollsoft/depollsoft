@@ -148,13 +148,33 @@ final class TMRouter {
         selectionChanged()
     }
 
-    /// The window is about to swap shells (an iPhone Duo opening, closing or turning).
-    /// The tags either shell could carry across are marked first, so an old Tracks page
-    /// going before the new shell comes up does not stop the part that is playing.
-    /// The new shell's appearance then moves the tag, and its page coming clears the mark.
-    func shellWillChange() {
+    /// The window is about to swap to `layout`'s shell (an iPhone Duo opening, closing or
+    /// turning). The tags either shell could carry are marked, so an old Tracks page going
+    /// does not stop the part that is playing (its new page coming clears the mark), and
+    /// the open tag moves now, so the new shell is first drawn with it in place.
+    func shellWillChange(to layout: TMShellLayout) {
         if hasDetail { detail.carryAcross() }
         if let index = path.lastIndex(where: { $0.tagModel != nil }) { path[index].tagModel?.carryAcross() }
+        switch layout {
+        case .book: setExpanded(true)
+        case .stack: useStack()
+        // An iPad's split collapses and widens itself, following its size class.
+        case .split: break
+        }
+    }
+
+    /// Something a page presents over the whole window is up (a video playing, sign-in).
+    /// Swapping shells would take the page presenting it down with it, so the root
+    /// waits for it to close; the cover hides the shell meanwhile.
+    var holdsShell: Bool {
+        if hasDetail, detail.watching != nil { return true }
+        return path.contains { route in
+            switch route.kind {
+            case .tag(let model): model.watching != nil
+            case .screen(_, .settings(let settings)): settings.showingSignIn
+            default: false
+            }
+        }
     }
 
     /// The shell is drawing one stack, with no column beside it (an iPhone, or an

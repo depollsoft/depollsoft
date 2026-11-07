@@ -239,7 +239,7 @@ struct ClassicRenderer {
 
             let natural = naturals.indices.contains(index) && naturals[index]
             let color = isPlaying ? onLit : (natural ? ink : inkSecondary)
-            let label = fitted(within: CGSize(width: button.width * 0.8, height: button.height * 0.6)) { scale in
+            let label = ReadoutPainter.fitted(within: CGSize(width: button.width * 0.8, height: button.height * 0.6)) { scale in
                 natural
                     ? NSAttributedString(string: notes[index].friendlyName ?? "",
                                          attributes: [.font: DPTheme.condensedFont(size: naturalSize * scale), .foregroundColor: color])
@@ -250,10 +250,6 @@ struct ClassicRenderer {
         }
 
         drawReadout(ink: ink, inkSecondary: inkSecondary)
-    }
-
-    private func fitted(within bounds: CGSize, _ make: (CGFloat) -> NSAttributedString) -> NSAttributedString {
-        ReadoutPainter.fitted(within: bounds, make)
     }
 
     /// The radial face's readout, centred in the well; a short readout (a phone
@@ -271,6 +267,7 @@ struct ClassicPitchPipeView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.layoutDirection) private var layoutDirection
     /// The range control's own size, measured.
     @State private var selectorSize = CGSize(width: 150, height: 32)
     /// The hinge's state, so the grid is laid out again as a fold comes and goes.
@@ -303,8 +300,12 @@ struct ClassicPitchPipeView: View {
                 )
                 accessibilityElements(geometry)
                 rangePicker
+                    .environment(\.layoutDirection, layoutDirection)
                     .frame(width: geometry.selectorRect.width)
                     .position(x: geometry.selectorRect.midX, y: geometry.selectorRect.midY)
+                    // Placed in the grid's fixed left-to-right coordinates, as the cells are
+                    // drawn and touched; the control itself reads in the user's direction.
+                    .environment(\.layoutDirection, .leftToRight)
                     // It fades to its new place with the grid rather than sliding across it.
                     .id(geometry.posture)
                     .transition(.opacity)
@@ -320,7 +321,7 @@ struct ClassicPitchPipeView: View {
             .onAppear { model.classicGeometry = geometry }
             .onChange(of: geometry) { _, new in model.classicGeometry = new }
         }
-        .refreshesOnFold($hingeStatus)
+        .hingeStatus($hingeStatus)
     }
 
     /// The old app's segmented control.

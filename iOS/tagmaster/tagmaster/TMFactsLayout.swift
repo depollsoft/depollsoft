@@ -50,7 +50,7 @@ struct TMFactsLayout: Layout {
     /// width and the line height grow with it, as UIKit's label font did.
     var bodyFont: UIFont = .preferredFont(forTextStyle: .body)
     /// The pixel grid: the display the view is on (an iPhone Duo has two).
-    var scale: CGFloat = 3
+    var scale: CGFloat
 
     private struct Row {
         var captionFrame: CGRect

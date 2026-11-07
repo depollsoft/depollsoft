@@ -95,27 +95,28 @@ struct TMActionSheet: UIViewRepresentable {
     /// bubble at the control (no Cancel row), as the rating sheet always was.
     var anchoredEverywhere = false
 
-    /// Hears a popover dismissed by a tap outside it, which runs no action.
-    final class Coordinator: NSObject, UIPopoverPresentationControllerDelegate {
-        var dismissed: () -> Void = {}
+    /// Hears a popover dismissed by a tap outside it, which runs no action. The sheet
+    /// holds it, so it still clears the request after the control that opened it has
+    /// gone (an iPhone Duo opening, closing or turning swaps the whole shell).
+    final class Closer: NSObject, UIPopoverPresentationControllerDelegate {
+        let dismissed: () -> Void
+        init(dismissed: @escaping () -> Void) { self.dismissed = dismissed }
         func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
             dismissed()
         }
     }
 
-    func makeCoordinator() -> Coordinator { Coordinator() }
+    private static var closerKey: UInt8 = 0
 
     func makeUIView(context: Context) -> TMPresentingAnchor { TMPresentingAnchor() }
 
     func updateUIView(_ anchor: TMPresentingAnchor, context: Context) {
         let binding = $isPresented
-        let coordinator = context.coordinator
-        coordinator.dismissed = { [weak anchor] in
-            anchor?.forget()
-            binding.wrappedValue = false
-        }
         let actions = actions, title = title, message = message, anchoredEverywhere = anchoredEverywhere
         anchor.alreadyUp = { $0 is UIAlertController }
+        // A sheet already up for this control (opened from its copy in the shell the
+        // window had before) is this control's to close now.
+        anchor.adoptsPresented = true
         anchor.make = { anchor in
             let sheet = UIAlertController(title: title, message: message, preferredStyle: .actionSheet)
             for action in actions {
@@ -131,7 +132,12 @@ struct TMActionSheet: UIViewRepresentable {
             }
             // iPhone shows the classic centred card; iPad, and an open iPhone Duo, need a popover source.
             if anchoredEverywhere || anchor.traitCollection.tmFloatsPopovers {
-                sheet.popoverPresentationController?.delegate = coordinator
+                let closer = Closer { [weak anchor] in
+                    anchor?.forget()
+                    binding.wrappedValue = false
+                }
+                objc_setAssociatedObject(sheet, &TMActionSheet.closerKey, closer, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+                sheet.popoverPresentationController?.delegate = closer
                 sheet.popoverPresentationController?.sourceView = anchor
                 sheet.popoverPresentationController?.sourceRect = anchor.bounds
             }

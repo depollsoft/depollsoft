@@ -273,14 +273,34 @@ final class FoldedPitchPipeTests: PitchPerfectTestCase {
         try await super.tearDown()
     }
 
+    /// How far SwiftUI's global space, which `Fold.simulated` is given, sits from the
+    /// window's inside the tab's navigation stack: measured on the face itself.
+    private func globalOffset() throws -> CGPoint {
+        var seen: [CGRect] = []
+        Fold.simulated = { frame in seen.append(frame); return nil }
+        defer { Fold.simulated = nil }
+        let app = try launch()
+        defer { app.tearDown() }
+        app.show(tab: 0)
+        ScreenCatalog.settle(0.3)
+        let face = try XCTUnwrap(app.descendants(of: MultiTouchSurface.Surface.self, in: app.window)
+            .first { $0.window != nil })
+        let global = try XCTUnwrap(seen.last { abs($0.width - face.bounds.width) < 0.5
+            && abs($0.height - face.bounds.height) < 0.5 }, "The face's frame reached the simulation")
+        let origin = face.convert(CGPoint.zero, to: nil)
+        return CGPoint(x: origin.x - global.minX, y: origin.y - global.minY)
+    }
+
     func testEveryControlVoiceOverReachesIsClearOfTheCrease() throws {
         let bounds = try XCTUnwrap(ScreenCatalog.scene).coordinateSpace.bounds
         let folds = [CGRect(x: 0, y: bounds.midY - 12, width: bounds.width, height: 24),
                      CGRect(x: bounds.midX - 12, y: 0, width: 24, height: bounds.height)]
+        // The folds are in window coordinates, where VoiceOver's frames are.
+        let offset = try globalOffset()
         for classic in [false, true] {
             for fold in folds {
                 DPSettingsModel.sharedInstance.classicPitchPipe = classic
-                Fold.simulated = { _ in fold }
+                Fold.simulated = { _ in fold.offsetBy(dx: -offset.x, dy: -offset.y) }
                 let app = try launch()
                 app.show(tab: 0)
                 let model = app.models.pitchPipe
@@ -296,6 +316,43 @@ final class FoldedPitchPipeTests: PitchPerfectTestCase {
                 app.tearDown()
             }
         }
+    }
+
+    /// Folding to tabletop moves the banner to the top of the upper half and back: the
+    /// same banner view each way, so the ad it loaded stays, rather than a new one
+    /// being requested on every fold.
+    func testTheBannerMovesWithoutBeingRebuilt() throws {
+        DPSettingsModel.sharedInstance.classicPitchPipe = false
+        let app = try launch()
+        app.show(tab: 0)
+        ScreenCatalog.settle(0.3)
+        func banner() -> BannerHostView? {
+            app.descendants(of: BannerHostView.self, in: app.window).first { $0.window != nil }
+        }
+        func top(_ view: UIView?) -> CGFloat { view.map { $0.convert($0.bounds, to: nil).minY } ?? .nan }
+        func face() -> UIView? {
+            app.descendants(of: MultiTouchSurface.Surface.self, in: app.window).first { $0.window != nil }
+        }
+        func relayout() {
+            let frame = app.window.frame
+            app.window.frame = frame.insetBy(dx: 0, dy: 1)
+            ScreenCatalog.settle(0.3)
+            app.window.frame = frame
+            ScreenCatalog.settle(0.3)
+        }
+        let flat = try XCTUnwrap(banner())
+        XCTAssertGreaterThan(top(flat), top(face()), "Flat, the banner docks below the face")
+
+        Fold.simulated = { frame in CGRect(x: frame.minX, y: frame.midY - 20, width: frame.width, height: 40) }
+        relayout()
+        XCTAssertTrue(banner() === flat, "Folded, it is the same banner")
+        XCTAssertLessThan(top(banner()), top(face()), "on top of the upper half")
+
+        Fold.simulated = nil
+        relayout()
+        XCTAssertTrue(banner() === flat, "and still the same one laid flat again")
+        XCTAssertGreaterThan(top(banner()), top(face()))
+        app.tearDown()
     }
 
     /// Right to left, both faces are still drawn and touched in fixed coordinates,
