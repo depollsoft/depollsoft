@@ -141,14 +141,16 @@ struct TMActionSheet: UIViewRepresentable {
                     action.handler()
                 })
             }
+            // Every sheet holds its closer, a centred card too: one opened on a closed Duo
+            // and left up while it opens becomes a popover there, which a tap outside closes.
+            let closer = Closer { [weak anchor] in
+                anchor?.forget()
+                binding.wrappedValue = false
+            }
+            objc_setAssociatedObject(sheet, &TMActionSheet.closerKey, closer, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            sheet.popoverPresentationController?.delegate = closer
             // iPhone shows the classic centred card; iPad, and an open iPhone Duo, need a popover source.
             if anchoredEverywhere || anchor.traitCollection.tmFloatsPopovers {
-                let closer = Closer { [weak anchor] in
-                    anchor?.forget()
-                    binding.wrappedValue = false
-                }
-                objc_setAssociatedObject(sheet, &TMActionSheet.closerKey, closer, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-                sheet.popoverPresentationController?.delegate = closer
                 sheet.popoverPresentationController?.sourceView = anchor
                 sheet.popoverPresentationController?.sourceRect = anchor.bounds
             }

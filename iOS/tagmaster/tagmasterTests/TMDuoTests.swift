@@ -433,6 +433,34 @@ final class TMDuoTests: TMBehaviorTestCase {
         model.pickerSource = nil
     }
 
+    /// The tag actions opened on the closed Duo, a centred card with no popover source,
+    /// and left up while it opens: the book's control adopts it, and tapped away there
+    /// it stays closed.
+    func testAnActionSheetFromTheClosedDuoClosesForGoodInTheBook() throws {
+        seedCachedTag(id: 1809)
+        let router = TMRouter()
+        let host = UIHostingController(rootView: TMRootView(router: router))
+        host.traitOverrides.horizontalSizeClass = .compact
+        host.traitOverrides.verticalSizeClass = .regular
+        mount(host, size: TMDuoTests.outer)
+        router.showTag(1809, source: nil)
+        settle()
+        let model = try XCTUnwrap(router.path.last?.tagModel)
+        spinUntil("the tag loads") { model.tag != nil }
+        model.showActions()
+        spinUntil("the actions sheet comes up") { TMPresentingAnchor.top(host) is UIAlertController }
+        let sheet = try XCTUnwrap(TMPresentingAnchor.top(host) as? UIAlertController)
+        open(host)
+        spinUntil("the book takes the tag with the sheet up") { router.expanded && router.hasDetail }
+        // A tap outside: UIKit dismisses it and tells its delegate; no action runs.
+        let presentation = try XCTUnwrap(sheet.popoverPresentationController)
+        sheet.dismiss(animated: false)
+        presentation.delegate?.presentationControllerDidDismiss?(presentation)
+        spinUntil("the tap clears the request") { !model.actionsPresented }
+        settle()
+        XCTAssertFalse(TMPresentingAnchor.top(host) is UIAlertController, "and the sheet doesn't come back")
+    }
+
     // MARK: - Tabletop: the music stand
 
     func testAPageOnlyStandsOnAFoldRightAcrossItWithRoomOnBothSides() {
