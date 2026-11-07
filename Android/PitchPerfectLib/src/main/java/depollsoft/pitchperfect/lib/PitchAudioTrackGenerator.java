@@ -113,7 +113,9 @@ public class PitchAudioTrackGenerator {
       public void invoke(Integer requested) {
         try {
           int room = track.getCapacityFrames() - track.getQueuedFrames();
-          int frames = Math.min(room, Math.max(requested, WAVE_MIN_WRITE_FRAMES));
+          // The platform's buffer can outgrow the samples (a new output), so a fill takes more writes.
+          int frames = Math.min(Math.min(room, Math.max(requested, WAVE_MIN_WRITE_FRAMES)),
+              samples.length / numChannels);
           if (requested <= 0 || frames <= 0)
             return;
           fillWave(source, samples, frames, numChannels);

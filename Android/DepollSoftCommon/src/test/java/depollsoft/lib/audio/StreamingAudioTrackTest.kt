@@ -47,6 +47,18 @@ class StreamingAudioTrackTest {
         /** Whether the head moves on every read, as a playing track's does between the watcher's polls. */
         @Volatile var headMovesOnEveryRead = false
 
+        /** The platform's buffer in frames, when it's bigger than the one asked for. */
+        @Volatile var platformFrames = 0
+
+        /** When set, a write waits for it, as one blocked in the platform does. */
+        @Volatile var holdWrites: CountDownLatch? = null
+
+        /** Counted down when a write reaches the platform. */
+        val writing = CountDownLatch(1)
+
+        /** How many times the watcher has read the head. */
+        val watcherReads = AtomicInteger()
+
         private val reads = AtomicInteger()
 
         override fun writeToPlatform(
@@ -54,12 +66,19 @@ class StreamingAudioTrackTest {
             offsetInShorts: Int,
             sizeInShorts: Int,
         ): Int {
+            writing.countDown()
+            holdWrites?.await(5, TimeUnit.SECONDS)
             val taken = minOf(sizeInShorts, nextWriteTakes)
             nextWriteTakes = Int.MAX_VALUE
             return taken
         }
 
-        override fun getPlaybackHeadPosition() = if (headMovesOnEveryRead) head + reads.incrementAndGet() else head
+        override fun platformBufferFrames() = platformFrames
+
+        override fun getPlaybackHeadPosition(): Int {
+            if (Thread.currentThread().name == StreamingAudioTrack.WATCHER_THREAD_NAME) watcherReads.incrementAndGet()
+            return if (headMovesOnEveryRead) head + reads.incrementAndGet() else head
+        }
     }
 
     // A wave's track: a second's buffer, kept a fifth of a second ahead.
@@ -288,6 +307,8 @@ class StreamingAudioTrackTest {
             short.setPrimesBeforePlay(true)
             short.play()
             assertTrue(awaitWritten(short, 4096))
+            // Let the watcher see the head at 0 first, so it sees it move and takes the track as started.
+            assertTrue(awaitWatcherRead(short))
 
             // The head moves once, then stands still with 3996 frames queued, more than the threshold.
             short.head = 100
@@ -321,6 +342,62 @@ class StreamingAudioTrackTest {
             short.pause()
             short.release()
         }
+    }
+
+    @Test
+    fun aTrackWhoseBufferThePlatformGrowsIsFilledToItsNewSize() {
+        // A track recreated for another output (Bluetooth headphones) gets that output's minimum
+        // buffer, which can be bigger than the one asked for. The platform holds it back until the
+        // bigger buffer is full, so filling to the old size left it silent.
+        val grown = instrumentLikeTrack()
+        try {
+            grown.setBufferFiller(boundedFiller(grown))
+            grown.setPrimesBeforePlay(true)
+            grown.play()
+            assertTrue(awaitWritten(grown, 4096))
+
+            grown.platformFrames = 6144
+
+            assertEquals(6144, grown.capacityFrames)
+            assertTrue("the watcher fills the bigger buffer: $fills", awaitWritten(grown, 6144))
+        } finally {
+            grown.pause()
+            grown.release()
+        }
+    }
+
+    @Test
+    fun aWriteInFlightAsTheTrackIsFlushedDoesNotCountAfterIt() {
+        // A reset waits only so long for the watcher before it flushes. A write that outlasted the
+        // wait must not count against the next note's prime, which would then come up short.
+        val flushed = instrumentLikeTrack()
+        try {
+            val filler = Action<Int> { flushed.write(samples, 0, it) }
+            flushed.setBufferFiller(filler)
+            val release = CountDownLatch(1)
+            flushed.holdWrites = release
+            // As the watcher does, the write holds the filler's lock.
+            val writer = Thread { synchronized(filler) { filler.invoke(1024) } }.apply { start() }
+            assertTrue(flushed.writing.await(5, TimeUnit.SECONDS))
+
+            val flusher = Thread { flushed.flush() }.apply { start() }
+            val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5)
+            while (flusher.isAlive && flusher.state != Thread.State.BLOCKED && System.nanoTime() < deadline) Thread.sleep(1)
+            release.countDown()
+            writer.join(5000)
+            flusher.join(5000)
+
+            assertEquals("the flush discarded the write, so its frames don't count", 0, flushed.writtenFrames)
+        } finally {
+            flushed.release()
+        }
+    }
+
+    /** Whether the watcher reads [target]'s head within a second. */
+    private fun awaitWatcherRead(target: FakePlatformTrack): Boolean {
+        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(1)
+        while (target.watcherReads.get() == 0 && System.nanoTime() < deadline) Thread.sleep(1)
+        return target.watcherReads.get() > 0
     }
 
     private fun awaitFill(): Boolean {

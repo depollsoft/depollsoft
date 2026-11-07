@@ -21,4 +21,13 @@ class TakingAudioTrackShadow : ShadowAudioTrack() {
         format: Int,
         isBlocking: Boolean,
     ): Int = sizeInShorts
+
+    @Suppress("FunctionName")
+    @Implementation
+    override fun native_get_buffer_size_frames(): Int = super.native_get_buffer_size_frames() + extraFrames
+
+    companion object {
+        /** Frames every track's platform buffer has beyond the one asked for, as on an output that needs more. */
+        @Volatile var extraFrames = 0
+    }
 }

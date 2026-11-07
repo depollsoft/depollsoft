@@ -37,10 +37,11 @@ public class StreamingAudioTrack extends AudioTrack {
           // The platform holds a streaming track back until its whole buffer is full, and the
           // mixer drops one that runs dry until something writes to it again. A track restarted
           // before the server discarded what a flush left can come up a few frames short, and
-          // filling only to the threshold would never send them. So until the head first moves,
-          // and whenever it has stood still a while, fill the whole buffer.
+          // one recreated for a new output (Bluetooth, say) can have a bigger buffer than before.
+          // Filling only to the threshold would leave either waiting. So until the head first
+          // moves, and whenever it has stood still a while, fill the whole buffer.
           boolean stalled = !started || now - lastMoved >= STALL_NANOS;
-          int target = stalled ? StreamingAudioTrack.this.capacityFrames
+          int target = stalled ? StreamingAudioTrack.this.getCapacityFrames()
               : StreamingAudioTrack.this.bufferFrameThreshold;
           // Fill to the target unless stopped, and only while the filler gets something in: one
           // that can't write (its track is gone) would otherwise hold the watcher here forever.
@@ -80,8 +81,9 @@ public class StreamingAudioTrack extends AudioTrack {
 
   /**
    * How long a playing track's head may stand still before the watcher fills its whole buffer, as
-   * it does before the track first starts. Longer than any mixer period, so a track that is playing
-   * never looks stalled between the mixer's reads.
+   * it does before the track first starts. Several times a typical mixer period (about 20 ms). On an
+   * output whose mixer reads less often than this, a playing track looks stalled between reads and
+   * is kept full, which adds latency but never silence.
    */
   static final long STALL_NANOS = 100_000_000L;
 
@@ -94,6 +96,7 @@ public class StreamingAudioTrack extends AudioTrack {
 
   private int bytesPerSample;
   private int bufferFrameThreshold;
+  // The buffer asked for. The platform's can be bigger: see getCapacityFrames().
   private final int capacityFrames;
   private boolean primesBeforePlay;
   private Object threadLock = new Object();
@@ -132,9 +135,23 @@ public class StreamingAudioTrack extends AudioTrack {
     return this.writtenFrames - this.getPlaybackHeadPosition();
   }
 
-  /** The buffer's size in frames. */
+  /**
+   * The buffer's size in frames. The platform makes a buffer at least as big as its output needs,
+   * so it can be bigger than the one asked for, and it can grow: moving to another output (Bluetooth
+   * headphones, say) recreates the track with that output's minimum. So this asks the platform.
+   */
   public int getCapacityFrames() {
-    return this.capacityFrames;
+    return Math.max(this.capacityFrames, this.platformBufferFrames());
+  }
+
+  /** The platform's buffer in frames, or 0 once its native track is gone; tests replace it. */
+  int platformBufferFrames() {
+    try {
+      return this.getBufferSizeInFrames();
+    }
+    catch (IllegalStateException e) {
+      return 0;
+    }
   }
 
   /**
@@ -208,8 +225,18 @@ public class StreamingAudioTrack extends AudioTrack {
 
   @Override
   public void flush() {
-    super.flush();
-    this.writtenFrames = 0;
+    // A fill writes and counts holding the filler's lock. A reset waits only so long for the
+    // watcher, so a write it outlasted could otherwise count after the flush, against the next note.
+    Action<Integer> filler = this.bufferFiller;
+    if (filler == null) {
+      super.flush();
+      this.writtenFrames = 0;
+      return;
+    }
+    synchronized (filler) {
+      super.flush();
+      this.writtenFrames = 0;
+    }
   }
 
   @Override
@@ -232,7 +259,7 @@ public class StreamingAudioTrack extends AudioTrack {
       Action<Integer> filler = this.bufferFiller;
       if (this.primesBeforePlay && filler != null && this.getPlayState() != PLAYSTATE_PLAYING) {
         synchronized (filler) {
-          filler.invoke(this.capacityFrames - this.getQueuedFrames());
+          filler.invoke(this.getCapacityFrames() - this.getQueuedFrames());
         }
       }
       if (this.trackWatcherThread != null)

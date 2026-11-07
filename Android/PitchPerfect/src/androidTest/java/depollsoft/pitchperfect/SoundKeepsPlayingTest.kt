@@ -14,8 +14,8 @@ import org.junit.runner.RunWith
  * Notes keep sounding through many presses on a real audio stack (device-only: Robolectric's
  * AudioTrack has no mixer). A review of 5.2.3 said the sound stopped after a while until the app
  * restarted: an instrument note pressed while the idle instrument track was being reset restarted
- * it one write short of full, the platform never started it, and every instrument note after that
- * was silent.
+ * it a few frames short of full, the platform never started it, and every instrument note after
+ * that was silent.
  */
 @RunWith(AndroidJUnit4::class)
 class SoundKeepsPlayingTest {

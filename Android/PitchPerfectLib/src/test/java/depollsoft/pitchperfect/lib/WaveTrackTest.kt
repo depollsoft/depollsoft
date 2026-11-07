@@ -61,6 +61,26 @@ class WaveTrackTest {
     }
 
     @Test
+    fun aWaveTrackWhoseBufferGrowsIsFilledToItsNewSize() {
+        // A track recreated for another output can get a bigger buffer than the wave's samples hold.
+        // A fill asked for that much ran off the end of the samples and wrote nothing.
+        val track = waveTrack()
+        val asked = track.capacityFrames
+        try {
+            TakingAudioTrackShadow.extraFrames = 1000
+            track.play()
+
+            val deadline = System.currentTimeMillis() + 5000
+            while (track.queuedFrames < asked + 1000 && System.currentTimeMillis() < deadline) Thread.sleep(10)
+            assertEquals(asked + 1000, track.queuedFrames)
+        } finally {
+            TakingAudioTrackShadow.extraFrames = 0
+            track.pause()
+            track.flush()
+        }
+    }
+
+    @Test
     fun aStoppedWaveTrackIsReusedWithNothingLeftFromItsLastNote() {
         val first = waveTrack()
         first.play()
