@@ -109,17 +109,9 @@ final class SongListModel {
     func displayName(_ list: DPSongList) -> String { store.displayName(for: list) }
     var canAddFromAnotherList: Bool { _ = revision; return store.hasAddableSongs(for: store.currentList) }
 
-    var emptyText: String {
-        isHome
-            ? "NO SONGS ON FILE\n\nTap + to add your first song and its key"
-            : "NOTHING IN THIS SET LIST\n\nTap + to add a song, or tap the pencil to add songs from another set list"
-    }
-
-    var emptyAccessibilityLabel: String {
-        isHome
-            ? "No songs on file. Tap Add to add your first song and its key."
-            : "Nothing in this set list. Tap Add to add a song, or tap Edit to add songs from another set list."
-    }
+    /// What an empty list is: the home list, or a set list. The empty list offers
+    /// its own Add, since the bar's + shows only while editing.
+    var emptyTitle: String { isHome ? "No songs on file" : "Nothing in this set list" }
 
     // MARK: Scroll memory
 
@@ -451,19 +443,59 @@ private struct SongRows: View {
             ))
             .overlay(alignment: .top) {
                 if songs.isEmpty {
-                    Text(model.emptyText)
-                        .font(Font(UIFont(name: "Oswald-Medium", size: 15) ?? .preferredFont(forTextStyle: .callout)))
-                        .foregroundStyle(Plate.inkSecondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 32)
-                        .padding(.top, 48)
-                        .accessibilityLabel(model.emptyAccessibilityLabel)
-                        .accessibilityIdentifier("songs.empty")
+                    EmptySongs(model: model)
                         .centredOffTheFold()
                 }
             }
             .modifier(ScrollMemory(model: model, songs: songs, proxy: proxy))
         }
+    }
+}
+
+/// An empty list says what it is and carries the way to fill it, framed as
+/// the set-list selector above it is.
+private struct EmptySongs: View {
+    let model: SongListModel
+
+    var body: some View {
+        VStack(spacing: 24) {
+            Text(model.emptyTitle.uppercased())
+                .font(Font(UIFont(name: "Oswald-Medium", size: 15) ?? .preferredFont(forTextStyle: .callout)))
+                .foregroundStyle(Plate.inkSecondary)
+                .multilineTextAlignment(.center)
+                .accessibilityLabel(model.emptyTitle)
+                .accessibilityIdentifier("songs.empty")
+            // One width for both, the wider label's.
+            VStack(spacing: 12) {
+                action("Add a song", id: "songs.empty.add") { model.addSong() }
+                if model.canAddFromAnotherList {
+                    action("Add from another set list", id: "songs.empty.addFrom") { model.addSongsFromAnotherList() }
+                }
+            }
+            .fixedSize(horizontal: true, vertical: false)
+        }
+        .padding(.horizontal, 32)
+        .padding(.top, 48)
+    }
+
+    private func action(_ title: String, id: String, perform: @escaping () -> Void) -> some View {
+        Button(action: perform) {
+            Text(title.uppercased())
+                .font(Plate.display(SetListSelectorMetrics.labelSize))
+                .kerning(SetListSelectorMetrics.labelSize * 0.16)
+                .foregroundStyle(Plate.ink)
+                .lineLimit(1)
+                .padding(.horizontal, 20)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .overlay {
+                    RoundedRectangle(cornerRadius: SetListSelectorMetrics.cornerRadius)
+                        .strokeBorder(Plate.hairline, lineWidth: SetListSelectorMetrics.frameStroke)
+                }
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(title)
+        .accessibilityIdentifier(id)
     }
 }
 

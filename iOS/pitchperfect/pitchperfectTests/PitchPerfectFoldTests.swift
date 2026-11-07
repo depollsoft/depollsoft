@@ -6,10 +6,11 @@
 //  face splits into a raised display and a ring, the classic grid opens at the
 //  fold, and nothing a finger or the eye needs ever straddles the crease. The
 //  folds are synthetic (the simulator reports none to a hosted test) but
-//  measured: the face's size on the inner display, between its bars and above
-//  the banner, and the division region iOS 27.1 reports there with the hinge
-//  at 130°: a 40-point frame that holds the crease and the 20 points either
-//  side iOS asks interactive content to keep from it.
+//  measured: the face's size on the inner display, between its bars and the
+//  banner (above the face standing, below it held like a book), and the
+//  division region iOS 27.1 reports there with the hinge at 130°: a 40-point
+//  frame that holds the crease and the 20 points either side iOS asks
+//  interactive content to keep from it.
 //
 
 import SwiftUI
@@ -18,9 +19,11 @@ import XCTest
 @testable import pitchperfect
 
 final class FoldGeometryTests: XCTestCase {
-    /// The inner display held upright, folded across its middle (tabletop).
+    /// The inner display held upright, folded across its middle (tabletop): the
+    /// face runs from the banner (window y 165) to the tabs, so the crease's band
+    /// (window y 455.5) leaves it 290.5 points above and 372.5 below.
     private let upright = CGSize(width: 669, height: 703)
-    private var acrossFold: CGRect { CGRect(x: 0, y: 373.5, width: upright.width, height: 40) }
+    private var acrossFold: CGRect { CGRect(x: 0, y: 290.5, width: upright.width, height: 40) }
     /// Held wide, folded down its middle (book), the side bar on the right.
     private let sideways = CGSize(width: 867, height: 483)
     private var downFold: CGRect { CGRect(x: 455.5, y: 0, width: 40, height: sideways.height) }
@@ -140,6 +143,15 @@ final class FoldGeometryTests: XCTestCase {
         let gap = acrossFold.minY - nameplate.maxY
         XCTAssertGreaterThan(gap, 0)
         XCTAssertLessThanOrEqual(gap, 30, "the readout stays with the keys below the fold, not up in the sky")
+    }
+
+    func testStandingAndHeldLikeABookPlayTheSameInstrument() {
+        // On the Duo's inner display, with the banner above the face standing and
+        // below it held like a book, both poses give cells of about 62 points.
+        let tabletop = InstrumentGeometry(size: upright, count: 13, fold: acrossFold)
+        let book = InstrumentGeometry(size: sideways, count: 13, fold: downFold)
+        XCTAssertEqual(tabletop.cellRadius * 2, 62, accuracy: 2, "tabletop")
+        XCTAssertEqual(book.cellRadius * 2, 62, accuracy: 2, "book")
     }
 
     func testAFoldThatWouldShrinkTheCellsUnderATouchTargetKeepsTheFaceWhole() {

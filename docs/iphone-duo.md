@@ -136,7 +136,9 @@ DESIGN.md's *Folded (iPhone Duo)* section is the design record; in short:
   on iPad (`isRegularSpace`); banners still show, as on any phone, sized from
   their window's shape rather than the interface orientation. In tabletop the
   banner moves to the top of the upper half (`InstrumentPage`), so the ring below
-  the fold gets its room and never sits against an ad. It is the same banner view
+  the fold gets its room and never sits against an ad. Every screen with a banner
+  does the same (the pitch pipe, Notes, Keys, Songs and the Settings sheet), so
+  in that pose the ad is in one place throughout the app. It is the same banner view
   either way (`BannerStack`), so folding keeps the ad it loaded rather than
   requesting another.
 

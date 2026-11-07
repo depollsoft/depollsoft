@@ -6,7 +6,8 @@
 //  each, for checking the app in each iPhone Duo pose: Device Hub sets the
 //  pose (closed, partly folded, open, turned), this only looks. It skips unless
 //  DUO_TOUR_DIR names a directory (TEST_RUNNER_DUO_TOUR_DIR on the xcodebuild
-//  command line); DUO_TOUR_POSE, if set, prefixes the file names.
+//  command line); DUO_TOUR_POSE, if set, prefixes the file names. DUO_TOUR_ADS=1
+//  shows the test ad in the banner's slot, as people see it.
 //
 
 import XCTest
@@ -63,11 +64,17 @@ final class DuoTourUITests: XCTestCase {
 
     private func launch(_ arguments: [String] = []) {
         app = XCUIApplication()
+        let ads = ProcessInfo.processInfo.environment["DUO_TOUR_ADS"] == "1"
         // As for store capture: no ad-consent or tracking prompt, the banner's slot without a test ad.
-        app.launchEnvironment["STORE_SCREENSHOTS"] = "1"
+        if !ads { app.launchEnvironment["STORE_SCREENSHOTS"] = "1" }
         app.launchArguments += ["-telemetry.chosen", "YES", "-telemetry.analytics", "NO", "-telemetry.crashes", "NO",
                                 "-depollsoft.pitchperfect.LoginShown", "YES"] + arguments
         app.launch()
+        guard ads else { return }
+        // The test ad comes after the tracking prompt, once per install.
+        let ask = XCUIApplication(bundleIdentifier: "com.apple.springboard").buttons["Ask App Not to Track"]
+        if ask.waitForExistence(timeout: 5) { ask.tap() }
+        Thread.sleep(forTimeInterval: 4)
     }
 
     /// An iPhone Duo has two displays, and the app's own screenshot is the outer
@@ -88,8 +95,8 @@ final class DuoTourUITests: XCTestCase {
     }
 
     private func snap(_ name: String) throws {
-        // Let bars settle into whichever axis the pose gives them.
-        Thread.sleep(forTimeInterval: 1.5)
+        // Let bars settle into whichever axis the pose gives them, and a page's test ad arrive.
+        Thread.sleep(forTimeInterval: ProcessInfo.processInfo.environment["DUO_TOUR_ADS"] == "1" ? 6 : 1.5)
         let screenshot = screenshot()
         try screenshot.pngRepresentation.write(to: URL(fileURLWithPath: directory)
             .appendingPathComponent("\(prefix)\(name).png"))

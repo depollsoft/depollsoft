@@ -169,7 +169,7 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 
 ### List Rows
 
-- 56–64dp fully transparent rows over the full-bleed score (lists themselves carry the score pattern on iOS and sit transparent on Android), with 1px hairline dividers. An empty song list uses the same engraved "NO SONGS ON FILE" prompt on both platforms and points directly to Add. Primary text condensed 20–24sp ink; trailing datum mono 14–18sp secondary. Android song titles keep a 20dp leading inset and song keys use the 18sp ceiling. Pressed state = the lit treatment (background flips to `plate-lit`, text to `plate-on-lit`) — a row lights the way a cell does.
+- 56–64dp fully transparent rows over the full-bleed score (lists themselves carry the score pattern on iOS and sit transparent on Android), with 1px hairline dividers. An empty song list uses the same engraved "NO SONGS ON FILE" prompt on both platforms and leads directly to Add: Android's prompt points to its Add Song button, and on iOS, whose bar shows + only while editing, the prompt carries framed "Add a song" (and "Add from another set list") buttons of its own. Primary text condensed 20–24sp ink; trailing datum mono 14–18sp secondary. Android song titles keep a 20dp leading inset and song keys use the 18sp ceiling. Pressed state = the lit treatment (background flips to `plate-lit`, text to `plate-on-lit`) — a row lights the way a cell does.
 
 ### Set List Selector (machined)
 
@@ -231,7 +231,7 @@ Phone and watch launcher icons are adaptive foregrounds on the shared #474747 pl
 
 ### Ad Slot
 
-- A fixed full-width container above the bottom nav, preceded by the small italic "Tired of Ads?" link. Android reserves its height immediately but runs Mobile Ads/WebView creation only while Main is foreground and five seconds after the latest touch/navigation input; pending work is canceled when Settings or another Activity covers Main, and licensed users skip initialization. On iOS, the banner loads only after the actual view width is known so no side gaps or background seams appear. Third-party creative lives only here. The one exception is an iPhone Duo standing half open (tabletop): the slot moves to the top of the upper half, under the title bar, so the keys on the lower half get its room (the folded ring's cells grow from 49 to about 62 points) and never sit against an ad.
+- A fixed full-width container above the bottom nav, preceded by the small italic "Tired of Ads?" link. Android reserves its height immediately but runs Mobile Ads/WebView creation only while Main is foreground and five seconds after the latest touch/navigation input; pending work is canceled when Settings or another Activity covers Main, and licensed users skip initialization. On iOS, the banner loads only after the actual view width is known so no side gaps or background seams appear. Third-party creative lives only here. The one exception is an iPhone Duo standing half open (tabletop): the slot moves to the top of the upper half, under the title bar, so the keys on the lower half get its room (the folded ring's cells grow from 49 to about 62 points) and never sit against an ad. It moves on every screen that has one (Notes, Keys, Songs and the Settings sheet as well as the pitch pipe), so in that pose the ad is in the same place throughout.
 
 ### Haptics
 

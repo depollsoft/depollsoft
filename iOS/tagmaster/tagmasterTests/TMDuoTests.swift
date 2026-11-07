@@ -287,11 +287,21 @@ final class TMDuoTests: TMBehaviorTestCase {
         // A part playing on the stack's Tracks page.
         let track = try XCTUnwrap(model.tracks.tracks.first)
         let format = try XCTUnwrap(AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 2))
-        let buffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 44_100))
-        buffer.frameLength = 44_100
+        // Long enough to outlast both swaps: a part that ended would look stopped.
+        let buffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 44_100 * 30))
+        buffer.frameLength = 44_100 * 30
         model.tracks.present(track, buffer: buffer)
         settle()
         XCTAssertTrue(model.tracks.playerVisible)
+        // Whether the engine starts depends on the machine's audio; whatever it did,
+        // the swap must leave it so: the same part loaded, playing or not as it was.
+        let player = model.tracks.player
+        let playing = player.player.isPlaying
+        func assertThePartIsAsItWas(_ swap: String, line: UInt = #line) {
+            XCTAssertTrue(model.tracks.playerVisible, "\(swap): the part is still in the player", line: line)
+            XCTAssertTrue(player.track === track && player.isLoaded, "\(swap): the same part, loaded", line: line)
+            XCTAssertEqual(player.player.isPlaying, playing, "\(swap): neither paused nor stopped", line: line)
+        }
 
         open(host)
         spinUntil("the split takes the tag") { router.expanded && router.hasDetail }
@@ -300,7 +310,7 @@ final class TMDuoTests: TMBehaviorTestCase {
         XCTAssertTrue(model.expanded, "Beside the list the bar grows the steppers and toggles")
         XCTAssertEqual(model.selectedPage, .tracks)
         XCTAssertFalse(model.tracks.hasLeft, "The Tracks page going with the stack left the part alone")
-        XCTAssertTrue(model.tracks.playerVisible, "and the part is still in the player")
+        assertThePartIsAsItWas("Opening")
 
         close(host)
         spinUntil("the stack takes the tag") { router.path.last?.tagModel === model }
@@ -309,7 +319,7 @@ final class TMDuoTests: TMBehaviorTestCase {
         XCTAssertFalse(model.expanded)
         XCTAssertEqual(model.selectedPage, .tracks)
         XCTAssertFalse(model.tracks.hasLeft, "The Tracks page going with the book left the part alone")
-        XCTAssertTrue(model.tracks.playerVisible, "and the part is still in the player")
+        assertThePartIsAsItWas("Closing")
     }
 
     /// A video playing full screen holds the shell: turning the open Duo from upright
