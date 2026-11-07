@@ -76,8 +76,10 @@ class StreamingAudioTrackTest {
         override fun platformBufferFrames() = platformFrames
 
         override fun getPlaybackHeadPosition(): Int {
+            val position = if (headMovesOnEveryRead) head + reads.incrementAndGet() else head
+            // Counted after the read, so a test that sees the count knows what the watcher saw.
             if (Thread.currentThread().name == StreamingAudioTrack.WATCHER_THREAD_NAME) watcherReads.incrementAndGet()
-            return if (headMovesOnEveryRead) head + reads.incrementAndGet() else head
+            return position
         }
     }
 
