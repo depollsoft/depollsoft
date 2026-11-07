@@ -26,9 +26,14 @@ import UIKit
 class TagMasterUITestCase: XCTestCase {
     private static var warmedApplication = false
 
+    /// Whether the class launches and quits the app once before its tests, so the
+    /// first test does not pay for the cold start. A test driving an app that is
+    /// already running turns it off.
+    class var warmsApplication: Bool { true }
+
     override class func setUp() {
         super.setUp()
-        guard !warmedApplication else { return }
+        guard warmsApplication, !warmedApplication else { return }
         let application = XCUIApplication()
         application.launchArguments = ["--uitesting"]
         application.launchArguments += ["-telemetry.chosen", "YES", "-telemetry.analytics", "NO", "-telemetry.crashes", "NO"]

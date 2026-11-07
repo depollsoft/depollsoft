@@ -167,9 +167,13 @@ def main():
     devices = json.loads(output('simctl', 'list', 'devices', 'available', '-j'))['devices']
     candidates = []
     for runtime, available in devices.items():
-        if '.iOS-' not in runtime:
+        # Plain iOS runtimes only (…SimRuntime.iOS-27-0). Images can also carry a
+        # device-specific runtime such as …iOS-27-1-iPhone19-…, which only its own
+        # device type can use.
+        match = re.fullmatch(r'.*\.iOS-(\d+)-(\d+)(?:-\d+)?', runtime)
+        if not match:
             continue
-        version = tuple(map(int, runtime.rsplit('iOS-', 1)[1].split('-')))[:2]
+        version = (int(match[1]), int(match[2]))
         if requested and version != tuple(map(int, requested.split('.')))[:2]:
             continue
         if version > sdk:

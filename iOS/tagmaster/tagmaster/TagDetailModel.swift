@@ -133,6 +133,25 @@ final class TagDetailModel {
     /// On screen, and the app active: the only time the quartet may move.
     var screenVisible = false
     var applicationActive = true
+    /// The screens showing this tag: two for a moment while it is carried between
+    /// the phone stack and the book or split, so the old one going does not hide the new one.
+    private var screensShowing: Set<AnyHashable> = []
+
+    func screenAppeared(_ screen: AnyHashable = 0) {
+        screensShowing.insert(screen)
+        screenVisible = true
+    }
+
+    func screenDisappeared(_ screen: AnyHashable = 0) {
+        screensShowing.remove(screen)
+        screenVisible = !screensShowing.isEmpty
+    }
+
+    /// The router is moving this tag between the phone stack and the book or split (an
+    /// iPhone Duo opening or closing): the part playing keeps playing.
+    func carryAcross() {
+        tracks.carriedAcross = true
+    }
 
     /// Bumped whenever the saved lists change anywhere, so membership reads re-run.
     private(set) var listsRevision = 0
@@ -147,6 +166,10 @@ final class TagDetailModel {
     var actionsPresented = false
     /// Where the "Add to list" picker is anchored while it is up (a popover on iPad).
     var pickerSource: TMPickerSource?
+    /// The video playing full screen over the tag. On the model, not the page, so the
+    /// root can see it and hold the shell still while it plays (an iPhone Duo turned
+    /// or opened under a video would otherwise take the page and the video down).
+    var watching: URL?
     var error: TMRecovery?
 
     var navigator = TMDetailNavigator()
@@ -326,7 +349,13 @@ final class TagDetailModel {
         [
             TMSheetAction(title: isFavorite ? "Remove Favorite" : "Add Favorite") { [weak self] in self?.toggleFavorite() },
             TMSheetAction(title: isTeachable ? "Unmark as Teachable" : "Mark as Teachable") { [weak self] in self?.toggleTeachable() },
-            TMSheetAction(title: "Add to List…") { [weak self] in self?.showListPicker(from: .actions) },
+            // The sheet can outlive its button: an iPhone Duo opened under it swaps the
+            // phone bar (whose tag button presents from .actions) for the book's, whose
+            // Add to list button presents from .toolbar.
+            TMSheetAction(title: "Add to List…") { [weak self] in
+                guard let self else { return }
+                showListPicker(from: expanded ? .toolbar : .actions)
+            },
             TMSheetAction(title: "Cancel", style: .cancel) {},
         ]
     }

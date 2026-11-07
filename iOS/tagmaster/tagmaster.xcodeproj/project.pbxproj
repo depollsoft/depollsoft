@@ -21,6 +21,7 @@
 		6FC5C8177A9D482C725660E0 /* TMShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA012B6F987B119001808DBE /* TMShell.swift */; };
 		BE42F0F9BE0897B5045C0E24 /* TMTableMargins.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A6EB7728E31536308B09228 /* TMTableMargins.swift */; };
 		E77E87422FC6F54CD8BEAE5B /* UsageAnalytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FCC14A7ECA94C4EE3E8FCFF /* UsageAnalytics.swift */; };
+		3A8BEA71FC6FC17B91B45FD8 /* HingeStatusWatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34912D4D39E345ACCFE84EE9 /* HingeStatusWatch.swift */; };
 		9A06113BB8CE5F79196AB372 /* ReviewPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65188BCE7F219A6F862CA57C /* ReviewPrompt.swift */; };
 		211E85D8325370D58A40199D /* TagMasterUsage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97C5A806D4A821CE138D5F68 /* TagMasterUsage.swift */; };
 		B4A1B0000000000000000001 /* TMTagLists.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1B0000000000000000000 /* TMTagLists.swift */; };
@@ -43,6 +44,7 @@
 		486B0CA3224947FA4117C431 /* TagDetailModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60F248CF839D292B5A554AAF /* TagDetailModel.swift */; };
 		24A50CF911D0B1355C98C550 /* TagSummaryModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A69F467F262F2D18D87FAF7 /* TagSummaryModel.swift */; };
 		FBF14E8E602F7A82192FFB0E /* TagTracksModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B1D1727D3EEAE97BBDBF08F /* TagTracksModel.swift */; };
+		13439AC0C8B353373CC1B04D /* TMMusicStand.swift in Sources */ = {isa = PBXBuildFile; fileRef = F51603D933047F73194A3570 /* TMMusicStand.swift */; };
 		2ADB50A87D031B9D0CB65D42 /* TagDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 876C6BD50FC5AE1674C8965F /* TagDetailView.swift */; };
 		E2EFF9D6D38E02634BB5DAF6 /* TMFactsLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93F5CF6B3C96209FC8DAE5C1 /* TMFactsLayout.swift */; };
 		D1045840E91B81774ED9399E /* TagSummaryPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41A38683354555FA1038024C /* TagSummaryPage.swift */; };
@@ -69,6 +71,7 @@
 		748DCF0CF473E34A3C8659DE /* TagTracksPlaybackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B68C2BB88A7D2B53A58D50DA /* TagTracksPlaybackTests.swift */; };
 		D452D485E8A8FCAF1446E344 /* TagDetailLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C37C8637F4CEC03ED771843 /* TagDetailLayoutTests.swift */; };
 		88B1B18AB26853AFE59192B7 /* TMShellTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = C830AC314319D8B9E2FA6AB5 /* TMShellTestSupport.swift */; };
+		BFF4DF9DE20133B081B5A52C /* TMDuoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88D74149038AA8B49D16771C /* TMDuoTests.swift */; };
 		BBCA090527B9C26B067B05EC /* TMRouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37A4BC3BD26DC513A62F59B6 /* TMRouterTests.swift */; };
 		CB34D931D876177CDE0CB921 /* TMArtworkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 083712943734B5BCD1340641 /* TMArtworkTests.swift */; };
 		28F695DF481EE0B06AFD6D03 /* TagMasterAuditTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63D3134C1B0898F50EE69316 /* TagMasterAuditTests.swift */; };
@@ -90,6 +93,7 @@
 		2FA270FBF561239F254EB350 /* FirebaseFacebookSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 42BE55FE34E9E89B06BE2071 /* FirebaseFacebookSwiftUI */; };
 		2FA270FBF561239F254EB351 /* FirebaseAppleSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 42BE55FE34E9E89B06BE2072 /* FirebaseAppleSwiftUI */; };
 		C0AUTH001000000000000021 /* FirebasePhoneAuthSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = C0AUTH001000000000000022 /* FirebasePhoneAuthSwiftUI */; };
+		5701D2C662FD3F39D01A2AF5 /* DuoTourUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99386FB21ADD230E78CB4B46 /* DuoTourUITests.swift */; };
 		7B028E721B5D9E0CF361AFAB /* RealAppAppearanceUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3A2063D0098C7636EA9F886 /* RealAppAppearanceUITests.swift */; };
 		4509CDA99C01CCE4D0486639 /* TagDetailUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77ECC52AB0226D70124AAFA9 /* TagDetailUITests.swift */; };
 		45BAAFDE745C7B2FAE4B2268 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 231E00AF493A86AC7F8045FD /* FirebaseFirestore */; };
@@ -221,6 +225,7 @@
 		60F248CF839D292B5A554AAF /* TagDetailModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagDetailModel.swift; sourceTree = "<group>"; };
 		6A69F467F262F2D18D87FAF7 /* TagSummaryModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagSummaryModel.swift; sourceTree = "<group>"; };
 		5B1D1727D3EEAE97BBDBF08F /* TagTracksModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagTracksModel.swift; sourceTree = "<group>"; };
+		F51603D933047F73194A3570 /* TMMusicStand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMMusicStand.swift; sourceTree = "<group>"; };
 		876C6BD50FC5AE1674C8965F /* TagDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagDetailView.swift; sourceTree = "<group>"; };
 		93F5CF6B3C96209FC8DAE5C1 /* TMFactsLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMFactsLayout.swift; sourceTree = "<group>"; };
 		41A38683354555FA1038024C /* TagSummaryPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagSummaryPage.swift; sourceTree = "<group>"; };
@@ -245,6 +250,7 @@
 		B68C2BB88A7D2B53A58D50DA /* TagTracksPlaybackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagTracksPlaybackTests.swift; sourceTree = "<group>"; };
 		1C37C8637F4CEC03ED771843 /* TagDetailLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagDetailLayoutTests.swift; sourceTree = "<group>"; };
 		C830AC314319D8B9E2FA6AB5 /* TMShellTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMShellTestSupport.swift; sourceTree = "<group>"; };
+		88D74149038AA8B49D16771C /* TMDuoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMDuoTests.swift; sourceTree = "<group>"; };
 		37A4BC3BD26DC513A62F59B6 /* TMRouterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMRouterTests.swift; sourceTree = "<group>"; };
 		083712943734B5BCD1340641 /* TMArtworkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMArtworkTests.swift; sourceTree = "<group>"; };
 		63D3134C1B0898F50EE69316 /* TagMasterAuditTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagMasterAuditTests.swift; sourceTree = "<group>"; };
@@ -307,6 +313,7 @@
 		63E8667A15DCCBC600E0FC17 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
 		63E8667C15DCCBE900E0FC17 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		63E8667E15DCCBF500E0FC17 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		99386FB21ADD230E78CB4B46 /* DuoTourUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuoTourUITests.swift; sourceTree = "<group>"; };
 		A3A2063D0098C7636EA9F886 /* RealAppAppearanceUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealAppAppearanceUITests.swift; sourceTree = "<group>"; };
 		77ECC52AB0226D70124AAFA9 /* TagDetailUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TagDetailUITests.swift; sourceTree = "<group>"; };
 		85FC00CD3DF44A7CBF014280 /* DPTagModelExtendedTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTagModelExtendedTests.m; sourceTree = "<group>"; };
@@ -329,6 +336,7 @@
 		36F3B204BCB1A0AF3F5AA9AE /* MainThreadWatchdog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MainThreadWatchdog.swift; path = ../shared/MainThreadWatchdog.swift; sourceTree = "<group>"; };
 		C560A928A2DFE595C4E83838 /* TestKeyboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TestKeyboard.swift; path = ../shared/TestKeyboard.swift; sourceTree = "<group>"; };
 		5FCC14A7ECA94C4EE3E8FCFF /* UsageAnalytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = UsageAnalytics.swift; path = ../shared/UsageAnalytics.swift; sourceTree = "<group>"; };
+		34912D4D39E345ACCFE84EE9 /* HingeStatusWatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HingeStatusWatch.swift; path = ../shared/HingeStatusWatch.swift; sourceTree = "<group>"; };
 		65188BCE7F219A6F862CA57C /* ReviewPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ReviewPrompt.swift; path = ../shared/ReviewPrompt.swift; sourceTree = "<group>"; };
 		65D06CA2A30E2817B10D6A31 /* TelemetryConsent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TelemetryConsent.swift; path = ../shared/TelemetryConsent.swift; sourceTree = "<group>"; };
 		8D43DEC18C63FA36BF5D446B /* ConsentUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConsentUITests.swift; path = ../shared/ConsentUITests.swift; sourceTree = "<group>"; };
@@ -397,6 +405,7 @@
 			children = (
 				77ECC52AB0226D70124AAFA9 /* TagDetailUITests.swift */,
 				A3A2063D0098C7636EA9F886 /* RealAppAppearanceUITests.swift */,
+				99386FB21ADD230E78CB4B46 /* DuoTourUITests.swift */,
 				5DC0C8159FE876947BDD64C1 /* tagmasterUITests.swift */,
 				F5BCD0DFDBC06C4180EBF6BC /* Info.plist */,
 			);
@@ -427,6 +436,7 @@
 				8D43DEC18C63FA36BF5D446B /* ConsentUITests.swift */,
 				65D06CA2A30E2817B10D6A31 /* TelemetryConsent.swift */,
 				65188BCE7F219A6F862CA57C /* ReviewPrompt.swift */,
+				34912D4D39E345ACCFE84EE9 /* HingeStatusWatch.swift */,
 				5FCC14A7ECA94C4EE3E8FCFF /* UsageAnalytics.swift */,
 				C560A928A2DFE595C4E83838 /* TestKeyboard.swift */,
 				83F42B3FF7F30DA1835B86EF /* TestRendering.swift */,
@@ -555,6 +565,7 @@
 				41A38683354555FA1038024C /* TagSummaryPage.swift */,
 				93F5CF6B3C96209FC8DAE5C1 /* TMFactsLayout.swift */,
 				876C6BD50FC5AE1674C8965F /* TagDetailView.swift */,
+				F51603D933047F73194A3570 /* TMMusicStand.swift */,
 				5B1D1727D3EEAE97BBDBF08F /* TagTracksModel.swift */,
 				6A69F467F262F2D18D87FAF7 /* TagSummaryModel.swift */,
 				60F248CF839D292B5A554AAF /* TagDetailModel.swift */,
@@ -603,6 +614,7 @@
 				63D3134C1B0898F50EE69316 /* TagMasterAuditTests.swift */,
 				083712943734B5BCD1340641 /* TMArtworkTests.swift */,
 				37A4BC3BD26DC513A62F59B6 /* TMRouterTests.swift */,
+				88D74149038AA8B49D16771C /* TMDuoTests.swift */,
 				C830AC314319D8B9E2FA6AB5 /* TMShellTestSupport.swift */,
 				D39DFEF726D6A0AD6BD25590 /* SettingsBehaviorTests.swift */,
 				42E606561E7B83893E787549 /* QueryBehaviorTests.swift */,
@@ -911,6 +923,7 @@
 				D1045840E91B81774ED9399E /* TagSummaryPage.swift in Sources */,
 				E2EFF9D6D38E02634BB5DAF6 /* TMFactsLayout.swift in Sources */,
 				2ADB50A87D031B9D0CB65D42 /* TagDetailView.swift in Sources */,
+				13439AC0C8B353373CC1B04D /* TMMusicStand.swift in Sources */,
 				FBF14E8E602F7A82192FFB0E /* TagTracksModel.swift in Sources */,
 				24A50CF911D0B1355C98C550 /* TagSummaryModel.swift in Sources */,
 				486B0CA3224947FA4117C431 /* TagDetailModel.swift in Sources */,
@@ -919,6 +932,7 @@
 				B4A1B0000000000000000001 /* TMTagLists.swift in Sources */,
 				211E85D8325370D58A40199D /* TagMasterUsage.swift in Sources */,
 				9A06113BB8CE5F79196AB372 /* ReviewPrompt.swift in Sources */,
+				3A8BEA71FC6FC17B91B45FD8 /* HingeStatusWatch.swift in Sources */,
 				E77E87422FC6F54CD8BEAE5B /* UsageAnalytics.swift in Sources */,
 				BE42F0F9BE0897B5045C0E24 /* TMTableMargins.swift in Sources */,
 				6FC5C8177A9D482C725660E0 /* TMShell.swift in Sources */,
@@ -963,6 +977,7 @@
 				28F695DF481EE0B06AFD6D03 /* TagMasterAuditTests.swift in Sources */,
 				CB34D931D876177CDE0CB921 /* TMArtworkTests.swift in Sources */,
 				BBCA090527B9C26B067B05EC /* TMRouterTests.swift in Sources */,
+				BFF4DF9DE20133B081B5A52C /* TMDuoTests.swift in Sources */,
 				88B1B18AB26853AFE59192B7 /* TMShellTestSupport.swift in Sources */,
 				E641EBD58C4F14EA04088C84 /* SettingsBehaviorTests.swift in Sources */,
 				989CDEB5A598DB3E24E0B4CB /* QueryBehaviorTests.swift in Sources */,
@@ -991,6 +1006,7 @@
 			files = (
 				4509CDA99C01CCE4D0486639 /* TagDetailUITests.swift in Sources */,
 				7B028E721B5D9E0CF361AFAB /* RealAppAppearanceUITests.swift in Sources */,
+				5701D2C662FD3F39D01A2AF5 /* DuoTourUITests.swift in Sources */,
 				8EA8FFA093720EB5D0A6DC19 /* tagmasterUITests.swift in Sources */,
 				65091594637A70B5D6F4EA5C /* ConsentUITests.swift in Sources */,
 			);

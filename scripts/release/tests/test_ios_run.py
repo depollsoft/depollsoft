@@ -89,19 +89,35 @@ class NativeRunnerTests(unittest.TestCase):
             self.assertFalse(marker.exists())
 
     def test_startup_and_individual_test_timeouts(self):
-        for output, expected in [('', 'did not start'),
-                                 ("Test Case '-[Example testHang]' started.", 'test budget')]:
+        for output, launch, expected in [('', .2, 'did not start testing'),
+                                         ('Testing started', 60, 'did not start a test'),
+                                         ("Test Case '-[Example testHang]' started.", 60, 'test budget')]:
             with self.subTest(output=output), tempfile.TemporaryDirectory() as directory:
                 child = f'import time; print({output!r}, flush=True); time.sleep(60)'
                 code = (f'import sys; sys.path.insert(0, {str(CI)!r}); '
                         'from ios_run import run; from pathlib import Path; '
                         f'raise SystemExit(run([sys.executable, "-c", {child!r}], '
-                        'fail_fast=True, '
+                        f'fail_fast=True, launch_timeout={launch}, '
                         'startup_timeout=.2, test_timeout=.2, shutdown_timeout=.2))')
                 result = subprocess.run([sys.executable, '-c', code], capture_output=True,
                                         text=True, timeout=5)
                 self.assertEqual(result.returncode, 1)
                 self.assertIn(expected, result.stdout)
+
+    def test_a_slow_xcodebuild_start_does_not_spend_the_startup_budget(self):
+        # Silent for longer than the startup budget before "Testing started", as
+        # xcodebuild is on a runner still settling after the simulator's first boot.
+        child = ('import time; time.sleep(.6); print("Testing started", flush=True); '
+                 'print("Test Case \'-[Example testPass]\' started.", flush=True); '
+                 'print("Test Case \'-[Example testPass]\' passed (0.01 seconds).", flush=True)')
+        code = (f'import sys; sys.path.insert(0, {str(CI)!r}); '
+                'from ios_run import run; from pathlib import Path; '
+                f'raise SystemExit(run([sys.executable, "-c", {child!r}], '
+                'fail_fast=True, launch_timeout=5, '
+                'startup_timeout=.2, test_timeout=.2, shutdown_timeout=.2))')
+        result = subprocess.run([sys.executable, '-c', code], capture_output=True,
+                                text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stdout)
 
     def test_unresponsive_command_is_killed_after_failure(self):
         with tempfile.TemporaryDirectory() as directory:

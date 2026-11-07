@@ -147,10 +147,14 @@ editor opened for an existing song looks that song up in the current list.
 ### Empty state
 
 - Current list is `default`: the existing "NO SONGS ON FILE / Press + to add
-  your first song and its key" (iOS already says "Tap +"; each platform keeps
-  its verb).
+  your first song and its key".
 - Any other list: "NOTHING IN THIS SET LIST" / "Press + to add a song, or tap
   the pencil to add songs from another set list". Same engraved style.
+- Android's + is the Add Song button, always on screen. iOS has no + outside
+  edit mode (the one in the selector makes a set list), so its empty list
+  carries its own actions under the engraved title, framed like the selector:
+  "Add a song", and "Add from another set list" when another list has songs
+  to add.
 
 ### Edit mode
 

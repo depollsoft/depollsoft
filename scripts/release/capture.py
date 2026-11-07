@@ -99,7 +99,7 @@ def ios_runtime(sdk, runtimes):
         if runtime.get('isAvailable') and 'iOS' in runtime['name'] and (26, 0) <= version <= sdk_version:
             candidates.append((version, runtime['identifier']))
     if not candidates:
-        raise ValueError('Install an iOS 26 simulator runtime supported by the selected Xcode; '
+        raise ValueError('Install an iOS 26 or later simulator runtime supported by the selected Xcode; '
                          'set DEVELOPER_DIR explicitly to use a different toolchain')
     return max(candidates)[1]
 

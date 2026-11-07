@@ -23,13 +23,10 @@ final class SongListModelTests: PitchPerfectTestCase {
 
     func testTheEmptyStateSpeaksForTheListShowing() throws {
         XCTAssertTrue(model.songs.isEmpty)
-        XCTAssertEqual(model.emptyText, "NO SONGS ON FILE\n\nTap + to add your first song and its key")
-        XCTAssertEqual(model.emptyAccessibilityLabel, "No songs on file. Tap Add to add your first song and its key.")
+        XCTAssertEqual(model.emptyTitle, "No songs on file")
         let list = try customList(named: "Saturday show")
         model.select(listId: list.id)
-        XCTAssertTrue(model.emptyText.hasPrefix("NOTHING IN THIS SET LIST"))
-        XCTAssertEqual(model.emptyAccessibilityLabel,
-                       "Nothing in this set list. Tap Add to add a song, or tap Edit to add songs from another set list.")
+        XCTAssertEqual(model.emptyTitle, "Nothing in this set list")
     }
 
     func testSortingDeletingAndMovingRewriteTheListAndStoreIt() {
@@ -252,14 +249,45 @@ final class PitchPerfectSongManagementTests: PitchPerfectTestCase {
         return try XCTUnwrap(app.topPresented as? UIAlertController)
     }
 
-    func testTheEmptyListSaysHowToStartAndRowsSayTheirKey() throws {
+    func testTheEmptyListOffersItsOwnAddAndRowsSayTheirKey() throws {
         let app = try songsTab()
-        XCTAssertEqual(app.ui.label(id: "songs.empty"), "No songs on file. Tap Add to add your first song and its key.")
+        XCTAssertEqual(app.ui.label(id: "songs.empty"), "No songs on file")
+        // The bar's + shows only while editing, so the empty list carries its own.
+        XCTAssertFalse(app.ui.exists(id: "plus"))
+        XCTAssertEqual(app.ui.label(id: "songs.empty.add"), "Add a song")
+        XCTAssertFalse(app.ui.exists(id: "songs.empty.addFrom"), "no other list has songs to add")
+        app.ui.tap(id: "songs.empty.add")
+        settle { app.topPresented !== app.host }
+        XCTAssertTrue(app.sheet.exists(label: "Song title"), "it opens the song editor")
+        app.sheet.tap(id: "xmark")
+        settle { app.topPresented === app.host }
         seedSongs(["Blue Skies", "Shenandoah"])
         ScreenCatalog.settle(0.2)
         XCTAssertFalse(app.ui.exists(id: "songs.empty"))
+        XCTAssertFalse(app.ui.exists(id: "songs.empty.add"))
         XCTAssertTrue(app.ui.exists(label: "Blue Skies, C"))
         XCTAssertTrue(app.ui.exists(label: "Shenandoah, C"))
+    }
+
+    /// Beside a fold the empty list's page can be narrow: its buttons keep to it, one
+    /// width for both, and the longer label wraps rather than reaching the crease.
+    func testTheEmptyListsButtonsKeepToANarrowPage() throws {
+        seedSongs(["Blue Skies"])
+        let list = try customList(named: "Saturday show")
+        DPSongsModel.sharedInstance.currentListId = list.id
+        let app = try songsTab()
+        // Held like a book beside another app: a 520-point window folded at 240.
+        let fold = CGRect(x: 240, y: 0, width: 40, height: 2000)
+        Fold.simulated = { _ in fold }
+        defer { Fold.simulated = nil }
+        app.window.frame.size.width = 520
+        ScreenCatalog.settle(0.3)
+        let add = try XCTUnwrap(app.ui.element(id: "songs.empty.add")).accessibilityFrame
+        let from = try XCTUnwrap(app.ui.element(id: "songs.empty.addFrom")).accessibilityFrame
+        XCTAssertGreaterThanOrEqual(from.minX, 0, "\(from)")
+        XCTAssertLessThanOrEqual(from.maxX, fold.minX, "\(from)")
+        XCTAssertEqual(add.width, from.width, accuracy: 0.5, "one width for both")
+        XCTAssertGreaterThan(from.height, add.height, "the longer label wraps")
     }
 
     func testEditModeSwapsTheBarForDoneAddAndMore() throws {
@@ -385,7 +413,9 @@ final class PitchPerfectSongManagementTests: PitchPerfectTestCase {
         let list = try customList(named: "Saturday show")
         DPSongsModel.sharedInstance.currentListId = list.id
         let app = try songsTab()
-        app.songs.addSongsFromAnotherList()
+        // The empty set list offers the songs on file as well as a new one.
+        XCTAssertEqual(app.ui.label(id: "songs.empty.addFrom"), "Add from another set list")
+        app.ui.tap(id: "songs.empty.addFrom")
         settle { app.topPresented !== app.host }
         let sheet = app.sheet
         // The picker is presented from UIKit, as it always was; its bar lands a beat later.
@@ -423,10 +453,13 @@ final class PitchPerfectSongManagementTests: PitchPerfectTestCase {
         XCTAssertTrue(ui.traits(id: "setlist.row.default.current").contains(.selected))
         XCTAssertEqual(ui.label(id: "setlist.row.\(first.id)"), "Saturday show, no songs")
         XCTAssertEqual(ui.label(id: "setlist.row.menu.\(first.id)"), "Actions for Saturday show")
-        XCTAssertEqual(ui.element(id: "setlist.row.default.current")?.accessibilityCustomActions?.map(\.name) ?? [], [],
-                       "My Songs never moves")
-        XCTAssertEqual(ui.element(id: "setlist.row.\(first.id)")?.accessibilityCustomActions?.map(\.name), ["Move down"])
-        XCTAssertEqual(ui.element(id: "setlist.row.\(second.id)")?.accessibilityCustomActions?.map(\.name), ["Move up"])
+        // iOS 27 also offers each row's menu (Rename, Duplicate, Delete) as custom actions.
+        func moves(_ id: String) -> [String] {
+            (ui.element(id: id)?.accessibilityCustomActions?.map(\.name) ?? []).filter { $0.hasPrefix("Move") }
+        }
+        XCTAssertEqual(moves("setlist.row.default.current"), [], "My Songs never moves")
+        XCTAssertEqual(moves("setlist.row.\(first.id)"), ["Move down"])
+        XCTAssertEqual(moves("setlist.row.\(second.id)"), ["Move up"])
         ui.perform(action: "Move up", id: "setlist.row.\(second.id)")
         XCTAssertEqual(DPSongsModel.sharedInstance.orderedLists.map(\.id), ["default", second.id, first.id])
         ui.tap(id: "setlist.row.\(first.id)")

@@ -192,7 +192,8 @@ final class PitchPerfectSettingsPresentationTests: PitchPerfectTestCase {
             app.show(tab: index)
             if index == 3 { XCTAssertEqual(app.ui.label(id: "gearshape"), "Settings") }
             app.ui.tap(id: "gearshape")
-            settle { app.topPresented !== app.host }
+            // The sheet's bar lands a beat after the sheet.
+            settle { app.topPresented !== app.host && app.navigationTitles.contains("Settings") }
             let sheet = app.sheet
             XCTAssertTrue(app.navigationTitles.contains("Settings"))
             for label in ["Toggle Notes", "Wake Lock", "Tuning", "Sound", "Theme"] {

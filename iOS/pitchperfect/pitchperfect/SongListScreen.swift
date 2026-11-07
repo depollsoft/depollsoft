@@ -109,17 +109,9 @@ final class SongListModel {
     func displayName(_ list: DPSongList) -> String { store.displayName(for: list) }
     var canAddFromAnotherList: Bool { _ = revision; return store.hasAddableSongs(for: store.currentList) }
 
-    var emptyText: String {
-        isHome
-            ? "NO SONGS ON FILE\n\nTap + to add your first song and its key"
-            : "NOTHING IN THIS SET LIST\n\nTap + to add a song, or tap the pencil to add songs from another set list"
-    }
-
-    var emptyAccessibilityLabel: String {
-        isHome
-            ? "No songs on file. Tap Add to add your first song and its key."
-            : "Nothing in this set list. Tap Add to add a song, or tap Edit to add songs from another set list."
-    }
+    /// What an empty list is: the home list, or a set list. The empty list offers
+    /// its own Add, since the bar's + shows only while editing.
+    var emptyTitle: String { isHome ? "No songs on file" : "Nothing in this set list" }
 
     // MARK: Scroll memory
 
@@ -451,18 +443,88 @@ private struct SongRows: View {
             ))
             .overlay(alignment: .top) {
                 if songs.isEmpty {
-                    Text(model.emptyText)
-                        .font(Font(UIFont(name: "Oswald-Medium", size: 15) ?? .preferredFont(forTextStyle: .callout)))
-                        .foregroundStyle(Plate.inkSecondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 32)
-                        .padding(.top, 48)
-                        .accessibilityLabel(model.emptyAccessibilityLabel)
-                        .accessibilityIdentifier("songs.empty")
+                    EmptySongs(model: model)
+                        .centredOffTheFold()
                 }
             }
             .modifier(ScrollMemory(model: model, songs: songs, proxy: proxy))
         }
+    }
+}
+
+/// An empty list says what it is and carries the way to fill it, framed as
+/// the set-list selector above it is.
+private struct EmptySongs: View {
+    let model: SongListModel
+
+    var body: some View {
+        VStack(spacing: 24) {
+            Text(model.emptyTitle.uppercased())
+                .font(Font(UIFont(name: "Oswald-Medium", size: 15) ?? .preferredFont(forTextStyle: .callout)))
+                .foregroundStyle(Plate.inkSecondary)
+                .multilineTextAlignment(.center)
+                .accessibilityLabel(model.emptyTitle)
+                .accessibilityIdentifier("songs.empty")
+            OneWidthStack(spacing: 12) {
+                action("Add a song", id: "songs.empty.add") { model.addSong() }
+                if model.canAddFromAnotherList {
+                    action("Add from another set list", id: "songs.empty.addFrom") { model.addSongsFromAnotherList() }
+                }
+            }
+        }
+        .padding(.horizontal, 32)
+        .padding(.top, 48)
+    }
+
+    private func action(_ title: String, id: String, perform: @escaping () -> Void) -> some View {
+        Button(action: perform) {
+            Text(title.uppercased())
+                .font(Plate.display(SetListSelectorMetrics.labelSize))
+                .kerning(SetListSelectorMetrics.labelSize * 0.16)
+                .foregroundStyle(Plate.ink)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 8)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .overlay {
+                    RoundedRectangle(cornerRadius: SetListSelectorMetrics.cornerRadius)
+                        .strokeBorder(Plate.hairline, lineWidth: SetListSelectorMetrics.frameStroke)
+                }
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(title)
+        .accessibilityIdentifier(id)
+    }
+}
+
+/// Stacks buttons at one width, the widest one's own, but never wider than it is
+/// offered: a narrow page (beside a fold, beside another app) wraps their labels
+/// rather than pushing them into the crease.
+private struct OneWidthStack: Layout {
+    var spacing: CGFloat
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let width = width(for: proposal, subviews)
+        let heights = subviews.map { $0.sizeThatFits(ProposedViewSize(width: width, height: nil)).height }
+        return CGSize(width: width, height: heights.reduce(0, +) + spacing * CGFloat(max(subviews.count - 1, 0)))
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let width = width(for: proposal, subviews)
+        var y = bounds.minY
+        for subview in subviews {
+            let height = subview.sizeThatFits(ProposedViewSize(width: width, height: nil)).height
+            subview.place(at: CGPoint(x: bounds.midX - width / 2, y: y),
+                          proposal: ProposedViewSize(width: width, height: height))
+            y += height + spacing
+        }
+    }
+
+    private func width(for proposal: ProposedViewSize, _ subviews: Subviews) -> CGFloat {
+        let widest = subviews.map { $0.sizeThatFits(.unspecified).width }.max() ?? 0
+        return min(widest, proposal.width ?? widest)
     }
 }
 

@@ -32,6 +32,10 @@ final class TMPresentingAnchor: UIView {
     var make: (TMPresentingAnchor) -> UIViewController = { _ in UIViewController() }
     /// Something like this is already presented (by another copy of this control).
     var alreadyUp: (UIViewController) -> Bool = { _ in false }
+    /// Wanting it while one is already up takes that one over, so this copy can close
+    /// it: for a presentation only one control can want at a time, whose first copy
+    /// may have gone with its shell.
+    var adoptsPresented = false
     private(set) weak var presented: UIViewController?
 
     override init(frame: CGRect) {
@@ -57,7 +61,10 @@ final class TMPresentingAnchor: UIView {
         // A bar item is first placed at a provisional size; anchor once it has its own.
         if wanted, presented == nil, bounds.height >= 30, let root = window?.rootViewController {
             let top = TMPresentingAnchor.top(root)
-            guard !alreadyUp(top) else { return }
+            guard !alreadyUp(top) else {
+                if adoptsPresented { adopt(top) }
+                return
+            }
             let controller = make(self)
             presented = controller
             top.present(controller, animated: UIView.areAnimationsEnabled)
@@ -68,6 +75,17 @@ final class TMPresentingAnchor: UIView {
     }
 
     func forget() { presented = nil }
+
+    /// Takes over one already up and hangs it from here, the copy on screen: a popover
+    /// re-laid (the Duo folding, a window resizing) places itself from its source view,
+    /// and the control that opened it may be going with its shell.
+    private func adopt(_ controller: UIViewController) {
+        presented = controller
+        if let popover = controller.popoverPresentationController {
+            popover.sourceView = self
+            popover.sourceRect = bounds
+        }
+    }
 
     /// The controller currently on top, which is the one that may present.
     static func top(_ controller: UIViewController) -> UIViewController {
@@ -88,27 +106,28 @@ struct TMActionSheet: UIViewRepresentable {
     /// bubble at the control (no Cancel row), as the rating sheet always was.
     var anchoredEverywhere = false
 
-    /// Hears a popover dismissed by a tap outside it, which runs no action.
-    final class Coordinator: NSObject, UIPopoverPresentationControllerDelegate {
-        var dismissed: () -> Void = {}
+    /// Hears a popover dismissed by a tap outside it, which runs no action. The sheet
+    /// holds it, so it still clears the request after the control that opened it has
+    /// gone (an iPhone Duo opening, closing or turning swaps the whole shell).
+    final class Closer: NSObject, UIPopoverPresentationControllerDelegate {
+        let dismissed: () -> Void
+        init(dismissed: @escaping () -> Void) { self.dismissed = dismissed }
         func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
             dismissed()
         }
     }
 
-    func makeCoordinator() -> Coordinator { Coordinator() }
+    private static var closerKey: UInt8 = 0
 
     func makeUIView(context: Context) -> TMPresentingAnchor { TMPresentingAnchor() }
 
     func updateUIView(_ anchor: TMPresentingAnchor, context: Context) {
         let binding = $isPresented
-        let coordinator = context.coordinator
-        coordinator.dismissed = { [weak anchor] in
-            anchor?.forget()
-            binding.wrappedValue = false
-        }
         let actions = actions, title = title, message = message, anchoredEverywhere = anchoredEverywhere
         anchor.alreadyUp = { $0 is UIAlertController }
+        // A sheet already up for this control (opened from its copy in the shell the
+        // window had before) is this control's to close now.
+        anchor.adoptsPresented = true
         anchor.make = { anchor in
             let sheet = UIAlertController(title: title, message: message, preferredStyle: .actionSheet)
             for action in actions {
@@ -122,9 +141,16 @@ struct TMActionSheet: UIViewRepresentable {
                     action.handler()
                 })
             }
-            // iPhone shows the classic centred card; iPad needs a popover source.
-            if anchoredEverywhere || anchor.traitCollection.userInterfaceIdiom == .pad {
-                sheet.popoverPresentationController?.delegate = coordinator
+            // Every sheet holds its closer, a centred card too: one opened on a closed Duo
+            // and left up while it opens becomes a popover there, which a tap outside closes.
+            let closer = Closer { [weak anchor] in
+                anchor?.forget()
+                binding.wrappedValue = false
+            }
+            objc_setAssociatedObject(sheet, &TMActionSheet.closerKey, closer, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            sheet.popoverPresentationController?.delegate = closer
+            // iPhone shows the classic centred card; iPad, and an open iPhone Duo, need a popover source.
+            if anchoredEverywhere || anchor.traitCollection.tmFloatsPopovers {
                 sheet.popoverPresentationController?.sourceView = anchor
                 sheet.popoverPresentationController?.sourceRect = anchor.bounds
             }

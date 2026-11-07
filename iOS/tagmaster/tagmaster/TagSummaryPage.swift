@@ -14,21 +14,35 @@ import UIKit
 /// from the edges, limited to a readable width.
 struct TMPageScroll<Content: View>: View {
     @ViewBuilder var content: Content
-    /// The readable width UIKit's guide gives the page right now.
-    @State private var readable = TMReadable.width
+    /// Standing on a tabletop Duo, the page ends at the fold.
+    @Environment(\.tmOnStand) private var onStand
 
     var body: some View {
         ScrollView {
-            content
-                .frame(maxWidth: readable, alignment: .leading)
-                .frame(maxWidth: .infinity)
-                .padding(.horizontal, 16)
+            TMReadableColumn { content }
                 .padding(.vertical, 4)
         }
         // UIKit's scroller ended at the safe area's foot (its keyboard guide), above the
         // page bar, and clipped there; the page never scrolled beneath the bar.
         .clipped()
-        .background(TMReadableProbe(width: $readable).accessibilityHidden(true))
+        // Stood up, a page shortened to the upper half shows that it scrolls on.
+        .scrollIndicatorsFlash(trigger: onStand)
+    }
+}
+
+/// Content 16 pt in from the edges, held to the readable width UIKit's guide gives
+/// it there, as every detail page's body is.
+struct TMReadableColumn<Content: View>: View {
+    @ViewBuilder var content: Content
+    /// The readable width UIKit's guide gives the column right now.
+    @State private var readable = TMReadable.width
+
+    var body: some View {
+        content
+            .frame(maxWidth: readable, alignment: .leading)
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 16)
+            .background(TMReadableProbe(width: $readable).accessibilityHidden(true))
     }
 }
 
@@ -91,19 +105,32 @@ struct TagSummaryPage: View {
     @Environment(\.tmAccent) private var accent
     let model: TagSummaryModel
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.displayScale) private var displayScale
+    /// This is the page's lower part, on a tabletop Duo's deck (`tmMusicStand`): the
+    /// key and Sheet Music, the lists the tag is on and its facts.
+    var deck = false
+    /// On a tabletop Duo the page stands above the fold: the tag's name and its words.
+    @Environment(\.tmOnStand) private var onStand
     @State private var visible = false
 
     var body: some View {
         if let tag = model.tag {
             TMPageScroll {
-                VStack(alignment: .leading, spacing: 8) {
-                    identity(tag)
-                    columns(tag)
+                if deck {
+                    lying(tag)
+                } else if onStand {
+                    standing(tag)
+                } else {
+                    VStack(alignment: .leading, spacing: 8) {
+                        identity(tag)
+                        columns(tag)
+                    }
                 }
             }
             // The note is watched only while it sounds on a page someone can see,
             // as the UIKit key button's display link ran only while it was in a window.
-            .onReceive(TagSummaryPage.keyNoteTicks(active: visible && model.keyNotePlaying)) { _ in
+            // On the stand the deck, which holds the key, watches it.
+            .onReceive(TagSummaryPage.keyNoteTicks(active: visible && !onStand && model.keyNotePlaying)) { _ in
                 model.syncKeyNote()
             }
             .onAppear { visible = true }
@@ -120,7 +147,47 @@ struct TagSummaryPage: View {
             : Empty(completeImmediately: false).eraseToAnyPublisher()
     }
 
-    private func identity(_ tag: DPTag) -> some View {
+    /// Standing: the tag's name and its words, the lyrics large enough to read from
+    /// across a table. A tag without words stands its facts instead.
+    private func standing(_ tag: DPTag) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            identity(tag, chips: false)
+            if hasProse { prose(tag, standing: true) } else { facts(tag) }
+        }
+    }
+
+    /// On the deck: the key and Sheet Music side by side (stacked when the text is
+    /// too large for that), then the lists the tag is on and, under its words, its facts.
+    private func lying(_ tag: DPTag) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            if !(tag.writtenKey ?? "").isEmpty || tag.sheetMusicUri != nil {
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: TMStandDeck.gap) { keyAndMusic(tag) }
+                        .fixedSize(horizontal: false, vertical: true)
+                    VStack(spacing: TMStandDeck.gap) { keyAndMusic(tag) }
+                }
+            }
+            TMListChips(model: model)
+            if hasProse { facts(tag) }
+        }
+        // TMPageScroll already leaves 4 points above.
+        .padding(.top, TMStandDeck.top - 4)
+    }
+
+    @ViewBuilder
+    private func keyAndMusic(_ tag: DPTag) -> some View {
+        if let key = tag.writtenKey, !key.isEmpty {
+            TMKeyNoteButton(model: model, title: key, fillsHeight: true)
+                .frame(minHeight: TMStandDeck.controlHeight)
+                .accessibilityIdentifier("summary.key")
+        }
+        if tag.sheetMusicUri != nil {
+            Self.sheetMusicButton(model)
+                .frame(maxWidth: .infinity, minHeight: TMStandDeck.controlHeight, maxHeight: .infinity)
+        }
+    }
+
+    private func identity(_ tag: DPTag, chips: Bool = true) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(tag.title ?? "")
                 .font(.title)
@@ -137,7 +204,7 @@ struct TagSummaryPage: View {
                     .foregroundStyle(Color(.secondaryLabel))
                     .fixedSize(horizontal: false, vertical: true)
             }
-            TMListChips(model: model)
+            if chips { TMListChips(model: model) }
         }
     }
 
@@ -174,7 +241,7 @@ struct TagSummaryPage: View {
                     .layoutValue(key: TMMatchesHeight.self, value: true)
             }
             if tag.sheetMusicUri != nil {
-                sheetMusicButton
+                Self.sheetMusicButton(model)
                     .layoutValue(key: TMGapBefore.self, value: 16)
                     .layoutValue(key: TMMatchesHeight.self, value: true)
             }
@@ -182,7 +249,7 @@ struct TagSummaryPage: View {
     }
 
     private func facts(_ tag: DPTag) -> some View {
-        TMFactsLayout(bodyFont: dynamicTypeSize.tmFont(.body)) {
+        TMFactsLayout(bodyFont: dynamicTypeSize.tmFont(.body), scale: displayScale) {
             TMCaption(text: "Tag ID")
             TMFactText(text: "\(tag.tagId)").tmFactValue(.text, minimumHeight: 28)
             TMCaption(text: "Parts")
@@ -198,7 +265,7 @@ struct TagSummaryPage: View {
         }
     }
 
-    private var sheetMusicButton: some View {
+    private static func sheetMusicButton(_ model: TagSummaryModel) -> some View {
         TMSheetMusicButton(busy: model.sheetMusicBusy) { model.openSheetMusic() }
             .overlay(alignment: .trailing) {
                 TMBarberPole.operation("Opening sheet music…", active: model.sheetMusicBusy)
@@ -206,13 +273,10 @@ struct TagSummaryPage: View {
             }
     }
 
-    private func prose(_ tag: DPTag) -> some View {
+    private func prose(_ tag: DPTag, standing: Bool = false) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             if let lyrics = tag.lyrics, !lyrics.isEmpty {
-                VStack(alignment: .leading, spacing: 4) {
-                    TMCaption(text: "Lyrics")
-                    TMFactText(text: lyrics).accessibilityIdentifier("summary.lyrics")
-                }
+                TMLyrics(text: lyrics, standing: standing)
             }
             if let notes = tag.notes, !notes.isEmpty {
                 VStack(alignment: .leading, spacing: 4) {
@@ -224,11 +288,27 @@ struct TagSummaryPage: View {
     }
 }
 
+/// A tag's lyrics under their caption: body text on the page, Title 3 standing on
+/// a tabletop Duo, to be read from across a table.
+struct TMLyrics: View {
+    let text: String
+    var standing = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            TMCaption(text: "Lyrics")
+            TMFactText(text: text, font: standing ? .title3 : .body)
+                .accessibilityIdentifier("summary.lyrics")
+        }
+    }
+}
+
 struct TMFactText: View {
     let text: String
+    var font = Font.body
     var body: some View {
         Text(text)
-            .font(.body)
+            .font(font)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -376,16 +456,18 @@ struct TMKeyNoteButton: View {
     }()
 }
 
-/// Sheet Music as UIKit drew it: a filled button (white title and icon on the
-/// accent, medium corners, 8/44 insets, wrapping title) that greys out exactly as
-/// UIKit's does while something is presented over the page.
+/// Sheet Music as UIKit drew it: a filled button (title and icon on the accent,
+/// medium corners, 8/44 insets, wrapping title) that greys out exactly as UIKit's
+/// does while something is presented over the page. The title is white on the
+/// light accent and black on the dark one (white on the dark accent's pale blue
+/// read at under 2:1), as the sounding key's is.
 struct TMSheetMusicButton: UIViewRepresentable {
     let busy: Bool
     let action: () -> Void
 
     func makeUIView(context: Context) -> UIButton {
         var configuration = UIButton.Configuration.filled()
-        configuration.baseForegroundColor = .white
+        configuration.baseForegroundColor = UIColor { $0.userInterfaceStyle == .dark ? .black : .white }
         configuration.cornerStyle = .medium
         configuration.image = UIImage(systemName: "doc.richtext")
         configuration.imagePadding = 8

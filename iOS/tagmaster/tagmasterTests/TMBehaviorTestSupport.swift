@@ -237,7 +237,9 @@ class TMBehaviorTestCase: XCTestCase {
                 .compactMap { ($0 as? UIWindowScene)?.windows.first { $0.isKeyWindow } }.first
         }
         dismantleWindow()
-        window = UIWindow(frame: CGRect(origin: .zero, size: size))
+        // The test host's scene: a window outside any scene is never shown.
+        window = MainActor.assumeIsolated { ScreenCatalog.scene.map { UIWindow(windowScene: $0) } ?? UIWindow() }
+        window.frame = CGRect(origin: .zero, size: size)
         window.backgroundColor = .systemBackground
         window.tintColor = .systemBlue
         window.rootViewController = controller

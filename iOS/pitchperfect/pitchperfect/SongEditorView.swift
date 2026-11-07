@@ -23,6 +23,9 @@ final class SongEditorModel {
     var titleErrorVisible = false
     /// Incremented when the controller wants the title field focused.
     var titleFocusRequest = 0
+    /// The editor is a centred sheet (an iPad, an open iPhone Duo), which rises
+    /// for the keyboard; the controller keeps it current.
+    @ObservationIgnored var sheetCentred = false
 
     let majorKeys = DPKey.majorKeys() as? [DPKey] ?? []
     let minorKeys = DPKey.minorKeys() as? [DPKey] ?? []
@@ -167,10 +170,11 @@ private struct KeySignatureList: View {
             }
             .scrollDismissesKeyboard(.immediately)
             .onAppear { scrollToSelection(proxy, animated: false) }
-            // On iPad the form sheet rises for the keyboard (a required title) and
-            // the list re-fits; UIKit's kept the chosen key centred.
+            // On iPad (and an open iPhone Duo) the centred sheet rises for the
+            // keyboard (a required title) and the list re-fits; UIKit's kept the
+            // chosen key centred.
             .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidShowNotification)) { _ in
-                guard UIDevice.current.userInterfaceIdiom == .pad else { return }
+                guard model.sheetCentred else { return }
                 scrollToSelection(proxy, animated: false)
             }
             .onChange(of: model.isMinor) { _, _ in scrollToSelection(proxy, animated: true) }
@@ -322,7 +326,10 @@ final class SongEditorController: UIViewController {
         super.init(nibName: nil, bundle: nil)
         navigationItem.title = session.title
         navigationItem.leftBarButtonItem = BarSymbol.item(systemName: "xmark", target: self, action: #selector(close))
-        navigationItem.rightBarButtonItem = BarSymbol.item(systemName: "checkmark", target: self, action: #selector(done))
+        let done = BarSymbol.item(systemName: "checkmark", target: self, action: #selector(done))
+        // Down an iPhone Duo's side bar, with the keyboard up, Save outlasts the rest.
+        if #available(iOS 27.0, *) { done.visibilityPriority = .high }
+        navigationItem.rightBarButtonItem = done
     }
 
     @available(*, unavailable)
@@ -380,6 +387,9 @@ final class SongEditorController: UIViewController {
     override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
         bannerHeight?.constant = AdBanner.size(width: view.bounds.width, landscape: banner.isLandscape).size.height
+        let centred = traitCollection.userInterfaceIdiom == .pad
+            || (view.window?.windowScene?.traitCollection.isRegularSpace ?? false)
+        if session.model.sheetCentred != centred { session.model.sheetCentred = centred }
     }
 
     @objc private func close() { session.cancel() }

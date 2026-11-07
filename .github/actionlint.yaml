@@ -1,3 +1,9 @@
+# GitHub-hosted image labels newer than actionlint's built-in list. xcode-27
+# is the Xcode 27 image (macOS 27) the iOS jobs build on.
+self-hosted-runner:
+  labels:
+    - xcode-27
+
 # Configuration variables in array of strings defined in your repository or
 # organization. `null` means disabling configuration variables check.
 # Empty array means no configuration variable is allowed.

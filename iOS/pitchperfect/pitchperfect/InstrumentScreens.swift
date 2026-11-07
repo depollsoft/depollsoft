@@ -583,6 +583,9 @@ struct KeyModeBarItem: UIViewControllerRepresentable {
             control.sizeToFit()
             control.accessibilityIdentifier = "keys.mode"
             control.addTarget(self, action: #selector(changed), for: .valueChanged)
+            // Major and Minor are words: the control stays in the horizontal bar
+            // when an iPhone Duo moves the symbols down its side.
+            if #available(iOS 27.1, *) { item.axisBehavior = .horizontalOnly }
         }
 
         override func didMove(toParent parent: UIViewController?) {

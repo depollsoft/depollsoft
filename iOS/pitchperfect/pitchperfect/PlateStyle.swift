@@ -137,12 +137,21 @@ private struct NavigationTitleFace: UIViewControllerRepresentable {
     }
 }
 
+extension UITraitCollection {
+    /// Regular both ways: a full-screen iPad, or an iPhone Duo open on its inner
+    /// display. Sheets centre there, so screens present as they do on iPad.
+    var isRegularSpace: Bool { horizontalSizeClass == .regular && verticalSizeClass == .regular }
+}
+
 /// The tab bar as the app delegate set it up: tinted with the label colour on
 /// every device, which UIKit applies to its own bottom bar and dims under an
 /// alert. SwiftUI rewrites the bar's tint from its environment on every update,
 /// so the root's tint says the same (`color`), except over iPadOS 18's top tab
 /// bar (regular width), which kept the system accent.
 enum TabBarChrome {
+    /// The top tab bar is iPadOS's own: an iPhone Duo's inner display, though
+    /// regular width, keeps the phone's bar (at the foot, or down the side), and
+    /// with it the label-coloured tint.
     static func isTopTabBar(horizontal: UserInterfaceSizeClass?) -> Bool {
         guard UIDevice.current.userInterfaceIdiom == .pad, horizontal == .regular else { return false }
         if #available(iOS 18.0, *) { return true }
@@ -177,6 +186,17 @@ extension View {
     func instrumentChrome(oswaldTitle: Bool = true) -> some View {
         background(NavigationTitleFace(oswald: oswaldTitle).frame(width: 0, height: 0))
             .tint(Color(uiColor: .label))
+    }
+
+    /// Keeps a sheet with a lone bar control in one horizontal bar where an
+    /// iPhone Duo would move it down the side (see `SettingsHost`).
+    @ViewBuilder
+    func horizontalBarOnly() -> some View {
+        if #available(iOS 27.1, *) {
+            toolbarVerticalBehavior(.disabled)
+        } else {
+            self
+        }
     }
 }
 
@@ -217,9 +237,11 @@ struct BarSymbol: View {
     private static let configuration = UIImage.SymbolConfiguration(pointSize: 17, weight: .regular, scale: .medium)
 
     /// The same symbol as a UIKit bar item, named and identified the same way.
+    /// The bar draws the image; the title stands for it in an overflow menu.
     static func item(systemName: String, target: Any, action: Selector) -> UIBarButtonItem {
         let item = UIBarButtonItem(image: UIImage(systemName: systemName, withConfiguration: configuration),
                                    style: .plain, target: target, action: action)
+        item.title = DPCommon.accessibilityLabel(forSymbol: systemName)
         item.accessibilityIdentifier = systemName
         item.accessibilityLabel = DPCommon.accessibilityLabel(forSymbol: systemName)
         return item

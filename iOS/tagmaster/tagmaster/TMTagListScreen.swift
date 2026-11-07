@@ -258,7 +258,8 @@ extension View {
     func tmTagListRow(selected: Bool, groupedInset: Bool = false) -> some View {
         let row = modifier(TMInertWhileEditing())
             .listRowInsets(EdgeInsets())
-            .listRowBackground(selected ? TMTheme.selectionWash : Color.clear)
+            // The wash runs to the list's edges, under a Duo crease's extra safe area too.
+            .listRowBackground((selected ? TMTheme.selectionWash : Color.clear).ignoresSafeArea(edges: .horizontal))
             .alignmentGuide(.listRowSeparatorLeading) { _ in 20 }
         if groupedInset {
             row.alignmentGuide(.listRowSeparatorTrailing) { $0.width - 20 }

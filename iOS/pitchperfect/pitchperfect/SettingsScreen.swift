@@ -730,6 +730,12 @@ final class SettingsHost: UIHostingController<SettingsSheet> {
     @available(*, unavailable)
     @MainActor required dynamic init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
+    /// A sheet whose only bar control is Done keeps one horizontal bar: a
+    /// vertical bar would take a column of the iPhone Duo's narrow outer display
+    /// from the rows to hold one button.
+    @available(iOS 27.1, *)
+    override var preferredVerticalBarBehavior: UIVerticalBarBehavior { .disabled }
+
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         if isBeingDismissed || presentingViewController == nil {

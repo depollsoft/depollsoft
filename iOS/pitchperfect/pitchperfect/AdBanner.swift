@@ -33,16 +33,28 @@ enum AdBanner {
 #endif
     }
 
+    /// The widest banner to show. The SDK refuses a banner view wider than the main
+    /// screen's long side ("Ad size will not fit on screen"), and on an iPhone Duo
+    /// the main screen is the outer display (678 points long) however the Duo is
+    /// held: open and held wide, a banner as wide as the inner display's page (867)
+    /// gets no ad at all. The only read of `UIScreen.main`, since it mirrors the SDK's.
+    static var widest: CGFloat {
+        let main = UIScreen.main.bounds
+        return max(main.width, main.height)
+    }
+
     static func size(width: CGFloat, landscape: Bool) -> AdSize {
         landscape ? landscapeAnchoredAdaptiveBanner(width: width) : portraitAnchoredAdaptiveBanner(width: width)
     }
 }
 
-/// Hosts the SDK's banner view: sizes it to the slot, loads once it is on screen
-/// and consent allows, and reloads when the width or orientation changes.
+/// Hosts the SDK's banner view: sizes it to the slot (centred, up to the widest
+/// the SDK takes), loads once it is on screen and consent allows, and reloads
+/// when the width or orientation changes.
 final class BannerHostView: UIView, BannerViewDelegate {
     let banner = BannerView()
-    private var loadedWidth: CGFloat = 0
+    /// The width and shape the current ad size was chosen for.
+    private var loaded: (width: CGFloat, landscape: Bool)?
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -58,7 +70,14 @@ final class BannerHostView: UIView, BannerViewDelegate {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
-    var isLandscape: Bool { window?.windowScene?.interfaceOrientation.isLandscape ?? false }
+    /// A landscape banner for a window wider than it is tall. The window's shape,
+    /// not the interface orientation: an iPhone Duo's inner display ignores the
+    /// supported orientations, and a window beside another app can be tall on a
+    /// screen held sideways.
+    var isLandscape: Bool {
+        guard let window else { return false }
+        return window.bounds.width > window.bounds.height
+    }
 
     override func didMoveToWindow() {
         super.didMoveToWindow()
@@ -68,17 +87,25 @@ final class BannerHostView: UIView, BannerViewDelegate {
         reloadIfNeeded(force: true)
     }
 
+    /// The banner's width in this slot: the slot's, up to the widest the SDK takes.
+    private var bannerWidth: CGFloat { min(bounds.width, AdBanner.widest) }
+
     override func layoutSubviews() {
         super.layoutSubviews()
-        banner.frame = bounds
+        // Centred: a slot wider than the widest banner keeps the plate either side.
+        banner.frame = CGRect(x: ((bounds.width - bannerWidth) / 2).rounded(), y: 0,
+                              width: bannerWidth, height: bounds.height)
         reloadIfNeeded(force: false)
     }
 
     private func reloadIfNeeded(force: Bool) {
         guard window != nil, bounds.width > 0 else { return }
-        guard force || bounds.width != loadedWidth else { return }
-        loadedWidth = bounds.width
-        banner.adSize = AdBanner.size(width: bounds.width, landscape: isLandscape)
+        // A window can turn landscape without its width changing (a Duo opening, a
+        // window beside another app), which changes the banner's size as well.
+        let landscape = isLandscape
+        guard force || loaded?.width != bounds.width || loaded?.landscape != landscape else { return }
+        loaded = (bounds.width, landscape)
+        banner.adSize = AdBanner.size(width: bannerWidth, landscape: landscape)
         guard !AdBanner.suppressed, AdConsent.canRequestAds else { return }
         banner.load(Request())
     }
@@ -98,8 +125,11 @@ struct BannerAdSlot: UIViewRepresentable {
     func updateUIView(_ view: BannerHostView, context: Context) {}
 
     func sizeThatFits(_ proposal: ProposedViewSize, uiView: BannerHostView, context: Context) -> CGSize? {
-        let width = proposal.width ?? uiView.window?.bounds.width ?? UIScreen.main.bounds.width
-        let size = AdBanner.size(width: width, landscape: uiView.isLandscape).size
+        // Without a proposal or a window yet, the narrowest phone's width stands in
+        // until layout proposes one (an iPhone Duo has two screens, so there is no
+        // one screen to ask).
+        let width = proposal.width ?? uiView.window?.bounds.width ?? 320
+        let size = AdBanner.size(width: min(width, AdBanner.widest), landscape: uiView.isLandscape).size
         return CGSize(width: width, height: size.height)
     }
 }
@@ -110,20 +140,70 @@ struct InstrumentPage<Content: View>: View {
     /// The style of the UIKit table this screen's list stands in for.
     var tableStyle = UITableView.Style.plain
     @ViewBuilder let content: () -> Content
+    /// An iPhone Duo standing half open (tabletop): the fold runs across the page.
+    @State private var standing = false
+    @State private var hingeStatus = 0
 
     var body: some View {
-        VStack(spacing: 0) {
+        // Standing, the banner tops the upper half, so the keys on the lower half
+        // under the fingers have the room it took and never sit against an ad.
+        BannerStack(bannerOnTop: standing) {
+            if showsBanner { banner }
             content()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-            if showsBanner {
-                BannerAdSlot()
-                    .accessibilityHidden(true)
+        }
+        .background {
+            GeometryReader { proxy in
+                let _ = hingeStatus
+                let sides = FoldSides(bounds: CGRect(origin: .zero, size: proxy.size), fold: Fold.band(in: proxy))
+                Color.clear.preference(key: StandingKey.self, value: sides.map { $0.across && $0.parts } ?? false)
             }
         }
+        .onPreferenceChange(StandingKey.self) { standing = $0 }
+        .hingeStatus($hingeStatus)
         // UIKit's screens pinned the banner to the safe area's foot and never made
         // room for the keyboard: it covered the banner and the rows beneath it.
         .ignoresSafeArea(.keyboard, edges: .bottom)
         .staffScreenBackground()
         .tableMargins(style: tableStyle)
     }
+
+    private var banner: some View {
+        BannerAdSlot()
+            .accessibilityHidden(true)
+    }
+}
+
+/// The banner (first, when there is one) docked below the content or topping it. One
+/// layout either way, so moving it keeps the same banner view and the ad it loaded,
+/// rather than building a new one that requests another ad on every fold.
+struct BannerStack: Layout {
+    var bannerOnTop: Bool
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        proposal.replacingUnspecifiedDimensions()
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        guard subviews.count == 2 else {
+            subviews.first?.place(at: bounds.origin, proposal: ProposedViewSize(bounds.size))
+            return
+        }
+        let banner = subviews[0], content = subviews[1]
+        let bannerHeight = min(banner.sizeThatFits(ProposedViewSize(width: bounds.width, height: nil)).height,
+                               bounds.height)
+        let contentHeight = bounds.height - bannerHeight
+        let bannerY = bannerOnTop ? bounds.minY : bounds.minY + contentHeight
+        let contentY = bannerOnTop ? bounds.minY + bannerHeight : bounds.minY
+        banner.place(at: CGPoint(x: bounds.minX, y: bannerY),
+                     proposal: ProposedViewSize(width: bounds.width, height: bannerHeight))
+        content.place(at: CGPoint(x: bounds.minX, y: contentY),
+                      proposal: ProposedViewSize(width: bounds.width, height: contentHeight))
+    }
+}
+
+/// Whether a fold runs across an instrument page (an iPhone Duo in tabletop).
+private struct StandingKey: PreferenceKey {
+    static let defaultValue = false
+    static func reduce(value: inout Bool, nextValue: () -> Bool) { value = value || nextValue() }
 }

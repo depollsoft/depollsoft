@@ -299,6 +299,7 @@ struct LoginIntroScreen: View {
                 Button("Skip") { dismiss() }
             }
         }
+        .horizontalBarOnly()
         .signInSheet(isPresented: $model.showingSignIn, onSignIn: { _ in model.accountArrived() })
         .onChange(of: model.showingSignIn) { _, showing in
             if model.signInSheetChanged(showing: showing) { dismiss() }

@@ -334,6 +334,13 @@ final class TagTracksModel {
     private(set) var session: TMTrackPlaybackSession?
     /// The page is off screen: nothing may start or present.
     private(set) var hasLeft = false
+    /// The Tracks pages showing this tag. A tag carried between the phone stack and
+    /// the split (an iPhone Duo opening or closing) is shown on two pages for a
+    /// moment, or on none, while its old page goes and its new one comes.
+    private var pagesShowing: Set<AnyHashable> = []
+    /// The router is carrying the tag to its new place: the old page going does not
+    /// stop the part that is playing, and the new page coming clears it.
+    var carriedAcross = false
 
     // Seams for tests: how a track is fetched, and how long it may take.
     var makeLoader: (URL, String) -> TMTrackLoader = { TMTrackLoader(url: $0, cacheKey: $1) }
@@ -348,9 +355,15 @@ final class TagTracksModel {
     var tag: DPTag? { detail?.tag }
     var tracks: [DPTrack] { tag?.tracks ?? [] }
 
-    func appeared() { hasLeft = false }
+    func appeared(page: AnyHashable = 0) {
+        pagesShowing.insert(page)
+        carriedAcross = false
+        hasLeft = false
+    }
 
-    func disappeared() {
+    func disappeared(page: AnyHashable = 0) {
+        pagesShowing.remove(page)
+        guard pagesShowing.isEmpty, !carriedAcross else { return }
         hasLeft = true
         stopPlayback()
     }

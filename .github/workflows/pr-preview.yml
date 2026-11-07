@@ -278,11 +278,12 @@ jobs:
 
   build-ios:
     name: Build iOS Preview
-    # Pinned to the same image as ios.yml/ios-app-tests.yml and
+    # Pinned to the same image and Xcode as ios.yml/ios-app-tests.yml and
     # release-assets.yml: a floating macos-latest silently changes the Xcode
     # version, and a matching Xcode lets this job share the SPM cache below
-    # with iOS CI instead of keeping a second copy.
-    runs-on: macos-26
+    # with iOS CI instead of keeping a second copy. Xcode 27.1 carries the
+    # iOS 27.1 SDK the apps need for iPhone Duo layouts.
+    runs-on: xcode-27
     timeout-minutes: 60
     needs: compute-version
     if: >-
@@ -299,12 +300,9 @@ jobs:
 
       - name: Select Xcode
         run: |
-          developer_dir=/Applications/Xcode.app/Contents/Developer
+          developer_dir=/Applications/Xcode_27.1.app/Contents/Developer
           if [ ! -d "$developer_dir" ]; then
-            developer_dir="$(xcode-select -p 2>/dev/null || true)"
-          fi
-          if [ -z "$developer_dir" ] || [ ! -d "$developer_dir" ]; then
-            echo "No usable Xcode installation found." >&2
+            echo "Xcode 27.1 is not installed on this runner." >&2
             exit 1
           fi
           echo "DEVELOPER_DIR=$developer_dir" >> "$GITHUB_ENV"
