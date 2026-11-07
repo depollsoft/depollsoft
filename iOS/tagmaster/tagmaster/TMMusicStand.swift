@@ -2,11 +2,13 @@
 //  TMMusicStand.swift
 //  tagmaster
 //
-//  An iPhone Duo standing half open on a table (tabletop) is a music stand: a
-//  tag's page reads on the upper half, the one that stands and faces the singers,
-//  and what they play lies on the lower half under the fingers: the key note and
-//  the sheet music, or on the Tracks page the parts. Every other window, and a
-//  Duo flat, closed or folded like a book, shows the page whole.
+//  An iPhone Duo standing half open on a table (tabletop) is a music stand: the
+//  words read on the upper half, the one that stands and faces the singers, and
+//  what they play lies on the lower half under the fingers. Summary stands its
+//  lyrics over the key, Sheet Music and the tag's facts; Tracks stands its notes
+//  and lyrics over the parts and the player. Details and Videos, pages to browse,
+//  stay whole. Every other window, and a Duo flat, closed or folded like a book,
+//  shows each page as it always has.
 //
 
 import SwiftUI
@@ -21,6 +23,12 @@ extension View {
     /// below. With nothing for the deck (`enabled` false) the page stays whole.
     func tmMusicStand<Deck: View>(enabled: Bool, @ViewBuilder deck: @escaping () -> Deck) -> some View {
         modifier(TMMusicStand(enabled: enabled, deck: deck))
+    }
+
+    /// A tag page that stays whole on the fold, as a list to browse does. It goes
+    /// plain there all the same, as the pages standing beside it do.
+    func tmMusicStand() -> some View {
+        modifier(TMMusicStand(enabled: false) { EmptyView() })
     }
 }
 
@@ -72,15 +80,6 @@ private struct TMMusicStand<Deck: View>: ViewModifier {
         VStack(spacing: 0) {
             content
                 .environment(\.tmOnStand, fold != nil)
-                // Standing, the page fades out where it meets the fold rather than
-                // slicing a line of text across.
-                .mask {
-                    VStack(spacing: 0) {
-                        Rectangle()
-                        LinearGradient(colors: [.black, .clear], startPoint: .top, endPoint: .bottom)
-                            .frame(height: fold == nil ? 0 : TMStandDeck.fade)
-                    }
-                }
                 .frame(height: fold?.minY)
             if let fold {
                 Color.clear
@@ -92,6 +91,11 @@ private struct TMMusicStand<Deck: View>: ViewModifier {
             }
         }
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: fold)
+        // Over the fold the barber pole would run from the words, across the crease
+        // and under the controls: a tag's pages go plain there, standing or not.
+        .background {
+            if band != nil { Color(.systemBackground).ignoresSafeArea() }
+        }
         .background {
             GeometryReader { proxy in
                 let _ = hingeStatus
@@ -110,120 +114,72 @@ private struct TMStandBandKey: PreferenceKey {
 
 // MARK: - Decks
 
-/// The deck's measures. Lying on the table under the fingers, the lower half is
-/// something to play, so the key and the sheet music are pads rather than the
-/// page's 44-point buttons, and both decks run the page's own width.
+/// The deck's measures: the page's own controls, a little taller for a hand
+/// reaching across a table, starting just below the fold.
 enum TMStandDeck {
-    /// The fade at the foot of the standing page, where it meets the fold.
-    static let fade: CGFloat = 24
-    /// Between the pads, side by side or stacked.
+    /// The key, Sheet Music and each part.
+    static let controlHeight: CGFloat = 52
+    /// Between the key and Sheet Music, side by side or stacked.
     static let gap: CGFloat = 12
-    /// Both pads' corners: the key's outline and Sheet Music's fill match.
-    static let corner: CGFloat = 12
-    /// Kept clear above and below stacked pads, the Key caption included.
-    static let margin: CGFloat = 24
-
-    /// A pad's height on a deck `deck` tall: a good part of the deck when the pads
-    /// sit side by side, half what is left when large text stacks them, never
-    /// shorter than a comfortable button nor so tall that they read as panels.
-    static func padHeight(deck: CGFloat, stacked: Bool) -> CGFloat {
-        let share = stacked ? (deck - 2 * margin - gap) / 2 : deck * 0.32
-        return min(max(share, 64), 120)
-    }
+    /// Above the deck's first control, below the fold's own margin.
+    static let top: CGFloat = 12
 }
 
-/// The deck under Summary, Details and Videos: the key note and the sheet music,
-/// the two things a singer reaches for with the tag up on the stand, side by side
-/// across the page's width (stacked when large text will not fit them so) and
-/// centred down the deck.
-struct TMStandKeyDeck: View {
-    let model: TagSummaryModel
-    @State private var visible = false
-
-    /// Whether the tag has anything for this deck.
-    static func has(_ model: TagSummaryModel) -> Bool {
-        guard let tag = model.tag else { return false }
-        return !(tag.writtenKey ?? "").isEmpty || tag.sheetMusicUri != nil
-    }
-
-    var body: some View {
-        if let tag = model.tag {
-            TMStandDeckScroll { deck in
-                ViewThatFits(in: .horizontal) {
-                    pads(tag, stacked: false, deck: deck)
-                    pads(tag, stacked: true, deck: deck)
-                }
-            }
-            .onReceive(TagSummaryPage.keyNoteTicks(active: visible && model.keyNotePlaying)) { _ in
-                model.syncKeyNote()
-            }
-            .onAppear { visible = true }
-            .onDisappear {
-                visible = false
-                model.stopKeyNote()
-            }
-        }
-    }
-
-    private func pads(_ tag: DPTag, stacked: Bool, deck: CGFloat) -> some View {
-        let height = TMStandDeck.padHeight(deck: deck, stacked: stacked)
-        let layout = stacked
-            ? AnyLayout(VStackLayout(alignment: .leading, spacing: TMStandDeck.gap))
-            : AnyLayout(HStackLayout(alignment: .bottom, spacing: TMStandDeck.gap))
-        return layout {
-            if let key = tag.writtenKey, !key.isEmpty {
-                VStack(alignment: .leading, spacing: 4) {
-                    TMCaption(text: "Key")
-                    TMKeyNoteButton(model: model, title: key, fillsHeight: true, font: .title3,
-                                    cornerRadius: TMStandDeck.corner)
-                        .frame(height: height)
-                        .accessibilityIdentifier("summary.key")
-                }
-            }
-            if tag.sheetMusicUri != nil {
-                TagSummaryPage.sheetMusicButton(model, textStyle: .title3, cornerRadius: TMStandDeck.corner)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: height)
-            }
-        }
-    }
-}
-
-/// The deck under Tracks: one row per part, as the page lists them. The player
-/// stays on the page above, with the recording notes.
+/// The deck under Tracks: the parts, the one in the player marked, and once a part
+/// is chosen the player itself, held under them where the hand is while the parts
+/// scroll.
 struct TMStandPartsDeck: View {
     let model: TagTracksModel
 
     var body: some View {
-        TMStandDeckScroll { _ in
-            VStack(alignment: .leading, spacing: 0) {
+        VStack(spacing: 0) {
+            TMReadableColumn {
                 Text("Tracks")
                     .font(.subheadline)
                     .foregroundStyle(Color(.secondaryLabel))
                     .padding(.leading, 4)
-                    .padding(.bottom, 4)
-                ForEach(Array(model.tracks.enumerated()), id: \.offset) { index, track in
-                    TMTrackRow(model: model, track: track)
-                        .padding(.leading, 3)
-                    if index < model.tracks.count - 1 { Divider().padding(.leading, 48) }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(.top, TMStandDeck.top)
+            .padding(.bottom, 4)
+            ScrollViewReader { reader in
+                ScrollView {
+                    TMReadableColumn {
+                        VStack(alignment: .leading, spacing: 0) {
+                            ForEach(Array(model.tracks.enumerated()), id: \.offset) { index, track in
+                                TMTrackRow(model: model, track: track)
+                                    .padding(.leading, 3)
+                                    .id(index)
+                                // The rules either side of the playing part would cut its wash;
+                                // they keep their hairline of space so no row moves.
+                                if index < model.tracks.count - 1 {
+                                    Divider()
+                                        .padding(.leading, 48)
+                                        .opacity(current == index || current == index + 1 ? 0 : 1)
+                                }
+                            }
+                        }
+                    }
+                    .padding(.bottom, 8)
                 }
+                .scrollBounceBehavior(.basedOnSize)
+                // The player coming in shortens the parts: the one it holds stays in
+                // view, once the shorter list has been laid out.
+                .onChange(of: current) { _, index in
+                    guard let index else { return }
+                    DispatchQueue.main.async { withAnimation { reader.scrollTo(index) } }
+                }
+            }
+            if model.playerVisible {
+                TMReadableColumn { TMTrackPlayer(model: model.player) }
+                    .padding(.vertical, 8)
             }
         }
     }
-}
 
-/// A deck's body: in the page's readable column, centred down the deck while it
-/// fits and scrolling when it doesn't (large text). Its content learns the deck's height.
-private struct TMStandDeckScroll<Content: View>: View {
-    @ViewBuilder let content: (CGFloat) -> Content
-
-    var body: some View {
-        GeometryReader { proxy in
-            ScrollView {
-                TMReadableColumn { content(proxy.size.height) }
-                    .frame(minHeight: proxy.size.height)
-            }
-            .scrollBounceBehavior(.basedOnSize)
-        }
+    /// The part in the player, by its place in the list.
+    private var current: Int? {
+        guard model.playerVisible, let track = model.player.track else { return nil }
+        return model.tracks.firstIndex { $0 === track }
     }
 }

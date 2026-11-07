@@ -10,8 +10,8 @@ import SwiftUI
 
 struct TagTracksPage: View {
     let model: TagTracksModel
-    /// On a tabletop Duo the parts are on the deck below the fold; the page keeps
-    /// the recording notes and the player.
+    /// On a tabletop Duo the parts and the player are on the deck below the fold;
+    /// the page stands the recording notes and the lyrics, to sing from.
     @Environment(\.tmOnStand) private var onStand
     /// This page, among any others showing the same tag while it is carried across.
     @State private var page = UUID()
@@ -60,11 +60,17 @@ struct TagTracksPage: View {
                     .foregroundStyle(Color(.secondaryLabel))
                 TMFactText(text: method)
             }
-            if model.playerVisible {
+            if onStand {
+                if !model.playerVisible, !model.tracks.isEmpty {
+                    TMFactText(text: "Tap a part below to play it.")
+                        .foregroundStyle(Color(.secondaryLabel))
+                }
+                if let lyrics = model.tag?.lyrics, !lyrics.isEmpty {
+                    TMLyrics(text: lyrics, standing: true)
+                        .padding(.top, 8)
+                }
+            } else if model.playerVisible {
                 TMTrackPlayer(model: model.player)
-            } else if onStand, !model.tracks.isEmpty {
-                TMFactText(text: "Tap a part below to play it.")
-                    .foregroundStyle(Color(.secondaryLabel))
             }
         }
     }
@@ -77,7 +83,8 @@ struct TagTracksPage: View {
 }
 
 /// One part: tapping it plays the learning track. On the Tracks page, and on a
-/// tabletop Duo's deck.
+/// tabletop Duo's deck, where the part in the player is marked: the player that
+/// says so is beside the hand, not up on the stand.
 struct TMTrackRow: View {
     @Environment(\.tmAccent) private var accent
     let model: TagTracksModel
@@ -87,9 +94,11 @@ struct TMTrackRow: View {
 
     var body: some View {
         let loading = model.loadingTrack === track
+        let current = lastInList == nil && model.playerVisible && model.player.track === track
+        let state = model.player.isPlaying ? "Playing" : "Paused"
         Button { model.select(track) } label: {
             HStack(spacing: 15) {
-                Image(systemName: "play.circle")
+                Image(systemName: current ? "play.circle.fill" : "play.circle")
                     .font(.title2)
                     .foregroundStyle(accent)
                 Text(track.title ?? "")
@@ -101,9 +110,21 @@ struct TMTrackRow: View {
                 if loading {
                     TMBarberPole(compact: true)
                         .accessibilityHidden(true)
+                } else if current {
+                    Text(state)
+                        .font(.subheadline)
+                        .foregroundStyle(Color(.secondaryLabel))
                 }
             }
             .frame(minHeight: 52)
+            .padding(.trailing, current ? 12 : 0)
+            .background(alignment: .leading) {
+                if current {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(TMTheme.selectionWash)
+                        .padding(.leading, -8)
+                }
+            }
             .contentShape(Rectangle())
             // UIKit's rules ended 20 pt from the trailing edge; the section's last is full width.
             .alignmentGuide(.listRowSeparatorTrailing) { lastInList == true ? $0.width * 2 : $0[.trailing] }
@@ -112,7 +133,8 @@ struct TMTrackRow: View {
             }
         }
         .accessibilityLabel(loading ? "\(track.title ?? "Track"), loading" : (track.title ?? "Track"))
-        .accessibilityHint("Plays the learning track")
+        .accessibilityValue(current ? state : "")
+        .accessibilityHint(current ? "Plays the learning track from the start" : "Plays the learning track")
     }
 }
 

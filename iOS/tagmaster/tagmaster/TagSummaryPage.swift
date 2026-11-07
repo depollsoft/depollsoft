@@ -14,19 +14,19 @@ import UIKit
 /// from the edges, limited to a readable width.
 struct TMPageScroll<Content: View>: View {
     @ViewBuilder var content: Content
-    /// Standing on a tabletop Duo, the page fades out into the fold.
+    /// Standing on a tabletop Duo, the page ends at the fold.
     @Environment(\.tmOnStand) private var onStand
 
     var body: some View {
         ScrollView {
             TMReadableColumn { content }
                 .padding(.vertical, 4)
-                // Room to scroll the last line up out of the fade.
-                .padding(.bottom, onStand ? TMStandDeck.fade : 0)
         }
         // UIKit's scroller ended at the safe area's foot (its keyboard guide), above the
         // page bar, and clipped there; the page never scrolled beneath the bar.
         .clipped()
+        // Stood up, a page shortened to the upper half shows that it scrolls on.
+        .scrollIndicatorsFlash(trigger: onStand)
     }
 }
 
@@ -106,16 +106,25 @@ struct TagSummaryPage: View {
     let model: TagSummaryModel
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.displayScale) private var displayScale
-    /// On a tabletop Duo the key and Sheet Music are on the deck below the fold.
+    /// This is the page's lower part, on a tabletop Duo's deck (`tmMusicStand`): the
+    /// key and Sheet Music, the lists the tag is on and its facts.
+    var deck = false
+    /// On a tabletop Duo the page stands above the fold: the tag's name and its words.
     @Environment(\.tmOnStand) private var onStand
     @State private var visible = false
 
     var body: some View {
         if let tag = model.tag {
             TMPageScroll {
-                VStack(alignment: .leading, spacing: 8) {
-                    identity(tag)
-                    columns(tag)
+                if deck {
+                    lying(tag)
+                } else if onStand {
+                    standing(tag)
+                } else {
+                    VStack(alignment: .leading, spacing: 8) {
+                        identity(tag)
+                        columns(tag)
+                    }
                 }
             }
             // The note is watched only while it sounds on a page someone can see,
@@ -138,7 +147,47 @@ struct TagSummaryPage: View {
             : Empty(completeImmediately: false).eraseToAnyPublisher()
     }
 
-    private func identity(_ tag: DPTag) -> some View {
+    /// Standing: the tag's name and its words, the lyrics large enough to read from
+    /// across a table. A tag without words stands its facts instead.
+    private func standing(_ tag: DPTag) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            identity(tag, chips: false)
+            if hasProse { prose(tag, standing: true) } else { facts(tag) }
+        }
+    }
+
+    /// On the deck: the key and Sheet Music side by side (stacked when the text is
+    /// too large for that), then the lists the tag is on and, under its words, its facts.
+    private func lying(_ tag: DPTag) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            if !(tag.writtenKey ?? "").isEmpty || tag.sheetMusicUri != nil {
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: TMStandDeck.gap) { keyAndMusic(tag) }
+                        .fixedSize(horizontal: false, vertical: true)
+                    VStack(spacing: TMStandDeck.gap) { keyAndMusic(tag) }
+                }
+            }
+            TMListChips(model: model)
+            if hasProse { facts(tag) }
+        }
+        // TMPageScroll already leaves 4 points above.
+        .padding(.top, TMStandDeck.top - 4)
+    }
+
+    @ViewBuilder
+    private func keyAndMusic(_ tag: DPTag) -> some View {
+        if let key = tag.writtenKey, !key.isEmpty {
+            TMKeyNoteButton(model: model, title: key, fillsHeight: true)
+                .frame(minHeight: TMStandDeck.controlHeight)
+                .accessibilityIdentifier("summary.key")
+        }
+        if tag.sheetMusicUri != nil {
+            Self.sheetMusicButton(model)
+                .frame(maxWidth: .infinity, minHeight: TMStandDeck.controlHeight, maxHeight: .infinity)
+        }
+    }
+
+    private func identity(_ tag: DPTag, chips: Bool = true) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(tag.title ?? "")
                 .font(.title)
@@ -155,7 +204,7 @@ struct TagSummaryPage: View {
                     .foregroundStyle(Color(.secondaryLabel))
                     .fixedSize(horizontal: false, vertical: true)
             }
-            TMListChips(model: model)
+            if chips { TMListChips(model: model) }
         }
     }
 
@@ -182,17 +231,16 @@ struct TagSummaryPage: View {
 
     private func performance(_ tag: DPTag) -> some View {
         // UIKit held Sheet Music and the key to one height, the taller of the two.
-        // On a tabletop Duo both are on the deck below the fold (`TMStandKeyDeck`).
         TMMatchedHeightStack {
             facts(tag)
-            if !onStand, let key = tag.writtenKey, !key.isEmpty {
+            if let key = tag.writtenKey, !key.isEmpty {
                 TMCaption(text: "Key").layoutValue(key: TMGapBefore.self, value: 16)
                 TMKeyNoteButton(model: model, title: key, fillsHeight: true)
                     .accessibilityIdentifier("summary.key")
                     .layoutValue(key: TMGapBefore.self, value: 4)
                     .layoutValue(key: TMMatchesHeight.self, value: true)
             }
-            if !onStand, tag.sheetMusicUri != nil {
+            if tag.sheetMusicUri != nil {
                 Self.sheetMusicButton(model)
                     .layoutValue(key: TMGapBefore.self, value: 16)
                     .layoutValue(key: TMMatchesHeight.self, value: true)
@@ -217,24 +265,18 @@ struct TagSummaryPage: View {
         }
     }
 
-    static func sheetMusicButton(_ model: TagSummaryModel, textStyle: UIFont.TextStyle = .body,
-                                 cornerRadius: CGFloat? = nil) -> some View {
-        TMSheetMusicButton(busy: model.sheetMusicBusy, textStyle: textStyle, cornerRadius: cornerRadius) {
-            model.openSheetMusic()
-        }
+    private static func sheetMusicButton(_ model: TagSummaryModel) -> some View {
+        TMSheetMusicButton(busy: model.sheetMusicBusy) { model.openSheetMusic() }
             .overlay(alignment: .trailing) {
                 TMBarberPole.operation("Opening sheet music…", active: model.sheetMusicBusy)
                     .padding(.trailing, 12)
             }
     }
 
-    private func prose(_ tag: DPTag) -> some View {
+    private func prose(_ tag: DPTag, standing: Bool = false) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             if let lyrics = tag.lyrics, !lyrics.isEmpty {
-                VStack(alignment: .leading, spacing: 4) {
-                    TMCaption(text: "Lyrics")
-                    TMFactText(text: lyrics).accessibilityIdentifier("summary.lyrics")
-                }
+                TMLyrics(text: lyrics, standing: standing)
             }
             if let notes = tag.notes, !notes.isEmpty {
                 VStack(alignment: .leading, spacing: 4) {
@@ -246,11 +288,27 @@ struct TagSummaryPage: View {
     }
 }
 
+/// A tag's lyrics under their caption: body text on the page, Title 3 standing on
+/// a tabletop Duo, to be read from across a table.
+struct TMLyrics: View {
+    let text: String
+    var standing = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            TMCaption(text: "Lyrics")
+            TMFactText(text: text, font: standing ? .title3 : .body)
+                .accessibilityIdentifier("summary.lyrics")
+        }
+    }
+}
+
 struct TMFactText: View {
     let text: String
+    var font = Font.body
     var body: some View {
         Text(text)
-            .font(.body)
+            .font(font)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -354,9 +412,6 @@ struct TMKeyNoteButton: View {
     /// Takes any taller height it is offered (Sheet Music's), outline and all, as
     /// the UIKit key did under its equal-height constraint.
     var fillsHeight = false
-    /// The title's text style: body on the page, larger on a tabletop Duo's deck.
-    var font = Font.body
-    var cornerRadius: CGFloat = 8
     /// Where the key is shown, for analytics.
     var source = TagMasterUsage.PitchSource.tag
     @Environment(\.colorScheme) private var colorScheme
@@ -370,14 +425,14 @@ struct TMKeyNoteButton: View {
             Text(title)
                 .lineLimit(singleLine ? 1 : nil)
         }
-        .font(font)
+        .font(.body)
         .foregroundStyle(foreground)
         .padding(.vertical, 4)
         .padding(.horizontal, 8)
         .frame(maxWidth: singleLine ? nil : .infinity, minHeight: 44, maxHeight: fillsHeight ? .infinity : nil)
         .frame(minWidth: 44)
-        .background(RoundedRectangle(cornerRadius: cornerRadius).fill(playing ? fill : .clear))
-        .overlay(RoundedRectangle(cornerRadius: cornerRadius).strokeBorder(accent, lineWidth: 1.5))
+        .background(RoundedRectangle(cornerRadius: 8).fill(playing ? fill : .clear))
+        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(accent, lineWidth: 1.5))
         .contentShape(Rectangle())
         // UIKit touches, so the key sounds at touch-down: a SwiftUI press inside the
         // page's scroll view is held back while the system decides whether a scroll
@@ -408,30 +463,19 @@ struct TMKeyNoteButton: View {
 /// read at under 2:1), as the sounding key's is.
 struct TMSheetMusicButton: UIViewRepresentable {
     let busy: Bool
-    var textStyle = UIFont.TextStyle.body
-    /// Fixed corners to match a key beside it; nil keeps UIKit's medium style.
-    var cornerRadius: CGFloat?
     let action: () -> Void
 
     func makeUIView(context: Context) -> UIButton {
         var configuration = UIButton.Configuration.filled()
         configuration.baseForegroundColor = UIColor { $0.userInterfaceStyle == .dark ? .black : .white }
-        if let cornerRadius {
-            configuration.cornerStyle = .fixed
-            configuration.background.cornerRadius = cornerRadius
-        } else {
-            configuration.cornerStyle = .medium
-        }
+        configuration.cornerStyle = .medium
         configuration.image = UIImage(systemName: "doc.richtext")
-        if textStyle != .body {
-            configuration.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(textStyle: textStyle)
-        }
         configuration.imagePadding = 8
         configuration.titleLineBreakMode = .byWordWrapping
         configuration.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 44, bottom: 8, trailing: 44)
-        configuration.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { [textStyle] attributes in
+        configuration.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attributes in
             var attributes = attributes
-            attributes.font = UIFont.preferredFont(forTextStyle: textStyle)
+            attributes.font = UIFont.preferredFont(forTextStyle: .body)
             return attributes
         }
         let button = UIButton(configuration: configuration)

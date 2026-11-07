@@ -62,19 +62,22 @@ the iOS 27.1 reserved-region API. Neither checks for the device.
   (`hingeStatus`); folding and unfolding a running app, quickly or slowly, moves
   the insets with it.
 - **Half shut upright (tabletop): a music stand.** It is still the stack, but a
-  tag stands up: each of its pages reads on the upper half, the one facing the
-  singers, and what they play lies on the lower half under the fingers, above
-  the page bar (`tmMusicStand`, `TMMusicStand.swift`). Summary, Details and
-  Videos put the key note and Sheet Music there, as two pads side by side
-  (stacked at large text sizes) up to 120 points tall, held down to sound the key
-  as on the page; Tracks puts the parts there and keeps the recording notes and
-  the player above. Both decks run the page's readable width and sit centred
-  on the lower half, and the page fades out into the fold rather than cutting a
-  line in two. A page with nothing for its deck, or a fold leaving either part
-  too little room, stays whole. Standing up
+  tag's words stand up on the upper half, the one facing the singers, and what
+  they play lies on the lower half under the fingers, above the page bar
+  (`tmMusicStand`, `TMMusicStand.swift`). Summary stands the tag's name and its
+  lyrics and notes, the lyrics in Title 3 to read from across a table; its deck
+  starts just below the fold with the key note and Sheet Music side by side
+  across the readable width (the page's own buttons, 52 points tall, stacked at
+  large text sizes), then the lists the tag is on and its facts. Tracks stands
+  the recording notes and the lyrics; its deck holds the parts and, once one is
+  chosen, the player under them, with the part in the player marked (Playing
+  or Paused) and kept in view. Details and Videos, pages to browse, stay whole
+  and scroll across the fold as Home and the lists do, as Apple's guidance has
+  continuous content do. A tag's pages draw no barber pole while the fold is
+  active: it ran from the words, across the crease and under the controls. A
+  fold leaving either part too little room keeps every page whole. Standing up
   or lying down keeps the page in place, so its scroll position and a playing
-  part survive. Home and the lists still scroll across the fold, as Apple's
-  guidance has continuous content do.
+  part survive.
 - **Opening, closing and turning carry the tag.** Opening moves the tag on top of
   the stack, with its sheet music, beside the list (`TMRouter.setExpanded(true)`);
   closing puts the tag beside the list on top of the stack (`TMRouter.useStack()`).

@@ -279,9 +279,9 @@ final class TMDuoTests: TMBehaviorTestCase {
         XCTAssertFalse(TMStandFold.stands(CGRect(x: 0, y: 600, width: 669, height: 40), in: page), "Too little deck below")
     }
 
-    /// Upright and half shut on a table, the tag's page reads on the standing half and
+    /// Upright and half shut on a table, the tag's words read on the standing half and
     /// what the singer plays lies on the half under the fingers.
-    func testInTabletopTheKeyAndThePartsLieBelowTheFold() throws {
+    func testInTabletopTheWordsStandAndTheControlsLieBelowTheFold() throws {
         seedCachedTag(id: 1809)
         let upright = CGSize(width: 669, height: 951)
         let fold = CGRect(x: 0, y: 455.5, width: upright.width, height: 40)
@@ -299,41 +299,78 @@ final class TMDuoTests: TMBehaviorTestCase {
         settle()
         let driver = UIDriver(window)
 
+        // Summary stands its lyrics; the key, Sheet Music and the facts lie below. (The
+        // fold is simulated in SwiftUI's global space, which inside the navigation
+        // stack is not the window's, so the halves are measured where they landed.)
+        let lyrics = try XCTUnwrap(driver.element(id: "summary.lyrics"), "Summary stands the lyrics")
         let key = try XCTUnwrap(driver.element(id: "summary.key"), "Summary's deck holds the key note")
-        XCTAssertGreaterThanOrEqual(key.accessibilityFrame.minY, fold.maxY)
         let music = try XCTUnwrap(driver.element(label: "Sheet Music"))
-        XCTAssertGreaterThanOrEqual(music.accessibilityFrame.minY, fold.maxY)
-        // They are pads side by side across the page's width, one height, well over a button's.
+        let standing = try XCTUnwrap(scroller(holding: lyrics))
+        let deck = try XCTUnwrap(scroller(holding: key))
+        XCTAssertEqual(deck.minY - standing.maxY, fold.height, accuracy: 1, "The fold's band lies between them")
+        XCTAssertLessThanOrEqual(lyrics.accessibilityFrame.maxY, standing.maxY, "The lyrics are whole above the fold")
+        XCTAssertEqual(key.accessibilityFrame.minY - deck.minY, TMStandDeck.top, accuracy: 1,
+                       "First on the deck, not floated down it")
+        // Side by side across the page's width, at one height: the page's own buttons.
         XCTAssertEqual(key.accessibilityFrame.minX, 16, accuracy: 1)
         XCTAssertEqual(music.accessibilityFrame.maxX, upright.width - 16, accuracy: 1)
         XCTAssertLessThan(key.accessibilityFrame.maxX, music.accessibilityFrame.minX)
-        XCTAssertEqual(key.accessibilityFrame.maxY, music.accessibilityFrame.maxY, accuracy: 1)
+        XCTAssertEqual(key.accessibilityFrame.minY, music.accessibilityFrame.minY, accuracy: 1)
         XCTAssertEqual(key.accessibilityFrame.height, music.accessibilityFrame.height, accuracy: 1)
-        XCTAssertGreaterThanOrEqual(key.accessibilityFrame.height, 64)
+        XCTAssertEqual(key.accessibilityFrame.height, TMStandDeck.controlHeight, accuracy: 1)
+        let tagID = try XCTUnwrap(driver.element(label: "Tag ID"))
+        XCTAssertGreaterThan(tagID.accessibilityFrame.minY, key.accessibilityFrame.maxY, "The facts follow on the deck")
+
+        // Details stays whole, with no deck.
+        model.selectedPage = .details
+        settle()
+        XCTAssertFalse(driver.exists(id: "summary.key"), "Details has no deck")
 
         model.selectedPage = .tracks
         settle()
         let lead = try XCTUnwrap(driver.element(label: "Lead"), "Tracks' deck holds the parts")
-        XCTAssertGreaterThanOrEqual(lead.accessibilityFrame.minY, fold.maxY)
+        let standingLyrics = try XCTUnwrap(driver.element(id: "summary.lyrics"), "Tracks stands the lyrics too")
+        let parts = try XCTUnwrap(scroller(holding: lead))
+        XCTAssertGreaterThanOrEqual(parts.minY - standingLyrics.accessibilityFrame.maxY, fold.height,
+                                    "The parts lie below the fold, the lyrics above it")
         XCTAssertEqual(lead.accessibilityFrame.maxX, upright.width - 16, accuracy: 1, "The parts run the page's width")
         XCTAssertTrue(driver.exists(label: "Tap a part below to play it."))
 
-        // A part playing on the stand keeps playing as the device is laid flat: the
-        // page stays where it was, so it never goes and stops the player.
-        let track = try XCTUnwrap(model.tracks.tracks.first)
+        // The player comes in on the deck, under the parts, and the part it holds is marked.
+        let track = try XCTUnwrap(model.tracks.tracks.first { $0.title == "Lead" })
         let format = try XCTUnwrap(AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 2))
         let buffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 44_100))
         buffer.frameLength = 44_100
         model.tracks.present(track, buffer: buffer)
         settle()
         XCTAssertTrue(model.tracks.playerVisible)
+        let player = try XCTUnwrap(driver.element(id: "tagmaster.trackPlayer"))
+        let shortened = try XCTUnwrap(scroller(holding: try XCTUnwrap(driver.element(label: "Lead"))))
+        XCTAssertGreaterThanOrEqual(player.accessibilityFrame.minY, shortened.maxY, "The player lies under the parts")
+        XCTAssertEqual(shortened.minY, parts.minY, accuracy: 1, "on the deck")
+        let playing = try XCTUnwrap(driver.element(label: "Lead"))
+        XCTAssertTrue(["Playing", "Paused"].contains(playing.accessibilityValue ?? ""), "The part in the player is marked")
+        XCTAssertGreaterThanOrEqual(playing.accessibilityFrame.minY, shortened.minY - 1, "and kept in view")
+        XCTAssertLessThanOrEqual(playing.accessibilityFrame.maxY, shortened.maxY + 1)
+        XCTAssertFalse(driver.exists(label: "Tap a part below to play it."))
 
+        // A part playing on the stand keeps playing as the device is laid flat: the
+        // page stays where it was, so it never goes and stops the player.
         TMStandFold.simulated = nil
         window.frame = CGRect(origin: .zero, size: CGSize(width: upright.width, height: upright.height - 1))
         settle()
-        XCTAssertFalse(driver.exists(label: "Tap a part below to play it."), "Laid flat, the page is whole again")
         XCTAssertTrue(driver.exists(label: "Lead"))
+        XCTAssertEqual(driver.element(label: "Lead")?.accessibilityValue ?? "", "", "Laid flat, the page is whole again")
         XCTAssertTrue(model.tracks.playerVisible, "and the part is still in the player")
+    }
+
+    /// The window frame of the scroller showing `element`: a half of the stand.
+    private func scroller(holding element: NSObject) -> CGRect? {
+        let centre = CGPoint(x: element.accessibilityFrame.midX, y: element.accessibilityFrame.midY)
+        return descendants(of: window) { $0 is UIScrollView }
+            .compactMap { view in view.superview.map { $0.convert(view.frame, to: nil) } }
+            .filter { $0.contains(centre) }
+            .min { $0.height < $1.height }
     }
 
     private func open(_ host: UIViewController) {
