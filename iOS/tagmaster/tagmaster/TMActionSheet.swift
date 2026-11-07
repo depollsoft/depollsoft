@@ -32,6 +32,10 @@ final class TMPresentingAnchor: UIView {
     var make: (TMPresentingAnchor) -> UIViewController = { _ in UIViewController() }
     /// Something like this is already presented (by another copy of this control).
     var alreadyUp: (UIViewController) -> Bool = { _ in false }
+    /// Wanting it while one is already up takes that one over, so this copy can close
+    /// it: for a presentation only one control can want at a time, whose first copy
+    /// may have gone with its shell.
+    var adoptsPresented = false
     private(set) weak var presented: UIViewController?
 
     override init(frame: CGRect) {
@@ -57,7 +61,10 @@ final class TMPresentingAnchor: UIView {
         // A bar item is first placed at a provisional size; anchor once it has its own.
         if wanted, presented == nil, bounds.height >= 30, let root = window?.rootViewController {
             let top = TMPresentingAnchor.top(root)
-            guard !alreadyUp(top) else { return }
+            guard !alreadyUp(top) else {
+                if adoptsPresented { presented = top }
+                return
+            }
             let controller = make(self)
             presented = controller
             top.present(controller, animated: UIView.areAnimationsEnabled)

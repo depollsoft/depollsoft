@@ -169,6 +169,15 @@ struct InstrumentGeometry: Equatable, PitchFaceLayout {
         return CGRect(x: center.x - cellRadius, y: center.y - cellRadius, width: cellRadius * 2, height: cellRadius * 2)
     }
 
+    /// What VoiceOver frames for a cell. Folded, a fold only splits the face while
+    /// the touch circle (1.15 × the cell) stays 44 points or more, so the cell itself
+    /// can be smaller: the element takes the touch circle, as a finger does.
+    func accessibilityRect(_ index: Int) -> CGRect {
+        let rect = cellRect(index)
+        guard posture != .flat else { return rect }
+        return rect.insetBy(dx: -cellRadius * 0.15, dy: -cellRadius * 0.15)
+    }
+
     /// The cell under `point`, with a touch target slightly larger than the glass; -1 for none.
     func cellIndex(at point: CGPoint) -> Int {
         for (index, center) in cellCenters.enumerated() {
@@ -280,10 +289,12 @@ private struct CentredOffTheFold: ViewModifier {
             let sides = FoldSides(bounds: bounds, fold: Fold.band(in: proxy))
             let page = sides.flatMap { $0.across || !$0.parts ? nil : $0 }
                 .map { layoutDirection == .leftToRight ? $0.first : $0.second } ?? bounds
+            // The fold is in fixed left-to-right coordinates, but the reader sets its
+            // content from the leading edge, which right to left is the right one.
             content
                 .frame(width: page.width)
                 .frame(maxHeight: .infinity, alignment: .top)
-                .offset(x: page.minX)
+                .offset(x: layoutDirection == .leftToRight ? page.minX : bounds.maxX - page.maxX)
         }
         .refreshesOnFold($hingeStatus)
     }
@@ -938,7 +949,7 @@ struct PitchInstrumentView: View {
             }
             ForEach(Array(model.notes.indices), id: \.self) { index in
                 if index < geometry.cellCenters.count {
-                    let rect = geometry.cellRect(index)
+                    let rect = geometry.accessibilityRect(index)
                     element(rect, label: model.spokenName(at: index), selected: false) {
                         model.activate(cell: index)
                     }
@@ -952,6 +963,10 @@ struct PitchInstrumentView: View {
             }
         }
         .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
+        // The geometry is drawn and touched in fixed left-to-right coordinates (the
+        // book turns round through `displayOnLeft`), so the elements are placed in
+        // them too; right to left they would otherwise land on the mirror image.
+        .environment(\.layoutDirection, .leftToRight)
         .allowsHitTesting(false)
     }
 

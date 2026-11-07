@@ -183,15 +183,27 @@ struct TMRootView: View {
     let router: TMRouter
     @Environment(\.horizontalSizeClass) private var horizontal
     @Environment(\.verticalSizeClass) private var vertical
+    /// The shell on screen. It follows the window a beat later, once the router has
+    /// marked the tag it is about to carry, since SwiftUI may take the old shell's
+    /// pages down before the new shell appears.
+    @State private var shell: TMShellLayout?
 
     var body: some View {
         GeometryReader { geometry in
-            switch TMShellLayout(idiom: UIDevice.current.userInterfaceIdiom, horizontal: horizontal,
-                                 vertical: vertical, width: geometry.size.width,
-                                 fold: TMBookRoot.uprightFold(in: geometry)) {
-            case .stack: TMStackRoot(router: router)
-            case .split: TMSplitRoot(router: router)
-            case .book: TMBookRoot(router: router)
+            let layout = TMShellLayout(idiom: UIDevice.current.userInterfaceIdiom, horizontal: horizontal,
+                                       vertical: vertical, width: geometry.size.width,
+                                       fold: TMBookRoot.uprightFold(in: geometry))
+            Group {
+                switch shell ?? layout {
+                case .stack: TMStackRoot(router: router)
+                case .split: TMSplitRoot(router: router)
+                case .book: TMBookRoot(router: router)
+                }
+            }
+            .onAppear { shell = layout }
+            .onChange(of: layout) { _, new in
+                router.shellWillChange()
+                shell = new
             }
         }
     }

@@ -169,8 +169,19 @@ final class HostedApp {
         songs.editSong(DPSongsModel.sharedInstance.currentList.songs[row])
     }
 
-    func typeSongTitle(_ title: String) {
-        let field = descendants(of: UITextField.self, in: topPresented.view).first!
+    func typeSongTitle(_ title: String, file: StaticString = #filePath, line: UInt = #line) {
+        // The editor's toolbar can be in the tree a beat before its title field (CI saw
+        // Done without the field), so wait for the field rather than crash the suite.
+        let deadline = Date().addingTimeInterval(10)
+        var field = descendants(of: UITextField.self, in: topPresented.view).first
+        while field == nil, Date() < deadline {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.01))
+            field = descendants(of: UITextField.self, in: topPresented.view).first
+        }
+        guard let field else {
+            XCTFail("The song editor never showed its title field", file: file, line: line)
+            return
+        }
         field.text = title
         field.sendActions(for: .editingChanged)
     }

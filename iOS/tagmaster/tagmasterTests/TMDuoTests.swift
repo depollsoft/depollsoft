@@ -214,6 +214,35 @@ final class TMDuoTests: TMBehaviorTestCase {
         }
     }
 
+    /// The old shell's Tracks page can go before the new shell appears and moves the
+    /// tag: the root has the router mark the tag before it swaps shells, so the part
+    /// keeps playing however SwiftUI orders the two.
+    func testThePartKeepsPlayingWhenTheOldPageGoesBeforeTheNewShellComes() throws {
+        let router = TMRouter()
+        router.showTag(1809, source: nil)
+        let model = try XCTUnwrap(router.path.last?.tagModel)
+        let tracks = model.tracks
+        tracks.appeared(page: "stack")
+
+        router.shellWillChange()
+        tracks.disappeared(page: "stack")
+        XCTAssertFalse(tracks.hasLeft, "Opening: the stack's page went first")
+        router.setExpanded(true)
+        tracks.appeared(page: "book")
+        XCTAssertTrue(router.detail === model)
+        XCTAssertFalse(tracks.carriedAcross, "The book's page coming clears the mark")
+
+        router.shellWillChange()
+        tracks.disappeared(page: "book")
+        XCTAssertFalse(tracks.hasLeft, "Closing: the book's page went first")
+        router.useStack()
+        tracks.appeared(page: "stack again")
+        XCTAssertFalse(tracks.hasLeft)
+
+        tracks.disappeared(page: "stack again")
+        XCTAssertTrue(tracks.hasLeft, "Leaving the page afterwards still stops the part")
+    }
+
     func testTheRouterMarksTheTagItCarries() throws {
         let router = TMRouter()
         router.showTag(1809, source: nil)
@@ -260,12 +289,57 @@ final class TMDuoTests: TMBehaviorTestCase {
         XCTAssertTrue(model.expanded, "Beside the list the bar grows the steppers and toggles")
         XCTAssertEqual(model.selectedPage, .tracks)
 
+        XCTAssertFalse(model.tracks.hasLeft, "The Tracks page going with the stack left the part alone")
+
         close(host)
         spinUntil("the stack takes the tag") { router.path.last?.tagModel === model }
         XCTAssertFalse(router.expanded)
         XCTAssertFalse(router.hasDetail)
         XCTAssertFalse(model.expanded)
         XCTAssertEqual(model.selectedPage, .tracks)
+        XCTAssertFalse(model.tracks.hasLeft, "The Tracks page going with the book left the part alone")
+    }
+
+    /// The list picker up when the Duo opens or closes: the control that opened it goes
+    /// with its shell, and the picker still closes on Done or a swipe, without coming
+    /// back when the device turns again.
+    func testAListPickerUpAcrossTheHandoffStillCloses() throws {
+        seedCachedTag(id: 1809)
+        let router = TMRouter()
+        let host = UIHostingController(rootView: TMRootView(router: router))
+        host.traitOverrides.horizontalSizeClass = .compact
+        host.traitOverrides.verticalSizeClass = .regular
+        mount(host, size: TMDuoTests.outer)
+        router.showTag(1809, source: nil)
+        settle()
+        let model = try XCTUnwrap(router.path.last?.tagModel)
+        spinUntil("the tag loads") { model.tag != nil }
+        func picker() -> TMListPickerPresenter.Host? { TMPresentingAnchor.top(host) as? TMListPickerPresenter.Host }
+
+        // From the tag actions, which only the stack's bar has.
+        model.showListPicker(from: .actions)
+        spinUntil("the picker comes up") { picker() != nil }
+        open(host)
+        spinUntil("the book takes the tag") { router.expanded && router.hasDetail }
+        let first = try XCTUnwrap(picker(), "The picker stays up across the handoff")
+        XCTAssertNotNil(first.presentationController?.delegate, "Something still hears it go")
+        try XCTUnwrap(first.rootView.onDone)()
+        spinUntil("Done closes it") { picker() == nil }
+        XCTAssertNil(model.pickerSource)
+
+        // From the chip, which both shells have; swiped away after closing the Duo.
+        model.showListPicker(from: .chip)
+        spinUntil("the picker comes up from the chip") { picker() != nil }
+        close(host)
+        spinUntil("the stack takes the tag") { router.path.last?.tagModel === model }
+        let second = try XCTUnwrap(picker())
+        let presentation = try XCTUnwrap(second.presentationController)
+        second.dismiss(animated: false)
+        presentation.delegate?.presentationControllerDidDismiss?(presentation)
+        spinUntil("the swipe clears the request") { model.pickerSource == nil && picker() == nil }
+        open(host)
+        spinUntil("the book takes the tag again") { router.expanded && router.hasDetail }
+        XCTAssertNil(picker(), "A picker swiped away does not come back")
     }
 
     // MARK: - Tabletop: the music stand

@@ -148,6 +148,15 @@ final class TMRouter {
         selectionChanged()
     }
 
+    /// The window is about to swap shells (an iPhone Duo opening, closing or turning).
+    /// The tags either shell could carry across are marked first, so an old Tracks page
+    /// going before the new shell comes up does not stop the part that is playing.
+    /// The new shell's appearance then moves the tag, and its page coming clears the mark.
+    func shellWillChange() {
+        if hasDetail { detail.carryAcross() }
+        if let index = path.lastIndex(where: { $0.tagModel != nil }) { path[index].tagModel?.carryAcross() }
+    }
+
     /// The shell is drawing one stack, with no column beside it (an iPhone, or an
     /// iPhone Duo folded shut). A tag that was open beside the list goes on top of
     /// the stack, with its reader, so closing the device keeps it in front.

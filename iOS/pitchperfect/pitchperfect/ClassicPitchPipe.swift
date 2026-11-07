@@ -376,6 +376,9 @@ struct ClassicPitchPipeView: View {
             }
         }
         .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
+        // The slots are drawn and touched in fixed left-to-right coordinates; right
+        // to left the elements would otherwise land on their mirror image.
+        .environment(\.layoutDirection, .leftToRight)
         .allowsHitTesting(false)
     }
 }

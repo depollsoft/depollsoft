@@ -152,6 +152,26 @@ final class FoldGeometryTests: XCTestCase {
         XCTAssertEqual(geometry.faceArea, CGRect(x: 0, y: 0, width: 200, height: 600))
     }
 
+    func testFoldedVoiceOverFramesAreTheTouchCirclesSoNoneIsUnder44Points() {
+        // 240-point pages: 40-point cells inside 46-point touch circles.
+        let close = InstrumentGeometry(size: CGSize(width: 520, height: 600), count: 13,
+                                       fold: CGRect(x: 240, y: 0, width: 40, height: 600))
+        XCTAssertEqual(close.posture, .book)
+        XCTAssertLessThan(close.cellRadius * 2, 44)
+        for geometry in [close, InstrumentGeometry(size: upright, count: 13, fold: acrossFold),
+                         InstrumentGeometry(size: sideways, count: 13, fold: downFold)] {
+            for index in geometry.cellCenters.indices {
+                let frame = geometry.accessibilityRect(index)
+                XCTAssertGreaterThanOrEqual(min(frame.width, frame.height), 44, "\(geometry.posture) \(index)")
+                XCTAssertEqual(frame.midX, geometry.cellCenters[index].x, accuracy: 0.001)
+                XCTAssertEqual(frame.midY, geometry.cellCenters[index].y, accuracy: 0.001)
+            }
+        }
+        // Flat, the phone's face is untouched.
+        let flat = InstrumentGeometry(size: CGSize(width: 402, height: 640), count: 13)
+        XCTAssertEqual(flat.accessibilityRect(3), flat.cellRect(3))
+    }
+
     func testTouchesFollowTheFoldedFace() throws {
         for geometry in [InstrumentGeometry(size: upright, count: 13, fold: acrossFold),
                          InstrumentGeometry(size: sideways, count: 13, fold: downFold)] {
@@ -275,6 +295,74 @@ final class FoldedPitchPipeTests: PitchPerfectTestCase {
                 }
                 app.tearDown()
             }
+        }
+    }
+
+    /// Right to left, both faces are still drawn and touched in fixed coordinates,
+    /// so every cell VoiceOver reaches has to sit on the drawn cell, not its mirror.
+    func testRightToLeftVoiceOverFramesSitOnTheDrawnCells() throws {
+        // On this app's own host, not the shared scene, so no later test inherits it.
+        for classic in [false, true] {
+            DPSettingsModel.sharedInstance.classicPitchPipe = classic
+            let app = try launch()
+            app.host.traitOverrides.layoutDirection = .rightToLeft
+            app.show(tab: 0)
+            ScreenCatalog.settle(0.3)
+            XCTAssertEqual(app.host.view.effectiveUserInterfaceLayoutDirection, .rightToLeft,
+                           "The face is laid out right to left, or this proves nothing")
+            let model = app.models.pitchPipe
+            let surface = try XCTUnwrap(app.descendants(of: MultiTouchSurface.Surface.self, in: app.window)
+                .first { $0.window != nil })
+            let origin = surface.convert(CGPoint.zero, to: nil)
+            let rects = classic ? model.classicGeometry.slots
+                                : model.geometry.cellCenters.indices.map(model.geometry.accessibilityRect)
+            XCTAssertFalse(rects.isEmpty)
+            for (index, rect) in rects.enumerated() where index < model.notes.count {
+                let label = model.spokenName(at: index)
+                let frame = try XCTUnwrap(app.ui.element(label: label), label).accessibilityFrame
+                let expected = rect.offsetBy(dx: origin.x, dy: origin.y)
+                XCTAssertEqual(frame.midX, expected.midX, accuracy: 1, "\(label) (classic \(classic))")
+                XCTAssertEqual(frame.midY, expected.midY, accuracy: 1, "\(label) (classic \(classic))")
+            }
+            app.tearDown()
+        }
+    }
+}
+
+/// A prompt kept off the crease takes the leading page of a book fold, which
+/// right to left is the right-hand one.
+@MainActor
+final class CentredOffTheFoldTests: XCTestCase {
+    override func tearDown() async throws {
+        await MainActor.run { Fold.simulated = nil }
+        try await super.tearDown()
+    }
+
+    func testThePromptTakesTheLeadingPageInEitherDirection() throws {
+        for direction in [LayoutDirection.leftToRight, .rightToLeft] {
+            let window = ScreenCatalog.makeWindow()
+            let bounds = window.bounds
+            let fold = CGRect(x: bounds.midX - 20, y: 0, width: 40, height: bounds.height)
+            Fold.simulated = { _ in fold }
+            window.rootViewController = UIHostingController(rootView:
+                Color.red
+                    .frame(height: 60)
+                    .accessibilityElement()
+                    .accessibilityLabel("Prompt")
+                    .centredOffTheFold()
+                    .environment(\.layoutDirection, direction))
+            window.isHidden = false
+            ScreenCatalog.settle(0.3)
+            let frame = try XCTUnwrap(UIDriver(window).element(label: "Prompt")).accessibilityFrame
+            if direction == .leftToRight {
+                XCTAssertEqual(frame.minX, 0, accuracy: 1, "\(frame)")
+                XCTAssertEqual(frame.maxX, fold.minX, accuracy: 1, "\(frame)")
+            } else {
+                XCTAssertEqual(frame.minX, fold.maxX, accuracy: 1, "\(frame)")
+                XCTAssertEqual(frame.maxX, bounds.maxX, accuracy: 1, "\(frame)")
+            }
+            window.isHidden = true
+            window.rootViewController = nil
         }
     }
 }

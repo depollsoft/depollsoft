@@ -164,12 +164,18 @@ struct TMListPickerPresenter: UIViewRepresentable {
     @Binding var isPresented: Bool
     let tagId: Int32
 
-    /// Marks a presented picker, so only one is ever up.
-    final class Host: UIHostingController<TMListPicker> {}
+    /// Marks a presented picker, so only one is ever up. It keeps its own closer, so
+    /// Done, a swipe or a tap outside still clears the request after the control that
+    /// opened it has gone (an iPhone Duo opening or closing swaps the whole shell).
+    final class Host: UIHostingController<TMListPicker> {
+        var closer: Closer?
+    }
 
-    final class Coordinator: NSObject, UIAdaptivePresentationControllerDelegate, UIPopoverPresentationControllerDelegate {
-        var dismissed: () -> Void = {}
-        func presentationControllerDidDismiss(_ presentationController: UIPresentationController) { dismissed() }
+    /// Hears the picker go, however it goes, and clears the request in the model.
+    final class Closer: NSObject, UIAdaptivePresentationControllerDelegate, UIPopoverPresentationControllerDelegate {
+        let closed: () -> Void
+        init(closed: @escaping () -> Void) { self.closed = closed }
+        func presentationControllerDidDismiss(_ presentationController: UIPresentationController) { closed() }
         // A popover stays a popover on iPad even in a narrow column; a Duo folded shut takes the phone sheet.
         func adaptivePresentationStyle(for controller: UIPresentationController,
                                        traitCollection: UITraitCollection) -> UIModalPresentationStyle {
@@ -177,29 +183,29 @@ struct TMListPickerPresenter: UIViewRepresentable {
         }
     }
 
-    func makeCoordinator() -> Coordinator { Coordinator() }
-
     func makeUIView(context: Context) -> TMPresentingAnchor { TMPresentingAnchor() }
 
     func updateUIView(_ anchor: TMPresentingAnchor, context: Context) {
         let binding = $isPresented
-        let coordinator = context.coordinator
-        coordinator.dismissed = { [weak anchor] in
-            anchor?.forget()
-            binding.wrappedValue = false
-        }
         let tagId = tagId
         anchor.alreadyUp = { $0 is Host }
+        // A picker already up for this control (opened from its copy in the shell the
+        // window had before) is this control's to close now.
+        anchor.adoptsPresented = true
         anchor.make = { anchor in
             let floating = anchor.traitCollection.tmFloatsPopovers
-            let picker = Host(rootView: TMListPicker(
-                model: TMListPickerModel(tagId: tagId),
-                onDone: { [weak anchor] in
-                    binding.wrappedValue = false
-                    anchor?.wanted = false
-                    anchor?.sync()
-                },
-                floating: floating))
+            let closer = Closer { [weak anchor] in
+                anchor?.forget()
+                binding.wrappedValue = false
+            }
+            let picker = Host(rootView: TMListPicker(model: TMListPickerModel(tagId: tagId), floating: floating))
+            picker.closer = closer
+            picker.rootView.onDone = { [weak picker] in
+                closer.closed()
+                if let picker, picker.presentingViewController != nil, !picker.isBeingDismissed {
+                    picker.dismiss(animated: true)
+                }
+            }
             picker.view.backgroundColor = .clear
             if floating {
                 picker.modalPresentationStyle = .popover
@@ -209,12 +215,12 @@ struct TMListPickerPresenter: UIViewRepresentable {
                 popover?.sourceView = anchor
                 popover?.sourceRect = anchor.bounds
                 popover?.permittedArrowDirections = [.up, .down]
-                popover?.delegate = coordinator
+                popover?.delegate = closer
             } else {
                 picker.modalPresentationStyle = .pageSheet
                 picker.sheetPresentationController?.detents = [.medium(), .large()]
                 picker.sheetPresentationController?.prefersGrabberVisible = true
-                picker.presentationController?.delegate = coordinator
+                picker.presentationController?.delegate = closer
             }
             return picker
         }

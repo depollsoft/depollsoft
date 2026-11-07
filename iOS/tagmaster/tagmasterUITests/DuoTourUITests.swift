@@ -17,6 +17,10 @@ final class DuoTourUITests: TagMasterUITestCase {
     private var directory: URL!
     private var pose = "pose"
 
+    /// Attached to a running app (DUO_TOUR_ATTACH), launching one to warm up would
+    /// quit the session the tour came to drive.
+    override class var warmsApplication: Bool { ProcessInfo.processInfo.environment["DUO_TOUR_ATTACH"] == nil }
+
     override func setUpWithError() throws {
         let environment = ProcessInfo.processInfo.environment
         guard let path = environment["DUO_TOUR_DIR"], !path.isEmpty else {

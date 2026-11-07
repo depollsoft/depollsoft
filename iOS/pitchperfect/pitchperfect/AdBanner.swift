@@ -42,7 +42,8 @@ enum AdBanner {
 /// and consent allows, and reloads when the width or orientation changes.
 final class BannerHostView: UIView, BannerViewDelegate {
     let banner = BannerView()
-    private var loadedWidth: CGFloat = 0
+    /// The width and shape the current ad size was chosen for.
+    private var loaded: (width: CGFloat, landscape: Bool)?
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -83,9 +84,12 @@ final class BannerHostView: UIView, BannerViewDelegate {
 
     private func reloadIfNeeded(force: Bool) {
         guard window != nil, bounds.width > 0 else { return }
-        guard force || bounds.width != loadedWidth else { return }
-        loadedWidth = bounds.width
-        banner.adSize = AdBanner.size(width: bounds.width, landscape: isLandscape)
+        // A window can turn landscape without its width changing (a Duo opening, a
+        // window beside another app), which changes the banner's size as well.
+        let landscape = isLandscape
+        guard force || loaded?.width != bounds.width || loaded?.landscape != landscape else { return }
+        loaded = (bounds.width, landscape)
+        banner.adSize = AdBanner.size(width: bounds.width, landscape: landscape)
         guard !AdBanner.suppressed, AdConsent.canRequestAds else { return }
         banner.load(Request())
     }
