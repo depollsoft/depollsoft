@@ -243,8 +243,9 @@ struct FoldSides: Equatable {
 /// a flat or closed Duo, and every other device, report none.
 @MainActor
 enum Fold {
-    /// Tests stand a fold in: given the face's frame in its window, the band in
-    /// window coordinates (nil for none).
+    /// Tests stand a fold in: given the face's global frame, the band in the same
+    /// space (nil for none). A face in a tab's hosting view can read a global frame
+    /// that is off its window position, so a test measures that offset once.
     static var simulated: ((CGRect) -> CGRect?)?
 
     /// The active fold across the view `proxy` measures, in its coordinates: the

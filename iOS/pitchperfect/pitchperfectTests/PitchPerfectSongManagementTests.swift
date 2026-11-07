@@ -269,6 +269,27 @@ final class PitchPerfectSongManagementTests: PitchPerfectTestCase {
         XCTAssertTrue(app.ui.exists(label: "Shenandoah, C"))
     }
 
+    /// Beside a fold the empty list's page can be narrow: its buttons keep to it, one
+    /// width for both, and the longer label wraps rather than reaching the crease.
+    func testTheEmptyListsButtonsKeepToANarrowPage() throws {
+        seedSongs(["Blue Skies"])
+        let list = try customList(named: "Saturday show")
+        DPSongsModel.sharedInstance.currentListId = list.id
+        let app = try songsTab()
+        // Held like a book beside another app: a 520-point window folded at 240.
+        let fold = CGRect(x: 240, y: 0, width: 40, height: 2000)
+        Fold.simulated = { _ in fold }
+        defer { Fold.simulated = nil }
+        app.window.frame.size.width = 520
+        ScreenCatalog.settle(0.3)
+        let add = try XCTUnwrap(app.ui.element(id: "songs.empty.add")).accessibilityFrame
+        let from = try XCTUnwrap(app.ui.element(id: "songs.empty.addFrom")).accessibilityFrame
+        XCTAssertGreaterThanOrEqual(from.minX, 0, "\(from)")
+        XCTAssertLessThanOrEqual(from.maxX, fold.minX, "\(from)")
+        XCTAssertEqual(add.width, from.width, accuracy: 0.5, "one width for both")
+        XCTAssertGreaterThan(from.height, add.height, "the longer label wraps")
+    }
+
     func testEditModeSwapsTheBarForDoneAddAndMore() throws {
         seedSongs(["Blue Skies"])
         let app = try songsTab()

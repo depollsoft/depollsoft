@@ -62,7 +62,7 @@ final class TMPresentingAnchor: UIView {
         if wanted, presented == nil, bounds.height >= 30, let root = window?.rootViewController {
             let top = TMPresentingAnchor.top(root)
             guard !alreadyUp(top) else {
-                if adoptsPresented { presented = top }
+                if adoptsPresented { adopt(top) }
                 return
             }
             let controller = make(self)
@@ -75,6 +75,17 @@ final class TMPresentingAnchor: UIView {
     }
 
     func forget() { presented = nil }
+
+    /// Takes over one already up and hangs it from here, the copy on screen: a popover
+    /// re-laid (the Duo folding, a window resizing) places itself from its source view,
+    /// and the control that opened it may be going with its shell.
+    private func adopt(_ controller: UIViewController) {
+        presented = controller
+        if let popover = controller.popoverPresentationController {
+            popover.sourceView = self
+            popover.sourceRect = bounds
+        }
+    }
 
     /// The controller currently on top, which is the one that may present.
     static func top(_ controller: UIViewController) -> UIViewController {

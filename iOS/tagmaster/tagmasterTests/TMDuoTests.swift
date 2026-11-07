@@ -340,7 +340,8 @@ final class TMDuoTests: TMBehaviorTestCase {
         settle()
         XCTAssertFalse(router.expanded, "Upright, the open Duo is the stack")
 
-        model.watching = URL(string: "https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+        // Any https page: the cover is what matters, so nothing need reach a real site.
+        model.watching = URL(string: "https://localhost/video")
         spinUntil("the video comes up") { TMPresentingAnchor.top(host) !== host }
         XCTAssertTrue(router.holdsShell)
         open(host)
@@ -353,6 +354,21 @@ final class TMDuoTests: TMBehaviorTestCase {
         model.watching = nil
         spinUntil("the book comes once it closes") { router.expanded && router.detail === model }
         XCTAssertEqual(model.selectedPage, .videos)
+    }
+
+    /// Sign-in, Settings' sheet, holds the shell too: the sheet goes with the page
+    /// that presents it.
+    func testSignInHoldsTheShellUntilItCloses() throws {
+        // Signed out, without Firebase: the test host never configures it.
+        let router = TMRouter(account: TMAccount(isSignedIn: { false }, signOut: {}),
+                              build: TMBuildInfo(number: "", pullRequest: "?"))
+        router.show(.settings)
+        guard case .settings(let settings)? = router.path.last?.screen else { return XCTFail("No Settings screen") }
+        XCTAssertFalse(router.holdsShell)
+        settings.showingSignIn = true
+        XCTAssertTrue(router.holdsShell, "Signing in, the shell holds")
+        settings.showingSignIn = false
+        XCTAssertFalse(router.holdsShell, "and moves once sign-in closes")
     }
 
     /// The list picker up when the Duo opens or closes: the control that opened it goes
@@ -388,6 +404,10 @@ final class TMDuoTests: TMBehaviorTestCase {
         close(host)
         spinUntil("the stack takes the tag") { router.path.last?.tagModel === model }
         let second = try XCTUnwrap(picker())
+        if let popover = second.popoverPresentationController {
+            XCTAssertTrue(popover.sourceView is TMPresentingAnchor && popover.sourceView?.window != nil,
+                          "The adopted picker hangs from the chip on screen")
+        }
         let presentation = try XCTUnwrap(second.presentationController)
         second.dismiss(animated: false)
         presentation.delegate?.presentationControllerDidDismiss?(presentation)

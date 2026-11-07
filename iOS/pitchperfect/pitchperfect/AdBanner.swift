@@ -33,13 +33,24 @@ enum AdBanner {
 #endif
     }
 
+    /// The widest banner to show. The SDK refuses a banner view wider than the main
+    /// screen's long side ("Ad size will not fit on screen"), and on an iPhone Duo
+    /// the main screen is the outer display (678 points long) however the Duo is
+    /// held: open and held wide, a banner as wide as the inner display's page (867)
+    /// gets no ad at all. The only read of `UIScreen.main`, since it mirrors the SDK's.
+    static var widest: CGFloat {
+        let main = UIScreen.main.bounds
+        return max(main.width, main.height)
+    }
+
     static func size(width: CGFloat, landscape: Bool) -> AdSize {
         landscape ? landscapeAnchoredAdaptiveBanner(width: width) : portraitAnchoredAdaptiveBanner(width: width)
     }
 }
 
-/// Hosts the SDK's banner view: sizes it to the slot, loads once it is on screen
-/// and consent allows, and reloads when the width or orientation changes.
+/// Hosts the SDK's banner view: sizes it to the slot (centred, up to the widest
+/// the SDK takes), loads once it is on screen and consent allows, and reloads
+/// when the width or orientation changes.
 final class BannerHostView: UIView, BannerViewDelegate {
     let banner = BannerView()
     /// The width and shape the current ad size was chosen for.
@@ -76,9 +87,14 @@ final class BannerHostView: UIView, BannerViewDelegate {
         reloadIfNeeded(force: true)
     }
 
+    /// The banner's width in this slot: the slot's, up to the widest the SDK takes.
+    private var bannerWidth: CGFloat { min(bounds.width, AdBanner.widest) }
+
     override func layoutSubviews() {
         super.layoutSubviews()
-        banner.frame = bounds
+        // Centred: a slot wider than the widest banner keeps the plate either side.
+        banner.frame = CGRect(x: ((bounds.width - bannerWidth) / 2).rounded(), y: 0,
+                              width: bannerWidth, height: bounds.height)
         reloadIfNeeded(force: false)
     }
 
@@ -89,7 +105,7 @@ final class BannerHostView: UIView, BannerViewDelegate {
         let landscape = isLandscape
         guard force || loaded?.width != bounds.width || loaded?.landscape != landscape else { return }
         loaded = (bounds.width, landscape)
-        banner.adSize = AdBanner.size(width: bounds.width, landscape: landscape)
+        banner.adSize = AdBanner.size(width: bannerWidth, landscape: landscape)
         guard !AdBanner.suppressed, AdConsent.canRequestAds else { return }
         banner.load(Request())
     }
@@ -113,7 +129,7 @@ struct BannerAdSlot: UIViewRepresentable {
         // until layout proposes one (an iPhone Duo has two screens, so there is no
         // one screen to ask).
         let width = proposal.width ?? uiView.window?.bounds.width ?? 320
-        let size = AdBanner.size(width: width, landscape: uiView.isLandscape).size
+        let size = AdBanner.size(width: min(width, AdBanner.widest), landscape: uiView.isLandscape).size
         return CGSize(width: width, height: size.height)
     }
 }

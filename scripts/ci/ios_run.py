@@ -15,6 +15,7 @@ import ios_simulator
 
 CASE_STARTED = re.compile(r"^Test [Cc]ase '(.+)' started")
 CASE_FINISHED = re.compile(r"^Test [Cc]ase '(.+)' (passed|failed|skipped)(?: on| \()")
+TESTING_STARTED = re.compile(r"^Testing started")
 
 
 def sample_simulator_apps(simulator, command_pid=None):
@@ -59,8 +60,11 @@ def signal_command(child, signum):
 
 
 def run(command, *,
-        fail_fast=False, startup_timeout=300, test_timeout=30, shutdown_timeout=15,
+        fail_fast=False, startup_timeout=300, launch_timeout=900, test_timeout=30, shutdown_timeout=15,
         keep_simulator_booted=False):
+    # xcodebuild's own start (reading the test run, installing the host on a simulator
+    # still settling after its first boot) has `launch_timeout` to say "Testing started";
+    # from there XCTest has `startup_timeout` to start a test.
     child = None
     # Only explicit iOS Simulator destinations belong to this invocation.
     simulator = next((match[1] for value in command
@@ -78,6 +82,7 @@ def run(command, *,
                                  start_new_session=True,
                                  env=dict(os.environ, NSUnbufferedIO='YES'))
         started = last_output = last_notice = time.monotonic()
+        testing_started = None
         first_test_seen = False
         active_case = None
         case_started = None
@@ -113,6 +118,8 @@ def run(command, *,
                     buffered += decoded
                     while '\n' in buffered:
                         line, buffered = buffered.split('\n', 1)
+                        if testing_started is None and TESTING_STARTED.match(line):
+                            testing_started = now
                         begin = CASE_STARTED.match(line)
                         end = CASE_FINISHED.match(line)
                         if begin:
@@ -131,12 +138,17 @@ def run(command, *,
                         signal_command(child, signal.SIGKILL)
                         break
                 elif fail_fast:
-                    if not first_test_seen and now - started >= startup_timeout:
-                        stop(f'XCTest did not start a test within {startup_timeout:g}s. See the raw log above.')
+                    launching = testing_started is None and not first_test_seen
+                    quiet_limit = launch_timeout if launching else startup_timeout
+                    if launching and now - started >= launch_timeout:
+                        stop(f'xcodebuild did not start testing within {launch_timeout:g}s. See the raw log above.')
+                    elif not first_test_seen and not launching and now - testing_started >= startup_timeout:
+                        stop(f'XCTest did not start a test within {startup_timeout:g}s of "Testing started". '
+                             'See the raw log above.')
                     elif active_case and now - case_started >= test_timeout:
                         stop(f'{active_case} exceeded the {test_timeout:g}s test budget.')
-                    elif now - last_output >= startup_timeout:
-                        stop(f'XCTest produced no output for {startup_timeout:g}s.')
+                    elif now - last_output >= quiet_limit:
+                        stop(f'XCTest produced no output for {quiet_limit:g}s.')
                     elif not first_test_seen and now - last_notice >= 30:
                         print(f'Waiting for XCTest to start its first test ({now - started:.0f}s elapsed)', flush=True)
                         last_notice = now

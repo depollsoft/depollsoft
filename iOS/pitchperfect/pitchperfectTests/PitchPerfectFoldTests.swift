@@ -367,6 +367,28 @@ final class FoldedPitchPipeTests: PitchPerfectTestCase {
         app.tearDown()
     }
 
+    /// Open and held wide, a Duo's page is wider than the main screen (the outer
+    /// display), and the SDK refuses a banner wider than that: the banner keeps to
+    /// the widest it takes, centred in the slot, and the slot keeps the page's width.
+    func testABannerWiderThanTheMainScreenKeepsToItsWidthCentred() throws {
+        // In a window, which the banner needs, but never shown: nothing else on screen moves.
+        let window = ScreenCatalog.makeWindow()
+        let slot = BannerHostView(frame: CGRect(x: 0, y: 500, width: AdBanner.widest + 189, height: 70))
+        window.addSubview(slot)
+        defer { slot.removeFromSuperview() }
+        slot.layoutIfNeeded()
+        XCTAssertEqual(slot.banner.frame.width, AdBanner.widest)
+        XCTAssertEqual(slot.banner.frame.midX, slot.bounds.midX, accuracy: 1)
+        XCTAssertEqual(slot.banner.adSize.size.width, AdBanner.widest)
+        // A slot no wider than the screen is the banner's own width, as before. (The
+        // SDK sizes the banner's height to its ad.)
+        slot.frame.size.width = AdBanner.widest - 100
+        slot.layoutIfNeeded()
+        XCTAssertEqual(slot.banner.frame.minX, 0)
+        XCTAssertEqual(slot.banner.frame.width, slot.bounds.width)
+        XCTAssertEqual(slot.banner.adSize.size.width, AdBanner.widest - 100)
+    }
+
     /// Right to left, both faces are still drawn and touched in fixed coordinates,
     /// so every cell VoiceOver reaches has to sit on the drawn cell, not its mirror.
     func testRightToLeftVoiceOverFramesSitOnTheDrawnCells() throws {

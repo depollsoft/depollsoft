@@ -163,9 +163,11 @@ final class TMRouter {
         }
     }
 
-    /// Something a page presents over the whole window is up (a video playing, sign-in).
+    /// Something a page presents over the shell is up (a video playing, sign-in).
     /// Swapping shells would take the page presenting it down with it, so the root
-    /// waits for it to close; the cover hides the shell meanwhile.
+    /// waits for it to close. The video's cover hides the held shell; sign-in is a
+    /// sheet, so the old shell can show around it until it closes, which beats losing
+    /// the sign-in.
     var holdsShell: Bool {
         if hasDetail, detail.watching != nil { return true }
         return path.contains { route in

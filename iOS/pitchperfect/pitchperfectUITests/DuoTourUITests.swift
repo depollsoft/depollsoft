@@ -95,8 +95,9 @@ final class DuoTourUITests: XCTestCase {
     }
 
     private func snap(_ name: String) throws {
-        // Let bars settle into whichever axis the pose gives them, and a page's test ad arrive.
-        Thread.sleep(forTimeInterval: ProcessInfo.processInfo.environment["DUO_TOUR_ADS"] == "1" ? 6 : 1.5)
+        // Let bars settle into whichever axis the pose gives them, and a page's test ad
+        // arrive (in the simulator one can take 20 s).
+        Thread.sleep(forTimeInterval: ProcessInfo.processInfo.environment["DUO_TOUR_ADS"] == "1" ? 20 : 1.5)
         let screenshot = screenshot()
         try screenshot.pngRepresentation.write(to: URL(fileURLWithPath: directory)
             .appendingPathComponent("\(prefix)\(name).png"))

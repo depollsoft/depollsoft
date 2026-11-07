@@ -14,7 +14,9 @@ the iOS 27.1 reserved-region API. Neither checks for the device.
   landscape included. The outer display behaves like an iPhone, and the inner
   display ignores the app's supported orientations.
 - **No `UIScreen.main`.** A Duo has two screens, so code reads the view's
-  `displayScale`, its own size, or its scene's screen.
+  `displayScale`, its own size, or its scene's screen. The one exception is the
+  banner's width cap (`AdBanner.widest`), which mirrors the ads SDK's own check
+  against the main screen (see Sheets and banners).
 - **Vertical bars.** Built with the iOS 27.1 SDK, navigation, tool and tab bar
   items move into a bar along the side on the outer display and in landscape on
   the inner one. Items there stand on the system's glass over the page, so they
@@ -138,7 +140,11 @@ DESIGN.md's *Folded (iPhone Duo)* section is the design record; in short:
   banner moves to the top of the upper half (`InstrumentPage`), so the ring below
   the fold gets its room and never sits against an ad. Every screen with a banner
   does the same (the pitch pipe, Notes, Keys, Songs and the Settings sheet), so
-  in that pose the ad is in one place throughout the app. It is the same banner view
+  in that pose the ad is in one place throughout the app. The SDK refuses a banner
+  view wider than the main screen's long side, and on a Duo the main screen is the
+  outer display (466×678) however it is held, so open and held wide a page-wide
+  (867 pt) banner got no ad at all ("Ad size will not fit on screen"): the banner
+  keeps to 678 pt there, centred in the slot. It is the same banner view
   either way (`BannerStack`), so folding keeps the ad it loaded rather than
   requesting another.
 
