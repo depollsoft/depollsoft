@@ -190,7 +190,19 @@ the clarinet is darker, for one.
   whose minimum is 4012 frames. Half a second after the last release dies
   away, the track fades out, pauses and flushes. The next note starts it
   again. A note played while it's stopping starts when the restart primes the
-  buffer.
+  buffer. The prime can come up short of the whole buffer. `pause()` and
+  `flush()` land together, and while the mixer still has the track active,
+  the server puts the flush off until the track next starts. Until then the
+  old audio still takes up room (on the emulator, 4047 of 4096 frames went
+  in). The buffer can also be bigger than the one asked for. The platform
+  makes it at least what its output needs, and a switch to Bluetooth
+  recreates the track with that output's minimum. `StreamingAudioTrack`
+  counts only the frames a write took, and asks the platform how big the
+  buffer is. Until a track's head first moves, and again once it has stood
+  still for 100 ms, its watcher fills the whole buffer instead of keeping
+  2048 frames ahead. In 5.2.3 a short prime could leave the track waiting for
+  audio the watcher never sent. It never started, and every instrument note
+  stayed silent until the app restarted.
 - **Measured on the API 36 emulator.** Notes were timed with
   `AudioTrack.getTimestamp`, and the output was recorded through QEMU's WAV
   audio backend.
