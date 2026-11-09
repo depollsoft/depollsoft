@@ -14,7 +14,7 @@ dependencies {
     // SemanticsSnapshot reads a Compose semantics tree; the apps' tests bring Compose's test APIs.
     testFixturesCompileOnly platform(compose_bom)
     testFixturesCompileOnly 'androidx.compose.ui:ui-test'
-    testImplementation 'org.robolectric:robolectric:4.17'
+    testImplementation 'org.robolectric:robolectric:4.16.1'
 }
 
 android {
