@@ -121,6 +121,7 @@ final class RowActivationTests: PitchPerfectTestCase {
         app.show(tab: 1)
         let notes = DPNote.prunedNotes() as! [DPNote]
         let note = notes[notes.count / 2]
+        app.ui.wait { app.ui.exists(label: NoteSpelling.spoken(note)) }
         let row = try XCTUnwrap(app.ui.element(label: NoteSpelling.spoken(note)))
         XCTAssertTrue(row.accessibilityTraits.contains(.button))
         app.ui.tap(label: NoteSpelling.spoken(note))
