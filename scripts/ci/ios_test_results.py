@@ -2,10 +2,10 @@
 """Verify actual XCTest results; xcpretty can emit empty reports for parallel tests."""
 import json
 import os
-from pathlib import Path
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
 
 def validate(summary):
@@ -36,10 +36,11 @@ def junit(scheme, tree):
     if not cases:
         raise ValueError('Xcode returned no test cases')
     root = ET.Element('testsuites')
-    suite = ET.SubElement(root, 'testsuite', name=scheme, tests=str(len(cases)),
-                         **{kind + 's': str(sum(case.find(kind) is not None for case in cases))
-                            for kind in ('failure', 'error')},
-                         skipped=str(sum(case.find('skipped') is not None for case in cases)))
+    attributes = {'name': scheme, 'tests': str(len(cases)),
+                  'skipped': str(sum(case.find('skipped') is not None for case in cases))}
+    for kind in ('failure', 'error'):
+        attributes[kind + 's'] = str(sum(case.find(kind) is not None for case in cases))
+    suite = ET.SubElement(root, 'testsuite', attributes)
     suite.extend(cases)
     return ET.ElementTree(root)
 
@@ -56,20 +57,29 @@ def check_durations(report, limit):
         raise ValueError(f'Tests exceeded the {limit:g}s budget: {names}')
 
 
+def read_result(scheme, kind):
+    command = [
+        os.environ.get('XCRUN', 'xcrun'), 'xcresulttool', 'get', 'test-results', kind,
+        '--path', f'{scheme}-results.xcresult', '--compact',
+    ]
+    try:
+        raw = subprocess.check_output(command, text=True, timeout=120)
+    except subprocess.TimeoutExpired:
+        print(f'::warning::{scheme}: xcresulttool {kind} timed out; retrying once', flush=True)
+        raw = subprocess.check_output(command, text=True, timeout=120)
+    return json.loads(raw)
+
+
 def main(schemes):
     failed = False
     for scheme in schemes:
         try:
-            raw = subprocess.check_output([
-                os.environ.get('XCRUN', 'xcrun'), 'xcresulttool', 'get', 'test-results', 'summary',
-                '--path', f'{scheme}-results.xcresult', '--compact',
-            ], text=True, timeout=60)
-            summary = json.loads(raw)
+            # A failed re-export must not leave an older passing report behind.
+            for suffix in ('summary.json', 'junit.xml'):
+                Path(f'{scheme}-{suffix}').unlink(missing_ok=True)
+            summary = read_result(scheme, 'summary')
             Path(f'{scheme}-summary.json').write_text(json.dumps(summary, indent=2) + '\n')
-            tree = json.loads(subprocess.check_output([
-                os.environ.get('XCRUN', 'xcrun'), 'xcresulttool', 'get', 'test-results', 'tests',
-                '--path', f'{scheme}-results.xcresult', '--compact',
-            ], text=True, timeout=60))
+            tree = read_result(scheme, 'tests')
             report = junit(scheme, tree)
             report.write(f'{scheme}-junit.xml', encoding='utf-8', xml_declaration=True)
             validate(summary)

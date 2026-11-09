@@ -72,10 +72,19 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: |
+            .github/workflows
             scripts/ci
             scripts/release/tests
-      - name: Verify the selector
-        run: python3 -m unittest scripts.release.tests.test_changed_apps
+            iOS/tagmaster/tagmasterUITests
+      - name: Verify iOS CI helpers
+        # Fixtures intentionally emit workflow error commands; buffer passing tests.
+        run: |
+          python3 -m unittest -b \
+            scripts.release.tests.test_changed_apps \
+            scripts.release.tests.test_ios_simulator \
+            scripts.release.tests.test_ios_results \
+            scripts.release.tests.test_ios_run \
+            scripts.release.tests.test_ios_suites
       - name: Select apps
         id: changes
         env:

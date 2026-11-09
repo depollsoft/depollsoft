@@ -1,23 +1,26 @@
 #!/usr/bin/env python3
 """Create an owned test device without reusing a runner's saved app data."""
-from contextlib import contextmanager
 import fcntl
 import json
-import plistlib
 import os
+import plistlib
 import re
-from pathlib import Path
 import subprocess
 import sys
 import uuid
+from contextlib import contextmanager
+from pathlib import Path
 
-
+# Keep these host-wide coordination paths compatible with existing capture jobs.
+# The registry is created with mode 0700; the flock file contains no app data.
+# pi-lens-ignore: S108
 REGISTRY = Path('/tmp/depollsoft-ios-devices')
 
 
 @contextmanager
 def allocation():
     # Protect only bookkeeping and allocation, never a build or test execution.
+    # pi-lens-ignore: S108
     with Path('/tmp/depollsoft-ios-simulator.lock').open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
         yield
@@ -25,7 +28,7 @@ def allocation():
 
 def process_identity(pid):
     result = subprocess.run(['ps', '-p', str(pid), '-o', 'ppid=', '-o', 'lstart=', '-o', 'comm='],
-                            text=True, capture_output=True, timeout=5,
+                            check=False, text=True, capture_output=True, timeout=5,
                             env=dict(os.environ, LC_ALL='C'))
     fields = result.stdout.strip().split(None, 6)
     if result.returncode or len(fields) != 7:
@@ -84,8 +87,29 @@ def delete(udid):
         shutdown(udid)
     except (subprocess.SubprocessError, OSError) as error:
         print(f'Simulator shutdown did not complete: {error}', flush=True)
-    subprocess.run([xcrun, 'simctl', 'delete', udid], check=True, timeout=30)
+    for attempt in range(2):
+        try:
+            subprocess.run([xcrun, 'simctl', 'delete', udid], check=True, timeout=60)
+            break
+        except subprocess.SubprocessError:
+            if attempt:
+                raise
+            print(f'Retrying deletion of simulator {udid}', flush=True)
     (REGISTRY / (udid + '.json')).unlink(missing_ok=True)
+
+
+def cleanup(udid):
+    """Teardown must not replace a test verdict on a disposable hosted VM."""
+    try:
+        delete(udid)
+    except (subprocess.SubprocessError, OSError) as error:
+        if (os.environ.get('GITHUB_ACTIONS') != 'true'
+                or os.environ.get('RUNNER_ENVIRONMENT') != 'github-hosted'):
+            raise
+        # Keep the ownership record when deletion fails. Persistent runners
+        # remain strict; GitHub discards this entire hosted VM after the job.
+        print(f'::warning::Simulator {udid} cleanup failed on the disposable hosted runner: {error}',
+              flush=True)
 
 
 def clean_abandoned():
@@ -150,7 +174,7 @@ def shutdown(udid):
     xcrun = os.environ.get('XCRUN', 'xcrun')
     print(f'Shutting down test simulator {udid}', flush=True)
     result = subprocess.run([xcrun, 'simctl', 'shutdown', udid],
-                            capture_output=True, text=True, timeout=30)
+                            check=False, capture_output=True, text=True, timeout=30)
     if result.returncode and 'current state: Shutdown' not in result.stderr:
         print(result.stderr, flush=True)
         result.check_returncode()
@@ -200,11 +224,11 @@ def main():
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 3 and sys.argv[1] == '--delete':
-        delete(sys.argv[2])
+    if len(sys.argv) == 3 and sys.argv[1] in ('--delete', '--cleanup'):
+        (delete if sys.argv[1] == '--delete' else cleanup)(sys.argv[2])
     elif len(sys.argv) == 1:
         with allocation():
             clean_abandoned()
             main()
     else:
-        raise SystemExit('Usage: ios_simulator.py [--delete UDID]')
+        raise SystemExit('Usage: ios_simulator.py [--delete UDID | --cleanup UDID]')

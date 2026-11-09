@@ -1,3 +1,4 @@
+# yamllint disable rule:line-length
 name: Build and test one iOS app
 on:
   workflow_call:
@@ -221,12 +222,14 @@ jobs:
           compression-level: 0
           if-no-files-found: error
 
+      # Persistent runners remain strict. On disposable GitHub-hosted VMs,
+      # exhausted teardown retries warn without replacing the build verdict.
       - name: Delete build destination
         if: always() && steps.build_simulator.outputs.udid != ''
-        timeout-minutes: 2
+        timeout-minutes: 4
         env:
           SIMULATOR_UDID: ${{ steps.build_simulator.outputs.udid }}
-        run: python3 ../scripts/ci/ios_simulator.py --delete "$SIMULATOR_UDID"
+        run: python3 ../scripts/ci/ios_simulator.py --cleanup "$SIMULATOR_UDID"
 
   suites:
     name: iOS tests (${{ matrix.job }})
@@ -324,8 +327,7 @@ jobs:
           retention-days: 7
       - name: Delete owned iOS Simulator
         if: always() && steps.simulator.outputs.udid != ''
-        timeout-minutes: 2
+        timeout-minutes: 4
         env:
           SIMULATOR_UDID: ${{ steps.simulator.outputs.udid }}
-        run: python3 ../scripts/ci/ios_simulator.py --delete "$SIMULATOR_UDID"
-
+        run: python3 ../scripts/ci/ios_simulator.py --cleanup "$SIMULATOR_UDID"
