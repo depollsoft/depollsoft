@@ -454,9 +454,17 @@ final class TMDuoTests: TMBehaviorTestCase {
         spinUntil("the book takes the tag with the sheet up") { router.expanded && router.hasDetail }
         // A tap outside: UIKit dismisses it and tells its delegate; no action runs.
         let presentation = try XCTUnwrap(sheet.popoverPresentationController)
-        sheet.dismiss(animated: false)
-        presentation.delegate?.presentationControllerDidDismiss?(presentation)
-        spinUntil("the tap clears the request") { !model.actionsPresented }
+        let dismissed = expectation(description: "the action sheet finishes dismissing")
+        sheet.dismiss(animated: false) {
+            // UIKit calls its delegate after dismissal, not while the old sheet
+            // can still be adopted by a newly laid-out control.
+            presentation.delegate?.presentationControllerDidDismiss?(presentation)
+            dismissed.fulfill()
+        }
+        wait(for: [dismissed], timeout: 10)
+        spinUntil("the tap clears the request and closes the sheet") {
+            !model.actionsPresented && !(TMPresentingAnchor.top(host) is UIAlertController)
+        }
         settle()
         XCTAssertFalse(TMPresentingAnchor.top(host) is UIAlertController, "and the sheet doesn't come back")
     }

@@ -281,15 +281,15 @@ final class TagDetailModelTests: XCTestCase {
 
     func testFavoriteAndTeachableTogglesFollowTheListsWhereverTheyChange() {
         model.toggleFavorite()
-        XCTAssertEqual(DPAppDelegate.favorites(), [], "Nothing is saved before the tag arrives")
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.favoriteKey), [], "Nothing is saved before the tag arrives")
         model.show(tagId: 1809)
         loader.finish(0, with: tag(1809))
 
         model.toggleFavorite()
-        XCTAssertEqual(DPAppDelegate.favorites(), [1809])
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.favoriteKey), [1809])
         XCTAssertTrue(model.isFavorite)
         model.toggleTeachable()
-        XCTAssertEqual(DPAppDelegate.teachable(), [1809])
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.teachableKey), [1809])
         XCTAssertTrue(model.isTeachable)
 
         // The picker, a chip or another device changes the lists: no toggle is involved.
@@ -297,7 +297,7 @@ final class TagDetailModelTests: XCTestCase {
         XCTAssertFalse(model.isFavorite)
         XCTAssertTrue(model.isTeachable)
         model.toggleTeachable()
-        XCTAssertEqual(DPAppDelegate.teachable(), [])
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.teachableKey), [])
     }
 
     func testTheTagActionsOfferTheOppositeOfEachSavedStateThenAddToListAndCancel() {
@@ -465,7 +465,7 @@ final class TagDetailModelTests: XCTestCase {
         model.summary.showPicker()
         XCTAssertEqual(model.pickerSource, .chip)
 
-        DPAppDelegate.addTeachable(1809)
+        TMTagLists.add(Int(1809), to: TMTagLists.teachableKey)
         XCTAssertEqual(model.summary.memberships, [TMTagLists.favoriteKey, TMTagLists.teachableKey, key])
     }
 

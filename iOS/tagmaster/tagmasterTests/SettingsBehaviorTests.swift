@@ -114,10 +114,10 @@ final class SettingsBehaviorTests: TMBehaviorTestCase {
         XCTAssertEqual(alert?.message, "Every favorite will be removed from your list. You can add tags again from any tag's Favorite and Teachable options.")
         XCTAssertEqual(Set(alert?.actions.map { $0.title ?? "" } ?? []), ["Clear Favorites", "Cancel"])
         XCTAssertEqual(alert?.actions.first { $0.title == "Clear Favorites" }?.style, .destructive)
-        XCTAssertEqual(DPAppDelegate.favorites(), [1, 2], "Nothing goes before the confirmation")
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.favoriteKey), [1, 2], "Nothing goes before the confirmation")
         alert?.tm_fire("Clear Favorites")
-        XCTAssertEqual(DPAppDelegate.favorites(), [])
-        XCTAssertEqual(DPAppDelegate.teachable(), [3])
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.favoriteKey), [])
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.teachableKey), [3])
         XCTAssertEqual(model.favoritesCount, 0)
     }
 
@@ -128,7 +128,7 @@ final class SettingsBehaviorTests: TMBehaviorTestCase {
         let alert = presentedAlert()
         XCTAssertEqual(alert?.title, "Clear Teachable Tags?")
         alert?.tm_fire("Clear Teachable Tags")
-        XCTAssertEqual(DPAppDelegate.teachable(), [])
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.teachableKey), [])
     }
 
     func testCountsFollowChangesMadeElsewhere() {

@@ -466,3 +466,45 @@ final class DPSongListSyncEmulatorTests: XCTestCase {
         func close() { Darwin.close(descriptor) }
     }
 }
+
+extension DPSongListSyncEmulatorTests {
+    func testRepeatedAttachmentKeepsAnExplicitUploadInEitherSignInOrder() throws {
+        for uploadFirst in [false, true] {
+            model.detachFromFirestore()
+            let offline = try XCTUnwrap(model.createList(named: uploadFirst ? "Upload first" : "Auth first"))
+            model.attachToFirestore(userDoc: localDoc, store: uploadFirst, remoteWins: !uploadFirst)
+            model.attachToFirestore(userDoc: localDoc, store: !uploadFirst, remoteWins: uploadFirst)
+            awaitList(offline.id) { $0.exists }
+            // A server-confirmed snapshot must not re-arm pruning after the upload.
+            RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.3))
+            XCTAssertNotNil(model.songLists[offline.id])
+            XCTAssertFalse(offline.isDeleted)
+        }
+    }
+
+    func testSnapshotQueuedBeforeReattachmentCannotApplyToTheNewSubscription() throws {
+        model.detachFromFirestore()
+        write("queued-list", ["name": "Queued list", "songs": [], "order": 0])
+        let snapshot: QuerySnapshot? = awaitCallback("read the queued snapshot") {
+            self.remoteDoc.collection("songLists").getDocuments(source: .server, completion: $0)
+        }
+        let queued = try XCTUnwrap(snapshot)
+        var callbacks: [(QuerySnapshot?, Error?) -> Void] = []
+        model.observeSongLists = { _, receive in
+            callbacks.append(receive)
+            return SyncTestRegistration()
+        }
+        model.attachToFirestore(userDoc: localDoc)
+        model.detachFromFirestore()
+        model.attachToFirestore(userDoc: localDoc)
+
+        callbacks[0](queued, nil)
+        XCTAssertNil(model.songLists["queued-list"], "a removed subscription cannot apply a queued snapshot")
+        callbacks[1](queued, nil)
+        XCTAssertNotNil(model.songLists["queued-list"], "the current subscription still applies the same snapshot")
+    }
+
+    private final class SyncTestRegistration: NSObject, ListenerRegistration {
+        func remove() {}
+    }
+}

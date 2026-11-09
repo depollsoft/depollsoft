@@ -4,7 +4,7 @@
 //
 //  The launch work SwiftUI's App leaves to a delegate (Firebase, consent, the
 //  Facebook SDK, remote notifications, list sync on sign-in), the sign-in URL
-//  check, the accent, and the saved-tag helpers the screens call.
+//  check, the accent, and the legacy saved-tag migration.
 //
 
 import AVKit
@@ -90,78 +90,15 @@ final class DPAppDelegate: UIResponder, UIApplicationDelegate {
             : UIColor(red: 0x00 / 255.0, green: 0x7A / 255.0, blue: 0xA3 / 255.0, alpha: 1)
     }
 
-    // MARK: Saved tags
-
-    @objc static func containsFavorite(_ tagId: Int32) -> Bool { favorites().contains(Int(tagId)) }
-    @objc static func containsTeachable(_ tagId: Int32) -> Bool { teachable().contains(Int(tagId)) }
-    @objc static func addFavorite(_ tagId: Int32) { setFavorites(adding(Int(tagId), to: favorites())) }
-    @objc static func addTeachable(_ tagId: Int32) { setTeachable(adding(Int(tagId), to: teachable())) }
-    @objc static func removeFavorite(_ tagId: Int32) { setFavorites(favorites().filter { $0 != Int(tagId) }) }
-    @objc static func removeTeachable(_ tagId: Int32) { setTeachable(teachable().filter { $0 != Int(tagId) }) }
-    @objc(moveFavoriteAt:to:) static func moveFavorite(at from: UInt, to: UInt) {
-        setFavorites(moving(favorites(), from: Int(from), to: Int(to)))
-    }
-    @objc(moveTeachableAt:to:) static func moveTeachable(at from: UInt, to: UInt) {
-        setTeachable(moving(teachable(), from: Int(from), to: Int(to)))
-    }
-
-    private static func adding(_ id: Int, to ids: [Int]) -> [Int] { ids.contains(id) ? ids : ids + [id] }
-
-    private static func moving(_ ids: [Int], from: Int, to: Int) -> [Int] {
-        guard ids.indices.contains(from), to >= 0, to < ids.count else { return ids }
-        var moved = ids
-        moved.insert(moved.remove(at: from), at: to)
-        return moved
-    }
 }
 
 extension DPAppDelegate {
-    @objc static func setTeachable(_ teachables: [Int]) {
-        setTeachable(teachables, doSave: true)
-    }
-
-    @objc static func setTeachable(_ teachables: [Int], doSave: Bool) {
-        TMTagLists.setIds(teachables, for: TMTagLists.teachableKey, doSave: doSave)
-    }
-
-    @objc static func teachable() -> [Int] {
-        TMTagLists.ids(for: TMTagLists.teachableKey)
-    }
-
-    static func oldTeachable() -> [Int]? {
-        guard let array = UserDefaults.standard.array(forKey: "teachable") else {
-            return nil
-        }
-        return array.compactMap { ($0 as? NSNumber)?.intValue }
-    }
-
-    @objc static func setFavorites(_ favorites: [Int]) {
-        setFavorites(favorites, doSave: true)
-    }
-
-    @objc static func setFavorites(_ favorites: [Int], doSave: Bool) {
-        TMTagLists.setIds(favorites, for: TMTagLists.favoriteKey, doSave: doSave)
-    }
-
-    @objc static func favorites() -> [Int] {
-        TMTagLists.ids(for: TMTagLists.favoriteKey)
-    }
-
-    static func oldFavorites() -> [Int]? {
-        guard let array = UserDefaults.standard.array(forKey: "favorites") else {
-            return nil
-        }
-        return array.compactMap { ($0 as? NSNumber)?.intValue }
-    }
-
-    private static func migrateOldLists() {
-        if let oldTeachable = oldTeachable() {
-            setTeachable(oldTeachable)
-            UserDefaults.standard.removeObject(forKey: "teachable")
-        }
-        if let oldFavorites = oldFavorites() {
-            setFavorites(oldFavorites)
-            UserDefaults.standard.removeObject(forKey: "favorites")
+    static func migrateOldLists() {
+        let defaults = UserDefaults.standard
+        for (legacy, key) in [("teachable", TMTagLists.teachableKey), ("favorites", TMTagLists.favoriteKey)] {
+            guard let old = defaults.array(forKey: legacy) else { continue }
+            TMTagLists.setIds(old.compactMap { ($0 as? NSNumber)?.intValue }, for: key)
+            defaults.removeObject(forKey: legacy)
         }
     }
 

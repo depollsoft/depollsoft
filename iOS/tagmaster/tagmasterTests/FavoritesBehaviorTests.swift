@@ -228,7 +228,7 @@ final class FavoritesBehaviorTests: TMBehaviorTestCase {
     func testFavoritesSeededInDefaultsBecomeHomeRowsInOrder() {
         let seeded = [669, 1478, 122]
         home(favorites: seeded)
-        XCTAssertEqual(DPAppDelegate.favorites(), seeded,
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.favoriteKey), seeded,
                        "The lists defaults key is the app's own favourites storage")
         XCTAssertEqual(model.favorites, seeded)
         // The list is lazy: bring the last favourite into view before reading the rows.
@@ -265,16 +265,16 @@ final class FavoritesBehaviorTests: TMBehaviorTestCase {
     func testDeletingAFavoriteRowRemovesThatFavorite() {
         home(favorites: [669, 1478, 122])
         model.removeFavorites(at: [1])
-        XCTAssertEqual(DPAppDelegate.favorites(), [669, 122])
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.favoriteKey), [669, 122])
         XCTAssertEqual(model.favorites, [669, 122])
     }
 
     func testReorderingAFavoriteRowReordersTheStoredList() {
         home(favorites: [669, 1478, 122])
         model.moveFavorite(from: [0], to: 3)
-        XCTAssertEqual(DPAppDelegate.favorites(), [1478, 122, 669])
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.favoriteKey), [1478, 122, 669])
         model.moveFavorite(from: [2], to: 0)
-        XCTAssertEqual(DPAppDelegate.favorites(), [669, 1478, 122])
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.favoriteKey), [669, 1478, 122])
     }
 
     func testEditButtonIsEnabledForFavoritesOrForListsOfTheirOwn() {
