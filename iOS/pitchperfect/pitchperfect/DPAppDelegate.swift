@@ -12,7 +12,6 @@
 import AVFoundation
 import FirebaseAuth
 import FirebaseCore
-import FirebaseFirestore
 import GoogleMobileAds
 import SwiftUI
 import UIKit
@@ -26,7 +25,6 @@ import GoogleSignIn
 
 @objc(DPAppDelegate)
 final class DPAppDelegate: UIResponder, UIApplicationDelegate {
-    private static var userDoc: DocumentReference?
     private var authListener: AuthStateDidChangeListenerHandle?
 
     static var isRunningTests: Bool { NSClassFromString("XCTestCase") != nil }
@@ -71,24 +69,14 @@ final class DPAppDelegate: UIResponder, UIApplicationDelegate {
 
     /// Songs and settings follow whoever is signed in.
     private func attachSyncToSignIn() {
-        var registration: ListenerRegistration?
         authListener = Auth.auth().addStateDidChangeListener { _, user in
             MainActor.assumeIsolated { UsageAnalytics.signedIn(user != nil) }
-            if let reg = registration {
-                reg.remove()
-                registration = nil
-                DPSongsModel.sharedInstance.detachFromFirestore()
-                DPSettingsModel.sharedInstance.detachFromFirestore()
-            }
-            if let user {
+            if user != nil {
                 DPSongsModel.sharedInstance.attachToFirestore()
                 DPSettingsModel.sharedInstance.attachToFirestore()
-                DPAppDelegate.userDoc = Firestore.firestore().document("users/\(user.uid)")
-                registration = DPAppDelegate.userDoc?.addSnapshotListener { _, error in
-                    if let error { print(error) }
-                }
             } else {
-                DPAppDelegate.userDoc = nil
+                DPSongsModel.sharedInstance.detachFromFirestore()
+                DPSettingsModel.sharedInstance.detachFromFirestore()
             }
         }
     }

@@ -121,7 +121,7 @@ final class TagDetailBehaviorTests: TMBehaviorTestCase {
         XCTAssertEqual(sheet.actions.last?.style, .cancel)
         sheet.tm_fire("Add Favorite")
         spinUntil("the sheet goes") { detail.presentedViewController == nil }
-        XCTAssertEqual(DPAppDelegate.favorites(), [1809])
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.favoriteKey), [1809])
         XCTAssertFalse(detail.model.actionsPresented)
     }
 
@@ -151,10 +151,10 @@ final class TagDetailBehaviorTests: TMBehaviorTestCase {
         XCTAssertFalse(model.hasNextTag)
 
         driver.tap(label: "Add Favorite")
-        XCTAssertEqual(DPAppDelegate.favorites(), [1809])
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.favoriteKey), [1809])
         XCTAssertTrue(driver.exists(label: "Remove Favorite"), "The heart fills and names its next action")
         driver.tap(label: "Mark as Teachable")
-        XCTAssertEqual(DPAppDelegate.teachable(), [1809])
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.teachableKey), [1809])
         XCTAssertTrue(driver.exists(label: "Unmark as Teachable"))
 
         // Changes made anywhere else show up in the bar too.
@@ -365,17 +365,17 @@ final class TagDetailBehaviorTests: TMBehaviorTestCase {
         seedCachedTag(id: 1809)
         _ = mountDetail()
         driver().perform(action: "Remove from Favorites", id: "summary.chip.favorite")
-        XCTAssertEqual(DPAppDelegate.favorites(), [])
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.favoriteKey), [])
     }
 
     func testTheChipsFollowChangesMadeAnywhereElse() {
         seedCachedTag(id: 1809)
         _ = mountDetail()
         XCTAssertFalse(driver().exists(id: "summary.chip.teachable"))
-        DPAppDelegate.addTeachable(1809)
+        TMTagLists.add(Int(1809), to: TMTagLists.teachableKey)
         ScreenCatalog.settle(0.2)
         XCTAssertEqual(driver().label(id: "summary.chip.teachable"), "Teachable Tags")
-        DPAppDelegate.removeTeachable(1809)
+        TMTagLists.remove(Int(1809), from: TMTagLists.teachableKey)
         ScreenCatalog.settle(0.2)
         XCTAssertFalse(driver().exists(id: "summary.chip.teachable"))
     }
@@ -505,10 +505,10 @@ final class TagDetailBehaviorTests: TMBehaviorTestCase {
         _ = mountPicker()
         let driver = driver()
         driver.tap(id: "picker.row.favorite")
-        XCTAssertEqual(DPAppDelegate.favorites(), [1809])
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.favoriteKey), [1809])
         XCTAssertTrue(driver.isSelected(id: "picker.row.favorite"))
         driver.tap(id: "picker.row.favorite")
-        XCTAssertEqual(DPAppDelegate.favorites(), [])
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.favoriteKey), [])
         driver.tap(id: "picker.row.afterglow-set-k3f9")
         XCTAssertEqual(TMTagLists.ids(for: "afterglow-set-k3f9"), [1809])
     }

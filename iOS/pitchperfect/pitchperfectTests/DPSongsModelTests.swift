@@ -1,10 +1,12 @@
 import XCTest
+import FirebaseCore
+import FirebaseFirestore
 @testable import pitchperfect
 
 // MARK: - Mock Classes for Firestore Testing
 
 /// Mock ListenerRegistration to track listener removal calls
-class MockListenerRegistration {
+class MockListenerRegistration: NSObject, ListenerRegistration {
     var removed = false
     func remove() {
         removed = true
@@ -471,4 +473,77 @@ final class DPSongsModelTests: XCTestCase {
         
         XCTAssertTrue(instance1 === instance2)
     }
+}
+
+extension DPSongsModelTests {
+    // MARK: - Firestore attachment
+
+    private func syncDocument(_ uid: String) -> DocumentReference {
+        let name = "songs-attachment-tests"
+        if FirebaseApp.app(name: name) == nil {
+            let options = FirebaseOptions(googleAppID: "1:1:ios:0000000000000001", gcmSenderID: "1")
+            options.projectID = "demo-pitchperfect-attachment"
+            options.apiKey = "AIzaSyEmulatorOnlyEmulatorOnlyEmulator0"
+            FirebaseApp.configure(name: name, options: options)
+            let firestore = Firestore.firestore(app: FirebaseApp.app(name: name)!)
+            let settings = firestore.settings
+            settings.host = "127.0.0.1:1"
+            settings.isSSLEnabled = false
+            settings.cacheSettings = MemoryCacheSettings()
+            firestore.settings = settings
+        }
+        return Firestore.firestore(app: FirebaseApp.app(name: name)!).document("users/\(uid)")
+    }
+
+    func testRepeatedAttachmentKeepsOneSubscriptionAndSwitchingAccountsRemovesIt() {
+        let model = DPSongsModel()
+        var registrations: [MockListenerRegistration] = []
+        model.observeSongLists = { _, _ in
+            let registration = MockListenerRegistration()
+            registrations.append(registration)
+            return registration
+        }
+        model.attachToFirestore(userDoc: syncDocument("first"))
+        model.attachToFirestore(userDoc: syncDocument("first"))
+        XCTAssertEqual(registrations.count, 1)
+        XCTAssertFalse(registrations[0].removed)
+
+        model.attachToFirestore(userDoc: syncDocument("second"))
+        XCTAssertEqual(registrations.count, 2)
+        XCTAssertTrue(registrations[0].removed)
+        XCTAssertFalse(registrations[1].removed)
+
+        model.detachFromFirestore()
+        XCTAssertTrue(registrations[1].removed)
+        model.detachFromFirestore()
+    }
+
+    func testSubscriptionDoesNotRetainModelAndLateCallbacksAreSafe() {
+        var model: DPSongsModel? = DPSongsModel()
+        weak var weakModel = model
+        var callbacks: [(QuerySnapshot?, Error?) -> Void] = []
+        var registrations: [MockListenerRegistration] = []
+        model!.observeSongLists = { _, receive in
+            callbacks.append(receive)
+            let registration = MockListenerRegistration()
+            registrations.append(registration)
+            return registration
+        }
+        model!.attachToFirestore(userDoc: syncDocument("first"))
+        model!.attachToFirestore(userDoc: syncDocument("second"))
+        var notifications = 0
+        let token = NotificationCenter.default.addObserver(forName: .songsChanged, object: model, queue: nil) { _ in
+            notifications += 1
+        }
+        defer { NotificationCenter.default.removeObserver(token) }
+        callbacks[0](nil, nil)
+        XCTAssertEqual(notifications, 0)
+        NotificationCenter.default.removeObserver(token)
+
+        model = nil
+        XCTAssertNil(weakModel)
+        XCTAssertTrue(registrations[1].removed)
+        callbacks[1](nil, nil)
+    }
+
 }

@@ -252,7 +252,7 @@ final class TMHomeModel: TMTagListing {
 
     func removeFavorites(at offsets: IndexSet) {
         for index in offsets.sorted(by: >) where favorites.indices.contains(index) {
-            DPAppDelegate.removeFavorite(Int32(favorites[index]))
+            TMTagLists.remove(favorites[index], from: TMTagLists.favoriteKey)
         }
         reload()
     }
@@ -261,7 +261,7 @@ final class TMHomeModel: TMTagListing {
         guard let from = offsets.first, offsets.count == 1 else { return }
         let to = destination > from ? destination - 1 : destination
         guard from != to else { return }
-        DPAppDelegate.moveFavorite(at: UInt(from), to: UInt(to))
+        TMTagLists.move(in: TMTagLists.favoriteKey, from: from, to: to)
         reload()
     }
 

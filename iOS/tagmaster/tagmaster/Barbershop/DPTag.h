@@ -13,6 +13,8 @@
 #import "DPTagQueryResult.h"
 #import "DPTrack.h"
 
+FOUNDATION_EXPORT NSString *const _Nonnull DPTagDefaultFieldList;
+
 @interface DPTag : NSObject
 
 @property (nonatomic) int appVersion;
@@ -57,24 +59,11 @@
 @property (nonatomic, strong, nullable) NSArray *videos;
 @property (nonatomic, copy, nullable) NSString *lyrics;
 
-+ (void)clearCache;
-+ (long)getCurrentCacheSize;
 + (nullable DPTag *)loadFromCache:(int)tagId;
 + (nullable DPTag *)loadTagById:(int)tagId;
 + (nullable DPTag *)loadTagById:(int)tagId refresh:(BOOL)refresh;
-+ (nonnull DPTagQueryResult *)query:(nullable NSString *)query;
-+ (nonnull DPTagQueryResult *)query:(nullable NSString *)query numberOfResults:(int)numberOfResults;
-+ (nonnull DPTagQueryResult *)query:(nullable NSString *)query numberOfResults:(int)numberOfResults start:(int)start;
-+ (nonnull DPTagQueryResult *)query:(nullable NSString *)query numberOfResults:(int)numberOfResults start:(int)start parts:(nullable NSNumber *)parts;
-+ (nonnull DPTagQueryResult *)query:(nullable NSString *)query numberOfResults:(int)numberOfResults start:(int)start parts:(nullable NSNumber *)parts learningTracks:(nullable NSNumber *)learningTracks;
-+ (nonnull DPTagQueryResult *)query:(nullable NSString *)query numberOfResults:(int)numberOfResults start:(int)start parts:(nullable NSNumber *)parts learningTracks:(nullable NSNumber *)learningTracks sheetMusic:(nullable NSNumber *)sheetMusic;
-+ (nonnull DPTagQueryResult *)query:(nullable NSString *)query numberOfResults:(int)numberOfResults start:(int)start parts:(nullable NSNumber *)parts learningTracks:(nullable NSNumber *)learningTracks sheetMusic:(nullable NSNumber *)sheetMusic collection:(enum DPTagCollection)tagCollection;
-+ (nonnull DPTagQueryResult *)query:(nullable NSString *)query numberOfResults:(int)numberOfResults start:(int)start parts:(nullable NSNumber *)parts learningTracks:(nullable NSNumber *)learningTracks sheetMusic:(nullable NSNumber *)sheetMusic collection:(enum DPTagCollection)tagCollection sortBy:(enum DPTagSortOptions)sortBy;
-+ (nonnull DPTagQueryResult *)query:(nullable NSString *)query numberOfResults:(int)numberOfResults start:(int)start parts:(nullable NSNumber *)parts learningTracks:(nullable NSNumber *)learningTracks sheetMusic:(nullable NSNumber *)sheetMusic collection:(enum DPTagCollection)tagCollection sortBy:(enum DPTagSortOptions)sortBy minimumRating:(nullable NSNumber *)minimumRating;
-+ (nonnull DPTagQueryResult *)query:(nullable NSString *)query numberOfResults:(int)numberOfResults start:(int)start parts:(nullable NSNumber *)parts learningTracks:(nullable NSNumber *)learningTracks sheetMusic:(nullable NSNumber *)sheetMusic collection:(enum DPTagCollection)tagCollection sortBy:(enum DPTagSortOptions)sortBy minimumRating:(nullable NSNumber *)minimumRating minimumDownloads:(nullable NSNumber *)minimumDownloads;
-+ (nonnull DPTagQueryResult *)query:(nullable NSString *)query numberOfResults:(int)numberOfResults start:(int)start parts:(nullable NSNumber *)parts learningTracks:(nullable NSNumber *)learningTracks sheetMusic:(nullable NSNumber *)sheetMusic collection:(enum DPTagCollection)tagCollection sortBy:(enum DPTagSortOptions)sortBy minimumRating:(nullable NSNumber *)minimumRating minimumDownloads:(nullable NSNumber *)minimumDownloads cache:(BOOL)cache;
 + (nonnull DPTagQueryResult *)query:(nullable NSString *)query numberOfResults:(int)numberOfResults start:(int)start parts:(nullable NSNumber *)parts learningTracks:(nullable NSNumber *)learningTracks sheetMusic:(nullable NSNumber *)sheetMusic collection:(enum DPTagCollection)tagCollection sortBy:(enum DPTagSortOptions)sortBy minimumRating:(nullable NSNumber *)minimumRating minimumDownloads:(nullable NSNumber *)minimumDownloads cache:(BOOL)cache fieldList:(nullable NSString *)fieldList;
-+ (DPTag *_Nullable)queryById:(int)tagId;
++ (nullable DPTag *)queryById:(int)tagId;
 + (nonnull NSArray<DPTag *> *)queryByIds:(nonnull NSArray<NSNumber *> *)tagIds;
 + (nonnull NSArray<DPTag *> *)queryByIds:(nonnull NSArray<NSNumber *> *)tagIds cache:(BOOL)cache;
 

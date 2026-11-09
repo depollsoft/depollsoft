@@ -54,8 +54,8 @@ Locally the same data is cached per platform:
 
 The entry points are `TagLists` / `ListModel` on Android
 (`Android/TagMaster/src/main/java/depollsoft/tagmaster/`) and `TMTagLists` on iOS
-(`iOS/tagmaster/tagmaster/TMTagLists.swift`). Everything else goes through them, including the
-legacy `DPAppDelegate.favorites()` family and `FavoritesModel` / `TeachableTagsModel`.
+(`iOS/tagmaster/tagmaster/TMTagLists.swift`). Everything else goes through them, including
+Android's `FavoritesModel` / `TeachableTagsModel`; iOS screens edit `TMTagLists` directly.
 
 ## Running the emulators
 

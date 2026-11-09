@@ -43,15 +43,10 @@ struct TMCatalog: Sendable {
             let parts = query.parts.map { NSNumber(value: $0) }
             let tracks = query.learningTracks.map { NSNumber(value: $0) }
             let sheet = query.sheetMusic.map { NSNumber(value: $0) }
-            if let fields = query.fieldList {
-                return DPTag.query(query.text, numberOfResults: Int32(count), start: Int32(start), parts: parts,
-                                   learningTracks: tracks, sheetMusic: sheet, collection: query.collection,
-                                   sortBy: query.sortBy, minimumRating: rating, minimumDownloads: downloads,
-                                   cache: false, fieldList: fields)
-            }
             return DPTag.query(query.text, numberOfResults: Int32(count), start: Int32(start), parts: parts,
                                learningTracks: tracks, sheetMusic: sheet, collection: query.collection,
-                               sortBy: query.sortBy, minimumRating: rating, minimumDownloads: downloads)
+                               sortBy: query.sortBy, minimumRating: rating, minimumDownloads: downloads,
+                               cache: false, fieldList: query.fieldList ?? DPTagDefaultFieldList)
         } as? DPTagQueryResult
         guard let result, !result.failed else { return nil }
         return result

@@ -32,8 +32,7 @@
     [super setUp];
     // Clear the in-memory tag cache before each test
     [[DPTag tagCache] removeAllObjects];
-    // Also clear any file cache entries used by tests
-    [DPTag clearCache];
+    [[NSFileManager defaultManager] removeItemAtPath:[DPFileCache pathForKey:[DPTag cacheKeyForId:12345]] error:nil];
     
     // Create a sample tag for testing
     self.sampleTag = [[DPTag alloc] init];
@@ -49,8 +48,7 @@
 - (void)tearDown {
     // Clean up the in-memory cache
     [[DPTag tagCache] removeAllObjects];
-    // Clean up file cache
-    [DPTag clearCache];
+    [[NSFileManager defaultManager] removeItemAtPath:[DPFileCache pathForKey:self.sampleTag.cacheKey] error:nil];
     self.sampleTag = nil;
     [super tearDown];
 }
@@ -239,7 +237,7 @@
     method_setImplementation(parserMethod, mockParser);
     
     // Call query with minimal params
-    [DPTag query:@"test search" numberOfResults:5];
+    [DPTag query:@"test search" numberOfResults:5 start:0 parts:nil learningTracks:nil sheetMusic:nil collection:DPTagCollectionNone sortBy:DPTagSortNone minimumRating:nil minimumDownloads:nil cache:NO fieldList:DPTagDefaultFieldList];
     
     method_setImplementation(parserMethod, originalParser);
     
@@ -306,7 +304,7 @@
     });
     method_setImplementation(parserMethod, mockParser);
     
-    [DPTag query:@"   " numberOfResults:10]; // Whitespace-only query
+    [DPTag query:@"   " numberOfResults:10 start:0 parts:nil learningTracks:nil sheetMusic:nil collection:DPTagCollectionNone sortBy:DPTagSortNone minimumRating:nil minimumDownloads:nil cache:NO fieldList:DPTagDefaultFieldList]; // Whitespace-only query
     
     method_setImplementation(parserMethod, originalParser);
     
@@ -341,7 +339,7 @@
     });
     method_setImplementation(parserMethod, mockParser);
     
-    DPTagQueryResult *result = [DPTag query:@"test"];
+    DPTagQueryResult *result = [DPTag query:@"test" numberOfResults:10 start:0 parts:nil learningTracks:nil sheetMusic:nil collection:DPTagCollectionNone sortBy:DPTagSortNone minimumRating:nil minimumDownloads:nil cache:NO fieldList:DPTagDefaultFieldList];
     
     method_setImplementation(parserMethod, originalParser);
     
@@ -368,7 +366,7 @@
     });
     method_setImplementation(parserMethod, mockParser);
     
-    DPTagQueryResult *result = [DPTag query:@"test"];
+    DPTagQueryResult *result = [DPTag query:@"test" numberOfResults:10 start:0 parts:nil learningTracks:nil sheetMusic:nil collection:DPTagCollectionNone sortBy:DPTagSortNone minimumRating:nil minimumDownloads:nil cache:NO fieldList:DPTagDefaultFieldList];
     
     method_setImplementation(parserMethod, originalParser);
     
@@ -521,43 +519,6 @@
     }
 }
 
-- (void)testClearCacheRemovesAll {
-    // Cache a few tags
-    DPTag *tag1 = [[DPTag alloc] init];
-    tag1.tagId = 1001;
-    tag1.title = @"Tag 1001";
-    [tag1 cache];
-    
-    DPTag *tag2 = [[DPTag alloc] init];
-    tag2.tagId = 1002;
-    tag2.title = @"Tag 1002";
-    [tag2 cache];
-    
-    // Verify tags are cached
-    XCTAssertNotNil([DPTag tagCache][@1001]);
-    XCTAssertNotNil([DPTag tagCache][@1002]);
-    
-    // Call clearCache (note: implementation is TODO)
-    [DPTag clearCache];
-    
-    // Currently clearCache is not implemented, so this test documents expected behavior
-    // When implemented, these assertions should pass:
-    // XCTAssertNil([DPTag tagCache][@1001]);
-    // XCTAssertNil([DPTag tagCache][@1002]);
-}
-
-- (void)testGetCurrentCacheSizeReturnsBytes {
-    // Cache some tags
-    [self.sampleTag cache];
-    
-    // Call getCurrentCacheSize (note: implementation is TODO, returns 0)
-    long size = [DPTag getCurrentCacheSize];
-    
-    // Currently returns 0, but when implemented should return actual size
-    // This test documents expected behavior
-    XCTAssertGreaterThanOrEqual(size, 0, @"Cache size should be non-negative");
-}
-
 #pragma mark - Tag Description Tests
 
 - (void)testDescriptionFormatting {
@@ -593,7 +554,7 @@
     });
     method_setImplementation(parserMethod, mockParser);
     
-    [DPTag query:nil numberOfResults:10 start:0 parts:nil learningTracks:nil sheetMusic:nil collection:DPTagCollectionNone sortBy:DPTagSortTitle];
+    [DPTag query:nil numberOfResults:10 start:0 parts:nil learningTracks:nil sheetMusic:nil collection:DPTagCollectionNone sortBy:DPTagSortTitle minimumRating:nil minimumDownloads:nil cache:NO fieldList:DPTagDefaultFieldList];
     
     method_setImplementation(parserMethod, originalParser);
     
@@ -615,7 +576,7 @@
     });
     method_setImplementation(parserMethod, mockParser);
     
-    [DPTag query:nil numberOfResults:10 start:0 parts:nil learningTracks:nil sheetMusic:nil collection:DPTagCollectionNone sortBy:DPTagSortDownloaded];
+    [DPTag query:nil numberOfResults:10 start:0 parts:nil learningTracks:nil sheetMusic:nil collection:DPTagCollectionNone sortBy:DPTagSortDownloaded minimumRating:nil minimumDownloads:nil cache:NO fieldList:DPTagDefaultFieldList];
     
     method_setImplementation(parserMethod, originalParser);
     
@@ -638,7 +599,7 @@
     method_setImplementation(parserMethod, mockParser);
     
     // When sorting by Classic, collection should be set to classic automatically
-    [DPTag query:nil numberOfResults:10 start:0 parts:nil learningTracks:nil sheetMusic:nil collection:DPTagCollectionNone sortBy:DPTagSortClassic];
+    [DPTag query:nil numberOfResults:10 start:0 parts:nil learningTracks:nil sheetMusic:nil collection:DPTagCollectionNone sortBy:DPTagSortClassic minimumRating:nil minimumDownloads:nil cache:NO fieldList:DPTagDefaultFieldList];
     
     method_setImplementation(parserMethod, originalParser);
     
@@ -663,7 +624,7 @@
     });
     method_setImplementation(parserMethod, mockParser);
     
-    [DPTag query:nil numberOfResults:10 start:0 parts:nil learningTracks:nil sheetMusic:nil collection:DPTagCollectionEasyTags sortBy:DPTagSortNone];
+    [DPTag query:nil numberOfResults:10 start:0 parts:nil learningTracks:nil sheetMusic:nil collection:DPTagCollectionEasyTags sortBy:DPTagSortNone minimumRating:nil minimumDownloads:nil cache:NO fieldList:DPTagDefaultFieldList];
     
     method_setImplementation(parserMethod, originalParser);
     

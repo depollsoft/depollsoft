@@ -9,7 +9,6 @@
 #import "DPTag.h"
 #import "DPTagXMLParser.h"
 #import "DPFileCache.h"
-#import "DPUtils+Subscripts.h"
 #import "DPUtils+NSString.h"
 #import "DPTrack.h"
 #import "DPAccidental.h"
@@ -17,6 +16,8 @@
 
 const int APP_VERSION = 1;
 NSString *const API_URI_STRING = @"https://www.barbershoptags.com/api.php?client=TagMaster&";
+
+NSString *const DPTagDefaultFieldList = @"id,Title,AltTitle,Rating,Posted,Downloaded,SheetMusic,AllParts,Bass,Bari,Lead,Tenor,Other1,Other2,Other3,Other4";
 
 @implementation DPTag
 
@@ -170,15 +171,6 @@ NSString *const API_URI_STRING = @"https://www.barbershoptags.com/api.php?client
     return [NSString stringWithFormat:@"{Tag id: %d Title: %@}", self.tagId, self.title];
 }
 
-+ (void)clearCache {
-    // TODO: implement
-}
-
-+ (long)getCurrentCacheSize {
-    // TODO: implement
-    return 0;
-}
-
 + (DPTag *)loadTagById:(int)tagId {
     return [DPTag loadTagById:tagId refresh:NO];
 }
@@ -219,49 +211,6 @@ NSString *const API_URI_STRING = @"https://www.barbershoptags.com/api.php?client
     return nil;
 }
 
-+ (DPTagQueryResult *)query:(NSString *)query {
-    return [DPTag query:query numberOfResults:10];
-}
-
-+ (DPTagQueryResult *)query:(NSString *)query numberOfResults:(int)numberOfResults {
-    return [DPTag query:query numberOfResults:numberOfResults start:0];
-}
-
-+ (DPTagQueryResult *)query:(NSString *)query numberOfResults:(int)numberOfResults start:(int)start {
-    return [DPTag query:query numberOfResults:numberOfResults start:start parts:nil];
-}
-
-+ (DPTagQueryResult *)query:(NSString *)query numberOfResults:(int)numberOfResults start:(int)start parts:(NSNumber *)parts {
-    return [DPTag query:query numberOfResults:numberOfResults start:start parts:parts learningTracks:nil];
-}
-
-+ (DPTagQueryResult *)query:(NSString *)query numberOfResults:(int)numberOfResults start:(int)start parts:(NSNumber *)parts learningTracks:(NSNumber *)learningTracks {
-    return [DPTag query:query numberOfResults:numberOfResults start:start parts:parts learningTracks:learningTracks sheetMusic:nil];
-}
-
-+ (DPTagQueryResult *)query:(NSString *)query numberOfResults:(int)numberOfResults start:(int)start parts:(NSNumber *)parts learningTracks:(NSNumber *)learningTracks sheetMusic:(NSNumber *)sheetMusic {
-    return [DPTag query:query numberOfResults:numberOfResults start:start parts:parts learningTracks:learningTracks sheetMusic:sheetMusic collection:DPTagCollectionNone];
-}
-
-+ (DPTagQueryResult *)query:(NSString *)query numberOfResults:(int)numberOfResults start:(int)start parts:(NSNumber *)parts learningTracks:(NSNumber *)learningTracks sheetMusic:(NSNumber *)sheetMusic collection:(enum DPTagCollection)tagCollection {
-    return [DPTag query:query numberOfResults:numberOfResults start:start parts:parts learningTracks:learningTracks sheetMusic:sheetMusic collection:tagCollection sortBy:DPTagSortNone];
-}
-
-+ (DPTagQueryResult *)query:(NSString *)query numberOfResults:(int)numberOfResults start:(int)start parts:(NSNumber *)parts learningTracks:(NSNumber *)learningTracks sheetMusic:(NSNumber *)sheetMusic collection:(enum DPTagCollection)tagCollection sortBy:(enum DPTagSortOptions)sortBy {
-    return [DPTag query:query numberOfResults:numberOfResults start:start parts:parts learningTracks:learningTracks sheetMusic:sheetMusic collection:tagCollection sortBy:sortBy minimumRating:nil];
-}
-
-+ (DPTagQueryResult *)query:(NSString *)query numberOfResults:(int)numberOfResults start:(int)start parts:(NSNumber *)parts learningTracks:(NSNumber *)learningTracks sheetMusic:(NSNumber *)sheetMusic collection:(enum DPTagCollection)tagCollection sortBy:(enum DPTagSortOptions)sortBy minimumRating:(NSNumber *)minimumRating {
-    return [DPTag query:query numberOfResults:numberOfResults start:start parts:parts learningTracks:learningTracks sheetMusic:sheetMusic collection:tagCollection sortBy:sortBy minimumRating:minimumRating minimumDownloads:nil];
-}
-
-+ (DPTagQueryResult *)query:(NSString *)query numberOfResults:(int)numberOfResults start:(int)start parts:(NSNumber *)parts learningTracks:(NSNumber *)learningTracks sheetMusic:(NSNumber *)sheetMusic collection:(enum DPTagCollection)tagCollection sortBy:(enum DPTagSortOptions)sortBy minimumRating:(NSNumber *)minimumRating minimumDownloads:(NSNumber *)minimumDownloads {
-    return [DPTag query:query numberOfResults:numberOfResults start:start parts:parts learningTracks:learningTracks sheetMusic:sheetMusic collection:tagCollection sortBy:sortBy minimumRating:minimumRating minimumDownloads:minimumDownloads cache:NO];
-}
-
-+ (DPTagQueryResult *)query:(NSString *)query numberOfResults:(int)numberOfResults start:(int)start parts:(NSNumber *)parts learningTracks:(NSNumber *)learningTracks sheetMusic:(NSNumber *)sheetMusic collection:(enum DPTagCollection)tagCollection sortBy:(enum DPTagSortOptions)sortBy minimumRating:(NSNumber *)minimumRating minimumDownloads:(NSNumber *)minimumDownloads cache:(BOOL)cache {
-    return [DPTag query:query numberOfResults:numberOfResults start:start parts:parts learningTracks:learningTracks sheetMusic:sheetMusic collection:tagCollection sortBy:sortBy minimumRating:minimumRating minimumDownloads:minimumDownloads cache:cache fieldList:@"id,Title,AltTitle,Rating,Posted,Downloaded,SheetMusic,AllParts,Bass,Bari,Lead,Tenor,Other1,Other2,Other3,Other4"];
-}
 + (DPTagQueryResult *)query:(NSString *)query numberOfResults:(int)numberOfResults start:(int)start parts:(NSNumber *)parts learningTracks:(NSNumber *)learningTracks sheetMusic:(NSNumber *)sheetMusic collection:(enum DPTagCollection)tagCollection sortBy:(enum DPTagSortOptions)sortBy minimumRating:(NSNumber *)minimumRating minimumDownloads:(NSNumber *)minimumDownloads cache:(BOOL)cache fieldList:(NSString *)fieldList {
     NSMutableString *builtString = [NSMutableString stringWithString:API_URI_STRING];
     [builtString appendFormat:@"n=%d", numberOfResults];

@@ -58,10 +58,23 @@ public struct DPAddableSongs {
     @objc public static let sharedInstance = DPSongsModel()
 
     private var userDoc: DocumentReference?
-    private var allListeners: [ListenerRegistration] = []
+    private var listenerRegistration: ListenerRegistration?
+    private var syncGeneration = UUID()
+    /// Set while a sign-in is waiting for its first server snapshot to decide which lists stay.
+    private var pruneOnServerSnapshot = false
+
+
+    // Tests replace the subscription, without connecting to a Firebase service.
+    var observeSongLists: (DocumentReference, @escaping (QuerySnapshot?, Error?) -> Void) -> ListenerRegistration = { document, receive in
+        document.collection("songLists").addSnapshotListener(includeMetadataChanges: true, listener: receive)
+    }
     /// Raised while a Firestore snapshot is being applied, so nothing written
     /// by the restore path travels back to the server it just came from.
     private var applyingSnapshot = false
+
+    deinit {
+        listenerRegistration?.remove()
+    }
 
     public override init() {
         super.init()
@@ -98,122 +111,6 @@ public struct DPAddableSongs {
             let defaultList = DPSongList(id: DPSongsModel.defaultListId, name: "Default")
             self.songLists[DPSongsModel.defaultListId] = defaultList
         }
-    }
-
-    @objc public func attachToFirestore(store: Bool = false) {
-        guard let user = Auth.auth().currentUser else { return }
-        // A brand-new account keeps what this device has (the login flow uploads it);
-        // signing in to an existing account means the account's lists replace the local ones.
-        let remoteWins = !store
-            && !DPSongsModel.isNewAccount(createdAt: user.metadata.creationDate,
-                                          lastSignInAt: user.metadata.lastSignInDate)
-        attachToFirestore(userDoc: Firestore.firestore().document("/users/\(user.uid)"),
-                          store: store, remoteWins: remoteWins)
-    }
-
-    /// Whether the account was created by the sign-in that just happened: Firebase
-    /// stamps both times in the same request, so they differ by no more than it took.
-    static func isNewAccount(createdAt: Date?, lastSignInAt: Date?) -> Bool {
-        guard let createdAt, let lastSignInAt else { return false }
-        return abs(lastSignInAt.timeIntervalSince(createdAt)) < 60
-    }
-
-    /// Set while a sign-in is waiting for its first server snapshot to decide which lists stay.
-    private var pruneOnServerSnapshot = false
-
-    /// The attachment the emulator tests drive: every Firestore path this model
-    /// takes hangs off one injected user document.
-    @objc public func attachToFirestore(userDoc: DocumentReference, store: Bool = false) {
-        attachToFirestore(userDoc: userDoc, store: store, remoteWins: !store)
-    }
-
-    /// With `remoteWins`, the first snapshot confirmed by the server decides the
-    /// set of lists: any list on this device that the account does not have is
-    /// dropped, exactly as the account's default list has always replaced the
-    /// local one.
-    public func attachToFirestore(userDoc: DocumentReference, store: Bool, remoteWins: Bool) {
-        self.userDoc = userDoc
-        pruneOnServerSnapshot = remoteWins && !store
-        for (_, list) in self.songLists {
-            list.setParent(userRef: userDoc)
-        }
-        if store {
-            self.storeAll()
-        }
-        listenForSongLists()
-    }
-
-    /// Remote wins: keeps the default list and every list the account has and
-    /// discards the rest, marking them so a stale holder cannot write them back.
-    /// Returns the ids that were dropped.
-    @discardableResult
-    func applyRemoteWins(remoteIds: Set<String>) -> [String] {
-        let dropped = songLists.keys.filter { $0 != DPSongsModel.defaultListId && !remoteIds.contains($0) }
-        guard !dropped.isEmpty else { return [] }
-        for id in dropped {
-            songLists[id]?.discardLocally()
-            removeSongList(forKey: id)
-        }
-        if let stored = UserDefaults.standard.string(forKey: DPSongsModel.currentListKey), dropped.contains(stored) {
-            UserDefaults.standard.set(DPSongsModel.defaultListId, forKey: DPSongsModel.currentListKey)
-        }
-        return dropped
-    }
-
-    private func listenForSongLists() {
-        guard let userDoc else { return }
-        // Metadata changes are included so the moment the server confirms the
-        // cached view is reported even when no document changed: that
-        // confirmation is what settles a sign-in (see `pruneOnServerSnapshot`).
-        allListeners.append(userDoc.collection("songLists").addSnapshotListener(includeMetadataChanges: true) { (snapshot, error) in
-            if error != nil {
-                return
-            }
-            let settlesSignIn = self.pruneOnServerSnapshot && snapshot.map { !$0.metadata.isFromCache } == true
-            if (snapshot?.documentChanges.isEmpty ?? true) && !settlesSignIn {
-                return
-            }
-            self.applyingSnapshot = true
-            for change in snapshot!.documentChanges {
-                switch change.type {
-                case .added:
-                    if self.songLists[change.document.documentID] != nil {
-                        self.songLists[change.document.documentID]?.restore(snapshot: change.document)
-                    } else {
-                        let restored = DPSongList(snapshot: change.document)
-                        self.songLists[change.document.documentID] = restored
-                    }
-                case .modified:
-                    self.songLists[change.document.documentID]?.restore(snapshot: change.document)
-                case .removed:
-                    // Flagged first: an editor still holding the list would otherwise
-                    // store it back and recreate the document the other device deleted.
-                    self.songLists[change.document.documentID]?.discardLocally()
-                    self.removeSongList(forKey: change.document.documentID)
-                }
-            }
-            // The first server-confirmed snapshot of a sign-in settles which lists
-            // exist here. A cached (possibly empty) snapshot must not: it says
-            // nothing about the account.
-            if self.pruneOnServerSnapshot, let snapshot, !snapshot.metadata.isFromCache {
-                self.pruneOnServerSnapshot = false
-                self.applyRemoteWins(remoteIds: Set(snapshot.documents.map(\.documentID)))
-            }
-            // A list deleted above is gone from `songLists`, so this only
-            // rewrites what survived — locally, never back to the server.
-            self.storeAll()
-            self.applyingSnapshot = false
-            self.postChanged()
-        })
-    }
-
-    @objc public func detachFromFirestore() {
-        userDoc = nil
-        pruneOnServerSnapshot = false
-        for listener in allListeners {
-            listener.remove()
-        }
-        allListeners = []
     }
 
     @objc public func removeSongList(forKey: String) {
@@ -663,4 +560,131 @@ enum SongSerialization {
     }()
 
     static func registerAliases() { _ = registered }
+}
+
+// MARK: - Firestore sync
+
+extension DPSongsModel {
+    @objc public func attachToFirestore(store: Bool = false) {
+        guard let user = Auth.auth().currentUser else { return }
+        // A brand-new account keeps what this device has (the login flow uploads it);
+        // signing in to an existing account means the account's lists replace the local ones.
+        let remoteWins = !store
+            && !DPSongsModel.isNewAccount(createdAt: user.metadata.creationDate,
+                                          lastSignInAt: user.metadata.lastSignInDate)
+        attachToFirestore(userDoc: Firestore.firestore().document("/users/\(user.uid)"),
+                          store: store, remoteWins: remoteWins)
+    }
+
+    /// Whether the account was created by the sign-in that just happened: Firebase
+    /// stamps both times in the same request, so they differ by no more than it took.
+    static func isNewAccount(createdAt: Date?, lastSignInAt: Date?) -> Bool {
+        guard let createdAt, let lastSignInAt else { return false }
+        return abs(lastSignInAt.timeIntervalSince(createdAt)) < 60
+    }
+
+    /// The attachment the emulator tests drive: every Firestore path this model
+    /// takes hangs off one injected user document.
+    @objc public func attachToFirestore(userDoc: DocumentReference, store: Bool = false) {
+        attachToFirestore(userDoc: userDoc, store: store, remoteWins: !store)
+    }
+
+    /// With `remoteWins`, the first snapshot confirmed by the server decides the
+    /// set of lists: any list on this device that the account does not have is
+    /// dropped, exactly as the account's default list has always replaced the
+    /// local one.
+    public func attachToFirestore(userDoc: DocumentReference, store: Bool, remoteWins: Bool) {
+        // Auth changes and the sign-in sheet can both attach the same account.
+        // An explicit upload still takes effect, without installing another listener.
+        if self.userDoc == userDoc, listenerRegistration != nil {
+            if store {
+                pruneOnServerSnapshot = false
+                storeAll()
+            }
+            return
+        }
+        detachFromFirestore()
+        self.userDoc = userDoc
+        pruneOnServerSnapshot = remoteWins && !store
+        for (_, list) in self.songLists {
+            list.setParent(userRef: userDoc)
+        }
+        if store {
+            self.storeAll()
+        }
+        listenForSongLists()
+    }
+
+    /// Remote wins: keeps the default list and every list the account has and
+    /// discards the rest, marking them so a stale holder cannot write them back.
+    /// Returns the ids that were dropped.
+    @discardableResult
+    func applyRemoteWins(remoteIds: Set<String>) -> [String] {
+        let dropped = songLists.keys.filter { $0 != DPSongsModel.defaultListId && !remoteIds.contains($0) }
+        guard !dropped.isEmpty else { return [] }
+        for id in dropped {
+            songLists[id]?.discardLocally()
+            removeSongList(forKey: id)
+        }
+        if let stored = UserDefaults.standard.string(forKey: DPSongsModel.currentListKey), dropped.contains(stored) {
+            UserDefaults.standard.set(DPSongsModel.defaultListId, forKey: DPSongsModel.currentListKey)
+        }
+        return dropped
+    }
+
+    private func listenForSongLists() {
+        guard let userDoc else { return }
+        // Metadata changes are included so the moment the server confirms the
+        // cached view is reported even when no document changed: that
+        // confirmation is what settles a sign-in (see `pruneOnServerSnapshot`).
+        let generation = syncGeneration
+        listenerRegistration = observeSongLists(userDoc) { [weak self] snapshot, error in
+            // Removing a listener does not cancel a callback already queued for an old account.
+            guard let self, self.syncGeneration == generation, error == nil else { return }
+            let settlesSignIn = self.pruneOnServerSnapshot && snapshot.map { !$0.metadata.isFromCache } == true
+            if (snapshot?.documentChanges.isEmpty ?? true) && !settlesSignIn {
+                return
+            }
+            self.applyingSnapshot = true
+            for change in snapshot!.documentChanges {
+                switch change.type {
+                case .added:
+                    if self.songLists[change.document.documentID] != nil {
+                        self.songLists[change.document.documentID]?.restore(snapshot: change.document)
+                    } else {
+                        let restored = DPSongList(snapshot: change.document)
+                        self.songLists[change.document.documentID] = restored
+                    }
+                case .modified:
+                    self.songLists[change.document.documentID]?.restore(snapshot: change.document)
+                case .removed:
+                    // Flagged first: an editor still holding the list would otherwise
+                    // store it back and recreate the document the other device deleted.
+                    self.songLists[change.document.documentID]?.discardLocally()
+                    self.removeSongList(forKey: change.document.documentID)
+                }
+            }
+            // The first server-confirmed snapshot of a sign-in settles which lists
+            // exist here. A cached (possibly empty) snapshot must not: it says
+            // nothing about the account.
+            if self.pruneOnServerSnapshot, let snapshot, !snapshot.metadata.isFromCache {
+                self.pruneOnServerSnapshot = false
+                self.applyRemoteWins(remoteIds: Set(snapshot.documents.map(\.documentID)))
+            }
+            // A list deleted above is gone from `songLists`, so this only
+            // rewrites what survived — locally, never back to the server.
+            self.storeAll()
+            self.applyingSnapshot = false
+            self.postChanged()
+        }
+    }
+
+    @objc public func detachFromFirestore() {
+        syncGeneration = UUID()
+        listenerRegistration?.remove()
+        listenerRegistration = nil
+        userDoc = nil
+        pruneOnServerSnapshot = false
+    }
+
 }

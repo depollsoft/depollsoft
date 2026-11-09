@@ -17,4 +17,3 @@ CompileFlags:
     - -I../LayoutManagers
     - -I../pitchperfectlib/pitchperfectlib
     - -I.
-    - -fmodule-map-file=../../Pods/Firebase/CoreOnly/Sources/module.modulemap

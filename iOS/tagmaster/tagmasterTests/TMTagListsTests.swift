@@ -234,6 +234,9 @@ final class TMTagListsTests: XCTestCase {
         key.split(separator: "-").dropLast().joined(separator: "-")
     }
 
+}
+
+extension TMTagListsTests {
     // MARK: - Membership
 
     func testMembershipEditing() {
@@ -267,6 +270,28 @@ final class TMTagListsTests: XCTestCase {
     }
 
     // MARK: - Legacy data
+
+    func testLegacyFavoritesAndTeachableMigrateOnceIntoTheRegistry() {
+        let defaults = UserDefaults.standard
+        let savedFavorites = defaults.object(forKey: "favorites")
+        let savedTeachable = defaults.object(forKey: "teachable")
+        defer {
+            defaults.set(savedFavorites, forKey: "favorites")
+            defaults.set(savedTeachable, forKey: "teachable")
+        }
+        defaults.set([1, 2], forKey: "favorites")
+        defaults.set([3], forKey: "teachable")
+
+        DPAppDelegate.migrateOldLists()
+
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.favoriteKey), [1, 2])
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.teachableKey), [3])
+        XCTAssertNil(defaults.object(forKey: "favorites"))
+        XCTAssertNil(defaults.object(forKey: "teachable"))
+        TMTagLists.add(9, to: TMTagLists.favoriteKey)
+        DPAppDelegate.migrateOldLists()
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.favoriteKey), [1, 2, 9])
+    }
 
     func testListsWithoutMetadataSurfaceUnderTheirKey() {
         UserDefaults.standard.set(["legacy-key": [1, 2]], forKey: TMTagLists.listsDefaultsKey)
@@ -466,14 +491,14 @@ final class TMTagListsTests: XCTestCase {
         XCTAssertEqual(TMTagLists.ids(for: first), [1809])
     }
 
-    func testDPAppDelegateFavoritesAndTeachableRouteThroughTheRegistry() {
-        DPAppDelegate.setFavorites([1, 2])
-        DPAppDelegate.setTeachable([3])
+    func testFavoritesAndTeachableHaveIndependentContents() {
+        TMTagLists.setIds([1, 2], for: TMTagLists.favoriteKey)
+        TMTagLists.setIds([3], for: TMTagLists.teachableKey)
         XCTAssertEqual(TMTagLists.ids(for: TMTagLists.favoriteKey), [1, 2])
         XCTAssertEqual(TMTagLists.ids(for: TMTagLists.teachableKey), [3])
         TMTagLists.add(9, to: TMTagLists.favoriteKey)
-        XCTAssertEqual(DPAppDelegate.favorites(), [1, 2, 9])
-        XCTAssertEqual(DPAppDelegate.teachable(), [3])
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.favoriteKey), [1, 2, 9])
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.teachableKey), [3])
     }
 
     func testTheSavedTagHelpersAddMoveAndRemoveAndAnnounceEachChange() {
@@ -483,26 +508,26 @@ final class TMTagListsTests: XCTestCase {
         }
         defer { NotificationCenter.default.removeObserver(token) }
 
-        DPAppDelegate.setFavorites([1, 2])
+        TMTagLists.setIds([1, 2], for: TMTagLists.favoriteKey)
         XCTAssertGreaterThan(posts, 0, "a change is announced")
-        XCTAssertTrue(DPAppDelegate.containsFavorite(1))
-        DPAppDelegate.moveFavorite(at: 0, to: 1)
-        XCTAssertEqual(DPAppDelegate.favorites(), [2, 1])
-        DPAppDelegate.removeFavorite(2)
-        XCTAssertFalse(DPAppDelegate.containsFavorite(2))
-        DPAppDelegate.addFavorite(3)
-        DPAppDelegate.addFavorite(3)
-        XCTAssertEqual(DPAppDelegate.favorites(), [1, 3], "adding twice keeps one")
-        DPAppDelegate.moveFavorite(at: 5, to: 0)
-        XCTAssertEqual(DPAppDelegate.favorites(), [1, 3], "an out-of-range move changes nothing")
+        XCTAssertTrue(TMTagLists.contains(Int(1), in: TMTagLists.favoriteKey))
+        TMTagLists.move(in: TMTagLists.favoriteKey, from: Int(0), to: Int(1))
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.favoriteKey), [2, 1])
+        TMTagLists.remove(Int(2), from: TMTagLists.favoriteKey)
+        XCTAssertFalse(TMTagLists.contains(Int(2), in: TMTagLists.favoriteKey))
+        TMTagLists.add(Int(3), to: TMTagLists.favoriteKey)
+        TMTagLists.add(Int(3), to: TMTagLists.favoriteKey)
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.favoriteKey), [1, 3], "adding twice keeps one")
+        TMTagLists.move(in: TMTagLists.favoriteKey, from: Int(5), to: Int(0))
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.favoriteKey), [1, 3], "an out-of-range move changes nothing")
 
-        DPAppDelegate.setTeachable([11, 22])
-        XCTAssertTrue(DPAppDelegate.containsTeachable(11))
-        DPAppDelegate.moveTeachable(at: 0, to: 1)
-        XCTAssertEqual(DPAppDelegate.teachable(), [22, 11])
-        DPAppDelegate.removeTeachable(22)
-        XCTAssertFalse(DPAppDelegate.containsTeachable(22))
-        DPAppDelegate.addTeachable(7)
-        XCTAssertEqual(DPAppDelegate.teachable(), [11, 7])
+        TMTagLists.setIds([11, 22], for: TMTagLists.teachableKey)
+        XCTAssertTrue(TMTagLists.contains(Int(11), in: TMTagLists.teachableKey))
+        TMTagLists.move(in: TMTagLists.teachableKey, from: Int(0), to: Int(1))
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.teachableKey), [22, 11])
+        TMTagLists.remove(Int(22), from: TMTagLists.teachableKey)
+        XCTAssertFalse(TMTagLists.contains(Int(22), in: TMTagLists.teachableKey))
+        TMTagLists.add(Int(7), to: TMTagLists.teachableKey)
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.teachableKey), [11, 7])
     }
 }

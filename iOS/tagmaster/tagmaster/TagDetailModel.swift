@@ -315,9 +315,9 @@ final class TagDetailModel {
     func toggleFavorite() {
         guard tag != nil else { return }
         if isFavorite {
-            DPAppDelegate.removeFavorite(tagId)
+            TMTagLists.remove(Int(tagId), from: TMTagLists.favoriteKey)
         } else {
-            DPAppDelegate.addFavorite(tagId)
+            TMTagLists.add(Int(tagId), to: TMTagLists.favoriteKey)
             TagMasterUsage.tagAddedToList(TMTagLists.favoriteKey)
         }
     }
@@ -325,9 +325,9 @@ final class TagDetailModel {
     func toggleTeachable() {
         guard tag != nil else { return }
         if isTeachable {
-            DPAppDelegate.removeTeachable(tagId)
+            TMTagLists.remove(Int(tagId), from: TMTagLists.teachableKey)
         } else {
-            DPAppDelegate.addTeachable(tagId)
+            TMTagLists.add(Int(tagId), to: TMTagLists.teachableKey)
             TagMasterUsage.tagAddedToList(TMTagLists.teachableKey)
         }
     }
