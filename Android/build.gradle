@@ -5,7 +5,7 @@ import java.time.format.DateTimeFormatter
 
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
-    ext.kotlin_version = '2.3.0'
+    ext.kotlin_version = '2.4.21'
     repositories {
         mavenCentral()
         maven {
@@ -15,13 +15,13 @@ buildscript {
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:9.3.2'
+        classpath 'com.android.tools.build:gradle:9.5.1'
 
         classpath 'com.google.gms:google-services:4.5.0'
         classpath 'com.google.firebase:firebase-crashlytics-gradle:3.0.8'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:2.3.0"
-        classpath "org.jetbrains.kotlin:compose-compiler-gradle-plugin:2.3.0"
-        classpath "io.github.takahirom.roborazzi:roborazzi-gradle-plugin:1.75.0"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.21"
+        classpath "org.jetbrains.kotlin:compose-compiler-gradle-plugin:2.4.21"
+        classpath "io.github.takahirom.roborazzi:roborazzi-gradle-plugin:1.78.0"
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -30,7 +30,7 @@ buildscript {
 
 ext {
     compose_bom = 'androidx.compose:compose-bom:2026.09.00'
-    roborazzi_version = '1.75.0'
+    roborazzi_version = '1.78.0'
 }
 
 allprojects {
@@ -47,7 +47,7 @@ allprojects {
 
 // Resolve runtimes before the test JVM starts. Robolectric's Android security providers can
 // break HTTPS downloads when a later test first requests another SDK in the same process.
-// Keep these aligned with Robolectric 4.16.1 and the SDKs used by our @Config annotations.
+// Keep these aligned with Robolectric 4.17 and the SDKs used by our @Config annotations.
 def robolectricSdks = ['6.0.1_r3-robolectric-r1-i7', '7.0.0_r1-robolectric-r1-i7',
  '8.0.0_r4-robolectric-r1-i7',
  '9-robolectric-4913185-2-i7', '13-robolectric-9030017-i7',
@@ -87,7 +87,7 @@ subprojects {
         }
 
         apply plugin: 'jacoco'
-        jacoco { toolVersion = '0.8.15' }
+        jacoco { toolVersion = '0.8.16' }
 
         afterEvaluate {
             def unitTestTask = tasks.findByName('testDebugUnitTest')
@@ -168,7 +168,7 @@ subprojects {
 
         // Apply Jacoco to every library module.
         apply plugin: 'jacoco'
-        jacoco { toolVersion = '0.8.15' }
+        jacoco { toolVersion = '0.8.16' }
 
         afterEvaluate {
             def unitTestTask = tasks.findByName('testDebugUnitTest')

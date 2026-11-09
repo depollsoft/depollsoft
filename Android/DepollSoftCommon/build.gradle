@@ -7,14 +7,14 @@ dependencies {
     api 'androidx.compose.runtime:runtime'
     api 'com.parse.bolts:bolts-tasks:1.4.0'
     implementation 'androidx.appcompat:appcompat:1.8.0'
-    implementation 'androidx.core:core:1.19.0'
+    implementation 'androidx.core:core:1.19.1'
     testImplementation 'junit:junit:4.13.2'
     // GOLDEN_TOLERANCE; the apps' screenshot tests bring Roborazzi themselves.
     testFixturesCompileOnly "io.github.takahirom.roborazzi:roborazzi:$roborazzi_version"
     // SemanticsSnapshot reads a Compose semantics tree; the apps' tests bring Compose's test APIs.
     testFixturesCompileOnly platform(compose_bom)
     testFixturesCompileOnly 'androidx.compose.ui:ui-test'
-    testImplementation 'org.robolectric:robolectric:4.16.1'
+    testImplementation 'org.robolectric:robolectric:4.17'
 }
 
 android {
