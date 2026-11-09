@@ -35,7 +35,7 @@ dependencies {
     testImplementation "io.github.takahirom.roborazzi:roborazzi:$roborazzi_version"
     testImplementation "io.github.takahirom.roborazzi:roborazzi-compose:$roborazzi_version"
     testImplementation "io.github.takahirom.roborazzi:roborazzi-junit-rule:$roborazzi_version"
-    implementation platform('com.google.firebase:firebase-bom:34.18.0')
+    implementation platform('com.google.firebase:firebase-bom:35.1.0')
     def billing_version = "9.1.0"
     implementation "com.android.billingclient:billing:$billing_version"
     implementation "com.android.billingclient:billing-ktx:$billing_version"
@@ -44,15 +44,15 @@ dependencies {
     implementation project(':DepollSoftCommon')
     implementation project(':DepollSoftCompose')
     implementation project(':depollsoft.lib.kotlin')
-    implementation 'com.facebook.android:facebook-android-sdk:18.3.0'
-    implementation 'com.google.android.gms:play-services-ads:25.4.0'
+    implementation 'com.facebook.android:facebook-android-sdk:19.0.1'
+    implementation 'com.google.android.gms:play-services-ads:25.5.0'
     implementation 'com.google.android.ump:user-messaging-platform:4.0.0'
     implementation 'com.google.android.gms:play-services-wearable:20.0.1'
-    implementation 'androidx.wear:wear-remote-interactions:1.1.0'
+    implementation 'androidx.wear:wear-remote-interactions:1.2.0'
     implementation 'androidx.appcompat:appcompat:1.8.0'
     implementation 'com.google.android.material:material:1.14.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    implementation "androidx.core:core-ktx:1.19.0"
+    implementation "androidx.core:core-ktx:1.19.1"
     implementation 'com.google.firebase:firebase-analytics'
     implementation 'com.google.firebase:firebase-auth'
     implementation 'com.google.firebase:firebase-firestore'
@@ -67,11 +67,11 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.11.0'
     // Ships an ahead-of-time compile profile so sideloaded builds do not run interpreted.
-    implementation 'androidx.profileinstaller:profileinstaller:1.4.0'
+    implementation 'androidx.profileinstaller:profileinstaller:1.4.1'
 
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.robolectric:robolectric:4.16.1'
-    testImplementation 'org.mockito:mockito-core:5.23.0'
+    testImplementation 'org.mockito:mockito-core:5.24.0'
     testImplementation 'org.mockito:mockito-inline:5.2.0'
     testImplementation 'androidx.test:core:1.7.0'
 

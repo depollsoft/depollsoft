@@ -88,7 +88,7 @@ jobs:
         run: python3 scripts/ci/changed_apps.py > preview-manifest.json
 
       - name: Upload preview manifest
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: >-
             ${{ format(
@@ -163,7 +163,7 @@ jobs:
     steps:
       # v3
       - uses: "marocchino/sticky-pull-request-comment@\
-          d4d6b0936434b21bc8345ad45a440c5f7d2c40ff"
+          5770ad5eb8f42dd2c4f34da00c94c5381e49af88"
         with:
           header: preview-build
           recreate: true
@@ -210,7 +210,7 @@ jobs:
           persist-credentials: false
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78
         with:
           distribution: temurin
           java-version: "17"
@@ -224,7 +224,7 @@ jobs:
         timeout-minutes: 5
         run: python3 scripts/ci/android_sdk.py --install
 
-      - uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699
+      - uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd
         if: steps.android-sdk.outputs.available != 'true' && steps.android-sdk.outputs.manager != 'true'
         timeout-minutes: 5
         with:
@@ -265,7 +265,7 @@ jobs:
 
       - name: Upload preview APKs
         id: upload_apks
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: >-
             ${{ format(
@@ -316,7 +316,7 @@ jobs:
           XCODE_VERSION=$(xcodebuild -version | head -1 | sed 's/Xcode //')
           echo "version=$XCODE_VERSION" >> "$GITHUB_OUTPUT"
 
-      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b
+      - uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199
         with:
           ruby-version: "3.3"
           bundler-cache: true
@@ -557,7 +557,7 @@ jobs:
           fi
 
       - name: Upload unsigned iOS archives
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: >-
             ${{ format(
@@ -593,14 +593,14 @@ jobs:
           echo "GEM_PATH=$RUNNER_TEMP/ruby-gems" >> "$GITHUB_ENV"
           echo "$RUNNER_TEMP/ruby-gems/bin" >> "$GITHUB_PATH"
 
-      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b
+      - uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199
         with:
           ruby-version: "3.3"
           bundler-cache: true
           working-directory: Android
 
       - name: Download preview APKs
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
         with:
           name: >-
             ${{ format(

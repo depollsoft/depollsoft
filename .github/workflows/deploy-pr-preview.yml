@@ -414,12 +414,12 @@ jobs:
         id: capture-source
         run: echo "value=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78
         with:
           distribution: temurin
           java-version: "17"
 
-      - uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699
+      - uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd
         with:
           packages: "platform-tools platforms;android-35 platforms;android-37.0 build-tools;36.0.0"
 
@@ -430,7 +430,7 @@ jobs:
           echo "GEM_PATH=$RUNNER_TEMP/ruby-gems" >> "$GITHUB_ENV"
           echo "$RUNNER_TEMP/ruby-gems/bin" >> "$GITHUB_PATH"
 
-      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b
+      - uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199
         with:
           ruby-version: "3.3"
           bundler-cache: true
@@ -568,7 +568,7 @@ jobs:
           fi
           echo "DEVELOPER_DIR=$developer_dir" >> "$GITHUB_ENV"
 
-      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b
+      - uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199
         with:
           ruby-version: "3.3"
           bundler-cache: true
@@ -761,7 +761,7 @@ jobs:
 
       - name: Upload refreshed iOS signing repository
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: refreshed-match-repository
           path: ${{ runner.temp }}/refreshed-match-repository.tgz
