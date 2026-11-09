@@ -135,6 +135,6 @@ npm run deploy  # Deploy to Firebase
 ## Gotchas
 
 - Run `xcodebuild -resolvePackageDependencies` after changing Swift packages.
-- **FirebaseUI-iOS pin**: both Xcode projects pin FirebaseUI to revision `4d218a69` (16.1.0 plus the fix for firebase/FirebaseUI-iOS#1397). Without it, the sign-in picker crashes as soon as it opens when the iPad apps run on a Mac. Move back to a version requirement once a FirebaseUI release after 16.1.0 includes that fix.
+- **FirebaseUI-iOS floor**: both Xcode projects require FirebaseUI 16.2.0 or later, the first release with the fix for firebase/FirebaseUI-iOS#1397. Below it, the sign-in picker crashes as soon as it opens when the iPad apps run on a Mac.
 - Don't log PII; prefer IDs over raw data.
 - If an API deployment fails, start with the `api.yml` workflow logs.

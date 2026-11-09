@@ -1407,15 +1407,15 @@
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 12.18.0;
+				minimumVersion = 13.1.1;
 			};
 		};
 		E19E9EAF84EEBA3C3ED71DE0 /* XCRemoteSwiftPackageReference "FirebaseUI-iOS" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/FirebaseUI-iOS";
 			requirement = {
-				kind = revision;
-				revision = 4d218a698f08ab9944c3eef564667b15b2f08f99;
+				kind = upToNextMajorVersion;
+				minimumVersion = 16.2.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
