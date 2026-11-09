@@ -56,12 +56,12 @@ jobs:
             --retry 2 --retry-all-errors --retry-delay 5 \
             'https://www.barbershoptags.com/api.php?client=TagMaster&id=122&n=1' \
             --output /dev/null
-      - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78
         if: inputs.platform == 'android'
         with:
           distribution: ${{ runner.os == 'macOS' && 'zulu' || 'temurin' }}
           java-version: '17'
-      - uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699
+      - uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd
         if: inputs.platform == 'android'
         with:
           packages: 'platform-tools platforms;android-37.0 build-tools;36.0.0'
@@ -110,7 +110,7 @@ jobs:
         run: |
           python3 scripts/release/release.py export --app "$RELEASE_APP" \
             --platform "$RELEASE_PLATFORM" --output "build/release/assets/$RELEASE_APP/$RELEASE_PLATFORM" --allow-unplanned
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: release-assets-${{ inputs.app }}-${{ inputs.platform }}
           path: build/release/assets/${{ inputs.app }}/${{ inputs.platform }}
@@ -118,7 +118,7 @@ jobs:
           retention-days: 30
       - name: Upload failed Android capture diagnostics
         if: failure() && inputs.platform == 'android'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: release-capture-diagnostics-${{ inputs.app }}-${{ inputs.platform }}
           path: |

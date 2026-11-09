@@ -43,7 +43,7 @@ jobs:
       DRAFT_RELEASE: ${{ inputs.draft_release }}
     steps:
       - name: Checkout trusted tooling
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: ${{ github.event.repository.default_branch }}
           persist-credentials: false
@@ -74,7 +74,7 @@ jobs:
 
       - name: Download existing unsigned widget archive
         if: inputs.draft_release == ''
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
         with:
           name: ${{ inputs.archive_artifact }}
           path: preview-artifacts/ios
@@ -155,7 +155,7 @@ jobs:
           echo "DEVELOPER_DIR=$developer_dir" >> "$GITHUB_ENV"
 
       - name: Set up Ruby
-        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b
+        uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199
         with:
           ruby-version: "3.3"
           bundler-cache: true
@@ -205,7 +205,7 @@ jobs:
           archive:"$GITHUB_WORKSPACE/preview-artifacts/ios/PitchPerfect-private.xcarchive"
 
       - name: Set up Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: "22"
 
