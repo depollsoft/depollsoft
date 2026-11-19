@@ -76,6 +76,8 @@ class TabletListDetailTest : ComposeScreenTest() {
     @Test
     fun aRowOpensBesideTheListAndLightsUp() {
         val activity = teachable()
+        // A placeholder row has nothing to open until the cached tag arrives.
+        compose.waitUntil(10_000) { text("savedTag:${ids[0]}").contains("Fixture 1") }
         compose
             .onAllNodes(
                 androidx.compose.ui.test.hasAnyAncestor(androidx.compose.ui.test.hasTestTag("savedTag:${ids[0]}")) and

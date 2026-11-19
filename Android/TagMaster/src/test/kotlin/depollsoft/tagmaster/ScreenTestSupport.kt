@@ -2,11 +2,12 @@ package depollsoft.tagmaster
 
 import android.app.Activity
 import android.app.Application
+import android.content.ComponentName
+import android.content.pm.PackageManager
 import android.os.Looper
 import com.facebook.FacebookSdk
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import depollsoft.lib.activity.RichApplication
 import depollsoft.lib.json.JsonSerializer
 import depollsoft.lib.util.Preferences
@@ -199,9 +200,23 @@ internal object ScreenTestSupport {
      */
     fun ensureSyntheticFirebaseApp() {
         val context = RuntimeEnvironment.getApplication()
-        if (FirebaseApp.getApps(context).isEmpty()) FirebaseApp.initializeApp(context, UNIT_TEST_FIREBASE_OPTIONS)
+        if (FirebaseApp.getApps(context).isEmpty()) {
+            // Auth tests need neither the measurement worker nor Crashlytics' process-wide
+            // exception handler. Both start during initializeApp, before collection can be disabled.
+            val pm = context.packageManager
+            val service = ComponentName(context, "com.google.firebase.components.ComponentDiscoveryService")
+            val info = pm.getServiceInfo(service, PackageManager.GET_META_DATA)
+            for (registrar in listOf(
+                "analytics.connector.internal.AnalyticsConnectorRegistrar",
+                "crashlytics.CrashlyticsRegistrar",
+                "sessions.FirebaseSessionsRegistrar",
+            )) {
+                info.metaData.remove("com.google.firebase.components:com.google.firebase.$registrar")
+            }
+            shadowOf(pm).addOrUpdateService(info)
+            FirebaseApp.initializeApp(context, UNIT_TEST_FIREBASE_OPTIONS)
+        }
         FirebaseApp.getInstance().setDataCollectionDefaultEnabled(false as Boolean?)
-        FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(false)
     }
 
     /** The Facebook SDK as its content provider sets it up at app start; Robolectric starts no providers. */
