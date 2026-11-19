@@ -134,6 +134,8 @@
             android:name=".SettingsActivity"
             android:configChanges="keyboardHidden|orientation"
             android:label="@string/app_name" />
+        <!-- FirebaseUI's sign-in flow in the app's colors; see SignInActivity. -->
+        <activity android:name=".SignInActivity" />
         <activity
             android:name=".TeachableTagsActivity"
             android:configChanges="keyboardHidden|orientation"

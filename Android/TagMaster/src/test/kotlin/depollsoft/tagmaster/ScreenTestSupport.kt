@@ -3,6 +3,10 @@ package depollsoft.tagmaster
 import android.app.Activity
 import android.app.Application
 import android.os.Looper
+import com.facebook.FacebookSdk
+import com.google.firebase.FirebaseApp
+import com.google.firebase.FirebaseOptions
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import depollsoft.lib.activity.RichApplication
 import depollsoft.lib.json.JsonSerializer
 import depollsoft.lib.util.Preferences
@@ -186,6 +190,36 @@ internal object ScreenTestSupport {
      * one from synthetic options and disable collection, as PitchPerfect's `ensureFirebaseApp`
      * does.
      */
+
+    /**
+     * A default `FirebaseApp` from synthetic options, for FirebaseUI's sign-in screens, which ask for
+     * one as they open. Left in place once made: FirebaseUI caches its instance per app name, so a
+     * deleted and remade app would leave it holding the dead one. Signed out, as every screen here
+     * expects, and with collection off.
+     */
+    fun ensureSyntheticFirebaseApp() {
+        val context = RuntimeEnvironment.getApplication()
+        if (FirebaseApp.getApps(context).isEmpty()) FirebaseApp.initializeApp(context, UNIT_TEST_FIREBASE_OPTIONS)
+        FirebaseApp.getInstance().setDataCollectionDefaultEnabled(false as Boolean?)
+        FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(false)
+    }
+
+    /** The Facebook SDK as its content provider sets it up at app start; Robolectric starts no providers. */
+    @Suppress("DEPRECATION")
+    fun ensureFacebookSdk() {
+        if (!FacebookSdk.isInitialized()) FacebookSdk.sdkInitialize(RuntimeEnvironment.getApplication())
+    }
+
+    /** Well-formed but meaningless credentials: they belong to no Firebase project at all. */
+    private val UNIT_TEST_FIREBASE_OPTIONS =
+        FirebaseOptions
+            .Builder()
+            .setApplicationId("1:000000000000:android:0000000000000000")
+            // Shaped like a real key (`A[\w-]{38}`) so Firebase Installations accepts it offline.
+            .setApiKey("AIzaSyUnitTestUnitTestUnitTestUnitTest0")
+            .setProjectId("tagmaster-unit-test")
+            .build()
+
     fun startClean() {
         blockNetwork()
 
@@ -279,7 +313,10 @@ internal object ScreenTestSupport {
      * and cannot silently skip.
      */
     fun dismissChangelog() {
-        org.robolectric.shadows.ShadowDialog.getLatestDialog()?.takeIf { it.isShowing }?.dismiss()
+        org.robolectric.shadows.ShadowDialog
+            .getLatestDialog()
+            ?.takeIf { it.isShowing }
+            ?.dismiss()
         idle()
     }
 
@@ -342,5 +379,4 @@ internal object ScreenTestSupport {
         Tag.clearCache()
         File(RuntimeEnvironment.getApplication().filesDir, "TagCache").deleteRecursively()
     }
-
 }

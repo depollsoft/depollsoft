@@ -1,9 +1,11 @@
 package depollsoft.pitchperfect
 
-import android.app.Activity.RESULT_OK
+import android.content.Context
+import android.content.Intent
 import android.graphics.Typeface
 import android.text.Html
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -31,14 +33,13 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.firebase.ui.auth.AuthUI
-import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
+import com.firebase.ui.auth.configuration.AuthUIConfiguration
+import com.firebase.ui.auth.configuration.authUIConfiguration
+import com.firebase.ui.auth.configuration.auth_provider.AuthProvider
 import com.google.firebase.Firebase
-import com.google.firebase.auth.EmailAuthProvider
-import com.google.firebase.auth.FacebookAuthProvider
-import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
 import depollsoft.lib.auth.SignInOutcome
+import depollsoft.lib.auth.SignInResult
 import depollsoft.pitchperfect.ui.AppCompatAlertDialog
 import depollsoft.pitchperfect.ui.DialogButton
 import depollsoft.pitchperfect.ui.LegacyText
@@ -48,38 +49,32 @@ import depollsoft.pitchperfect.ui.plateColors
 import depollsoft.pitchperfect.ui.plateText
 
 object LoginPrompt {
-    internal const val CREDENTIAL_MANAGER_ENABLED = false
-    internal const val ALWAYS_SHOW_PROVIDER_CHOICE = true
-    internal val PROVIDER_IDS =
-        setOf(
-            EmailAuthProvider.PROVIDER_ID,
-            GoogleAuthProvider.PROVIDER_ID,
-            FacebookAuthProvider.PROVIDER_ID,
-        )
+    internal fun createSignInIntent(context: Context) = Intent(context, SignInActivity::class.java)
 
-    internal fun createSignInIntent() =
-        AuthUI
-            .getInstance()
-            .createSignInIntentBuilder()
-            .setAvailableProviders(providers())
-            .setAlwaysShowSignInMethodScreen(ALWAYS_SHOW_PROVIDER_CHOICE)
-            .setCredentialManagerEnabled(CREDENTIAL_MANAGER_ENABLED)
-            .setTheme(R.style.AuthTheme)
-            .build()
-
-    internal fun providers() =
-        listOf(
-            AuthUI.IdpConfig
-                .EmailBuilder()
-                .setRequireName(false)
-                .setAllowNewAccounts(true)
-                .build(),
-            AuthUI.IdpConfig.GoogleBuilder().build(),
-            AuthUI.IdpConfig
-                .FacebookBuilder()
-                .setPermissions(listOf("email", "public_profile"))
-                .build(),
-        )
+    /** FirebaseUI's flow: email, Google and Facebook, always starting from the provider choice. */
+    internal fun configuration(context: Context): AuthUIConfiguration =
+        authUIConfiguration {
+            this.context = context.applicationContext
+            providers {
+                provider(
+                    AuthProvider.Email(
+                        isDisplayNameRequired = false,
+                        emailLinkActionCodeSettings = null,
+                        isNewAccountsAllowed = true,
+                        passwordValidationRules = emptyList(),
+                    ),
+                )
+                // The server client ID comes from google-services.json's default_web_client_id.
+                provider(AuthProvider.Google(scopes = listOf("email"), serverClientId = null))
+                provider(AuthProvider.Facebook(scopes = listOf("email", "public_profile")))
+            }
+            isDisplayNameRequired = false
+            // FirebaseUI's "By continuing, you accept..." line links to these.
+            tosUrl = "https://apps.depoll.com/terms-of-use"
+            privacyPolicyUrl = "https://apps.depoll.com/privacy/"
+            isProviderChoiceAlwaysShown = true
+            isCredentialManagerEnabled = false
+        }
 }
 
 /**
@@ -103,29 +98,24 @@ fun LoginPromptDialog(
     }
 
     val launcher =
-        rememberLauncherForActivityResult(FirebaseAuthUIActivityResultContract()) { result ->
-            val response = result.idpResponse
-            // FirebaseUI can report an error or a cancellation after Firebase has already accepted a
-            // Facebook account that has no email address.
-            when (
-                SignInOutcome.resolve(
-                    isSignedIn = Firebase.auth.currentUser != null,
-                    resultOk = result.resultCode == RESULT_OK && response != null,
-                    hasError = response?.error != null,
-                )
-            ) {
+        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            // FirebaseUI can report an error or a cancellation after Firebase has already signed the
+            // person in; Firebase's auth state decides.
+            when (SignInResult.outcome(result.resultCode, result.data, isSignedIn = Firebase.auth.currentUser != null)) {
                 SignInOutcome.SIGNED_IN -> {
-                    if (Firebase.auth.currentUser == null) {
-                        reset(R.string.SignInFailed)
-                    } else {
-                        SongsModel.get().attachToFirestore(response?.isNewUser == true)
-                        PitchPerfectAnalytics.signedIn(response?.providerType)
-                        onDismiss()
-                        onAuthenticated()
-                    }
+                    SongsModel.get().attachToFirestore(SignInResult.isNewUser(result.data))
+                    PitchPerfectAnalytics.signedIn(SignInResult.provider(result.data))
+                    onDismiss()
+                    onAuthenticated()
                 }
-                SignInOutcome.FAILED -> reset(R.string.SignInFailed)
-                SignInOutcome.CANCELED -> reset(R.string.SignInCanceled)
+
+                SignInOutcome.FAILED -> {
+                    reset(R.string.SignInFailed)
+                }
+
+                SignInOutcome.CANCELED -> {
+                    reset(R.string.SignInCanceled)
+                }
             }
         }
 
@@ -180,7 +170,7 @@ fun LoginPromptDialog(
                 status = null
                 // A live region may not speak a line that has only just appeared; say it outright.
                 view.announceForAccessibility(context.getString(R.string.OpeningSignIn))
-                launcher.launch(LoginPrompt.createSignInIntent())
+                launcher.launch(LoginPrompt.createSignInIntent(context))
             }
         }
     }

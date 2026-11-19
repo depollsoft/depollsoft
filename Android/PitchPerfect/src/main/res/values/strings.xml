@@ -3,7 +3,8 @@
 
     <string name="app_name">Pitch Perfect</string>
     <string name="facebook_application_id">263872380333771</string>
-    <string name="fb_login_protocol_scheme">fb263872380333771</string>
+    <!-- FirebaseUI registers Facebook's browser redirect under this name. -->
+    <string name="facebook_login_protocol_scheme" translatable="false">fb263872380333771</string>
     <string name="facebook_client_token">eb375cce82f2fbb23c5e4f4044986c14</string>
     <string name="CtoC">C to C</string>
     <string name="FtoF">F to F</string>

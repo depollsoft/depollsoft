@@ -2,7 +2,10 @@ package depollsoft.tagmaster
 
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.BorderStroke
@@ -47,14 +50,16 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import com.facebook.login.LoginManager
-import com.firebase.ui.auth.AuthUI
-import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
+import com.firebase.ui.auth.FirebaseAuthUI
+import com.firebase.ui.auth.configuration.AuthUIConfiguration
+import com.firebase.ui.auth.configuration.authUIConfiguration
+import com.firebase.ui.auth.configuration.auth_provider.AuthProvider
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import depollsoft.compose.ViewAlign
 import depollsoft.compose.scrollViewScrollbar
 import depollsoft.lib.auth.SignInOutcome
-import depollsoft.lib.kotlin.R as LibKotlinR
+import depollsoft.lib.auth.SignInResult
 import depollsoft.lib.privacy.TelemetryConsent
 import depollsoft.lib.ui.ChangelogViewer
 import depollsoft.lib.util.AppLog
@@ -77,6 +82,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import depollsoft.lib.kotlin.R as LibKotlinR
 
 /**
  * Settings: the cache, signing in to sync lists, clearing the built-in lists, the Random Tag
@@ -98,6 +104,7 @@ class SettingsActivity : AppCompatActivity() {
         private set
 
     private var cacheSizeJob: Job? = null
+
     /**
      * A message waiting for the screen to show it. A sign-in result can arrive before a recreated
      * screen has composed its snackbar host, so messages queue here instead of being dropped.
@@ -111,20 +118,14 @@ class SettingsActivity : AppCompatActivity() {
     )
 
     private val signInLauncher =
-        registerForActivityResult(FirebaseAuthUIActivityResultContract()) { result ->
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             loggingIn = false
-            val response = result.idpResponse
             // Firebase's auth state, not FirebaseUI's result code, decides whether the person is
             // signed in: FirebaseUI can report an error or cancellation after Firebase has already
-            // accepted a Facebook account that has no email address.
-            val outcome =
-                SignInOutcome.resolve(
-                    isSignedIn = Firebase.auth.currentUser != null,
-                    resultOk = result.resultCode == RESULT_OK && response != null,
-                    hasError = response?.error != null,
-                )
+            // signed them in.
+            val outcome = SignInResult.outcome(result.resultCode, result.data, isSignedIn = Firebase.auth.currentUser != null)
             AuthState.notifyChanged()
-            if (outcome == SignInOutcome.SIGNED_IN) TagMasterAnalytics.signedIn(response?.providerType)
+            if (outcome == SignInOutcome.SIGNED_IN) TagMasterAnalytics.signedIn(SignInResult.provider(result.data))
             showMessage(
                 when (outcome) {
                     SignInOutcome.SIGNED_IN -> R.string.forms_signed_in
@@ -151,12 +152,17 @@ class SettingsActivity : AppCompatActivity() {
     internal fun logIn() {
         if (loggingIn) return
         loggingIn = true
-        signInLauncher.launch(createSignInIntent())
+        signInLauncher.launch(Intent(this, SignInActivity::class.java))
     }
 
     internal fun logOut() {
         LoginManager.getInstance().logOut()
-        AuthUI.getInstance().signOut(this).continueWith { AuthState.notifyChanged() }
+        lifecycleScope.launch {
+            // FirebaseUI signs out of Firebase, then of the Google and Facebook sessions; a
+            // provider that fails to sign out leaves Firebase signed out all the same.
+            runCatching { FirebaseAuthUI.getInstance().signOut(applicationContext) }
+            AuthState.notifyChanged()
+        }
     }
 
     internal fun showMessage(message: Int) {
@@ -194,7 +200,8 @@ class SettingsActivity : AppCompatActivity() {
                     throw e
                 } catch (e: Exception) {
                     if (!isFinishing && !isDestroyed) {
-                        pendingMessage = Message(getString(R.string.forms_cache_size_failed), getString(R.string.Refresh)) { refreshCacheSize() }
+                        pendingMessage =
+                            Message(getString(R.string.forms_cache_size_failed), getString(R.string.Refresh)) { refreshCacheSize() }
                     }
                 }
             }
@@ -213,32 +220,31 @@ class SettingsActivity : AppCompatActivity() {
         showMessage(R.string.forms_logs_copied)
     }
 
-    private fun createSignInIntent() =
-        AuthUI
-            .getInstance()
-            .createSignInIntentBuilder()
-            .setAvailableProviders(SIGN_IN_PROVIDERS)
-            // Credential saving is what crashes FirebaseUI for Facebook accounts without an
-            // email address; the build-time patch in buildSrc guards the rest of that path.
-            .setCredentialManagerEnabled(false)
-            .setTheme(R.style.AppTheme_ActionBar)
-            .build()
-
     internal companion object {
-        val SIGN_IN_PROVIDERS: List<AuthUI.IdpConfig> by lazy {
-            listOf(
-                AuthUI.IdpConfig
-                    .EmailBuilder()
-                    .setRequireName(false)
-                    .setAllowNewAccounts(true)
-                    .build(),
-                AuthUI.IdpConfig.GoogleBuilder().build(),
-                AuthUI.IdpConfig
-                    .FacebookBuilder()
-                    .setPermissions(listOf("email", "public_profile"))
-                    .build(),
-            )
-        }
+        /** FirebaseUI's flow for [SignInActivity]: email, Google and Facebook. */
+        fun signInConfiguration(context: Context): AuthUIConfiguration =
+            authUIConfiguration {
+                this.context = context.applicationContext
+                providers {
+                    provider(
+                        AuthProvider.Email(
+                            isDisplayNameRequired = false,
+                            emailLinkActionCodeSettings = null,
+                            isNewAccountsAllowed = true,
+                            passwordValidationRules = emptyList(),
+                        ),
+                    )
+                    // The server client ID comes from google-services.json's default_web_client_id.
+                    provider(AuthProvider.Google(scopes = listOf("email"), serverClientId = null))
+                    provider(AuthProvider.Facebook(scopes = listOf("email", "public_profile")))
+                }
+                isDisplayNameRequired = false
+                // FirebaseUI's "By continuing, you accept..." line links to these.
+                tosUrl = "https://apps.depoll.com/terms-of-use"
+                privacyPolicyUrl = "https://apps.depoll.com/privacy/"
+                // Saving passwords to Credential Manager stays off, as it always has been here.
+                isCredentialManagerEnabled = false
+            }
     }
 }
 
@@ -387,7 +393,12 @@ private fun RandomTagFilters() {
     val downloads = stringArrayResource(R.array.MinDownloadChoices).toList()
     val ratings = stringArrayResource(R.array.MinRatingChoices).toList()
     val booleans = listOf(null, true, false)
-    Setting(R.string.MinimumRating, ratings, ratings.indexOf(SettingsModel.minimumRandomTagRating.toInt().toString()).coerceAtLeast(0), "minimumRatingSpinner") {
+    Setting(
+        R.string.MinimumRating,
+        ratings,
+        ratings.indexOf(SettingsModel.minimumRandomTagRating.toInt().toString()).coerceAtLeast(0),
+        "minimumRatingSpinner",
+    ) {
         SettingsModel.minimumRandomTagRating = if (it == 0) 0.0 else ratings[it].toDouble()
     }
     Setting(
@@ -545,6 +556,11 @@ private fun PrivateBuildDiagnostics(activity: SettingsActivity) {
             color = TagMasterTheme.colors.text,
         )
         Text(metadata, style = TagMasterType.bodyMedium, color = TagMasterTheme.colors.text)
-        WideButton(R.string.forms_copy_logs, ButtonStyle.Filled, "copyLogsButton", Modifier.padding(top = 8.dp)) { activity.copyLogs(metadata) }
+        WideButton(
+            R.string.forms_copy_logs,
+            ButtonStyle.Filled,
+            "copyLogsButton",
+            Modifier.padding(top = 8.dp),
+        ) { activity.copyLogs(metadata) }
     }
 }

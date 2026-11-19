@@ -17,9 +17,9 @@ enum class SignInOutcome {
          * Resolves a FirebaseUI activity result against the real Firebase auth state.
          *
          * FirebaseUI can finish with a canceled or error result after Firebase itself
-         * has already signed the user in (for example when its post-sign-in credential
-         * save step fails for a Facebook account with no email address). The auth
-         * state is therefore the source of truth: a signed-in user is always a success.
+         * has already signed the user in (an error shown after the credential exchange,
+         * or the person backing out of a step that follows it). The auth state is
+         * therefore the source of truth: a signed-in user is always a success.
          */
         fun resolve(
             isSignedIn: Boolean,

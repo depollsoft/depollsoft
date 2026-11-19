@@ -18,6 +18,7 @@ import depollsoft.tagmaster.QueryModel
 import depollsoft.tagmaster.ScreenTestSupport
 import depollsoft.tagmaster.SettingsActivity
 import depollsoft.tagmaster.SheetMusicActivity
+import depollsoft.tagmaster.SignInActivity
 import depollsoft.tagmaster.TagBrowserActivity
 import depollsoft.tagmaster.TagDetailActivity
 import depollsoft.tagmaster.TagListActivity
@@ -407,6 +408,20 @@ class TagMasterScreenshotTest {
         withCatalog {
             capture(launch(SettingsActivity::class.java), "settings_night")
         }
+
+    // FirebaseUI's provider choice, hosted in the app's colors by SignInActivity.
+    private fun signIn(name: String) {
+        ScreenTestSupport.ensureSyntheticFirebaseApp()
+        ScreenTestSupport.ensureFacebookSdk()
+        capture(launch(SignInActivity::class.java), name)
+    }
+
+    @Test
+    fun signInProviders() = signIn("sign_in_providers")
+
+    @Test
+    @Config(qualifiers = PHONE_NIGHT)
+    fun signInProvidersNight() = signIn("sign_in_providers_night")
 
     // ==================== A fractional density ====================
 

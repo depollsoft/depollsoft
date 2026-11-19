@@ -1,7 +1,3 @@
-import com.android.build.api.instrumentation.FramesComputationMode
-import com.android.build.api.instrumentation.InstrumentationScope
-import depollsoft.instrumentation.FirebaseUiNullEmailClassVisitorFactory
-
 buildscript {
     repositories {
         google()
@@ -25,6 +21,8 @@ dependencies {
     // Material (not Material 3): the plate theme was built on MaterialComponents, and these are
     // the controls whose metrics match it (switch, radio button, ripple, menus).
     implementation 'androidx.compose.material:material'
+    // FirebaseUI's sign-in screens are Material 3; SignInActivity maps the plate onto its roles.
+    implementation 'androidx.compose.material3:material3'
     implementation 'androidx.activity:activity-compose:1.13.0'
     implementation 'androidx.lifecycle:lifecycle-runtime-compose:2.11.0'
     debugImplementation 'androidx.compose.ui:ui-tooling'
@@ -35,7 +33,8 @@ dependencies {
     testImplementation "io.github.takahirom.roborazzi:roborazzi:$roborazzi_version"
     testImplementation "io.github.takahirom.roborazzi:roborazzi-compose:$roborazzi_version"
     testImplementation "io.github.takahirom.roborazzi:roborazzi-junit-rule:$roborazzi_version"
-    implementation platform('com.google.firebase:firebase-bom:35.1.0')
+    implementation platform('com.google.firebase:firebase-bom:35.2.0')
+    // PurchaseService uses the suspend APIs in billing-ktx. Update the two artifacts together.
     def billing_version = "9.1.0"
     implementation "com.android.billingclient:billing:$billing_version"
     implementation "com.android.billingclient:billing-ktx:$billing_version"
@@ -58,24 +57,19 @@ dependencies {
     implementation 'com.google.firebase:firebase-firestore'
     implementation 'com.google.firebase:firebase-functions'
     implementation 'com.google.firebase:firebase-crashlytics'
-    // play-services-auth 22.0.0 removed the legacy GoogleSignIn API that firebase-ui-auth 9.x
-    // still calls from GoogleSignInHandler, so tapping "Sign in with Google" crashed with
-    // NoClassDefFoundError (Crashlytics issue 588e5ce8). Stay on the last 21.x until FirebaseUI
-    // moves Google sign-in to Credential Manager.
-    implementation 'com.google.android.gms:play-services-auth:21.6.0'
-    implementation 'com.firebaseui:firebase-ui-auth:9.1.1'
+    implementation 'com.google.android.gms:play-services-auth:22.0.0'
+    implementation 'com.firebaseui:firebase-ui-auth:10.0.0'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.11.0'
     // Ships an ahead-of-time compile profile so sideloaded builds do not run interpreted.
     implementation 'androidx.profileinstaller:profileinstaller:1.4.1'
 
     testImplementation 'junit:junit:4.13.2'
-    testImplementation 'org.robolectric:robolectric:4.16.1'
+    testImplementation 'org.robolectric:robolectric:4.17'
     testImplementation 'org.mockito:mockito-core:5.24.0'
-    testImplementation 'org.mockito:mockito-inline:5.2.0'
     testImplementation 'androidx.test:core:1.7.0'
 
-    // Store captures, FirebaseUI compatibility, and privacy consent still run on a device.
+    // Store captures and privacy consent still run on a device.
     // PrivacyConsentTest uses Espresso to exercise the consent controls.
     androidTestImplementation platform(compose_bom)
     androidTestImplementation 'androidx.compose.ui:ui-test-junit4'
@@ -246,15 +240,6 @@ android {
     }
 }
 
-androidComponents {
-    onVariants(selector().all()) { variant ->
-        variant.instrumentation.transformClassesWith(
-                FirebaseUiNullEmailClassVisitorFactory,
-                InstrumentationScope.ALL) { }
-        variant.instrumentation.setAsmFramesComputationMode(
-                FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_METHODS)
-    }
-}
 
 apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.google.firebase.crashlytics'

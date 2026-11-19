@@ -3,6 +3,7 @@ package depollsoft.pitchperfect
 import android.content.Context
 import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
+import com.facebook.FacebookSdk
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.analytics.FirebaseAnalytics
@@ -71,7 +72,11 @@ internal object ScreenTestSupport {
      */
     private fun forgetForeignDelegates() {
         for (field in androidx.appcompat.app.AppCompatDelegate::class.java.declaredFields) {
-            if (!java.lang.reflect.Modifier.isStatic(field.modifiers)) continue
+            if (!java.lang.reflect.Modifier
+                    .isStatic(field.modifiers)
+            ) {
+                continue
+            }
             runCatching {
                 field.isAccessible = true
                 when (val value = field.get(null)) {
@@ -130,9 +135,19 @@ internal object ScreenTestSupport {
         FirebaseAnalytics.getInstance(context).setAnalyticsCollectionEnabled(false)
     }
 
+    /**
+     * The Facebook SDK as its content provider sets it up when the app starts; Robolectric starts no
+     * providers. FirebaseUI's provider choice reaches for Facebook's LoginManager as it composes.
+     */
+    @Suppress("DEPRECATION")
+    fun ensureFacebookSdk() {
+        if (!FacebookSdk.isInitialized()) FacebookSdk.sdkInitialize(ApplicationProvider.getApplicationContext())
+    }
+
     /** Well-formed but meaningless credentials: they belong to no Firebase project at all. */
     private val UNIT_TEST_FIREBASE_OPTIONS =
-        FirebaseOptions.Builder()
+        FirebaseOptions
+            .Builder()
             .setApplicationId("1:000000000000:android:0000000000000000")
             // Shaped like a real key (`A[\w-]{38}`) so Firebase Installations accepts it offline.
             .setApiKey("AIzaSyUnitTestUnitTestUnitTestUnitTest0")
