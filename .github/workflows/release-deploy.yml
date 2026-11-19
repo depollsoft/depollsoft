@@ -63,7 +63,7 @@ jobs:
           "$RUNNER_TEMP/release-python/bin/pip" install -r scripts/release/requirements.txt
           echo "RELEASE_PYTHON=$RUNNER_TEMP/release-python/bin/python" >> "$GITHUB_ENV"
           echo "RELEASE_ASSETS=$GITHUB_WORKSPACE/build/release/assets/$RELEASE_APP/$RELEASE_PLATFORM" >> "$GITHUB_ENV"
-      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880
         if: inputs.platform == 'android' && steps.identity.outputs.done != 'true'
         with:
           distribution: temurin
@@ -80,7 +80,7 @@ jobs:
           echo "GEM_PATH=$RUNNER_TEMP/ruby-gems" >> "$GITHUB_ENV"
           echo "$RUNNER_TEMP/ruby-gems/bin" >> "$GITHUB_PATH"
 
-      - uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199
+      - uses: ruby/setup-ruby@f9c4492e86def3e644ab32a0ef185eda5b0c20d0
         if: steps.identity.outputs.done != 'true'
         with:
           ruby-version: '3.3'

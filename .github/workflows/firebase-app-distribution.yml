@@ -207,7 +207,7 @@ jobs:
           test -f "$apk"
           release_notes="$(printf 'PR #%s: %s\nLatest commit: %s\nCommit: %s' \
             "$PR_NUMBER" "$PR_TITLE" "$COMMIT_MESSAGE" "$COMMIT_SHA")"
-          npx --yes firebase-tools@15.28.2 \
+          npx --yes firebase-tools@15.37.0 \
             appdistribution:distribute "$apk" \
             --app "$MATRIX_FIREBASE_APP_ID" \
             --groups "$TESTER_GROUPS" \
@@ -285,7 +285,7 @@ jobs:
       - name: Set up Ruby
         # v1
         uses: >-
-          ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199
+          ruby/setup-ruby@f9c4492e86def3e644ab32a0ef185eda5b0c20d0
         with:
           ruby-version: "3.3"
           bundler-cache: true
@@ -450,7 +450,7 @@ jobs:
           test -f "$ipa"
           release_notes="$(printf 'PR #%s: %s\nLatest commit: %s\nCommit: %s' \
             "$PR_NUMBER" "$PR_TITLE" "$COMMIT_MESSAGE" "$COMMIT_SHA")"
-          npx --yes firebase-tools@15.28.2 \
+          npx --yes firebase-tools@15.37.0 \
             appdistribution:distribute "$ipa" \
             --app "$MATRIX_FIREBASE_APP_ID" \
             --groups "$TESTER_GROUPS" \

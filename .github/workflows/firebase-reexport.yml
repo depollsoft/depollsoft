@@ -155,7 +155,7 @@ jobs:
           echo "DEVELOPER_DIR=$developer_dir" >> "$GITHUB_ENV"
 
       - name: Set up Ruby
-        uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199
+        uses: ruby/setup-ruby@f9c4492e86def3e644ab32a0ef185eda5b0c20d0
         with:
           ruby-version: "3.3"
           bundler-cache: true
@@ -219,7 +219,7 @@ jobs:
           export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/reexport-firebase-$GITHUB_RUN_ID.json"
           umask 077
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$GOOGLE_APPLICATION_CREDENTIALS"
-          npx --yes firebase-tools@15.28.2 appdistribution:distribute iOS/build/PitchPerfect-private.ipa \
+          npx --yes firebase-tools@15.37.0 appdistribution:distribute iOS/build/PitchPerfect-private.ipa \
             --app '1:402153260205:ios:9eb7589d0e3abe5b91f224' \
             --groups "$TESTER_GROUPS" \
             --release-notes "Widget signing repair. Build $BUILD_NUMBER. Source $SOURCE_SHA. App and widget signatures and private App Group verified before upload."
