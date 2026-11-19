@@ -27,9 +27,11 @@ import com.firebase.ui.auth.AuthState as FirebaseUiState
  */
 class SignInActivity : AppCompatActivity() {
     private val authUI by lazy { FirebaseAuthUI.getInstance() }
+    private var showedError = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (savedInstanceState?.getBoolean("signIn.showedError") == true) recordError()
         window.decorView.filterTouchesWhenObscured = true
         enableEdgeToEdge()
         val configuration = SettingsActivity.signInConfiguration(this)
@@ -53,7 +55,7 @@ class SignInActivity : AppCompatActivity() {
 
                     // The screen shows the error and stays up for another try.
                     is FirebaseUiState.Error -> {
-                        setResult(RESULT_CANCELED, SignInResult.failed())
+                        recordError()
                     }
 
                     else -> {
@@ -76,6 +78,17 @@ class SignInActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun recordError() {
+        showedError = true
+        setResult(RESULT_CANCELED, SignInResult.failed())
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        // Activity doesn't save a pending setResult. Back after rotation must still report the error.
+        outState.putBoolean("signIn.showedError", showedError)
     }
 
     override fun onDestroy() {

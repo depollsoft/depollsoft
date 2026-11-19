@@ -68,6 +68,7 @@ dependencies {
 }
 
 android {
+    sourceSets.test.kotlin.directories.add(rootProject.file('signin-host-tests/src').path)
     sourceSets.androidTest.kotlin.directories.add(rootProject.file('store-screenshot-tests/src').path)
     buildFeatures {
         compose = true
