@@ -34,7 +34,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b
+      - uses: ruby/setup-ruby@f9c4492e86def3e644ab32a0ef185eda5b0c20d0
         with:
           ruby-version: '3.3'
       - name: Validate release tooling and copy

@@ -47,7 +47,8 @@ class TagListActivityScreenTest : ComposeScreenTest() {
         val key = TagLists.create("Afterglow set")
         ListModel(key).add(fixture.id)
         open(key)
-        assertTrue(text("savedTag:${fixture.id}").contains(fixture.title!!))
+        // The row exists before its asynchronous disk-cache read supplies the title.
+        compose.waitUntil(10_000) { text("savedTag:${fixture.id}").contains(fixture.title!!) }
         assertFalse(exists("tagListBrowseButton"))
     }
 

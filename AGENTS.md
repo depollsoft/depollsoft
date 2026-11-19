@@ -104,7 +104,7 @@ npm run deploy  # Deploy to Firebase
 ## Testing Guidelines
 
 - **API**: `node:test` suite in `api/src/test` covering the analytics router (`npm test`). The router takes injected Pub/Sub, BigQuery, JWT and geoip dependencies through `createAnalyticsRouter`. Cloud Run deploy is still the first integration check.
-- **Android**: Pitch Perfect, Wear and Tag Master screen behaviour is tested on the JVM with Robolectric and the Compose test APIs (`src/test`). Roborazzi screenshot goldens in `src/test/screenshots` pin the pixels (`recordRoborazziDebug` to update, `verifyRoborazziDebug` to check; CI verifies them), including right-to-left, 200% font, landscape and tablet variants. Semantics snapshots in `src/test/semantics` pin what a screen reader hears (`RECORD_SEMANTICS=1` to rewrite). `src/androidTest` holds only a device-only residue (drags, IME geometry, PdfRenderer, store screenshots, the FirebaseUI patch check) that CI compiles but does not run. Re-record and review goldens when a UI change is intended; an unexplained golden diff is a regression.
+- **Android**: Pitch Perfect, Wear and Tag Master screen behaviour is tested on the JVM with Robolectric and the Compose test APIs (`src/test`). Roborazzi screenshot goldens in `src/test/screenshots` pin the pixels (`recordRoborazziDebug` to update, `verifyRoborazziDebug` to check; CI verifies them), including right-to-left, 200% font, landscape and tablet variants. Semantics snapshots in `src/test/semantics` pin what a screen reader hears (`RECORD_SEMANTICS=1` to rewrite). `src/androidTest` holds only a device-only residue (drags, IME geometry, PdfRenderer, store screenshots) that CI compiles but does not run. Re-record and review goldens when a UI change is intended; an unexplained golden diff is a regression.
 - **iOS**:
   - pitchperfect: models are tested directly, and the real controls are driven in-process through the accessibility tree (`iOS/shared/SwiftUITestDriver.swift`). `PitchPerfectScreenCatalogTests` renders every screen state (set `TEST_RUNNER_SCREEN_CATALOG_DIR` to write captures).
   - tagmaster: the hosted `tagmasterTests` bundle tests models directly and drives the real SwiftUI screens and shell through `UIDriver` (`iOS/shared/SwiftUITestDriver.swift`).
@@ -135,6 +135,6 @@ npm run deploy  # Deploy to Firebase
 ## Gotchas
 
 - Run `xcodebuild -resolvePackageDependencies` after changing Swift packages.
-- **FirebaseUI-iOS pin**: both Xcode projects pin FirebaseUI to revision `4d218a69` (16.1.0 plus the fix for firebase/FirebaseUI-iOS#1397). Without it, the sign-in picker crashes as soon as it opens when the iPad apps run on a Mac. Move back to a version requirement once a FirebaseUI release after 16.1.0 includes that fix.
+- **FirebaseUI-iOS floor**: both Xcode projects require FirebaseUI 16.2.0 or later, the first release with the fix for firebase/FirebaseUI-iOS#1397. Below it, the sign-in picker crashes as soon as it opens when the iPad apps run on a Mac.
 - Don't log PII; prefer IDs over raw data.
 - If an API deployment fails, start with the `api.yml` workflow logs.

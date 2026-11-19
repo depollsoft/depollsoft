@@ -1,17 +1,17 @@
 package depollsoft.pitchperfect.screenshots
 
-import org.robolectric.RuntimeEnvironment
-import org.junit.Assert.assertTrue
-import org.junit.Assert.assertFalse
-import depollsoft.pitchperfect.R
-import androidx.core.content.ContextCompat
-import androidx.compose.ui.test.performScrollTo
-import androidx.compose.ui.test.captureToImage
-import androidx.compose.ui.graphics.asAndroidBitmap
 import android.graphics.Bitmap
-import depollsoft.lib.activity.RichApplication
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.core.content.ContextCompat
+import depollsoft.lib.activity.RichApplication
+import depollsoft.pitchperfect.R
 import depollsoft.pitchperfect.SettingsActivity
 import depollsoft.pitchperfect.TestTags
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.captureScreen
@@ -25,12 +25,14 @@ import depollsoft.pitchperfect.screenshots.ScreenshotSupport.showLoginPrompt
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.showTab
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.submitSetListName
 import org.junit.After
-import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
@@ -89,7 +91,9 @@ class DialogScreenshotTest {
         val ids = ScreenshotSupport.seedSetLists()
         // Too long for the dialog window's first measuring pass: the title takes AppCompat's
         // two-line size, however wide the dialog then opens.
-        depollsoft.pitchperfect.SongsModel.get().renameList(ids[0], "Saturday chapter show at the lake house")
+        depollsoft.pitchperfect.SongsModel
+            .get()
+            .renameList(ids[0], "Saturday chapter show at the lake house")
         val activity = launchMain()
         activity.showTab(3)
         activity.openDeleteSetListDialog(ids[0])
@@ -132,7 +136,9 @@ class DialogScreenshotTest {
     @Test
     fun sound() {
         launch(SettingsActivity::class.java)
-        ScreenshotSupport.compose.onNodeWithTag(TestTags.SOUND).performClick()
+        // The click action, not a touch: a tapped row's press ripple can still be fading behind the
+        // dialog's scrim when the second capture is taken, depending on when that window redraws.
+        ScreenshotSupport.compose.onNodeWithTag(TestTags.SOUND).performSemanticsAction(SemanticsActions.OnClick)
         ScreenshotSupport.settle()
         captureScreen("dialog_sound")
         // More below: the bottom hairline and the scrollbar show; nothing above yet.
@@ -161,7 +167,11 @@ class DialogScreenshotTest {
         assertFalse(list.thumbShowing())
     }
 
-    private fun listImage(tag: String) = ScreenshotSupport.compose.onNodeWithTag(tag).captureToImage().asAndroidBitmap()
+    private fun listImage(tag: String) =
+        ScreenshotSupport.compose
+            .onNodeWithTag(tag)
+            .captureToImage()
+            .asAndroidBitmap()
 
     /** Whether row [y] is the plate's hairline most of the way across (a divider, not a row's ink). */
     private fun Bitmap.hairlineAt(y: Int): Boolean {

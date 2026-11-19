@@ -425,16 +425,15 @@ class SettingsScreenTest {
 
     @Test
     fun theSignInButtonOpensFirebaseUiAndShowsItIsBusy() {
-        // FirebaseUI reads its configuration from the context the real app hands it at startup.
-        com.firebase.ui.auth.AuthUI.setApplicationContext(RichApplication.getAppContext())
         val activity = settings()
         tapScrolled(TestTags.LOG_IN)
         compose.onNodeWithTag(TestTags.LOGIN_BUTTON).performClick()
         screens.settle()
         val started = shadowOf(activity).nextStartedActivityForResult
-        assertTrue(
-            "the provider choice is FirebaseUI's",
-            started.intent.component!!.className.startsWith("com.firebase.ui.auth"),
+        assertEquals(
+            "the provider choice is FirebaseUI's, hosted on the plate",
+            SignInActivity::class.java.name,
+            started.intent.component!!.className,
         )
         compose.onNodeWithTag(TestTags.LOGIN_BUTTON).assertIsNotEnabled()
         // "Opening sign-in" is announced outright on the press; a live region would repeat it.
@@ -643,7 +642,6 @@ class SettingsScreenTest {
 
     @Test
     fun aSignInResultArrivingAfterRecreationReachesThePrompt() {
-        com.firebase.ui.auth.AuthUI.setApplicationContext(RichApplication.getAppContext())
         val controller = screens.launch(SettingsActivity::class.java)
         tapScrolled(TestTags.LOG_IN)
         compose.onNodeWithTag(TestTags.LOGIN_BUTTON).performClick()
@@ -665,9 +663,10 @@ class SettingsScreenTest {
 
     @Test
     fun theSignInPromptUsesFirebaseUisMethodPicker() {
-        assertFalse(LoginPrompt.CREDENTIAL_MANAGER_ENABLED)
-        assertTrue(LoginPrompt.ALWAYS_SHOW_PROVIDER_CHOICE)
-        assertEquals(setOf("password", "google.com", "facebook.com"), LoginPrompt.PROVIDER_IDS)
+        val config = LoginPrompt.configuration(RichApplication.getAppContext())
+        assertFalse(config.isCredentialManagerEnabled)
+        assertTrue(config.isProviderChoiceAlwaysShown)
+        assertEquals(listOf("password", "google.com", "facebook.com"), config.providers.map { it.providerId })
     }
 
     // ==================== Appearance ====================
